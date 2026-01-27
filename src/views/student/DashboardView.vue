@@ -123,37 +123,6 @@
           </div>
         </div>
       </div>
-
-      <!-- AI Analysis Preview -->
-      <div class="rounded-2xl border border-slate-200 bg-gradient-to-br from-indigo-500 to-purple-600 p-5 text-white shadow-sm">
-        <div class="mb-4 flex items-center gap-2">
-          <Sparkles :size="20" />
-          <h2 class="font-semibold">AI Tahlil</h2>
-        </div>
-        
-        <div class="mb-4 rounded-xl bg-white/10 p-4 backdrop-blur">
-          <div class="mb-2 flex items-center justify-between">
-            <span class="text-sm text-white/80">Umumiy holat</span>
-            <span class="text-lg font-bold">{{ aiScore }}/100</span>
-          </div>
-          <div class="h-2 overflow-hidden rounded-full bg-white/20">
-            <div 
-              class="h-full rounded-full bg-white transition-all"
-              :style="{ width: aiScore + '%' }"
-            ></div>
-          </div>
-        </div>
-        
-        <p class="mb-4 text-sm text-white/80">{{ aiSummary }}</p>
-        
-        <router-link 
-          to="/student/ai-analysis"
-          class="flex items-center justify-center gap-2 rounded-xl bg-white/20 py-2 text-sm font-medium backdrop-blur transition-all hover:bg-white/30"
-        >
-          <Brain :size="16" />
-          Batafsil tahlil
-        </router-link>
-      </div>
     </div>
 
     <!-- Bottom Section -->
@@ -294,7 +263,7 @@ import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import { useDataStore } from '@/stores/data'
 import {
-  TrendingUp, BookOpen, Book, Bell, Calendar, Sparkles, Brain,
+  TrendingUp, BookOpen, Book, Bell, Calendar,
   CheckCircle, XCircle, Clock, GraduationCap, FileText, User
 } from 'lucide-vue-next'
 
@@ -364,18 +333,6 @@ const recentAttendance = computed(() => {
 const borrowedBooks = ref(2)
 const unreadNotifications = ref(3)
 const totalBooks = ref(5000)
-
-const aiScore = computed(() => {
-  // AI score based on attendance and other factors
-  return Math.min(100, attendanceRate.value + 10)
-})
-
-const aiSummary = computed(() => {
-  if (aiScore.value >= 90) return "Ajoyib natijalar! Siz eng faol talabalar qatoridansiz."
-  if (aiScore.value >= 75) return "Yaxshi! Davomatni ushlab turing va muvaffaqiyatga erishsiz."
-  if (aiScore.value >= 60) return "O'rtacha holat. Davomat va faollikni oshiring."
-  return "Diqqat! Davomatingiz past. Darslarga muntazam boring."
-})
 
 // Methods
 function getLessonStatus(lesson) {

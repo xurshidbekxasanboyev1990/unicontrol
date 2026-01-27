@@ -90,41 +90,6 @@
       </div>
     </div>
 
-    <!-- AI Analysis -->
-    <div class="bg-gradient-to-br from-violet-500 to-purple-600 rounded-2xl p-6 text-white">
-      <div class="flex items-center gap-3 mb-4">
-        <div class="w-10 h-10 bg-white/20 backdrop-blur rounded-xl flex items-center justify-center">
-          <Sparkles class="w-5 h-5" />
-        </div>
-        <div>
-          <h2 class="font-semibold">AI Tahlil</h2>
-          <p class="text-sm text-violet-200">Sun'iy intellekt xulosasi</p>
-        </div>
-      </div>
-
-      <div class="space-y-3">
-        <p v-if="stats.rate >= 85" class="text-violet-100">
-          <strong>A'lo natija!</strong> Sizning davomatingiz juda yaxshi. Shu yo'lda davom eting. 
-          Darslarni o'tkazib yubormaslikka harakat qiling.
-        </p>
-        <p v-else-if="stats.rate >= 70" class="text-violet-100">
-          <strong>Yaxshi, lekin yaxshilash kerak.</strong> Davomatingiz qoniqarli, ammo 85% dan yuqori bo'lsa yanada yaxshi. 
-          {{ stats.absent }} ta dars qoldirganingiz sabablari bormi?
-        </p>
-        <p v-else class="text-violet-100">
-          <strong>Ogohlantirish!</strong> Davomatingiz past. Bu akademik natijalaringizga ta'sir qilishi mumkin.
-          Dekanat bilan bog'lanishingizni maslahat beramiz.
-        </p>
-      </div>
-
-      <div class="mt-4 p-3 bg-white/10 backdrop-blur rounded-xl">
-        <div class="flex items-center gap-2 text-sm">
-          <TrendingUp class="w-4 h-4" />
-          <span>O'tgan oyga nisbatan: <strong>+3%</strong> yaxshilangan</span>
-        </div>
-      </div>
-    </div>
-
     <!-- Recent Records -->
     <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden">
       <div class="p-6 border-b border-slate-100">
@@ -199,8 +164,6 @@ import {
   CheckCircle,
   Clock,
   XCircle,
-  Sparkles,
-  TrendingUp,
   ClipboardList,
   FileText
 } from 'lucide-vue-next'

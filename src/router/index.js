@@ -30,6 +30,7 @@ import LeaderFileManager from '../views/leader/FileManagerView.vue'
 import AdminDashboard from '../views/admin/DashboardView.vue'
 import AdminStudents from '../views/admin/StudentsView.vue'
 import AdminGroups from '../views/admin/GroupsView.vue'
+import AdminUsers from '../views/admin/UsersView.vue'
 import AdminReports from '../views/admin/ReportsView.vue'
 import AdminNotifications from '../views/admin/NotificationsView.vue'
 
@@ -84,7 +85,10 @@ const routes = [
       { path: 'reports', name: 'leader-reports', component: LeaderReports },
       { path: 'notifications', name: 'leader-notifications', component: LeaderNotifications },
       { path: 'analytics', name: 'leader-analytics', component: LeaderAnalytics },
-      { path: 'files', name: 'leader-files', component: LeaderFileManager }
+      { path: 'files', name: 'leader-files', component: LeaderFileManager },
+      { path: 'profile', name: 'leader-profile', component: StudentProfile },
+      { path: 'settings', name: 'leader-settings', component: StudentSettings },
+      { path: 'help', name: 'leader-help', component: StudentHelp }
     ]
   },
 
@@ -98,8 +102,12 @@ const routes = [
       { path: 'dashboard', name: 'admin-dashboard', component: AdminDashboard },
       { path: 'students', name: 'admin-students', component: AdminStudents },
       { path: 'groups', name: 'admin-groups', component: AdminGroups },
+      { path: 'users', name: 'admin-users', component: AdminUsers },
       { path: 'reports', name: 'admin-reports', component: AdminReports },
-      { path: 'notifications', name: 'admin-notifications', component: AdminNotifications }
+      { path: 'notifications', name: 'admin-notifications', component: AdminNotifications },
+      { path: 'profile', name: 'admin-profile', component: StudentProfile },
+      { path: 'settings', name: 'admin-settings', component: StudentSettings },
+      { path: 'help', name: 'admin-help', component: StudentHelp }
     ]
   },
 
@@ -117,7 +125,9 @@ const routes = [
       { path: 'students', name: 'super-students', component: AdminStudents },
       { path: 'groups', name: 'super-groups', component: AdminGroups },
       { path: 'reports', name: 'super-reports', component: AdminReports },
-      { path: 'notifications', name: 'super-notifications', component: AdminNotifications }
+      { path: 'notifications', name: 'super-notifications', component: AdminNotifications },
+      { path: 'profile', name: 'super-profile', component: StudentProfile },
+      { path: 'help', name: 'super-help', component: StudentHelp }
     ]
   },
 

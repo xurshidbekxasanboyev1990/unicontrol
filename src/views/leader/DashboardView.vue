@@ -1,5 +1,59 @@
 <template>
   <div class="space-y-6">
+    <!-- Birthday Card (agar ertaga tug'ilgan kun bo'lsa) -->
+    <div 
+      v-if="tomorrowBirthdays.length > 0"
+      class="relative overflow-hidden rounded-2xl bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 p-6 text-white shadow-lg"
+    >
+      <div class="absolute -right-6 -top-6 h-32 w-32 rounded-full bg-white/10"></div>
+      <div class="absolute -bottom-8 -left-8 h-40 w-40 rounded-full bg-white/10"></div>
+      
+      <div class="relative">
+        <div class="flex items-center gap-3 mb-4">
+          <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-white/20 backdrop-blur">
+            <Cake :size="24" />
+          </div>
+          <div>
+            <h3 class="text-lg font-bold">🎂 Ertangi tug'ilgan kun!</h3>
+            <p class="text-sm text-white/80">{{ tomorrowDateFormatted }}</p>
+          </div>
+        </div>
+        
+        <div class="space-y-3">
+          <div 
+            v-for="student in tomorrowBirthdays" 
+            :key="student.id"
+            class="flex items-center gap-4 rounded-xl bg-white/10 p-4 backdrop-blur"
+          >
+            <div class="flex h-14 w-14 items-center justify-center rounded-xl bg-white/20 text-2xl font-bold">
+              {{ student.name.charAt(0) }}
+            </div>
+            <div class="flex-1">
+              <p class="font-semibold text-lg">{{ student.name }}</p>
+              <p class="text-sm text-white/80">
+                {{ student.birthDate }} yilda tug'ilgan
+              </p>
+            </div>
+            <div class="text-right">
+              <p class="text-3xl font-bold">{{ calculateAge(student.birthDate) }}</p>
+              <p class="text-xs text-white/70">yoshga to'ladi</p>
+            </div>
+          </div>
+        </div>
+        
+        <div class="mt-4 flex gap-3">
+          <button class="flex items-center gap-2 rounded-xl bg-white/20 px-4 py-2 text-sm font-medium backdrop-blur transition-all hover:bg-white/30">
+            <Gift :size="18" />
+            Tabriklamoqchiman
+          </button>
+          <button class="flex items-center gap-2 rounded-xl bg-white px-4 py-2 text-sm font-medium text-purple-600 transition-all hover:bg-white/90">
+            <Send :size="18" />
+            Xabar yuborish
+          </button>
+        </div>
+      </div>
+    </div>
+
     <!-- Header -->
     <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
       <div>
@@ -203,7 +257,7 @@ import { useDataStore } from '@/stores/data'
 import { useAuthStore } from '@/stores/auth'
 import { 
   Users, BookOpen, Calendar, TrendingUp,
-  CheckCircle, XCircle, Zap
+  CheckCircle, XCircle, Zap, Cake, Gift, Send
 } from 'lucide-vue-next'
 
 const router = useRouter()
@@ -213,13 +267,72 @@ const authStore = useAuthStore()
 // Computed
 const currentGroup = computed(() => {
   const groupId = authStore.user?.groupId
-  return dataStore.groups.find(g => g.id === groupId)
+  const groupName = authStore.user?.group || authStore.user?.managedGroup
+  if (groupId) {
+    return dataStore.groups.find(g => g.id === groupId)
+  }
+  return dataStore.groups.find(g => g.name === groupName)
 })
 
 const groupStudents = computed(() => {
   const groupId = authStore.user?.groupId
-  return dataStore.students.filter(s => s.groupId === groupId)
+  const groupName = authStore.user?.group || authStore.user?.managedGroup
+  if (groupId) {
+    return dataStore.students.filter(s => s.groupId === groupId)
+  }
+  return dataStore.students.filter(s => s.group === groupName)
 })
+
+// Ertangi tug'ilgan kunlar
+const tomorrowBirthdays = computed(() => {
+  const tomorrow = new Date()
+  tomorrow.setDate(tomorrow.getDate() + 1)
+  const tomorrowDay = tomorrow.getDate()
+  const tomorrowMonth = tomorrow.getMonth() + 1
+  
+  return groupStudents.value.filter(student => {
+    if (!student.birthDate) return false
+    // birthDate format: "15.05.2003" yoki "2003-05-15"
+    let day, month
+    if (student.birthDate.includes('.')) {
+      const parts = student.birthDate.split('.')
+      day = parseInt(parts[0])
+      month = parseInt(parts[1])
+    } else if (student.birthDate.includes('-')) {
+      const parts = student.birthDate.split('-')
+      month = parseInt(parts[1])
+      day = parseInt(parts[2])
+    } else {
+      return false
+    }
+    return day === tomorrowDay && month === tomorrowMonth
+  })
+})
+
+const tomorrowDateFormatted = computed(() => {
+  const tomorrow = new Date()
+  tomorrow.setDate(tomorrow.getDate() + 1)
+  return tomorrow.toLocaleDateString('uz-UZ', { 
+    day: 'numeric', 
+    month: 'long', 
+    year: 'numeric' 
+  })
+})
+
+function calculateAge(birthDate) {
+  if (!birthDate) return 0
+  let year
+  if (birthDate.includes('.')) {
+    year = parseInt(birthDate.split('.')[2])
+  } else if (birthDate.includes('-')) {
+    year = parseInt(birthDate.split('-')[0])
+  } else {
+    return 0
+  }
+  const tomorrow = new Date()
+  tomorrow.setDate(tomorrow.getDate() + 1)
+  return tomorrow.getFullYear() - year
+}
 
 const todayLessons = computed(() => {
   const today = new Date().toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase()

@@ -1,9 +1,11 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
+import { useDataStore } from './data'
 
 export const useAuthStore = defineStore('auth', () => {
   const user = ref(null)
   const isAuthenticated = ref(false)
+  const loginError = ref(null)
 
   // Rol turlari: 'student', 'leader', 'admin', 'superadmin'
   const roles = {
@@ -13,39 +15,10 @@ export const useAuthStore = defineStore('auth', () => {
     SUPERADMIN: 'superadmin'
   }
 
-  // Demo foydalanuvchilar
-  const demoUsers = [
+  // Admin va superadmin foydalanuvchilari (tizim administratorlari)
+  const adminUsers = ref([
     {
-      id: 1,
-      login: 'student',
-      password: '123',
-      role: 'student',
-      name: 'Aliyev Jasur',
-      studentId: 'ST-2024-001',
-      group: 'KI_25-04',
-      phone: '+998 90 123 45 67',
-      address: 'Toshkent sh., Chilonzor tumani',
-      commute: 'Avtobus #45',
-      avatar: null,
-      email: 'jasur@uni.uz'
-    },
-    {
-      id: 2,
-      login: 'sardor',
-      password: '123',
-      role: 'leader',
-      name: 'Karimov Sardor',
-      studentId: 'ST-2024-002',
-      group: 'KI_25-04',
-      phone: '+998 91 234 56 78',
-      address: 'Toshkent sh., Yunusobod tumani',
-      commute: 'Metro',
-      avatar: null,
-      email: 'sardor@uni.uz',
-      managedGroup: 'KI_25-04'
-    },
-    {
-      id: 3,
+      id: 1001,
       login: 'admin',
       password: '123',
       role: 'admin',
@@ -55,7 +28,7 @@ export const useAuthStore = defineStore('auth', () => {
       email: 'admin@uni.uz'
     },
     {
-      id: 4,
+      id: 1002,
       login: 'super',
       password: '123',
       role: 'superadmin',
@@ -64,7 +37,7 @@ export const useAuthStore = defineStore('auth', () => {
       avatar: null,
       email: 'super@uni.uz'
     }
-  ]
+  ])
 
   // Computed
   const isStudent = computed(() => user.value?.role === roles.STUDENT)
@@ -75,14 +48,18 @@ export const useAuthStore = defineStore('auth', () => {
   const canManageGroups = computed(() => ['admin', 'superadmin'].includes(user.value?.role))
   const canSendNotifications = computed(() => user.value?.role === roles.SUPERADMIN)
 
-  // Login
+  // Login - dinamik (dataStore'dan talabalarni tekshiradi)
   const login = (credentials) => {
-    const foundUser = demoUsers.find(
+    loginError.value = null
+    const dataStore = useDataStore()
+    
+    // 1. Admin/SuperAdmin tekshirish
+    const adminUser = adminUsers.value.find(
       u => u.login === credentials.login && u.password === credentials.password
     )
     
-    if (foundUser) {
-      user.value = { ...foundUser }
+    if (adminUser) {
+      user.value = { ...adminUser }
       delete user.value.password
       isAuthenticated.value = true
       localStorage.setItem('user', JSON.stringify(user.value))
@@ -90,13 +67,57 @@ export const useAuthStore = defineStore('auth', () => {
       return { success: true, user: user.value }
     }
     
-    return { success: false, message: 'Login yoki parol noto\'g\'ri' }
+    // 2. Talaba/Sardor tekshirish (studentId bilan login)
+    const student = dataStore.students.find(
+      s => s.studentId === credentials.login && s.password === credentials.password
+    )
+    
+    if (student) {
+      // Guruh holatini tekshirish
+      const group = dataStore.groups.find(g => g.name === student.group)
+      
+      if (!group || !group.isActive) {
+        loginError.value = 'blocked'
+        return { 
+          success: false, 
+          blocked: true,
+          message: 'Guruhingiz ruxsatga ega emas. Iltimos, adminga murojaat qiling.' 
+        }
+      }
+      
+      // Talabaning hozirgi roli (sardor yoki oddiy talaba)
+      const role = student.role || 'student'
+      
+      user.value = {
+        id: student.id,
+        login: student.studentId,
+        role: role,
+        name: student.name,
+        studentId: student.studentId,
+        groupId: student.groupId,
+        group: student.group,
+        phone: student.phone,
+        address: student.address,
+        commute: student.commute,
+        avatar: student.avatar,
+        email: student.email,
+        managedGroup: role === 'leader' ? student.group : null
+      }
+      
+      isAuthenticated.value = true
+      localStorage.setItem('user', JSON.stringify(user.value))
+      localStorage.setItem('isAuthenticated', 'true')
+      return { success: true, user: user.value }
+    }
+    
+    return { success: false, message: 'Talaba ID yoki parol noto\'g\'ri' }
   }
 
   // Logout
   const logout = () => {
     user.value = null
     isAuthenticated.value = false
+    loginError.value = null
     localStorage.removeItem('user')
     localStorage.removeItem('isAuthenticated')
   }
@@ -107,8 +128,30 @@ export const useAuthStore = defineStore('auth', () => {
     const storedAuth = localStorage.getItem('isAuthenticated')
     
     if (storedUser && storedAuth === 'true') {
-      user.value = JSON.parse(storedUser)
+      const parsedUser = JSON.parse(storedUser)
+      
+      // Agar talaba yoki sardor bo'lsa, roli yangilangan bo'lishi mumkin
+      if (parsedUser.studentId) {
+        const dataStore = useDataStore()
+        const student = dataStore.students.find(s => s.studentId === parsedUser.studentId)
+        
+        if (student) {
+          // Guruh holatini tekshirish
+          const group = dataStore.groups.find(g => g.name === student.group)
+          if (!group || !group.isActive) {
+            logout()
+            return false
+          }
+          
+          // Rolni yangilash (sardor bo'lsa leader, aks holda student)
+          parsedUser.role = student.role || 'student'
+          parsedUser.managedGroup = student.role === 'leader' ? student.group : null
+        }
+      }
+      
+      user.value = parsedUser
       isAuthenticated.value = true
+      localStorage.setItem('user', JSON.stringify(user.value))
       return true
     }
     return false
@@ -128,11 +171,26 @@ export const useAuthStore = defineStore('auth', () => {
     return { success: true }
   }
 
+  // Foydalanuvchi rolini yangilash
+  const refreshUserRole = () => {
+    if (user.value?.studentId) {
+      const dataStore = useDataStore()
+      const student = dataStore.students.find(s => s.studentId === user.value.studentId)
+      
+      if (student) {
+        user.value.role = student.role || 'student'
+        user.value.managedGroup = student.role === 'leader' ? student.group : null
+        localStorage.setItem('user', JSON.stringify(user.value))
+      }
+    }
+  }
+
   return {
     user,
     isAuthenticated,
+    loginError,
     roles,
-    demoUsers,
+    adminUsers,
     isStudent,
     isLeader,
     isAdmin,
@@ -143,6 +201,7 @@ export const useAuthStore = defineStore('auth', () => {
     login,
     logout,
     checkAuth,
-    updateProfile
+    updateProfile,
+    refreshUserRole
   }
 })

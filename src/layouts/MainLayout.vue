@@ -182,22 +182,29 @@
                   </div>
                   <div class="py-2">
                     <router-link
-                      v-if="authStore.isStudent || authStore.isLeader"
-                      to="/student/profile"
+                      :to="getProfilePath"
                       class="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-600 hover:bg-slate-50 transition-colors"
                       @click="isDropdownOpen = false"
                     >
                       <UserCircle class="w-4 h-4" />
                       Profil sozlamalari
                     </router-link>
-                    <button class="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-slate-600 hover:bg-slate-50 transition-colors">
+                    <router-link
+                      :to="getSettingsPath"
+                      class="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-600 hover:bg-slate-50 transition-colors"
+                      @click="isDropdownOpen = false"
+                    >
                       <Settings class="w-4 h-4" />
                       Sozlamalar
-                    </button>
-                    <button class="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-slate-600 hover:bg-slate-50 transition-colors">
+                    </router-link>
+                    <router-link
+                      :to="getHelpPath"
+                      class="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-600 hover:bg-slate-50 transition-colors"
+                      @click="isDropdownOpen = false"
+                    >
                       <HelpCircle class="w-4 h-4" />
                       Yordam
-                    </button>
+                    </router-link>
                   </div>
                   <div class="border-t border-slate-100 pt-2">
                     <button
@@ -307,11 +314,18 @@ const currentPageTitle = computed(() => {
     'leader-notifications': 'Bildirishnomalar',
     'leader-analytics': 'Statistika',
     'leader-files': 'Fayllar',
+    'leader-profile': 'Profil',
+    'leader-settings': 'Sozlamalar',
+    'leader-help': 'Yordam',
     'admin-dashboard': 'Boshqaruv paneli',
     'admin-students': 'Talabalar',
     'admin-groups': 'Guruhlar',
     'admin-reports': 'Hisobotlar',
     'admin-notifications': 'Bildirishnomalar',
+    'admin-users': 'Foydalanuvchilar',
+    'admin-profile': 'Profil',
+    'admin-settings': 'Sozlamalar',
+    'admin-help': 'Yordam',
     'super-dashboard': 'Super Admin',
     'super-admins': 'Adminlar',
     'super-settings': 'Sozlamalar',
@@ -319,7 +333,9 @@ const currentPageTitle = computed(() => {
     'super-students': 'Talabalar',
     'super-groups': 'Guruhlar',
     'super-reports': 'Hisobotlar',
-    'super-notifications': 'Bildirishnomalar'
+    'super-notifications': 'Bildirishnomalar',
+    'super-profile': 'Profil',
+    'super-help': 'Yordam'
   }
   return titles[route.name] || 'Boshqaruv paneli'
 })
@@ -373,6 +389,14 @@ const menuSections = computed(() => {
         { path: '/leader/notifications', label: 'Bildirishnomalar', icon: markRaw(Send) }
       ]
     })
+    sections.push({
+      title: 'Profil',
+      items: [
+        { path: '/leader/profile', label: 'Mening profilim', icon: markRaw(User) },
+        { path: '/leader/settings', label: 'Sozlamalar', icon: markRaw(Settings) },
+        { path: '/leader/help', label: 'Yordam', icon: markRaw(HelpCircle) }
+      ]
+    })
   }
 
   if (authStore.isAdmin) {
@@ -381,7 +405,8 @@ const menuSections = computed(() => {
       items: [
         { path: '/admin/dashboard', label: 'Dashboard', icon: markRaw(LayoutDashboard) },
         { path: '/admin/students', label: 'Talabalar', icon: markRaw(Users) },
-        { path: '/admin/groups', label: 'Guruhlar', icon: markRaw(Building2) }
+        { path: '/admin/groups', label: 'Guruhlar', icon: markRaw(Building2) },
+        { path: '/admin/users', label: 'Foydalanuvchilar', icon: markRaw(Shield) }
       ]
     })
     sections.push({
@@ -389,6 +414,14 @@ const menuSections = computed(() => {
       items: [
         { path: '/admin/reports', label: 'Hisobotlar', icon: markRaw(BarChart3) },
         { path: '/admin/notifications', label: 'Bildirishnomalar', icon: markRaw(Send) }
+      ]
+    })
+    sections.push({
+      title: 'Profil',
+      items: [
+        { path: '/admin/profile', label: 'Mening profilim', icon: markRaw(User) },
+        { path: '/admin/settings', label: 'Sozlamalar', icon: markRaw(Settings) },
+        { path: '/admin/help', label: 'Yordam', icon: markRaw(HelpCircle) }
       ]
     })
   }
@@ -412,6 +445,13 @@ const menuSections = computed(() => {
         { path: '/super/notifications', label: 'Bildirishnomalar', icon: markRaw(Send) }
       ]
     })
+    sections.push({
+      title: 'Profil',
+      items: [
+        { path: '/super/profile', label: 'Mening profilim', icon: markRaw(User) },
+        { path: '/super/help', label: 'Yordam', icon: markRaw(HelpCircle) }
+      ]
+    })
   }
 
   return sections
@@ -420,6 +460,31 @@ const menuSections = computed(() => {
 const isActive = (path) => {
   return route.path === path || route.path.startsWith(path + '/')
 }
+
+// Rol asosida path larni aniqlash
+const getProfilePath = computed(() => {
+  if (authStore.isLeader) return '/leader/profile'
+  if (authStore.isStudent) return '/student/profile'
+  if (authStore.isAdmin) return '/admin/profile'
+  if (authStore.isSuperAdmin) return '/super/profile'
+  return '/student/profile'
+})
+
+const getSettingsPath = computed(() => {
+  if (authStore.isLeader) return '/leader/settings'
+  if (authStore.isStudent) return '/student/settings'
+  if (authStore.isAdmin) return '/admin/settings'
+  if (authStore.isSuperAdmin) return '/super/settings'
+  return '/student/settings'
+})
+
+const getHelpPath = computed(() => {
+  if (authStore.isLeader) return '/leader/help'
+  if (authStore.isStudent) return '/student/help'
+  if (authStore.isAdmin) return '/admin/help'
+  if (authStore.isSuperAdmin) return '/super/help'
+  return '/student/help'
+})
 
 const handleLogout = () => {
   authStore.logout()

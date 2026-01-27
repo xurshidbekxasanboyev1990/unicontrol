@@ -38,11 +38,32 @@
           <form @submit.prevent="handleLogin" class="space-y-6">
             <!-- Error Alert -->
             <Transition name="shake">
-              <div v-if="error" class="flex items-center gap-3 p-4 bg-rose-500/10 border border-rose-500/20 rounded-2xl text-rose-400">
+              <div v-if="error && !isBlocked" class="flex items-center gap-3 p-4 bg-rose-500/10 border border-rose-500/20 rounded-2xl text-rose-400">
                 <div class="w-10 h-10 bg-rose-500/20 rounded-xl flex items-center justify-center flex-shrink-0">
                   <AlertCircle class="w-5 h-5" />
                 </div>
                 <span class="text-sm font-medium">{{ error }}</span>
+              </div>
+            </Transition>
+
+            <!-- Blocked Group Alert -->
+            <Transition name="shake">
+              <div v-if="isBlocked" class="p-5 bg-amber-500/10 border border-amber-500/20 rounded-2xl">
+                <div class="flex items-start gap-3">
+                  <div class="w-12 h-12 bg-amber-500/20 rounded-xl flex items-center justify-center flex-shrink-0">
+                    <ShieldAlert class="w-6 h-6 text-amber-400" />
+                  </div>
+                  <div>
+                    <h3 class="font-semibold text-amber-400 mb-1">Ruxsat etilmagan</h3>
+                    <p class="text-sm text-amber-300/80">Guruhingiz ruxsatga ega emas. Tizimga kirish uchun adminga murojaat qiling.</p>
+                    <button 
+                      @click="isBlocked = false; error = ''"
+                      class="mt-3 text-sm text-amber-400 hover:text-amber-300 underline"
+                    >
+                      Qayta urinish
+                    </button>
+                  </div>
+                </div>
               </div>
             </Transition>
 
@@ -203,6 +224,7 @@ import {
   LogIn, 
   Loader2, 
   AlertCircle,
+  ShieldAlert,
   UserCircle,
   Users,
   Shield,
@@ -220,19 +242,20 @@ const showPassword = ref(false)
 const remember = ref(false)
 const isLoading = ref(false)
 const error = ref('')
+const isBlocked = ref(false)
 
 const demoAccounts = [
   { 
-    username: 'student', 
-    password: '123', 
+    username: 'ST-2024-001', 
+    password: '123456', 
     label: 'Talaba', 
     icon: markRaw(UserCircle), 
     bgClass: 'bg-gradient-to-br from-blue-500 to-blue-600',
     glowClass: 'bg-blue-500/10'
   },
   { 
-    username: 'sardor', 
-    password: '123', 
+    username: 'ST-2024-002', 
+    password: '123456', 
     label: 'Sardor', 
     icon: markRaw(Users), 
     bgClass: 'bg-gradient-to-br from-amber-500 to-orange-600',
@@ -263,6 +286,7 @@ const fillDemo = (demo) => {
 
 const handleLogin = async () => {
   error.value = ''
+  isBlocked.value = false
   
   if (!username.value || !password.value) {
     error.value = 'Login va parolni kiriting'
@@ -285,8 +309,10 @@ const handleLogin = async () => {
       }[authStore.user.role] || '/student'
       
       router.push(redirectPath)
+    } else if (result.blocked) {
+      isBlocked.value = true
     } else {
-      error.value = 'Login yoki parol noto\'g\'ri'
+      error.value = result.message || 'Talaba ID yoki parol noto\'g\'ri'
     }
   } catch (err) {
     error.value = 'Xatolik yuz berdi'

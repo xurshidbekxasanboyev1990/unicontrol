@@ -238,7 +238,7 @@
 </template>
 
 <script setup>
-import { ref, computed, reactive } from 'vue'
+import { ref, computed, reactive, watch, onMounted } from 'vue'
 import { useDataStore } from '../../stores/data'
 import { useAuthStore } from '../../stores/auth'
 import {
@@ -261,25 +261,65 @@ import {
 const dataStore = useDataStore()
 const authStore = useAuthStore()
 
+// Foydalanuvchi ma'lumotlarini olish
 const student = computed(() => {
-  return dataStore.students.find(s => s.id === authStore.user?.studentId) || dataStore.students[0]
+  // Student yoki Leader uchun - o'z ma'lumotlarini ko'rsatish
+  if (authStore.isStudent || authStore.isLeader) {
+    return dataStore.students.find(s => s.id === authStore.user?.studentId) || 
+           dataStore.students.find(s => s.name === authStore.user?.name) ||
+           dataStore.students[0]
+  }
+  // Admin yoki Super uchun - auth dan user
+  return {
+    name: authStore.user?.name || 'Admin',
+    studentId: authStore.user?.email || 'admin@uni.uz',
+    phone: '+998 71 123 45 67',
+    address: 'Toshkent shahar',
+    commute: 'Shaxsiy transport',
+    passport: '-',
+    jshshir: '-',
+    groupId: null,
+    contractPaid: 0
+  }
 })
 
 const group = computed(() => {
+  if (!student.value?.groupId) return null
   return dataStore.groups.find(g => g.id === student.value?.groupId)
 })
 
 const contractAmount = computed(() => group.value?.contractAmount || 18411000)
-const debt = computed(() => Math.max(0, contractAmount.value - (student.value?.contractPaid || 0)))
+const debt = computed(() => {
+  if (!group.value) return 0
+  return Math.max(0, contractAmount.value - (student.value?.contractPaid || 0))
+})
 const contractPercent = computed(() => {
+  if (!group.value) return 100
   return Math.round((student.value?.contractPaid || 0) / contractAmount.value * 100)
 })
 
 const form = reactive({
-  phone: student.value?.phone || '',
-  address: student.value?.address || '',
-  commute: student.value?.commute || ''
+  phone: '',
+  address: '',
+  commute: ''
 })
+
+// Form ni student ma'lumotlari bilan to'ldirish
+onMounted(() => {
+  if (student.value) {
+    form.phone = student.value.phone || ''
+    form.address = student.value.address || ''
+    form.commute = student.value.commute || ''
+  }
+})
+
+watch(student, (newVal) => {
+  if (newVal) {
+    form.phone = newVal.phone || ''
+    form.address = newVal.address || ''
+    form.commute = newVal.commute || ''
+  }
+}, { immediate: true })
 
 const passwordForm = reactive({
   current: '',

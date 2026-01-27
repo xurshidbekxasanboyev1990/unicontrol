@@ -65,7 +65,7 @@
     </div>
 
     <!-- Quick Actions -->
-    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+    <div class="grid grid-cols-2 lg:grid-cols-5 gap-4">
       <router-link to="/admin/students" class="bg-white rounded-2xl border border-slate-200 p-5 hover:shadow-lg hover:border-blue-200 transition-all group">
         <div class="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
           <UserPlus class="w-6 h-6 text-blue-600" />
@@ -96,6 +96,14 @@
         </div>
         <h3 class="font-semibold text-slate-800">Xabarlar</h3>
         <p class="text-sm text-slate-500 mt-1">E'lonlar yuborish</p>
+      </router-link>
+
+      <router-link to="/admin/users" class="bg-white rounded-2xl border border-slate-200 p-5 hover:shadow-lg hover:border-rose-200 transition-all group">
+        <div class="w-12 h-12 bg-rose-100 rounded-xl flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+          <Key class="w-6 h-6 text-rose-600" />
+        </div>
+        <h3 class="font-semibold text-slate-800">Foydalanuvchilar</h3>
+        <p class="text-sm text-slate-500 mt-1">Parol va hisoblar</p>
       </router-link>
     </div>
 
@@ -202,6 +210,7 @@ import {
   FolderPlus,
   BarChart3,
   Bell,
+  Key,
   UserCheck,
   FileText,
   AlertCircle

@@ -4,10 +4,10 @@ import { ref, computed } from 'vue'
 export const useDataStore = defineStore('data', () => {
   // Guruhlar
   const groups = ref([
-    { id: 1, name: 'KI_25-04', faculty: 'Kompyuter injiniringi', year: 1, leaderId: 2, leaderName: 'Karimov Sardor', contractAmount: 18411000 },
-    { id: 2, name: 'DI_25-21', faculty: 'Dasturiy injiniring', year: 1, leaderId: null, leaderName: '', contractAmount: 18411000 },
-    { id: 3, name: 'FTO_24-03', faculty: 'Fizika-texnika', year: 2, leaderId: null, leaderName: '', contractAmount: 16500000 },
-    { id: 4, name: 'SE_25-01', faculty: 'Dasturiy injiniring', year: 1, leaderId: null, leaderName: '', contractAmount: 18411000 },
+    { id: 1, name: 'KI_25-04', faculty: 'Kompyuter injiniringi', year: 1, leaderId: 2, leaderName: 'Karimov Sardor', contractAmount: 18411000, isActive: true },
+    { id: 2, name: 'DI_25-21', faculty: 'Dasturiy injiniring', year: 1, leaderId: null, leaderName: '', contractAmount: 18411000, isActive: true },
+    { id: 3, name: 'FTO_24-03', faculty: 'Fizika-texnika', year: 2, leaderId: null, leaderName: '', contractAmount: 16500000, isActive: false },
+    { id: 4, name: 'SE_25-01', faculty: 'Dasturiy injiniring', year: 1, leaderId: null, leaderName: '', contractAmount: 18411000, isActive: true },
   ])
 
   // Talabalar
@@ -15,7 +15,7 @@ export const useDataStore = defineStore('data', () => {
     {
       id: 1,
       studentId: 'ST-2024-001',
-      name: 'Aliyev Jasur',
+      name: 'Aliyev Jasur Vali o\'g\'li',
       phone: '+998 90 123 45 67',
       address: 'Toshkent sh., Chilonzor tumani',
       commute: 'Avtobus #45',
@@ -24,9 +24,11 @@ export const useDataStore = defineStore('data', () => {
       contractPaid: 18411000,
       passport: 'AA 1234567',
       jshshir: '12345678901234',
+      birthDate: '27.01.2004',
       role: 'student',
       avatar: null,
-      email: 'jasur@uni.uz'
+      email: 'jasur@uni.uz',
+      password: '123456'
     },
     {
       id: 2,
@@ -40,9 +42,11 @@ export const useDataStore = defineStore('data', () => {
       contractPaid: 18411000,
       passport: 'AB 2345678',
       jshshir: '23456789012345',
+      birthDate: '15.03.2003',
       role: 'leader',
       avatar: null,
-      email: 'sardor@uni.uz'
+      email: 'sardor@uni.uz',
+      password: '123456'
     },
     {
       id: 3,
@@ -56,9 +60,11 @@ export const useDataStore = defineStore('data', () => {
       contractPaid: 13808250,
       passport: 'AC 3456789',
       jshshir: '34567890123456',
+      birthDate: '08.07.2004',
       role: 'student',
       avatar: null,
-      email: 'alisher@uni.uz'
+      email: 'alisher@uni.uz',
+      password: '123456'
     },
     {
       id: 4,
@@ -72,9 +78,11 @@ export const useDataStore = defineStore('data', () => {
       contractPaid: 9205500,
       passport: 'AD 4567890',
       jshshir: '45678901234567',
+      birthDate: '22.11.2003',
       role: 'student',
       avatar: null,
-      email: 'bekzod@uni.uz'
+      email: 'bekzod@uni.uz',
+      password: '123456'
     },
     {
       id: 5,
@@ -88,9 +96,11 @@ export const useDataStore = defineStore('data', () => {
       contractPaid: 20000000,
       passport: 'AE 5678901',
       jshshir: '56789012345678',
+      birthDate: '30.05.2004',
       role: 'student',
       avatar: null,
-      email: 'ulugbek@uni.uz'
+      email: 'ulugbek@uni.uz',
+      password: '123456'
     },
     {
       id: 6,
@@ -104,9 +114,11 @@ export const useDataStore = defineStore('data', () => {
       contractPaid: 18411000,
       passport: 'AF 6789012',
       jshshir: '67890123456789',
+      birthDate: '14.02.2003',
       role: 'student',
       avatar: null,
-      email: 'amir@uni.uz'
+      email: 'amir@uni.uz',
+      password: '123456'
     },
     {
       id: 7,
@@ -120,9 +132,11 @@ export const useDataStore = defineStore('data', () => {
       contractPaid: 14000000,
       passport: 'AG 7890123',
       jshshir: '78901234567890',
+      birthDate: '03.09.2004',
       role: 'student',
       avatar: null,
-      email: 'shoxrux@uni.uz'
+      email: 'shoxrux@uni.uz',
+      password: '123456'
     },
     {
       id: 8,
@@ -136,9 +150,11 @@ export const useDataStore = defineStore('data', () => {
       contractPaid: 16500000,
       passport: 'AH 8901234',
       jshshir: '89012345678901',
+      birthDate: '19.12.2003',
       role: 'student',
       avatar: null,
-      email: 'nilufar@uni.uz'
+      email: 'nilufar@uni.uz',
+      password: '123456'
     }
   ])
 
@@ -256,13 +272,125 @@ export const useDataStore = defineStore('data', () => {
 
   const assignGroupLeader = (groupId, studentId) => {
     const groupIndex = groups.value.findIndex(g => g.id === groupId)
+    const group = groups.value[groupIndex]
+    
+    // Eski sardorni oddiy talabaga aylantirish
+    if (group && group.leaderId) {
+      const oldLeaderIndex = students.value.findIndex(s => s.id === group.leaderId)
+      if (oldLeaderIndex !== -1) {
+        students.value[oldLeaderIndex].role = 'student'
+      }
+    }
+    
+    // Yangi sardorni belgilash
     if (groupIndex !== -1) {
+      const student = students.value.find(s => s.id === studentId)
       groups.value[groupIndex].leaderId = studentId
+      groups.value[groupIndex].leaderName = student?.name || ''
     }
     const studentIndex = students.value.findIndex(s => s.id === studentId)
     if (studentIndex !== -1) {
       students.value[studentIndex].role = 'leader'
     }
+  }
+
+  // Sardorlikni olib tashlash
+  const removeGroupLeader = (groupId) => {
+    const groupIndex = groups.value.findIndex(g => g.id === groupId)
+    if (groupIndex !== -1) {
+      const leaderId = groups.value[groupIndex].leaderId
+      if (leaderId) {
+        const studentIndex = students.value.findIndex(s => s.id === leaderId)
+        if (studentIndex !== -1) {
+          students.value[studentIndex].role = 'student'
+        }
+      }
+      groups.value[groupIndex].leaderId = null
+      groups.value[groupIndex].leaderName = ''
+    }
+  }
+
+  // Guruh holatini o'zgartirish (yoqish/o'chirish)
+  const toggleGroupStatus = (groupId) => {
+    const index = groups.value.findIndex(g => g.id === groupId)
+    if (index !== -1) {
+      groups.value[index].isActive = !groups.value[index].isActive
+    }
+  }
+
+  // Guruh holatini tekshirish
+  const isGroupActive = (groupName) => {
+    const group = groups.value.find(g => g.name === groupName)
+    return group ? group.isActive : false
+  }
+
+  // Excel'dan guruh va talabalarni import qilish
+  const importFromExcel = (data) => {
+    // data = [{ group: 'KI_25-04', faculty: 'Kompyuter injiniringi', students: [...] }, ...]
+    data.forEach(item => {
+      // Guruh mavjudligini tekshirish
+      let group = groups.value.find(g => g.name === item.group)
+      
+      if (!group) {
+        // Yangi guruh qo'shish
+        const newGroupId = groups.value.length > 0 ? Math.max(...groups.value.map(g => g.id)) + 1 : 1
+        group = {
+          id: newGroupId,
+          name: item.group,
+          faculty: item.faculty || 'Noma\'lum',
+          year: item.year || 1,
+          leaderId: null,
+          leaderName: '',
+          contractAmount: item.contractAmount || 18411000,
+          isActive: true
+        }
+        groups.value.push(group)
+      }
+      
+      // Talabalarni qo'shish
+      if (item.students && Array.isArray(item.students)) {
+        item.students.forEach(studentData => {
+          // Talaba mavjudligini tekshirish (studentId bo'yicha)
+          const existingStudent = students.value.find(s => s.studentId === studentData.studentId)
+          if (!existingStudent) {
+            const newId = students.value.length > 0 ? Math.max(...students.value.map(s => s.id)) + 1 : 1
+            students.value.push({
+              id: newId,
+              studentId: studentData.studentId || `ST-${Date.now()}-${newId}`,
+              name: studentData.name,
+              phone: studentData.phone || '',
+              address: studentData.address || '',
+              commute: studentData.commute || '',
+              groupId: group.id,
+              group: group.name,
+              contractPaid: studentData.contractPaid || 0,
+              passport: studentData.passport || '',
+              jshshir: studentData.jshshir || '',
+              birthDate: studentData.birthDate || '',
+              role: 'student',
+              avatar: null,
+              email: studentData.email || '',
+              password: studentData.password || '123456'
+            })
+          }
+        })
+      }
+    })
+  }
+
+  // Talaba parolini yangilash
+  const updateStudentPassword = (studentId, newPassword) => {
+    const student = students.value.find(s => s.id === studentId || s.studentId === studentId)
+    if (student) {
+      student.password = newPassword
+      return true
+    }
+    return false
+  }
+
+  // Talaba ID bo'yicha topish
+  const findStudentByStudentId = (studentId) => {
+    return students.value.find(s => s.studentId === studentId)
   }
 
   const addAttendanceRecord = (record) => {
@@ -397,6 +525,12 @@ export const useDataStore = defineStore('data', () => {
     deleteGroup,
     updateGroupContract,
     assignGroupLeader,
+    removeGroupLeader,
+    toggleGroupStatus,
+    isGroupActive,
+    importFromExcel,
+    updateStudentPassword,
+    findStudentByStudentId,
     addAttendanceRecord,
     updateAttendanceRecord,
     addScheduleItem,

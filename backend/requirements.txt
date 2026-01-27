@@ -1,0 +1,68 @@
+# FastAPI & Server
+fastapi==0.109.2
+uvicorn[standard]==0.27.1
+python-multipart==0.0.9
+gunicorn==21.2.0
+
+# Database
+sqlalchemy==2.0.25
+asyncpg==0.29.0
+alembic==1.13.1
+psycopg2-binary==2.9.9
+
+# Authentication & Security
+python-jose[cryptography]==3.3.0
+passlib[bcrypt]==1.7.4
+bcrypt==4.1.2
+
+# Validation & Settings
+pydantic==2.6.1
+pydantic-settings==2.1.0
+email-validator==2.1.0.post1
+python-dotenv==1.0.1
+
+# Excel Processing
+openpyxl==3.1.2
+pandas==2.2.0
+xlsxwriter==3.1.9
+xlrd==2.0.1
+
+# AI & ML
+openai==1.12.0
+langchain==0.1.6
+langchain-openai==0.0.5
+tiktoken==0.6.0
+
+# HTTP Client (for KUAF Mutoola API)
+httpx==0.26.0
+aiohttp==3.9.3
+
+# Firebase (Push Notifications & Mobile)
+firebase-admin==6.4.0
+
+# Caching & Background Tasks
+redis==5.0.1
+celery==5.3.6
+
+# File Storage
+boto3==1.34.34
+python-magic==0.4.27
+
+# Utilities
+python-dateutil==2.8.2
+pytz==2024.1
+Pillow==10.2.0
+
+# Logging & Monitoring
+loguru==0.7.2
+sentry-sdk[fastapi]==1.40.0
+
+# Testing
+pytest==8.0.0
+pytest-asyncio==0.23.4
+httpx==0.26.0
+
+# Development
+black==24.1.1
+isort==5.13.2
+flake8==7.0.0
