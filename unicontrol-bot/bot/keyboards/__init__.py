@@ -6,7 +6,9 @@ from .inline import (
     get_search_results_keyboard,
     get_confirm_keyboard,
     get_settings_keyboard,
-    get_back_keyboard
+    get_back_keyboard,
+    get_group_detail_keyboard,
+    get_unsubscribe_confirm_keyboard
 )
 
 from .admin import (
@@ -31,6 +33,8 @@ __all__ = [
     "get_confirm_keyboard",
     "get_settings_keyboard",
     "get_back_keyboard",
+    "get_group_detail_keyboard",
+    "get_unsubscribe_confirm_keyboard",
     # Admin keyboards
     "get_admin_main_menu",
     "get_admin_stats_keyboard",

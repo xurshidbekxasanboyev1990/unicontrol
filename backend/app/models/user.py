@@ -111,6 +111,12 @@ class User(Base):
         nullable=False,
         comment="Email verification status"
     )
+    is_first_login: Mapped[bool] = mapped_column(
+        Boolean, 
+        default=False, 
+        nullable=False,
+        comment="True if user needs to change password on first login"
+    )
     
     # Timestamps
     last_login: Mapped[Optional[datetime]] = mapped_column(

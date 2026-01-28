@@ -57,9 +57,10 @@ class NotificationListResponse(BaseModel):
     """Schema for notification list."""
     items: List[NotificationResponse]
     total: int
-    unread_count: int
+    unread_count: int = 0
     page: int
     page_size: int
+    total_pages: int = 0
 
 
 class MarkAsRead(BaseModel):
@@ -107,3 +108,15 @@ class PushSubscription(BaseModel):
     device_token: str
     device_type: str = Field(..., pattern="^(ios|android|web)$")
     device_name: Optional[str] = None
+
+
+class NotificationBulkSend(BaseModel):
+    """Schema for sending bulk notifications."""
+    user_ids: List[int] = Field(..., min_length=1)
+    title: str = Field(..., min_length=1, max_length=200)
+    message: str = Field(..., min_length=1)
+    type: NotificationType = NotificationType.INFO
+    priority: NotificationPriority = NotificationPriority.NORMAL
+    action_url: Optional[str] = Field(None, max_length=500)
+    action_text: Optional[str] = Field(None, max_length=100)
+    expires_at: Optional[datetime] = None

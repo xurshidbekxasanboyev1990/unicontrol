@@ -83,6 +83,54 @@ class NotificationService:
         notifications = result.scalars().all()
         
         return list(notifications), total, unread
+
+    async def list_notifications(
+        self,
+        user_id: int,
+        page: int = 1,
+        page_size: int = 20,
+        is_read: Optional[bool] = None,
+        notification_type = None
+    ) -> Tuple[List[Notification], int]:
+        """
+        List notifications for a user (simplified for route).
+        """
+        query = select(Notification).where(Notification.user_id == user_id)
+        count_query = select(func.count(Notification.id)).where(
+            Notification.user_id == user_id
+        )
+        
+        if is_read is not None:
+            query = query.where(Notification.is_read == is_read)
+            count_query = count_query.where(Notification.is_read == is_read)
+        
+        if notification_type is not None:
+            query = query.where(Notification.type == notification_type)
+            count_query = count_query.where(Notification.type == notification_type)
+        
+        # Get total count
+        total_result = await self.db.execute(count_query)
+        total = total_result.scalar() or 0
+        
+        # Get notifications
+        query = query.order_by(Notification.created_at.desc())
+        query = query.offset((page - 1) * page_size).limit(page_size)
+        
+        result = await self.db.execute(query)
+        notifications = result.scalars().all()
+        
+        return list(notifications), total
+
+    async def get_unread_count(self, user_id: int) -> int:
+        """Get count of unread notifications for a user."""
+        query = select(func.count(Notification.id)).where(
+            and_(
+                Notification.user_id == user_id,
+                Notification.is_read == False
+            )
+        )
+        result = await self.db.execute(query)
+        return result.scalar() or 0
     
     async def create(
         self,

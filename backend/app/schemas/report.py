@@ -31,6 +31,24 @@ class ReportCreate(ReportBase):
     pass
 
 
+class ReportUpdate(BaseModel):
+    """Schema for updating report."""
+    name: Optional[str] = Field(None, min_length=1, max_length=200)
+    description: Optional[str] = None
+    status: Optional[ReportStatus] = None
+    error_message: Optional[str] = None
+
+
+class ReportGenerate(BaseModel):
+    """Schema for generating report."""
+    report_type: ReportType
+    format: ReportFormat = ReportFormat.EXCEL
+    date_from: Optional[date] = None
+    date_to: Optional[date] = None
+    group_id: Optional[int] = None
+    filters: Optional[dict] = None
+
+
 class ReportResponse(BaseModel):
     """Schema for report response."""
     id: int

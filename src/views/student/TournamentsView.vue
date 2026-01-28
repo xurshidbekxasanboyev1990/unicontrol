@@ -132,6 +132,19 @@
               </div>
               <p class="text-slate-600">{{ tournament.prize }}</p>
             </div>
+
+            <!-- Subject-based tournament indicator (YANGI MODEL) -->
+            <div v-if="hasParticipationRules(tournament)" class="flex items-center gap-3 text-sm">
+              <div class="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+                <BookOpen class="w-4 h-4 text-blue-500" />
+              </div>
+              <div>
+                <p class="text-blue-600 font-medium">Fan bo'yicha bellashuv</p>
+                <p class="text-xs text-slate-400">
+                  {{ getParticipationRuleInfo(tournament) }}
+                </p>
+              </div>
+            </div>
           </div>
 
           <!-- Participants -->
@@ -179,6 +192,14 @@
             class="w-full py-3 bg-slate-200 text-slate-500 rounded-xl font-semibold"
           >
             Joylar to'lgan
+          </button>
+          <button
+            v-else-if="hasParticipationRules(tournament) && !canParticipateInTournament(tournament)"
+            disabled
+            class="w-full py-3 bg-amber-100 text-amber-600 rounded-xl font-semibold flex items-center justify-center gap-2"
+          >
+            <AlertCircle class="w-5 h-5" />
+            Yo'nalishingiz mos emas
           </button>
           <button
             v-else
@@ -235,6 +256,132 @@
                   <div>
                     <span class="text-emerald-600">Guruh:</span>
                     <span class="text-emerald-800 font-medium ml-1">{{ regForm.group }}</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Subject Selection for Participation Rules Based Tournaments (YANGI MODEL) -->
+              <div v-if="hasParticipationRules(selectedTournament)" class="space-y-3">
+                <div class="flex items-center gap-2">
+                  <BookOpen class="w-5 h-5 text-blue-500" />
+                  <label class="text-sm font-semibold text-slate-700">
+                    Fan tanlash
+                  </label>
+                </div>
+                
+                <!-- Direction info -->
+                <div v-if="getStudentDirectionName()" class="p-3 bg-blue-50 rounded-xl border border-blue-100">
+                  <p class="text-sm text-blue-700">
+                    <span class="font-medium">Sizning yo'nalishingiz:</span> {{ getStudentDirectionName() }}
+                  </p>
+                </div>
+
+                <!-- Rule not found - Can't participate -->
+                <div v-if="!getStudentParticipationRule(selectedTournament)" class="p-4 bg-amber-50 rounded-xl border border-amber-200">
+                  <div class="flex items-start gap-3">
+                    <AlertCircle class="w-5 h-5 text-amber-500 shrink-0 mt-0.5" />
+                    <div>
+                      <p class="text-sm font-medium text-amber-700">Sizning yo'nalishingiz qatnasha olmaydi</p>
+                      <p class="text-xs text-amber-600 mt-1">
+                        Bu turnir sizning yo'nalishingiz uchun ochiq emas
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- FIXED mode - Auto selected, just show info -->
+                <div v-else-if="getStudentParticipationRule(selectedTournament)?.selectionMode === 'fixed'" class="space-y-2">
+                  <div class="p-3 bg-emerald-50 rounded-xl border border-emerald-100">
+                    <p class="text-sm text-emerald-700 font-medium mb-2">
+                      Sizning yo'nalishingiz uchun fan avtomatik belgilangan:
+                    </p>
+                    <div class="flex items-center gap-2 p-2 bg-white rounded-lg border border-emerald-200">
+                      <BookOpen class="w-5 h-5 text-emerald-500" />
+                      <span class="font-semibold text-emerald-700">{{ getFixedSubject(selectedTournament)?.name }}</span>
+                      <CheckCircle class="w-4 h-4 text-emerald-500 ml-auto" />
+                    </div>
+                  </div>
+                </div>
+
+                <!-- SINGLE mode - Choose one from allowed -->
+                <div v-else-if="getStudentParticipationRule(selectedTournament)?.selectionMode === 'single'" class="space-y-2">
+                  <p class="text-xs text-slate-500">
+                    Quyidagi fanlardan <strong>bittasini</strong> tanlang:
+                  </p>
+                  <div class="grid grid-cols-2 gap-2">
+                    <label
+                      v-for="subject in getAllowedSubjects(selectedTournament)"
+                      :key="subject.id"
+                      :class="[
+                        'relative flex items-center gap-3 p-3 rounded-xl border-2 cursor-pointer transition-all',
+                        selectedSubjectIds.includes(subject.id)
+                          ? 'border-emerald-500 bg-emerald-50'
+                          : 'border-slate-200 hover:border-emerald-300 hover:bg-slate-50'
+                      ]"
+                    >
+                      <input
+                        type="radio"
+                        :value="subject.id"
+                        @change="selectSingleSubject(subject.id)"
+                        :checked="selectedSubjectIds.includes(subject.id)"
+                        class="sr-only"
+                      />
+                      <BookOpen :class="['w-5 h-5', selectedSubjectIds.includes(subject.id) ? 'text-emerald-500' : 'text-slate-400']" />
+                      <span :class="[
+                        'text-sm font-medium',
+                        selectedSubjectIds.includes(subject.id) ? 'text-emerald-700' : 'text-slate-700'
+                      ]">{{ subject.name }}</span>
+                      <div v-if="selectedSubjectIds.includes(subject.id)" class="absolute top-1 right-1">
+                        <CheckCircle class="w-4 h-4 text-emerald-500" />
+                      </div>
+                    </label>
+                  </div>
+                </div>
+
+                <!-- MULTIPLE mode - Choose multiple from allowed -->
+                <div v-else-if="getStudentParticipationRule(selectedTournament)?.selectionMode === 'multiple'" class="space-y-2">
+                  <div class="flex items-center justify-between">
+                    <p class="text-xs text-slate-500">
+                      Quyidagi fanlardan tanlang:
+                    </p>
+                    <span class="text-xs font-medium text-blue-600">
+                      {{ selectedSubjectIds.length }} / {{ getStudentParticipationRule(selectedTournament)?.maxSelect || '?' }} tanlandi
+                    </span>
+                  </div>
+                  <p class="text-xs text-slate-400">
+                    Kamida {{ getStudentParticipationRule(selectedTournament)?.minSelect || 1 }} ta, 
+                    ko'pi bilan {{ getStudentParticipationRule(selectedTournament)?.maxSelect || '?' }} ta tanlashingiz mumkin
+                  </p>
+                  <div class="grid grid-cols-2 gap-2">
+                    <label
+                      v-for="subject in getAllowedSubjects(selectedTournament)"
+                      :key="subject.id"
+                      :class="[
+                        'relative flex items-center gap-3 p-3 rounded-xl border-2 cursor-pointer transition-all',
+                        selectedSubjectIds.includes(subject.id)
+                          ? 'border-emerald-500 bg-emerald-50'
+                          : canSelectMore || selectedSubjectIds.includes(subject.id)
+                            ? 'border-slate-200 hover:border-emerald-300 hover:bg-slate-50'
+                            : 'border-slate-100 bg-slate-50 opacity-50 cursor-not-allowed'
+                      ]"
+                    >
+                      <input
+                        type="checkbox"
+                        :value="subject.id"
+                        @change="toggleSubject(subject.id)"
+                        :checked="selectedSubjectIds.includes(subject.id)"
+                        :disabled="!canSelectMore && !selectedSubjectIds.includes(subject.id)"
+                        class="sr-only"
+                      />
+                      <BookOpen :class="['w-5 h-5', selectedSubjectIds.includes(subject.id) ? 'text-emerald-500' : 'text-slate-400']" />
+                      <span :class="[
+                        'text-sm font-medium',
+                        selectedSubjectIds.includes(subject.id) ? 'text-emerald-700' : 'text-slate-700'
+                      ]">{{ subject.name }}</span>
+                      <div v-if="selectedSubjectIds.includes(subject.id)" class="absolute top-1 right-1">
+                        <CheckCircle class="w-4 h-4 text-emerald-500" />
+                      </div>
+                    </label>
                   </div>
                 </div>
               </div>
@@ -347,7 +494,8 @@ import { useAuthStore } from '../../stores/auth'
 import { useToastStore } from '../../stores/toast'
 import {
   Trophy, Calendar, MapPin, Clock, Gift, UserPlus, CheckCircle,
-  Brain, Dumbbell, Palette, FlaskConical, ClipboardCheck
+  Brain, Dumbbell, Palette, FlaskConical, ClipboardCheck, BookOpen, AlertCircle,
+  GraduationCap
 } from 'lucide-vue-next'
 
 const dataStore = useDataStore()
@@ -358,6 +506,7 @@ const showRegisterModal = ref(false)
 const showSuccessModal = ref(false)
 const selectedCategory = ref('all')
 const selectedTournament = ref(null)
+const selectedSubjectIds = ref([]) // YANGI: array ga o'zgartirildi
 
 const categories = [
   { value: 'all', label: 'Barchasi', icon: Trophy },
@@ -444,6 +593,13 @@ const getStatusLabel = (status) => {
 
 const openRegisterModal = (tournament) => {
   selectedTournament.value = tournament
+  selectedSubjectIds.value = [] // YANGI: array reset
+  
+  // Fixed rejimda avtomatik fan belgilash
+  const rule = getStudentParticipationRule(tournament)
+  if (rule?.selectionMode === 'fixed' && rule.allowedSubjectIds?.length > 0) {
+    selectedSubjectIds.value = [...rule.allowedSubjectIds]
+  }
   
   // Parse user name
   const nameParts = (authStore.user?.name || '').split(' ')
@@ -461,24 +617,142 @@ const openRegisterModal = (tournament) => {
   showRegisterModal.value = true
 }
 
+// ==========================================
+// YANGI MODEL HELPER FUNKSIYALARI
+// ==========================================
+
+// Turnirda qatnashish qoidalari bormi?
+const hasParticipationRules = (tournament) => {
+  return dataStore.hasParticipationRules(tournament?.id)
+}
+
+// Talaba uchun qatnashish qoidasini olish
+const getStudentParticipationRule = (tournament) => {
+  if (!tournament) return null
+  const userGroupId = authStore.user?.groupId
+  if (!userGroupId) return null
+  return dataStore.getParticipationRuleForStudent(tournament.id, userGroupId)
+}
+
+// Turnirga qatnasha oladimi?
+const canParticipateInTournament = (tournament) => {
+  if (!hasParticipationRules(tournament)) return true
+  return !!getStudentParticipationRule(tournament)
+}
+
+// Ruxsat etilgan fanlarni olish
+const getAllowedSubjects = (tournament) => {
+  const rule = getStudentParticipationRule(tournament)
+  if (!rule?.allowedSubjectIds) return []
+  return rule.allowedSubjectIds.map(id => dataStore.getSubjectById(id)).filter(Boolean)
+}
+
+// Fixed rejimda tanlangan fanni olish
+const getFixedSubject = (tournament) => {
+  const rule = getStudentParticipationRule(tournament)
+  if (!rule || rule.selectionMode !== 'fixed') return null
+  return dataStore.getSubjectById(rule.allowedSubjectIds[0])
+}
+
+// Single rejimda bitta tanlash
+const selectSingleSubject = (subjectId) => {
+  selectedSubjectIds.value = [subjectId]
+}
+
+// Multiple rejimda toggle qilish
+const toggleSubject = (subjectId) => {
+  const index = selectedSubjectIds.value.indexOf(subjectId)
+  if (index > -1) {
+    selectedSubjectIds.value.splice(index, 1)
+  } else {
+    const rule = getStudentParticipationRule(selectedTournament.value)
+    if (rule && selectedSubjectIds.value.length < rule.maxSelect) {
+      selectedSubjectIds.value.push(subjectId)
+    }
+  }
+}
+
+// Multiple rejimda yana tanlash mumkinmi?
+const canSelectMore = computed(() => {
+  const rule = getStudentParticipationRule(selectedTournament.value)
+  if (!rule) return false
+  return selectedSubjectIds.value.length < rule.maxSelect
+})
+
+// Qatnashish qoidasi haqida ma'lumot
+const getParticipationRuleInfo = (tournament) => {
+  const rule = getStudentParticipationRule(tournament)
+  if (!rule) return "Sizning yo'nalishingiz mos emas"
+  
+  switch (rule.selectionMode) {
+    case 'fixed':
+      const fixedSubject = dataStore.getSubjectById(rule.allowedSubjectIds[0])
+      return `Fan: ${fixedSubject?.name || 'Noma\'lum'}`
+    case 'single':
+      return `${rule.allowedSubjectIds.length} tadan 1 ta tanlang`
+    case 'multiple':
+      return `${rule.minSelect}-${rule.maxSelect} ta fan tanlang`
+    default:
+      return ''
+  }
+}
+
+// Talaba yo'nalishi nomi
+const getStudentDirectionName = () => {
+  const userGroupId = authStore.user?.groupId
+  if (!userGroupId) return ''
+  const direction = dataStore.getDirectionByGroupId(userGroupId)
+  return direction?.name || ''
+}
+
 const submitRegistration = () => {
+  // YANGI MODEL: Qatnashish qoidalarini tekshirish
+  if (hasParticipationRules(selectedTournament.value)) {
+    const rule = getStudentParticipationRule(selectedTournament.value)
+    
+    if (!rule) {
+      toast.error('Sizning yo\'nalishingiz bu turnirda qatnasha olmaydi')
+      return
+    }
+
+    // Validatsiya
+    if (rule.selectionMode === 'single' && selectedSubjectIds.value.length !== 1) {
+      toast.error('Bitta fan tanlang')
+      return
+    }
+    
+    if (rule.selectionMode === 'multiple') {
+      if (selectedSubjectIds.value.length < rule.minSelect) {
+        toast.error(`Kamida ${rule.minSelect} ta fan tanlang`)
+        return
+      }
+      if (selectedSubjectIds.value.length > rule.maxSelect) {
+        toast.error(`Ko'pi bilan ${rule.maxSelect} ta fan tanlang`)
+        return
+      }
+    }
+  }
+  
   // Validate required custom fields
-  for (const field of selectedTournament.value.customFields) {
+  for (const field of selectedTournament.value.customFields || []) {
     if (field.required && !regForm.value.customFieldValues[field.name]) {
       toast.error(`"${field.name}" maydonini to'ldiring`)
       return
     }
   }
 
-  const success = dataStore.registerForTournament(selectedTournament.value.id, {
-    ...regForm.value
-  })
+  const registrationData = {
+    ...regForm.value,
+    selectedSubjectIds: selectedSubjectIds.value // YANGI: array
+  }
 
-  if (success) {
+  const result = dataStore.registerForTournament(selectedTournament.value.id, registrationData)
+
+  if (result.success) {
     showRegisterModal.value = false
     showSuccessModal.value = true
   } else {
-    toast.error('Xatolik yuz berdi')
+    toast.error(result.message || 'Xatolik yuz berdi')
   }
 }
 </script>

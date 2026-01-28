@@ -28,6 +28,16 @@ from app.models.mutoola import (
     SyncDirection,
 )
 from app.models.activity_log import ActivityLog, ActivityAction
+from app.models.file import File, Folder, FileType
+from app.models.library import (
+    Book,
+    BookBorrow,
+    BookReview,
+    BookCategory,
+    BookLanguage,
+    BookStatus,
+    BorrowStatus,
+)
 
 __all__ = [
     # User
@@ -63,4 +73,16 @@ __all__ = [
     # Activity Log
     "ActivityLog",
     "ActivityAction",
+    # File Management
+    "File",
+    "Folder",
+    "FileType",
+    # Library
+    "Book",
+    "BookBorrow",
+    "BookReview",
+    "BookCategory",
+    "BookLanguage",
+    "BookStatus",
+    "BorrowStatus",
 ]

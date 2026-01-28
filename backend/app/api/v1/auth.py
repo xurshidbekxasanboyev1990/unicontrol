@@ -21,7 +21,7 @@ from app.schemas.user import (
     RefreshToken,
 )
 from app.core.dependencies import get_current_active_user
-from app.models.user import User
+from app.models.user import User, UserRole
 
 router = APIRouter()
 
@@ -52,14 +52,66 @@ async def refresh_token(
     return await service.refresh_tokens(token_data.refresh_token)
 
 
-@router.get("/me", response_model=UserResponse)
+@router.get("/me")
 async def get_current_user_profile(
-    current_user: User = Depends(get_current_active_user)
+    current_user: User = Depends(get_current_active_user),
+    db: AsyncSession = Depends(get_db)
 ):
     """
-    Get current user's profile.
+    Get current user's profile with extended student info if applicable.
     """
-    return UserResponse.model_validate(current_user)
+    from sqlalchemy import select
+    from app.models.student import Student
+    from app.models.group import Group
+    
+    response_data = {
+        "id": current_user.id,
+        "email": current_user.email,
+        "name": current_user.name,
+        "role": current_user.role,
+        "phone": current_user.phone,
+        "avatar": current_user.avatar,
+        "is_active": current_user.is_active,
+        "created_at": current_user.created_at,
+        "last_login": current_user.last_login,
+        "login": current_user.login,
+    }
+    
+    # Agar talaba yoki sardor bo'lsa, student ma'lumotlarini ham qaytarish
+    if current_user.role in [UserRole.STUDENT, UserRole.LEADER]:
+        # Student ma'lumotlarini topish
+        result = await db.execute(
+            select(Student).where(Student.user_id == current_user.id)
+        )
+        student = result.scalar_one_or_none()
+        
+        if student:
+            response_data["student_id"] = student.student_id
+            response_data["group_id"] = student.group_id
+            response_data["full_name"] = student.name
+            response_data["address"] = student.address
+            response_data["commute"] = student.commute
+            response_data["passport"] = student.passport
+            response_data["jshshir"] = student.jshshir
+            response_data["birth_date"] = student.birth_date.isoformat() if student.birth_date else None
+            response_data["gender"] = student.gender
+            response_data["contract_amount"] = float(student.contract_amount) if student.contract_amount else 0
+            response_data["contract_paid"] = float(student.contract_paid) if student.contract_paid else 0
+            response_data["student_phone"] = student.phone
+            response_data["student_email"] = student.email
+            
+            # Guruh nomini olish
+            if student.group_id:
+                group_result = await db.execute(
+                    select(Group).where(Group.id == student.group_id)
+                )
+                group = group_result.scalar_one_or_none()
+                if group:
+                    response_data["group_name"] = group.name
+                    response_data["faculty"] = group.faculty
+                    response_data["year"] = group.course_year
+    
+    return response_data
 
 
 @router.put("/me/password")

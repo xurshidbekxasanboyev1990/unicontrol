@@ -11,7 +11,7 @@ from typing import Optional
 from datetime import date, timedelta
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, func
+from sqlalchemy import select, func, case
 
 from app.database import get_db
 from app.models.user import User, UserRole
@@ -54,9 +54,9 @@ async def get_student_dashboard(
     attendance_result = await db.execute(
         select(
             func.count(Attendance.id).label('total'),
-            func.sum(func.cast(Attendance.status == AttendanceStatus.PRESENT, int)).label('present'),
-            func.sum(func.cast(Attendance.status == AttendanceStatus.ABSENT, int)).label('absent'),
-            func.sum(func.cast(Attendance.status == AttendanceStatus.LATE, int)).label('late')
+            func.sum(case((Attendance.status == AttendanceStatus.PRESENT, 1), else_=0)).label('present'),
+            func.sum(case((Attendance.status == AttendanceStatus.ABSENT, 1), else_=0)).label('absent'),
+            func.sum(case((Attendance.status == AttendanceStatus.LATE, 1), else_=0)).label('late')
         ).where(
             Attendance.student_id == student.id,
             Attendance.date >= month_start
@@ -124,7 +124,7 @@ async def get_leader_dashboard(
     today_attendance = await db.execute(
         select(
             func.count(Attendance.id).label('total'),
-            func.sum(func.cast(Attendance.status == AttendanceStatus.PRESENT, int)).label('present')
+            func.sum(case((Attendance.status == AttendanceStatus.PRESENT, 1), else_=0)).label('present')
         ).join(Student).where(
             Student.group_id == group.id,
             Attendance.date == today
@@ -138,7 +138,7 @@ async def get_leader_dashboard(
         select(
             Attendance.date,
             func.count(Attendance.id).label('total'),
-            func.sum(func.cast(Attendance.status == AttendanceStatus.PRESENT, int)).label('present')
+            func.sum(case((Attendance.status == AttendanceStatus.PRESENT, 1), else_=0)).label('present')
         ).join(Student).where(
             Student.group_id == group.id,
             Attendance.date >= week_start
@@ -207,7 +207,7 @@ async def get_admin_dashboard(
     today_attendance = await db.execute(
         select(
             func.count(Attendance.id).label('total'),
-            func.sum(func.cast(Attendance.status == AttendanceStatus.PRESENT, int)).label('present')
+            func.sum(case((Attendance.status == AttendanceStatus.PRESENT, 1), else_=0)).label('present')
         ).where(Attendance.date == today)
     )
     today_stats = today_attendance.first()
@@ -224,13 +224,13 @@ async def get_admin_dashboard(
             Group.id,
             Group.name,
             func.count(Attendance.id).label('total'),
-            func.sum(func.cast(Attendance.status == AttendanceStatus.PRESENT, int)).label('present')
+            func.sum(case((Attendance.status == AttendanceStatus.PRESENT, 1), else_=0)).label('present')
         ).join(Student, Student.group_id == Group.id)
         .join(Attendance, Attendance.student_id == Student.id)
         .where(Attendance.date >= week_start)
         .group_by(Group.id)
         .having(
-            (func.sum(func.cast(Attendance.status == AttendanceStatus.PRESENT, int)) / 
+            (func.sum(case((Attendance.status == AttendanceStatus.PRESENT, 1), else_=0)) / 
              func.count(Attendance.id) * 100) < 80
         )
     )
@@ -289,7 +289,7 @@ async def get_superadmin_dashboard(
         select(
             Attendance.date,
             func.count(Attendance.id).label('total'),
-            func.sum(func.cast(Attendance.status == AttendanceStatus.PRESENT, int)).label('present')
+            func.sum(case((Attendance.status == AttendanceStatus.PRESENT, 1), else_=0)).label('present')
         ).where(Attendance.date >= week_start)
         .group_by(Attendance.date)
         .order_by(Attendance.date)

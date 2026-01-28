@@ -101,14 +101,21 @@ async def main():
     # Register all routers
     for router in routers:
         dp.include_router(router)
-        dp.include_router(router)
     
     # Create attendance notifier
     notifier = AttendanceNotifier(bot)
     
-    # Setup startup/shutdown handlers
-    dp.startup.register(lambda: on_startup(bot, notifier))
-    dp.shutdown.register(lambda: on_shutdown(bot, notifier))
+    # Initialize database before polling
+    await init_db()
+    logger.info("Database initialized")
+    
+    # Start attendance notifier
+    await notifier.start()
+    logger.info("Attendance notifier started")
+    
+    # Get bot info
+    bot_info = await bot.get_me()
+    logger.info(f"Bot started: @{bot_info.username}")
     
     try:
         # Start polling
@@ -119,7 +126,11 @@ async def main():
             drop_pending_updates=True
         )
     finally:
-        await on_shutdown(bot, notifier)
+        # Stop notifier
+        await notifier.stop()
+        # Close bot session
+        await bot.session.close()
+        logger.info("Bot stopped")
 
 
 if __name__ == "__main__":

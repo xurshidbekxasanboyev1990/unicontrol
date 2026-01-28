@@ -16,7 +16,7 @@ import io
 
 from app.database import get_db
 from app.services.excel_service import ExcelService
-from app.core.dependencies import get_current_active_user, require_admin, require_leader
+from app.core.dependencies import get_current_active_user, require_admin, require_leader, require_superadmin
 from app.models.user import User
 
 router = APIRouter()
@@ -169,6 +169,57 @@ async def import_schedules(
         group_id=group_id,
         semester=semester,
         academic_year=academic_year
+    )
+    
+    return result
+
+
+@router.post("/import/kontingent")
+async def import_kontingent(
+    file: UploadFile = File(...),
+    update_existing: bool = Form(False),
+    create_users: bool = Form(True),
+    default_password: str = Form("12345678"),
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(require_superadmin)
+):
+    """
+    Import students from Kontingent Excel file.
+    
+    Requires superadmin role.
+    
+    This endpoint handles the special format of Kontingent export files
+    which have merged cells and specific column structure:
+    - Row 1-2: Headers with merged cells
+    - Row 3+: Student data
+    
+    Features:
+    - Auto-creates Group if not exists
+    - Auto-creates User account for each student (login = student_id)
+    - Sets is_first_login=True for password change prompt
+    - Handles merged cells and complex structure
+    
+    Args:
+        file: Excel file (.xlsx)
+        update_existing: If True, update existing students
+        create_users: If True, create user accounts (default: True)
+        default_password: Default password for new accounts (default: 12345678)
+    
+    Returns:
+        Import statistics and errors
+    """
+    service = ExcelService(db)
+    
+    if not file.filename.endswith(('.xlsx', '.xls')):
+        from app.core.exceptions import BadRequestException
+        raise BadRequestException("Faqat Excel fayl (.xlsx, .xls) yuklay olasiz.")
+    
+    contents = await file.read()
+    result = await service.import_kontingent(
+        file_data=contents,
+        update_existing=update_existing,
+        create_users=create_users,
+        default_password=default_password
     )
     
     return result

@@ -52,6 +52,8 @@ class AuthService:
         """
         from sqlalchemy import or_
         
+        print(f"[AUTH] Authenticate called: login={login}")
+        
         # Find user by email or login
         result = await self.db.execute(
             select(User).where(
@@ -61,10 +63,16 @@ class AuthService:
         user = result.scalar_one_or_none()
         
         if user is None:
+            print(f"[AUTH] User not found: {login}")
             raise UnauthorizedException("Login yoki parol noto'g'ri")
         
+        print(f"[AUTH] User found: id={user.id}, login={user.login}, role={user.role}")
+        
         if not verify_password(password, user.password_hash):
+            print(f"[AUTH] Wrong password for user: {login}")
             raise UnauthorizedException("Login yoki parol noto'g'ri")
+        
+        print(f"[AUTH] Password verified OK")
         
         if not user.is_active:
             raise UnauthorizedException("Akkount faollashtirilmagan")

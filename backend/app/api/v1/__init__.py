@@ -23,6 +23,8 @@ from app.api.v1 import (
     mutoola,
     dashboard,
     telegram,
+    files,
+    library,
 )
 
 api_router = APIRouter()
@@ -115,4 +117,18 @@ api_router.include_router(
 api_router.include_router(
     telegram.router,
     tags=["Telegram Bot"]
+)
+
+# Files Management
+api_router.include_router(
+    files.router,
+    prefix="/files",
+    tags=["Files"]
+)
+
+# Library (Books)
+api_router.include_router(
+    library.router,
+    prefix="/library",
+    tags=["Library"]
 )

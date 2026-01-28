@@ -192,6 +192,13 @@ def create_application() -> FastAPI:
         tags=["API v1"]
     )
     
+    # API routes without version (alias for /api/v1) - for frontend compatibility
+    app.include_router(
+        api_v1_router,
+        prefix="/api",
+        tags=["API"]
+    )
+    
     # Mobile API routes
     app.include_router(
         mobile_router,

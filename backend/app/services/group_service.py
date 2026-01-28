@@ -16,9 +16,10 @@ from sqlalchemy.orm import joinedload
 
 from app.models.group import Group
 from app.models.student import Student
-from app.models.user import User
+from app.models.user import User, UserRole
 from app.schemas.group import GroupCreate, GroupUpdate, GroupStats
 from app.core.exceptions import NotFoundException, ConflictException
+from app.core.security import get_password_hash
 
 
 class GroupService:
@@ -170,7 +171,7 @@ class GroupService:
         return True
     
     async def set_leader(self, group_id: int, leader_id: Optional[int]) -> Group:
-        """Set or unset group leader."""
+        """Set or unset group leader and create user account if needed."""
         group = await self.get_by_id(group_id)
         if not group:
             raise NotFoundException("Group not found")
@@ -189,6 +190,38 @@ class GroupService:
             
             # Update student's leader status
             student.is_leader = True
+            
+            # Login: student_id (HEMIS ID)
+            login = student.student_id or f"leader_{student.id}"
+            
+            # Check if user account exists for this login
+            user_result = await self.db.execute(
+                select(User).where(User.login == login)
+            )
+            existing_user = user_result.scalar_one_or_none()
+            
+            if not existing_user:
+                # Create user account for leader
+                # Password: 12345678
+                default_password = "12345678"
+                
+                new_user = User(
+                    login=login,
+                    email=student.email if hasattr(student, 'email') and student.email else None,
+                    name=student.name,
+                    password_hash=get_password_hash(default_password),
+                    role=UserRole.LEADER,
+                    phone=student.phone if hasattr(student, 'phone') else None,
+                    is_first_login=True,
+                    is_active=True
+                )
+                self.db.add(new_user)
+                print(f"[GROUP SERVICE] Yangi sardor user yaratildi: login={login}")
+            else:
+                # User mavjud, leader role ga o'zgartiramiz
+                existing_user.role = UserRole.LEADER
+                existing_user.is_active = True
+                print(f"[GROUP SERVICE] Mavjud user sardor qilindi: login={login}")
         
         group.leader_id = leader_id
         await self.db.commit()

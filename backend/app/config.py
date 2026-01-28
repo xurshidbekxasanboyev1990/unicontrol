@@ -56,13 +56,13 @@ class Settings(BaseSettings):
     # ====================
     SECRET_KEY: str
     ALGORITHM: str = "HS256"
-    ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
-    REFRESH_TOKEN_EXPIRE_DAYS: int = 7
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 480
+    REFRESH_TOKEN_EXPIRE_DAYS: int = 30
     
     # ====================
     # CORS
     # ====================
-    CORS_ORIGINS: str = '["http://localhost:5173"]'
+    CORS_ORIGINS: str = 'http://localhost:5173,http://localhost:3000'
     CORS_ALLOW_CREDENTIALS: bool = True
     
     @field_validator("CORS_ORIGINS", mode="before")
@@ -75,8 +75,12 @@ class Settings(BaseSettings):
     
     @property
     def cors_origins_list(self) -> List[str]:
-        """Get CORS origins as a list."""
-        return json.loads(self.CORS_ORIGINS)
+        """Get CORS origins as a list - supports both JSON and comma-separated."""
+        try:
+            return json.loads(self.CORS_ORIGINS)
+        except json.JSONDecodeError:
+            # If not JSON, split by comma
+            return [origin.strip() for origin in self.CORS_ORIGINS.split(",") if origin.strip()]
     
     # ====================
     # OPENAI API

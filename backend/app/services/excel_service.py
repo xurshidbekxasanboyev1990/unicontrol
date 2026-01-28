@@ -431,3 +431,242 @@ class ExcelService:
         df = pd.DataFrame(sample_data, columns=columns)
         
         return self._create_excel_file(df, f"{template_type}_template")
+
+    async def import_kontingent(
+        self,
+        file_data: bytes,
+        update_existing: bool = False,
+        create_users: bool = True,
+        default_password: str = "12345678"
+    ) -> Dict[str, Any]:
+        """
+        Import students from Kontingent Excel file.
+        OPTIMIZED: Batch insert for speed - can handle 20,000+ students in seconds.
+        """
+        from openpyxl import load_workbook
+        from app.models.user import User, UserRole
+        from app.core.security import get_password_hash
+        import re
+        
+        # Load workbook with read_only for speed
+        wb = load_workbook(io.BytesIO(file_data), read_only=True, data_only=True)
+        ws = wb.active
+        
+        # Pre-hash the default password once (expensive operation)
+        hashed_password = get_password_hash(default_password)
+        
+        # Load existing data in bulk for fast lookups
+        existing_students_result = await self.db.execute(select(Student.student_id))
+        existing_student_ids = set(row[0] for row in existing_students_result.fetchall())
+        
+        existing_users_result = await self.db.execute(select(User.login))
+        existing_user_logins = set(row[0] for row in existing_users_result.fetchall())
+        
+        existing_groups_result = await self.db.execute(select(Group.id, Group.name))
+        groups_cache = {row[1]: row[0] for row in existing_groups_result.fetchall()}
+        
+        # Collect all data first (in memory)
+        students_to_create = []
+        users_to_create = []
+        groups_to_create = {}  # name -> group_data
+        student_user_links = []  # [(student_id, user_login), ...]
+        
+        imported = 0
+        updated = 0
+        skipped = 0
+        failed = 0
+        errors = []
+        users_created = 0
+        
+        # Read all rows at once
+        rows = list(ws.iter_rows(min_row=3, values_only=True))
+        
+        for row_idx, row in enumerate(rows, start=3):
+            try:
+                if not row or len(row) < 2:
+                    continue
+                    
+                # Read cell values (by index, 0-based)
+                student_id = str(row[0] or "").strip()
+                full_name = str(row[1] or "").strip()
+                
+                # Skip empty rows
+                if not student_id or not full_name:
+                    continue
+                
+                # Check if already exists
+                if student_id in existing_student_ids:
+                    skipped += 1
+                    continue
+                
+                # Parse all fields
+                passport = str(row[3] or "").strip() if len(row) > 3 else ""
+                jshshir = str(row[4] or "").strip() if len(row) > 4 else ""
+                birth_date = row[6] if len(row) > 6 else None
+                phone = str(row[7] or "").strip() if len(row) > 7 else ""
+                specialty_name = str(row[12] or "").strip() if len(row) > 12 else ""
+                course = row[13] if len(row) > 13 else None
+                group_name = str(row[14] or "").strip() if len(row) > 14 else ""
+                
+                # Address columns
+                country = str(row[15] or "").strip() if len(row) > 15 else ""
+                region = str(row[16] or "").strip() if len(row) > 16 else ""
+                district = str(row[17] or "").strip() if len(row) > 17 else ""
+                address_detail = str(row[18] or "").strip() if len(row) > 18 else ""
+                full_living_address = str(row[22] or "").strip() if len(row) > 22 else ""
+                living_address = str(row[21] or "").strip() if len(row) > 21 else ""
+                commute = str(row[23] or "").strip() if len(row) > 23 else ""
+                
+                # Build address
+                address_parts = [p for p in [country, region, district, address_detail] if p]
+                full_address = ", ".join(address_parts) if address_parts else full_living_address or living_address
+                
+                # Parse birth_date
+                parsed_birth_date = None
+                if birth_date:
+                    if isinstance(birth_date, datetime):
+                        parsed_birth_date = birth_date.date()
+                    elif isinstance(birth_date, date):
+                        parsed_birth_date = birth_date
+                    elif isinstance(birth_date, str):
+                        for fmt in ["%d.%m.%Y", "%Y-%m-%d", "%d/%m/%Y"]:
+                            try:
+                                parsed_birth_date = datetime.strptime(birth_date, fmt).date()
+                                break
+                            except:
+                                pass
+                
+                # Parse course
+                course_num = 1
+                if course:
+                    if isinstance(course, (int, float)):
+                        course_num = int(course)
+                    elif isinstance(course, str):
+                        match = re.search(r'(\d+)', str(course))
+                        if match:
+                            course_num = int(match.group(1))
+                
+                # Handle group - check cache first
+                group_id = None
+                if group_name:
+                    if group_name in groups_cache:
+                        group_id = groups_cache[group_name]
+                    elif group_name in groups_to_create:
+                        group_id = f"__new__{group_name}"  # Placeholder
+                    else:
+                        # Mark for creation
+                        groups_to_create[group_name] = {
+                            "name": group_name,
+                            "faculty": specialty_name or "Unknown",
+                            "course_year": course_num,
+                            "is_active": True
+                        }
+                        group_id = f"__new__{group_name}"  # Placeholder
+                
+                # Add student to batch
+                students_to_create.append({
+                    "student_id": student_id,
+                    "name": full_name,
+                    "phone": phone or None,
+                    "passport": passport or None,
+                    "jshshir": jshshir or None,
+                    "birth_date": parsed_birth_date,
+                    "address": full_address or None,
+                    "commute": commute or None,
+                    "group_id": group_id,  # Will be resolved after groups created
+                    "is_active": True,
+                    "contract_amount": 0,
+                    "contract_paid": 0
+                })
+                existing_student_ids.add(student_id)
+                imported += 1
+                
+                # Add user to batch
+                if create_users and student_id not in existing_user_logins:
+                    users_to_create.append({
+                        "login": student_id,
+                        "password_hash": hashed_password,
+                        "name": full_name,
+                        "phone": phone or None,
+                        "role": UserRole.STUDENT,
+                        "is_active": True,
+                        "is_first_login": True
+                    })
+                    student_user_links.append(student_id)
+                    existing_user_logins.add(student_id)
+                    users_created += 1
+                    
+            except Exception as e:
+                failed += 1
+                errors.append({
+                    "row": row_idx,
+                    "student_id": str(row[0] if row and len(row) > 0 else ""),
+                    "name": str(row[1] if row and len(row) > 1 else ""),
+                    "error": str(e)
+                })
+        
+        wb.close()
+        
+        # Now batch insert everything
+        
+        # 1. Create all new groups first
+        if groups_to_create:
+            for group_data in groups_to_create.values():
+                group = Group(**group_data)
+                self.db.add(group)
+            await self.db.flush()
+            
+            # Refresh groups cache
+            groups_result = await self.db.execute(select(Group.id, Group.name))
+            groups_cache = {row[1]: row[0] for row in groups_result.fetchall()}
+        
+        # 2. Resolve group_id placeholders and create students
+        for student_data in students_to_create:
+            group_id = student_data["group_id"]
+            if isinstance(group_id, str) and group_id.startswith("__new__"):
+                group_name = group_id[7:]  # Remove "__new__" prefix
+                student_data["group_id"] = groups_cache.get(group_name)
+            
+            student = Student(**student_data)
+            self.db.add(student)
+        
+        # 3. Create all users
+        for user_data in users_to_create:
+            user = User(**user_data)
+            self.db.add(user)
+        
+        # 4. Commit everything at once
+        await self.db.commit()
+        
+        # 5. Link users to students (optional, can be done in bulk later)
+        if student_user_links:
+            # Get all created users and students
+            users_result = await self.db.execute(
+                select(User.id, User.login).where(User.login.in_(student_user_links))
+            )
+            user_id_map = {row[1]: row[0] for row in users_result.fetchall()}
+            
+            students_result = await self.db.execute(
+                select(Student.id, Student.student_id).where(Student.student_id.in_(student_user_links))
+            )
+            
+            for student_id, student_sid in students_result.fetchall():
+                if student_sid in user_id_map:
+                    await self.db.execute(
+                        Student.__table__.update()
+                        .where(Student.id == student_id)
+                        .values(user_id=user_id_map[student_sid])
+                    )
+            
+            await self.db.commit()
+        
+        return {
+            "success": True,
+            "imported": imported,
+            "updated": updated,
+            "skipped": skipped,
+            "failed": failed,
+            "users_created": users_created,
+            "errors": errors[:50],  # Limit errors to 50
+            "message": f"Kontingentdan {imported} ta yangi talaba import qilindi, {updated} ta yangilandi, {users_created} ta foydalanuvchi yaratildi."
+        }

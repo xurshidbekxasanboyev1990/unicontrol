@@ -105,7 +105,7 @@ def create_refresh_token(
         expire = datetime.utcnow() + expires_delta
     else:
         expire = datetime.utcnow() + timedelta(
-            minutes=settings.REFRESH_TOKEN_EXPIRE_MINUTES
+            days=settings.REFRESH_TOKEN_EXPIRE_DAYS
         )
     
     to_encode = {
@@ -117,7 +117,7 @@ def create_refresh_token(
     
     encoded_jwt = jwt.encode(
         to_encode,
-        settings.REFRESH_SECRET_KEY,
+        settings.SECRET_KEY,  # Use same SECRET_KEY for refresh tokens
         algorithm=settings.ALGORITHM
     )
     return encoded_jwt
@@ -135,15 +135,10 @@ def verify_token(token: str, token_type: str = "access") -> Optional[dict]:
         The decoded token payload or None if invalid
     """
     try:
-        secret_key = (
-            settings.SECRET_KEY 
-            if token_type == "access" 
-            else settings.REFRESH_SECRET_KEY
-        )
-        
+        # Use same SECRET_KEY for both access and refresh tokens
         payload = jwt.decode(
             token,
-            secret_key,
+            settings.SECRET_KEY,
             algorithms=[settings.ALGORITHM]
         )
         

@@ -29,7 +29,7 @@ router = APIRouter()
 @router.get("", response_model=NotificationListResponse)
 async def list_notifications(
     page: int = Query(1, ge=1),
-    page_size: int = Query(20, ge=1, le=100),
+    page_size: int = Query(100, ge=1, le=1000),
     is_read: Optional[bool] = None,
     notification_type: Optional[NotificationType] = None,
     db: AsyncSession = Depends(get_db),
@@ -47,9 +47,13 @@ async def list_notifications(
         notification_type=notification_type
     )
     
+    # Get unread count
+    unread_count = await service.get_unread_count(current_user.id)
+    
     return NotificationListResponse(
         items=[NotificationResponse.model_validate(n) for n in notifications],
         total=total,
+        unread_count=unread_count,
         page=page,
         page_size=page_size,
         total_pages=(total + page_size - 1) // page_size

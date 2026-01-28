@@ -53,14 +53,22 @@ class PasswordReset(BaseModel):
 class UserResponse(BaseModel):
     """Schema for user response."""
     id: int
-    email: EmailStr
+    email: Optional[EmailStr] = None
     name: str
     role: UserRole
     phone: Optional[str] = None
     avatar: Optional[str] = None
     is_active: bool
+    is_first_login: bool = False
     created_at: datetime
     last_login: Optional[datetime] = None
+    # Extended fields for students
+    student_id: Optional[str] = None
+    group_id: Optional[int] = None
+    group_name: Optional[str] = None
+    full_name: Optional[str] = None
+    address: Optional[str] = None
+    commute: Optional[str] = None
     
     model_config = ConfigDict(from_attributes=True)
 
