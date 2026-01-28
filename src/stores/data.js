@@ -1,13 +1,135 @@
+/**
+ * ============================================
+ * UNI CONTROL - Asosiy Ma'lumotlar Store
+ * ============================================
+ * 
+ * Bu eng katta store bo'lib, barcha asosiy ma'lumotlarni saqlaydi.
+ * Production'da bu ma'lumotlar backend API'dan keladi.
+ * 
+ * MA'LUMOTLAR TUZILISHI:
+ * ======================
+ * 
+ * 1. DIRECTIONS (Yo'nalishlar)
+ *    Ta'lim yo'nalishlari: KI, DI, TIB, IQT va h.k.
+ *    Har bir guruh bitta yo'nalishga tegishli.
+ * 
+ * 2. SUBJECTS (Fanlar)
+ *    Bellashuv fanlari: Informatika, Matematika, Fizika va h.k.
+ *    Turnirlar fan bo'yicha o'tkazilishi mumkin.
+ * 
+ * 3. DIRECTION_SUBJECTS (Yo'nalish-Fan bog'lanishi)
+ *    Qaysi yo'nalish qaysi fanlarda qatnashishi mumkinligini belgilaydi.
+ *    Masalan: KI -> [Informatika, Matematika, Fizika, Dasturlash]
+ * 
+ * 4. GROUPS (Guruhlar)
+ *    Talabalar guruhlari. Har bir guruhda:
+ *    - directionId: Yo'nalish
+ *    - leaderId: Sardor (null bo'lishi mumkin)
+ *    - isActive: Faol/Bloklangan holat
+ *    - contractAmount: Yillik kontrakt summasi
+ * 
+ * 5. STUDENTS (Talabalar)
+ *    Talabalar ro'yxati. Har bir talabada:
+ *    - studentId: Login uchun ID (masalan: ST-2024-001)
+ *    - role: 'student' yoki 'leader'
+ *    - contractPaid: To'langan summa
+ *    - password: Login paroli
+ * 
+ * 6. SCHEDULE (Dars jadvali)
+ *    Haftalik dars jadvali: kun, vaqt, fan, o'qituvchi, xona
+ * 
+ * 7. ATTENDANCE_RECORDS (Davomat)
+ *    Kunlik davomat: present, absent, late
+ * 
+ * 8. REPORTS (Hisobotlar)
+ *    Sardor/Admin tomonidan yaratilgan hisobotlar
+ * 
+ * 9. NOTIFICATIONS (Bildirishnomalar)
+ *    Tizim xabarlari
+ * 
+ * 10. CLUBS (To'garaklar)
+ *     Qo'shimcha ta'lim to'garaklari
+ * 
+ * 11. TOURNAMENTS (Turnirlar)
+ *     Bellashuvlar va olimpiadalar.
+ *     isSubjectBased: true bo'lsa, faqat tegishli yo'nalish qatnashadi
+ * 
+ * MUHIM METODLAR:
+ * ===============
+ * - assignGroupLeader(): Sardor tayinlash (student.role = 'leader')
+ * - toggleGroupStatus(): Guruhni bloklash (login taqiqlanadi)
+ * - getAvailableSubjectsForStudent(): Turnir uchun mavjud fanlar
+ * - registerForTournament(): Turnirga ro'yxatdan o'tish
+ */
+
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 
 export const useDataStore = defineStore('data', () => {
+  // ===================================================================
+  // 1. YO'NALISHLAR (Ta'lim yo'nalishlari)
+  // ===================================================================
+  const directions = ref([
+    { id: 1, code: 'KI', name: 'Kompyuter injiniringi', faculty: 'Axborot texnologiyalari', isActive: true },
+    { id: 2, code: 'DI', name: 'Dasturiy injiniring', faculty: 'Axborot texnologiyalari', isActive: true },
+    { id: 3, code: 'AT', name: 'Axborot tizimlari', faculty: 'Axborot texnologiyalari', isActive: true },
+    { id: 4, code: 'TIB', name: 'Tibbiyot', faculty: 'Tibbiyot fakulteti', isActive: true },
+    { id: 5, code: 'IQT', name: 'Iqtisodiyot', faculty: 'Iqtisodiyot fakulteti', isActive: true },
+    { id: 6, code: 'HUQ', name: 'Huquqshunoslik', faculty: 'Huquq fakulteti', isActive: true },
+    { id: 7, code: 'FIL', name: 'Filologiya', faculty: 'Filologiya fakulteti', isActive: true },
+    { id: 8, code: 'FTO', name: 'Fizika-texnika', faculty: 'Fizika-matematika fakulteti', isActive: true },
+    { id: 9, code: 'KIM', name: 'Kimyo', faculty: 'Tabiiy fanlar fakulteti', isActive: true },
+    { id: 10, code: 'BIO', name: 'Biologiya', faculty: 'Tabiiy fanlar fakulteti', isActive: true }
+  ])
+
+  // Fanlar (Bellashuv fanlari)
+  const subjects = ref([
+    { id: 1, name: 'Informatika', icon: 'Monitor', color: 'blue', isActive: true },
+    { id: 2, name: 'Matematika', icon: 'Calculator', color: 'indigo', isActive: true },
+    { id: 3, name: 'Fizika', icon: 'Atom', color: 'amber', isActive: true },
+    { id: 4, name: 'Kimyo', icon: 'FlaskConical', color: 'green', isActive: true },
+    { id: 5, name: 'Biologiya', icon: 'Leaf', color: 'emerald', isActive: true },
+    { id: 6, name: 'Ingliz tili', icon: 'Languages', color: 'red', isActive: true },
+    { id: 7, name: 'Tarix', icon: 'BookText', color: 'yellow', isActive: true },
+    { id: 8, name: 'Huquq asoslari', icon: 'Scale', color: 'slate', isActive: true },
+    { id: 9, name: 'Iqtisodiyot asoslari', icon: 'Banknote', color: 'cyan', isActive: true },
+    { id: 10, name: 'Adabiyot', icon: 'BookOpen', color: 'purple', isActive: true },
+    { id: 11, name: 'Dasturlash', icon: 'Code', color: 'teal', isActive: true },
+    { id: 12, name: 'Robototexnika', icon: 'Cpu', color: 'orange', isActive: true }
+  ])
+
+  // Yo'nalish - Fan bog'lanishi (Qaysi yo'nalish qaysi fanlardan qatnashishi mumkin)
+  const directionSubjects = ref([
+    // Kompyuter injiniringi -> Informatika, Matematika, Fizika, Dasturlash, Robototexnika, Ingliz tili
+    { directionId: 1, subjectIds: [1, 2, 3, 11, 12, 6] },
+    // Dasturiy injiniring -> Informatika, Matematika, Dasturlash, Ingliz tili
+    { directionId: 2, subjectIds: [1, 2, 11, 6] },
+    // Axborot tizimlari -> Informatika, Matematika, Dasturlash
+    { directionId: 3, subjectIds: [1, 2, 11] },
+    // Tibbiyot -> Kimyo, Biologiya, Ingliz tili
+    { directionId: 4, subjectIds: [4, 5, 6] },
+    // Iqtisodiyot -> Matematika, Iqtisodiyot asoslari, Ingliz tili
+    { directionId: 5, subjectIds: [2, 9, 6] },
+    // Huquqshunoslik -> Huquq asoslari, Tarix, Ingliz tili
+    { directionId: 6, subjectIds: [8, 7, 6] },
+    // Filologiya -> Ingliz tili, Adabiyot, Tarix
+    { directionId: 7, subjectIds: [6, 10, 7] },
+    // Fizika-texnika -> Fizika, Matematika, Informatika
+    { directionId: 8, subjectIds: [3, 2, 1] },
+    // Kimyo -> Kimyo, Biologiya, Matematika
+    { directionId: 9, subjectIds: [4, 5, 2] },
+    // Biologiya -> Biologiya, Kimyo
+    { directionId: 10, subjectIds: [5, 4] }
+  ])
+
   // Guruhlar
   const groups = ref([
-    { id: 1, name: 'KI_25-04', faculty: 'Kompyuter injiniringi', year: 1, leaderId: 2, leaderName: 'Karimov Sardor', contractAmount: 18411000, isActive: true },
-    { id: 2, name: 'DI_25-21', faculty: 'Dasturiy injiniring', year: 1, leaderId: null, leaderName: '', contractAmount: 18411000, isActive: true },
-    { id: 3, name: 'FTO_24-03', faculty: 'Fizika-texnika', year: 2, leaderId: null, leaderName: '', contractAmount: 16500000, isActive: false },
-    { id: 4, name: 'SE_25-01', faculty: 'Dasturiy injiniring', year: 1, leaderId: null, leaderName: '', contractAmount: 18411000, isActive: true },
+    { id: 1, name: 'KI_25-04', faculty: 'Kompyuter injiniringi', directionId: 1, year: 1, leaderId: 2, leaderName: 'Karimov Sardor', contractAmount: 18411000, isActive: true },
+    { id: 2, name: 'DI_25-21', faculty: 'Dasturiy injiniring', directionId: 2, year: 1, leaderId: null, leaderName: '', contractAmount: 18411000, isActive: true },
+    { id: 3, name: 'FTO_24-03', faculty: 'Fizika-texnika', directionId: 8, year: 2, leaderId: null, leaderName: '', contractAmount: 16500000, isActive: false },
+    { id: 4, name: 'SE_25-01', faculty: 'Dasturiy injiniring', directionId: 2, year: 1, leaderId: null, leaderName: '', contractAmount: 18411000, isActive: true },
+    { id: 5, name: 'TIB_25-01', faculty: 'Tibbiyot', directionId: 4, year: 1, leaderId: null, leaderName: '', contractAmount: 25000000, isActive: true },
+    { id: 6, name: 'IQT_25-02', faculty: 'Iqtisodiyot', directionId: 5, year: 1, leaderId: null, leaderName: '', contractAmount: 15000000, isActive: true }
   ])
 
   // Talabalar
@@ -195,7 +317,20 @@ export const useDataStore = defineStore('data', () => {
     }
   ])
 
-  // Turnirlar
+  // ===================================================================
+  // 11. TURNIRLAR - YANGI TUZILISH
+  // ===================================================================
+  // 
+  // YANGI MODEL:
+  // - participationRules[]: Har bir yo'nalish uchun alohida qoidalar
+  // - selectionMode: 'fixed' | 'single' | 'multiple'
+  // - registration.selectedSubjectIds[]: Bir nechta fan tanlash imkoniyati
+  //
+  // SELECTION MODES:
+  // - fixed: Tanlov yo'q, 1 ta fan avtomatik (masalan: KI -> Informatika)
+  // - single: allowedSubjectIds ichidan faqat 1 ta tanlash (masalan: MED -> Bio YOKI Kimyo)
+  // - multiple: allowedSubjectIds ichidan bir nechta tanlash (masalan: MED -> Bio VA Kimyo)
+  //
   const tournaments = ref([
     {
       id: 1,
@@ -213,6 +348,8 @@ export const useDataStore = defineStore('data', () => {
       contactPhone: '+998 90 123 45 67',
       isActive: true,
       image: null,
+      // Qatnashish qoidalari - bu oddiy turnir, hamma qatnashishi mumkin (qoidalar bo'sh)
+      participationRules: [],
       customFields: [
         { id: 1, name: 'Dasturlash tili', type: 'select', options: ['Python', 'C++', 'Java', 'JavaScript'], required: true },
         { id: 2, name: 'Tajriba darajasi', type: 'select', options: ['Boshlang\'ich', 'O\'rta', 'Yuqori'], required: true }
@@ -235,6 +372,7 @@ export const useDataStore = defineStore('data', () => {
       contactPhone: '+998 91 234 56 78',
       isActive: true,
       image: null,
+      participationRules: [], // Hamma qatnashishi mumkin
       customFields: [
         { id: 1, name: 'Pozitsiya', type: 'select', options: ['Darvozabon', 'Himoyachi', 'Yarim himoyachi', 'Hujumchi'], required: true },
         { id: 2, name: 'Jamoa nomi', type: 'text', required: true },
@@ -258,10 +396,106 @@ export const useDataStore = defineStore('data', () => {
       contactPhone: '+998 93 345 67 89',
       isActive: true,
       image: null,
+      participationRules: [], // Hamma qatnashishi mumkin
       customFields: [
         { id: 1, name: 'Ingliz tili darajasi', type: 'select', options: ['A1', 'A2', 'B1', 'B2', 'C1'], required: true },
         { id: 2, name: 'IELTS ball (agar mavjud)', type: 'text', required: false }
       ],
+      registrations: []
+    },
+    {
+      id: 4,
+      title: 'Bilimlar bellashuvi 2026',
+      description: 'Har bir yo\'nalish o\'z fanlaridan bellashadi. Yo\'nalishga qarab 1 yoki 2 ta fan tanlash mumkin.',
+      category: 'intellektual',
+      type: 'olimpiada',
+      startDate: '2026-03-10',
+      endDate: '2026-03-12',
+      registrationDeadline: '2026-03-05',
+      location: 'Bosh bino, barcha auditoriyalar',
+      maxParticipants: 500,
+      prize: 'Har bir fan bo\'yicha: 1-o\'rin: 1,500,000 so\'m, 2-o\'rin: 1,000,000 so\'m, 3-o\'rin: 500,000 so\'m',
+      organizer: 'O\'quv bo\'limi',
+      contactPhone: '+998 90 999 88 77',
+      isActive: true,
+      image: null,
+      // ===== QATNASHISH QOIDALARI =====
+      // Har bir yo'nalish uchun alohida qoida
+      participationRules: [
+        {
+          id: 1,
+          directionId: 1, // KI - Kompyuter injiniringi
+          allowedSubjectIds: [1], // Faqat Informatika
+          selectionMode: 'fixed', // Tanlov yo'q
+          minSelect: 1,
+          maxSelect: 1
+        },
+        {
+          id: 2,
+          directionId: 2, // DI - Dasturiy injiniring
+          allowedSubjectIds: [1], // Faqat Informatika
+          selectionMode: 'fixed',
+          minSelect: 1,
+          maxSelect: 1
+        },
+        {
+          id: 3,
+          directionId: 4, // TIB - Tibbiyot (MED)
+          allowedSubjectIds: [4, 5], // Kimyo va Biologiya
+          selectionMode: 'single', // 1 ta tanlash kerak
+          minSelect: 1,
+          maxSelect: 1
+        },
+        {
+          id: 4,
+          directionId: 5, // IQT - Iqtisodiyot
+          allowedSubjectIds: [2], // Faqat Matematika
+          selectionMode: 'fixed',
+          minSelect: 1,
+          maxSelect: 1
+        },
+        {
+          id: 5,
+          directionId: 6, // HUQ - Huquqshunoslik
+          allowedSubjectIds: [7], // Faqat Tarix
+          selectionMode: 'fixed',
+          minSelect: 1,
+          maxSelect: 1
+        },
+        {
+          id: 6,
+          directionId: 7, // FIL - Filologiya (Ingliz tili)
+          allowedSubjectIds: [6], // Faqat Ingliz tili
+          selectionMode: 'fixed',
+          minSelect: 1,
+          maxSelect: 1
+        },
+        {
+          id: 7,
+          directionId: 8, // FTO - Fizika-texnika
+          allowedSubjectIds: [3], // Faqat Fizika
+          selectionMode: 'fixed',
+          minSelect: 1,
+          maxSelect: 1
+        },
+        {
+          id: 8,
+          directionId: 9, // KIM - Kimyo
+          allowedSubjectIds: [4, 5], // Kimyo va Biologiya
+          selectionMode: 'multiple', // 1 yoki 2 ta tanlash mumkin
+          minSelect: 1,
+          maxSelect: 2
+        },
+        {
+          id: 9,
+          directionId: 10, // BIO - Biologiya
+          allowedSubjectIds: [5, 4], // Biologiya va Kimyo
+          selectionMode: 'multiple', // 1 yoki 2 ta tanlash mumkin
+          minSelect: 1,
+          maxSelect: 2
+        }
+      ],
+      customFields: [],
       registrations: []
     }
   ])
@@ -566,21 +800,179 @@ export const useDataStore = defineStore('data', () => {
     return tournaments.value.filter(t => t.isActive)
   })
 
+  // ========================================
+  // YANGI TURNIR MODELI HELPER FUNKSIYALARI
+  // ========================================
+
+  /**
+   * Yo'nalish uchun qatnashish qoidasini olish
+   * @param {number} tournamentId - Turnir ID
+   * @param {number} directionId - Yo'nalish ID
+   * @returns {Object|null} - Qatnashish qoidasi yoki null
+   */
+  const getParticipationRuleForDirection = (tournamentId, directionId) => {
+    const tournament = tournaments.value.find(t => t.id === tournamentId)
+    if (!tournament || !tournament.participationRules) return null
+    return tournament.participationRules.find(r => r.directionId === directionId) || null
+  }
+
+  /**
+   * Talaba uchun qatnashish qoidasini olish (groupId orqali)
+   * @param {number} tournamentId - Turnir ID
+   * @param {number} groupId - Guruh ID
+   * @returns {Object|null} - Qatnashish qoidasi yoki null
+   */
+  const getParticipationRuleForStudent = (tournamentId, groupId) => {
+    const direction = getDirectionByGroupId(groupId)
+    if (!direction) return null
+    return getParticipationRuleForDirection(tournamentId, direction.id)
+  }
+
+  /**
+   * Turnirda qatnashish qoidalari borligini tekshirish
+   * @param {number} tournamentId - Turnir ID
+   * @returns {boolean}
+   */
+  const hasParticipationRules = (tournamentId) => {
+    const tournament = tournaments.value.find(t => t.id === tournamentId)
+    return tournament?.participationRules?.length > 0
+  }
+
+  /**
+   * Ro'yxatdan o'tish validatsiyasi
+   * @param {number} tournamentId - Turnir ID
+   * @param {number} directionId - Yo'nalish ID
+   * @param {number[]} selectedSubjectIds - Tanlangan fanlar
+   * @returns {Object} - { valid: boolean, message: string }
+   */
+  const validateTournamentRegistration = (tournamentId, directionId, selectedSubjectIds) => {
+    const rule = getParticipationRuleForDirection(tournamentId, directionId)
+    
+    if (!rule) {
+      return { valid: false, message: 'Sizning yo\'nalishingiz bu turnirda qatnasha olmaydi' }
+    }
+
+    // Tanlangan fanlar ruxsat etilgan fanlar ichida ekanligini tekshirish
+    const invalidSubjects = selectedSubjectIds.filter(id => !rule.allowedSubjectIds.includes(id))
+    if (invalidSubjects.length > 0) {
+      return { valid: false, message: 'Tanlangan fanlardan ba\'zilari ruxsat etilmagan' }
+    }
+
+    // selectionMode bo'yicha tekshirish
+    switch (rule.selectionMode) {
+      case 'fixed':
+        // Fixed rejimda faqat bitta ruxsat etilgan fan bo'ladi va u avtomatik tanlanadi
+        if (selectedSubjectIds.length !== 1 || selectedSubjectIds[0] !== rule.allowedSubjectIds[0]) {
+          return { valid: false, message: 'Bu yo\'nalish uchun fan avtomatik belgilangan' }
+        }
+        break
+      
+      case 'single':
+        // Faqat bitta fan tanlash kerak
+        if (selectedSubjectIds.length !== 1) {
+          return { valid: false, message: 'Faqat bitta fan tanlashingiz kerak' }
+        }
+        break
+      
+      case 'multiple':
+        // Min va max chegaralarni tekshirish
+        if (selectedSubjectIds.length < rule.minSelect) {
+          return { valid: false, message: `Kamida ${rule.minSelect} ta fan tanlashingiz kerak` }
+        }
+        if (selectedSubjectIds.length > rule.maxSelect) {
+          return { valid: false, message: `Ko'pi bilan ${rule.maxSelect} ta fan tanlashingiz mumkin` }
+        }
+        break
+      
+      default:
+        return { valid: false, message: 'Noma\'lum tanlash rejimi' }
+    }
+
+    return { valid: true, message: 'Validatsiya muvaffaqiyatli' }
+  }
+
+  /**
+   * Turnirga ro'yxatdan o'tish (YANGI MODEL)
+   * @param {number} tournamentId - Turnir ID
+   * @param {Object} registration - Ro'yxatdan o'tish ma'lumotlari
+   *   - studentId: Talaba ID
+   *   - selectedSubjectIds: Tanlangan fanlar ro'yxati (agar qoidalar bo'lsa)
+   */
   const registerForTournament = (tournamentId, registration) => {
     const index = tournaments.value.findIndex(t => t.id === tournamentId)
-    if (index !== -1) {
-      const newId = tournaments.value[index].registrations.length > 0
-        ? Math.max(...tournaments.value[index].registrations.map(r => r.id)) + 1
-        : 1
-      tournaments.value[index].registrations.push({
-        id: newId,
-        ...registration,
-        registeredAt: new Date().toISOString(),
-        status: 'pending'
-      })
-      return true
+    if (index === -1) {
+      return { success: false, message: 'Turnir topilmadi' }
     }
-    return false
+
+    const tournament = tournaments.value[index]
+    const { studentId, selectedSubjectIds = [] } = registration
+
+    // Tekshirish: allaqachon ro'yxatdan o'tganmi?
+    if (tournament.registrations.some(r => r.studentId === studentId)) {
+      return { success: false, message: 'Siz allaqachon ro\'yxatdan o\'tgansiz' }
+    }
+
+    // Talabani topish
+    const student = students.value.find(s => s.id === studentId)
+    if (!student) {
+      return { success: false, message: 'Talaba topilmadi' }
+    }
+
+    // Talaba yo'nalishini aniqlash
+    const direction = getDirectionByGroupId(student.groupId)
+    
+    let finalSelectedSubjectIds = selectedSubjectIds
+    let selectedSubjectNames = []
+
+    // Qatnashish qoidalarini tekshirish (agar mavjud bo'lsa)
+    if (hasParticipationRules(tournamentId)) {
+      if (!direction) {
+        return { success: false, message: 'Talaba yo\'nalishi aniqlanmadi' }
+      }
+
+      const rule = getParticipationRuleForDirection(tournamentId, direction.id)
+      
+      if (!rule) {
+        return { success: false, message: 'Sizning yo\'nalishingiz bu turnirda qatnasha olmaydi' }
+      }
+
+      // Fixed rejimda avtomatik fan belgilash
+      if (rule.selectionMode === 'fixed') {
+        finalSelectedSubjectIds = [...rule.allowedSubjectIds]
+      }
+
+      // Validatsiya
+      const validation = validateTournamentRegistration(tournamentId, direction.id, finalSelectedSubjectIds)
+      if (!validation.valid) {
+        return { success: false, message: validation.message }
+      }
+    }
+
+    // Tanlangan fanlar nomlarini olish
+    if (finalSelectedSubjectIds.length > 0) {
+      selectedSubjectNames = finalSelectedSubjectIds.map(id => {
+        const subject = subjects.value.find(s => s.id === id)
+        return subject?.name || 'Noma\'lum'
+      })
+    }
+    
+    const newId = tournament.registrations.length > 0
+      ? Math.max(...tournament.registrations.map(r => r.id)) + 1
+      : 1
+
+    tournament.registrations.push({
+      id: newId,
+      studentId,
+      studentName: student.name,
+      directionId: direction?.id || null,
+      directionName: direction?.name || null,
+      selectedSubjectIds: finalSelectedSubjectIds,
+      selectedSubjectNames,
+      registeredAt: new Date().toISOString(),
+      status: 'pending'
+    })
+    
+    return { success: true, message: 'Muvaffaqiyatli ro\'yxatdan o\'tdingiz' }
   }
 
   const cancelRegistration = (tournamentId, registrationId) => {
@@ -626,6 +1018,108 @@ export const useDataStore = defineStore('data', () => {
     return result
   }
 
+  // Yo'nalish va Fan funksiyalari
+  const getDirectionById = (id) => {
+    return directions.value.find(d => d.id === id)
+  }
+
+  const getSubjectById = (id) => {
+    return subjects.value.find(s => s.id === id)
+  }
+
+  const getSubjectsByDirection = (directionId) => {
+    const link = directionSubjects.value.find(ds => ds.directionId === directionId)
+    if (link) {
+      return subjects.value.filter(s => link.subjectIds.includes(s.id))
+    }
+    return []
+  }
+
+  const getDirectionByGroupId = (groupId) => {
+    const group = groups.value.find(g => g.id === groupId)
+    if (group && group.directionId) {
+      return directions.value.find(d => d.id === group.directionId)
+    }
+    return null
+  }
+
+  const canStudentRegisterForSubject = (studentGroupId, subjectId) => {
+    const group = groups.value.find(g => g.id === studentGroupId)
+    if (!group || !group.directionId) return false
+    
+    const link = directionSubjects.value.find(ds => ds.directionId === group.directionId)
+    if (link) {
+      return link.subjectIds.includes(subjectId)
+    }
+    return false
+  }
+
+  const getAvailableSubjectsForStudent = (studentGroupId, tournamentSubjectIds) => {
+    const group = groups.value.find(g => g.id === studentGroupId)
+    if (!group || !group.directionId) return []
+    
+    const link = directionSubjects.value.find(ds => ds.directionId === group.directionId)
+    if (link) {
+      // Turnirdagi fanlar va talaba yo'nalishi fanlari kesishmasi
+      return subjects.value.filter(s => 
+        tournamentSubjectIds.includes(s.id) && link.subjectIds.includes(s.id)
+      )
+    }
+    return []
+  }
+
+  // Direction CRUD
+  const addDirection = (direction) => {
+    const newId = directions.value.length > 0 ? Math.max(...directions.value.map(d => d.id)) + 1 : 1
+    directions.value.push({ id: newId, ...direction, isActive: true })
+    return newId
+  }
+
+  const updateDirection = (id, data) => {
+    const index = directions.value.findIndex(d => d.id === id)
+    if (index !== -1) {
+      directions.value[index] = { ...directions.value[index], ...data }
+    }
+  }
+
+  const deleteDirection = (id) => {
+    const index = directions.value.findIndex(d => d.id === id)
+    if (index !== -1) {
+      directions.value.splice(index, 1)
+    }
+  }
+
+  // Subject CRUD
+  const addSubject = (subject) => {
+    const newId = subjects.value.length > 0 ? Math.max(...subjects.value.map(s => s.id)) + 1 : 1
+    subjects.value.push({ id: newId, ...subject, isActive: true })
+    return newId
+  }
+
+  const updateSubject = (id, data) => {
+    const index = subjects.value.findIndex(s => s.id === id)
+    if (index !== -1) {
+      subjects.value[index] = { ...subjects.value[index], ...data }
+    }
+  }
+
+  const deleteSubject = (id) => {
+    const index = subjects.value.findIndex(s => s.id === id)
+    if (index !== -1) {
+      subjects.value.splice(index, 1)
+    }
+  }
+
+  // Direction-Subject link
+  const updateDirectionSubjects = (directionId, subjectIds) => {
+    const index = directionSubjects.value.findIndex(ds => ds.directionId === directionId)
+    if (index !== -1) {
+      directionSubjects.value[index].subjectIds = subjectIds
+    } else {
+      directionSubjects.value.push({ directionId, subjectIds })
+    }
+  }
+
   return {
     groups,
     students,
@@ -635,6 +1129,9 @@ export const useDataStore = defineStore('data', () => {
     notifications,
     clubs,
     tournaments,
+    directions,
+    subjects,
+    directionSubjects,
     getStudentsByGroup,
     getScheduleByGroup,
     getAttendanceByStudent,
@@ -676,10 +1173,28 @@ export const useDataStore = defineStore('data', () => {
     deleteTournament,
     toggleTournamentStatus,
     getActiveTournaments,
+    // Yangi turnir helper funksiyalari
+    getParticipationRuleForDirection,
+    getParticipationRuleForStudent,
+    hasParticipationRules,
+    validateTournamentRegistration,
     registerForTournament,
     cancelRegistration,
     updateRegistrationStatus,
     isStudentRegistered,
-    getStudentRegistrations
+    getStudentRegistrations,
+    getDirectionById,
+    getSubjectById,
+    getSubjectsByDirection,
+    getDirectionByGroupId,
+    canStudentRegisterForSubject,
+    getAvailableSubjectsForStudent,
+    addDirection,
+    updateDirection,
+    deleteDirection,
+    addSubject,
+    updateSubject,
+    deleteSubject,
+    updateDirectionSubjects
   }
 })

@@ -237,23 +237,20 @@
 
                   <div>
                     <label class="block text-sm font-medium text-slate-700 mb-1">Kategoriya *</label>
-                    <select v-model="form.category" class="w-full px-4 py-2.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500">
-                      <option value="intellektual">🧠 Intellektual</option>
-                      <option value="sport">⚽ Sport</option>
-                      <option value="ijodiy">🎨 Ijodiy</option>
-                      <option value="ilmiy">🔬 Ilmiy</option>
-                    </select>
+                    <CustomSelect
+                      v-model="form.category"
+                      :options="categoryOptions"
+                      placeholder="Kategoriya tanlang"
+                    />
                   </div>
 
                   <div>
                     <label class="block text-sm font-medium text-slate-700 mb-1">Turi *</label>
-                    <select v-model="form.type" class="w-full px-4 py-2.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500">
-                      <option value="olimpiada">Olimpiada</option>
-                      <option value="chempionat">Chempionat</option>
-                      <option value="tanlov">Tanlov</option>
-                      <option value="festival">Festival</option>
-                      <option value="boshqa">Boshqa</option>
-                    </select>
+                    <CustomSelect
+                      v-model="form.type"
+                      :options="typeOptions"
+                      placeholder="Turi tanlang"
+                    />
                   </div>
 
                   <div class="md:col-span-2">
@@ -359,6 +356,187 @@
                 </div>
               </div>
 
+              <!-- Qatnashish qoidalari (YANGI MODEL) -->
+              <div class="space-y-4">
+                <div class="flex items-center justify-between">
+                  <h4 class="font-semibold text-slate-700 flex items-center gap-2">
+                    <BookOpen class="w-4 h-4" />
+                    Yo'nalishlar bo'yicha fan tanlash
+                  </h4>
+                  <button
+                    @click="addParticipationRule"
+                    class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-500 text-white text-sm rounded-lg font-medium hover:bg-emerald-600 transition-colors"
+                  >
+                    <Plus class="w-4 h-4" />
+                    Qo'shish
+                  </button>
+                </div>
+
+                <!-- Tushunarli izoh -->
+                <div class="flex items-start gap-3 p-3 bg-amber-50 rounded-lg border border-amber-200 text-sm text-amber-700">
+                  <AlertTriangle class="w-5 h-5 shrink-0 mt-0.5" />
+                  <span>Har bir yo'nalish talabalari qaysi fanlardan qatnashishini belgilang. 
+                  Qo'shilmasa — barcha yo'nalishlar erkin qatnashadi.</span>
+                </div>
+
+                <!-- Qoidalar ro'yxati -->
+                <div v-if="form.participationRules.length > 0" class="space-y-4">
+                  <div
+                    v-for="(rule, index) in form.participationRules"
+                    :key="rule.id || index"
+                    class="bg-white border-2 border-slate-200 rounded-2xl overflow-hidden hover:border-emerald-300 transition-colors"
+                  >
+                    <!-- Kartochka sarlavhasi -->
+                    <div class="flex items-center justify-between px-4 py-3 bg-slate-50 border-b border-slate-200">
+                      <div class="flex items-center gap-3">
+                        <span class="w-7 h-7 bg-emerald-500 text-white rounded-full flex items-center justify-center text-sm font-bold">
+                          {{ index + 1 }}
+                        </span>
+                        <CustomSelect
+                          v-model="rule.directionId"
+                          :options="getDirectionOptions(rule.directionId)"
+                          placeholder="Yo'nalish tanlang"
+                          size="sm"
+                          class="min-w-[220px]"
+                        />
+                      </div>
+                      <button
+                        @click="removeParticipationRule(index)"
+                        class="p-2 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-colors"
+                        title="O'chirish"
+                      >
+                        <Trash2 class="w-4 h-4" />
+                      </button>
+                    </div>
+
+                    <!-- Kartochka tanasi -->
+                    <div class="p-4 space-y-4">
+                      <!-- Tanlash turi -->
+                      <div>
+                        <label class="block text-xs font-medium text-slate-500 mb-2 uppercase tracking-wide">
+                          Talaba qanday tanlaydi?
+                        </label>
+                        <div class="grid grid-cols-3 gap-2">
+                          <label
+                            :class="[
+                              'flex flex-col items-center gap-2 p-3 rounded-xl border-2 cursor-pointer transition-all text-center',
+                              rule.selectionMode === 'fixed'
+                                ? 'border-blue-500 bg-blue-50 text-blue-700'
+                                : 'border-slate-200 hover:border-blue-300'
+                            ]"
+                          >
+                            <input type="radio" v-model="rule.selectionMode" value="fixed" class="sr-only" />
+                            <Lock :class="['w-6 h-6', rule.selectionMode === 'fixed' ? 'text-blue-500' : 'text-slate-400']" />
+                            <span class="text-xs font-medium">Avtomatik</span>
+                            <span class="text-[10px] text-slate-500">Tanlash yo'q</span>
+                          </label>
+                          <label
+                            :class="[
+                              'flex flex-col items-center gap-2 p-3 rounded-xl border-2 cursor-pointer transition-all text-center',
+                              rule.selectionMode === 'single'
+                                ? 'border-emerald-500 bg-emerald-50 text-emerald-700'
+                                : 'border-slate-200 hover:border-emerald-300'
+                            ]"
+                          >
+                            <input type="radio" v-model="rule.selectionMode" value="single" class="sr-only" />
+                            <MousePointer :class="['w-6 h-6', rule.selectionMode === 'single' ? 'text-emerald-500' : 'text-slate-400']" />
+                            <span class="text-xs font-medium">Bittasini</span>
+                            <span class="text-[10px] text-slate-500">1 ta tanlaydi</span>
+                          </label>
+                          <label
+                            :class="[
+                              'flex flex-col items-center gap-2 p-3 rounded-xl border-2 cursor-pointer transition-all text-center',
+                              rule.selectionMode === 'multiple'
+                                ? 'border-purple-500 bg-purple-50 text-purple-700'
+                                : 'border-slate-200 hover:border-purple-300'
+                            ]"
+                          >
+                            <input type="radio" v-model="rule.selectionMode" value="multiple" class="sr-only" />
+                            <List :class="['w-6 h-6', rule.selectionMode === 'multiple' ? 'text-purple-500' : 'text-slate-400']" />
+                            <span class="text-xs font-medium">Bir nechta</span>
+                            <span class="text-[10px] text-slate-500">Ko'p tanlaydi</span>
+                          </label>
+                        </div>
+                      </div>
+
+                      <!-- Fanlar tanlash -->
+                      <div>
+                        <label class="block text-xs font-medium text-slate-500 mb-2 uppercase tracking-wide">
+                          Qaysi fanlardan? 
+                          <span class="text-emerald-500 normal-case">({{ rule.allowedSubjectIds?.length || 0 }} ta)</span>
+                        </label>
+                        <div class="flex flex-wrap gap-2">
+                          <label
+                            v-for="subject in dataStore.subjects"
+                            :key="subject.id"
+                            :class="[
+                              'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border-2 cursor-pointer transition-all text-sm',
+                              rule.allowedSubjectIds?.includes(subject.id)
+                                ? 'border-emerald-500 bg-emerald-50 text-emerald-700'
+                                : 'border-slate-200 bg-white hover:border-emerald-300 text-slate-600'
+                            ]"
+                          >
+                            <input
+                              type="checkbox"
+                              :value="subject.id"
+                              v-model="rule.allowedSubjectIds"
+                              class="sr-only"
+                            />
+                            <BookOpen class="w-3.5 h-3.5" />
+                            <span>{{ subject.name }}</span>
+                            <Check v-if="rule.allowedSubjectIds?.includes(subject.id)" class="w-3.5 h-3.5" />
+                          </label>
+                        </div>
+                      </div>
+
+                      <!-- Multiple uchun min/max -->
+                      <div v-if="rule.selectionMode === 'multiple'" class="flex items-center gap-3 p-3 bg-purple-50 rounded-xl">
+                        <span class="text-sm text-purple-700">Talaba</span>
+                        <input
+                          v-model.number="rule.minSelect"
+                          type="number"
+                          min="1"
+                          class="w-14 px-2 py-1 text-center border border-purple-300 rounded-lg text-sm font-medium"
+                        />
+                        <span class="text-sm text-purple-700">dan</span>
+                        <input
+                          v-model.number="rule.maxSelect"
+                          type="number"
+                          :min="rule.minSelect || 1"
+                          class="w-14 px-2 py-1 text-center border border-purple-300 rounded-lg text-sm font-medium"
+                        />
+                        <span class="text-sm text-purple-700">gacha fan tanlaydi</span>
+                      </div>
+
+                      <!-- Natija preview -->
+                      <div class="p-3 bg-slate-100 rounded-xl text-sm text-slate-600">
+                        <strong class="text-slate-800">{{ getDirectionCode(rule.directionId) }}</strong> talabasi: 
+                        <span v-if="!rule.directionId" class="text-amber-600">Yo'nalish tanlanmagan</span>
+                        <span v-else-if="!rule.allowedSubjectIds?.length" class="text-amber-600">Fan tanlanmagan</span>
+                        <span v-else-if="rule.selectionMode === 'fixed'" class="text-blue-600">
+                          {{ getFirstSubjectName(rule.allowedSubjectIds) }} fanidan qatnashadi (avtomatik)
+                        </span>
+                        <span v-else-if="rule.selectionMode === 'single'" class="text-emerald-600">
+                          {{ rule.allowedSubjectIds.length }} fandan bittasini tanlaydi
+                        </span>
+                        <span v-else class="text-purple-600">
+                          {{ rule.allowedSubjectIds.length }} fandan {{ rule.minSelect }}-{{ rule.maxSelect }} tasini tanlaydi
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Bo'sh holat -->
+                <div v-else class="p-8 bg-slate-50 rounded-2xl text-center border-2 border-dashed border-slate-200">
+                  <GraduationCap class="w-12 h-12 mx-auto text-slate-300 mb-3" />
+                  <p class="text-slate-600 font-medium">Hozircha barcha yo'nalishlar qatnashadi</p>
+                  <p class="text-sm text-slate-400 mt-1">
+                    Faqat ma'lum yo'nalishlar qatnashishi kerak bo'lsa, yuqoridagi "Qo'shish" tugmasini bosing
+                  </p>
+                </div>
+              </div>
+
               <!-- Custom fields -->
               <div class="space-y-4">
                 <div class="flex items-center justify-between">
@@ -379,7 +557,7 @@
                   <!-- Default fields info -->
                   <div class="p-3 bg-slate-50 rounded-xl text-sm text-slate-600">
                     <p class="font-medium mb-1">Standart maydonlar (avtomatik):</p>
-                    <p class="text-slate-500">Ism, Familiya, Telefon, Guruh, Izoh</p>
+                    <p class="text-slate-500">Ism, Familiya, Telefon, Guruh, Izoh{{ form.isSubjectBased ? ', Fan' : '' }}</p>
                   </div>
 
                   <!-- Custom fields list -->
@@ -410,15 +588,12 @@
                       </div>
                       <div>
                         <label class="block text-xs text-slate-500 mb-1">Turi</label>
-                        <select
+                        <CustomSelect
                           v-model="field.type"
-                          class="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500"
-                        >
-                          <option value="text">Matn</option>
-                          <option value="number">Raqam</option>
-                          <option value="select">Tanlash</option>
-                          <option value="textarea">Katta matn</option>
-                        </select>
+                          :options="fieldTypeOptions"
+                          placeholder="Turi"
+                          size="sm"
+                        />
                       </div>
                       <div class="flex items-end">
                         <label class="flex items-center gap-2 cursor-pointer">
@@ -645,8 +820,11 @@ import { useToastStore } from '../../stores/toast'
 import {
   Plus, Trophy, Users, Calendar, MapPin, Clock, Pencil, Trash2, Power, X,
   FileText, Gift, ListPlus, ClipboardList, Check, AlertTriangle, Zap,
-  Brain, Dumbbell, Palette, FlaskConical
+  Brain, Dumbbell, Palette, FlaskConical, BookOpen, ChevronDown,
+  Award, Star, PartyPopper, FileQuestion, Type, Hash, List, AlignLeft,
+  Lock, MousePointer, Pointer, GraduationCap
 } from 'lucide-vue-next'
+import CustomSelect from '../../components/ui/CustomSelect.vue'
 
 const dataStore = useDataStore()
 const toast = useToastStore()
@@ -659,6 +837,7 @@ const selectedCategory = ref('all')
 const selectedTournament = ref(null)
 const tournamentToDelete = ref(null)
 const expandedReg = ref(null)
+const activeSubjectDropdown = ref(null) // Fan dropdown uchun
 
 const categories = [
   { value: 'all', label: 'Barchasi', icon: Trophy },
@@ -668,11 +847,36 @@ const categories = [
   { value: 'ilmiy', label: 'Ilmiy', icon: FlaskConical }
 ]
 
+// CustomSelect uchun options (Lucide icons)
+const categoryOptions = [
+  { value: 'intellektual', label: 'Intellektual', icon: Brain },
+  { value: 'sport', label: 'Sport', icon: Dumbbell },
+  { value: 'ijodiy', label: 'Ijodiy', icon: Palette },
+  { value: 'ilmiy', label: 'Ilmiy', icon: FlaskConical }
+]
+
+const typeOptions = [
+  { value: 'olimpiada', label: 'Olimpiada', icon: Trophy },
+  { value: 'chempionat', label: 'Chempionat', icon: Award },
+  { value: 'tanlov', label: 'Tanlov', icon: Star },
+  { value: 'festival', label: 'Festival', icon: PartyPopper },
+  { value: 'boshqa', label: 'Boshqa', icon: FileQuestion }
+]
+
+const fieldTypeOptions = [
+  { value: 'text', label: 'Matn', icon: Type },
+  { value: 'number', label: 'Raqam', icon: Hash },
+  { value: 'select', label: 'Tanlash', icon: List },
+  { value: 'textarea', label: 'Katta matn', icon: AlignLeft }
+]
+
 const defaultForm = {
   title: '',
   description: '',
   category: 'intellektual',
   type: 'olimpiada',
+  // YANGI MODEL: participationRules o'rniga isSubjectBased va subjectIds
+  participationRules: [],
   startDate: '',
   endDate: '',
   registrationDeadline: '',
@@ -685,6 +889,90 @@ const defaultForm = {
 }
 
 const form = ref({ ...defaultForm })
+
+// Barcha fanlarni olish
+const subjects = computed(() => dataStore.subjects.filter(s => s.isActive))
+
+// ==========================================
+// YANGI MODEL FUNKSIYALARI
+// ==========================================
+
+// Qatnashish qoidasi qo'shish
+const addParticipationRule = () => {
+  const newId = Date.now()
+  form.value.participationRules.push({
+    id: newId,
+    directionId: null,
+    allowedSubjectIds: [],
+    selectionMode: 'single',
+    minSelect: 1,
+    maxSelect: 1
+  })
+}
+
+// Qatnashish qoidasini o'chirish
+const removeParticipationRule = (index) => {
+  form.value.participationRules.splice(index, 1)
+}
+
+// Mavjud (tanlangan bo'lmagan) yo'nalishlarni olish
+const getAvailableDirections = (currentDirectionId) => {
+  const usedDirectionIds = form.value.participationRules
+    .map(r => r.directionId)
+    .filter(id => id !== null && id !== currentDirectionId)
+  
+  return dataStore.directions.filter(d => 
+    d.isActive && !usedDirectionIds.includes(d.id)
+  )
+}
+
+// Yo'nalish options generatori (CustomSelect uchun)
+const getDirectionOptions = (currentDirectionId) => {
+  const availableDirections = getAvailableDirections(currentDirectionId)
+  return availableDirections.map(dir => ({
+    value: dir.id,
+    label: `${dir.code} - ${dir.name}`,
+    icon: GraduationCap
+  }))
+}
+
+// Yo'nalish nomini olish
+const getDirectionName = (directionId) => {
+  if (!directionId) return 'Tanlanmagan'
+  const direction = dataStore.getDirectionById(directionId)
+  return direction ? `${direction.code} - ${direction.name}` : 'Noma\'lum'
+}
+
+// Birinchi fan nomini olish (fixed rejim uchun)
+const getFirstSubjectName = (subjectIds) => {
+  if (!subjectIds || subjectIds.length === 0) return 'Tanlanmagan'
+  const subject = dataStore.getSubjectById(subjectIds[0])
+  return subject?.name || 'Noma\'lum'
+}
+
+// Fan nomini olish
+const getSubjectName = (subjectId) => {
+  const subject = dataStore.getSubjectById(subjectId)
+  return subject?.name || ''
+}
+
+// Yo'nalish kodini olish
+const getDirectionCode = (directionId) => {
+  if (!directionId) return '—'
+  const direction = dataStore.getDirectionById(directionId)
+  return direction?.code || '—'
+}
+
+// Fan dropdown toggle
+const toggleSubjectDropdown = (index) => {
+  activeSubjectDropdown.value = activeSubjectDropdown.value === index ? null : index
+}
+
+// Modal yopilganda dropdown ham yopilsin
+const closeModal = () => {
+  showModal.value = false
+  activeSubjectDropdown.value = null
+}
 
 const filteredTournaments = computed(() => {
   if (selectedCategory.value === 'all') {
@@ -754,7 +1042,11 @@ const isDeadlinePassed = (deadline) => {
 
 const openCreateModal = () => {
   isEditing.value = false
-  form.value = { ...defaultForm, customFields: [] }
+  form.value = { 
+    ...defaultForm, 
+    customFields: [], 
+    participationRules: [] // YANGI MODEL
+  }
   showModal.value = true
 }
 
@@ -762,16 +1054,19 @@ const editTournament = (tournament) => {
   isEditing.value = true
   form.value = {
     ...tournament,
-    customFields: tournament.customFields.map(f => ({
+    // YANGI MODEL: participationRules ni ko'chirish
+    participationRules: tournament.participationRules 
+      ? tournament.participationRules.map(r => ({
+          ...r,
+          allowedSubjectIds: r.allowedSubjectIds || []
+        }))
+      : [],
+    customFields: (tournament.customFields || []).map(f => ({
       ...f,
       optionsText: f.options ? f.options.join(', ') : ''
     }))
   }
   showModal.value = true
-}
-
-const closeModal = () => {
-  showModal.value = false
 }
 
 const addCustomField = () => {
@@ -799,8 +1094,43 @@ const saveTournament = () => {
     return
   }
 
+  // YANGI MODEL: Qatnashish qoidalarini validatsiya qilish
+  for (const rule of form.value.participationRules) {
+    if (!rule.directionId) {
+      toast.error('Barcha qoidalar uchun yo\'nalish tanlang')
+      return
+    }
+    if (!rule.allowedSubjectIds || rule.allowedSubjectIds.length === 0) {
+      toast.error('Barcha qoidalar uchun kamida bitta fan tanlang')
+      return
+    }
+    if (rule.selectionMode === 'fixed' && rule.allowedSubjectIds.length > 1) {
+      toast.error('Fixed rejimda faqat bitta fan tanlanishi kerak')
+      return
+    }
+    if (rule.selectionMode === 'multiple') {
+      if (rule.minSelect < 1) {
+        toast.error('Minimum tanlash 1 dan kam bo\'lishi mumkin emas')
+        return
+      }
+      if (rule.maxSelect < rule.minSelect) {
+        toast.error('Maximum tanlash minimum dan kam bo\'lishi mumkin emas')
+        return
+      }
+    }
+  }
+
   const data = {
     ...form.value,
+    // YANGI MODEL
+    participationRules: form.value.participationRules.map(r => ({
+      id: r.id,
+      directionId: r.directionId,
+      allowedSubjectIds: r.allowedSubjectIds,
+      selectionMode: r.selectionMode,
+      minSelect: r.selectionMode === 'multiple' ? r.minSelect : 1,
+      maxSelect: r.selectionMode === 'multiple' ? r.maxSelect : 1
+    })),
     customFields: form.value.customFields.map(f => ({
       id: f.id,
       name: f.name,
@@ -864,5 +1194,45 @@ const updateStatus = (tournamentId, regId, status) => {
 .modal-enter-from .relative,
 .modal-leave-to .relative {
   transform: scale(0.95) translateY(10px);
+}
+
+/* Custom Select Styling */
+.custom-select {
+  @apply w-full pl-4 pr-10 py-3 text-sm font-medium text-slate-700 
+         bg-gradient-to-b from-white to-slate-50 
+         border-2 border-slate-200 rounded-xl 
+         appearance-none cursor-pointer
+         transition-all duration-200 ease-out
+         hover:border-emerald-400 hover:shadow-md hover:shadow-emerald-100
+         focus:outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10;
+}
+
+.custom-select-sm {
+  @apply py-2 pl-3 pr-9 text-sm rounded-lg;
+}
+
+.custom-select option {
+  @apply py-3 px-4 text-slate-700 bg-white;
+}
+
+.custom-select option:checked {
+  @apply bg-emerald-50 text-emerald-700;
+}
+
+.custom-select option:hover {
+  @apply bg-emerald-50;
+}
+
+.select-icon {
+  @apply absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 pointer-events-none
+         transition-transform duration-200;
+}
+
+.custom-select:focus + .select-icon {
+  @apply text-emerald-500 rotate-180;
+}
+
+.custom-select:hover + .select-icon {
+  @apply text-emerald-400;
 }
 </style>

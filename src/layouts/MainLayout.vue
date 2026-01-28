@@ -418,7 +418,8 @@ const menuSections = computed(() => {
         { path: '/admin/groups', label: 'Guruhlar', icon: markRaw(Building2) },
         { path: '/admin/users', label: 'Foydalanuvchilar', icon: markRaw(Shield) },
         { path: '/admin/clubs', label: "To'garaklar", icon: markRaw(Palette) },
-        { path: '/admin/tournaments', label: "Turnirlar", icon: markRaw(Trophy) }
+        { path: '/admin/tournaments', label: "Turnirlar", icon: markRaw(Trophy) },
+        { path: '/admin/subjects', label: "Fanlar", icon: markRaw(BookOpen) }
       ]
     })
     sections.push({

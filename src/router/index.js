@@ -1,3 +1,35 @@
+/**
+ * ============================================
+ * UNI CONTROL - Vue Router Configuration
+ * ============================================
+ * 
+ * Bu fayl barcha route'lar va navigation guards'ni o'z ichiga oladi.
+ * 
+ * ROUTE TUZILISHI:
+ * ----------------
+ * '/'           -> '/login' ga redirect
+ * '/login'      -> LoginView (guest only)
+ * '/student/*'  -> Talaba sahifalari (role: student)
+ * '/leader/*'   -> Sardor sahifalari (role: leader)
+ * '/admin/*'    -> Admin sahifalari (role: admin)
+ * '/super/*'    -> Super admin sahifalari (role: superadmin)
+ * 
+ * META MA'LUMOTLARI:
+ * ------------------
+ * - requiresAuth: true  -> Faqat login qilgan foydalanuvchilar
+ * - guest: true         -> Faqat login qilmagan foydalanuvchilar
+ * - role: 'student'     -> Faqat shu rol kirishi mumkin
+ * 
+ * NAVIGATION GUARDS:
+ * ------------------
+ * router.beforeEach() - har bir sahifaga o'tishdan oldin tekshiradi:
+ * 1. Autentifikatsiya (login qilinganmi?)
+ * 2. Rol huquqlari (shu sahifaga kirish mumkinmi?)
+ * 3. Guest sahifalar (login bo'lsa redirect)
+ * 
+ * MUHIM: SuperAdmin barcha sahifalarga kira oladi!
+ */
+
 import { createRouter, createWebHistory } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
 
@@ -38,6 +70,7 @@ import AdminReports from '../views/admin/ReportsView.vue'
 import AdminNotifications from '../views/admin/NotificationsView.vue'
 import AdminClubs from '../views/admin/ClubsView.vue'
 import AdminTournaments from '../views/admin/TournamentsView.vue'
+import AdminSubjects from '../views/admin/SubjectsView.vue'
 
 // Super Admin views
 import SuperDashboard from '../views/super/DashboardView.vue'
@@ -115,6 +148,7 @@ const routes = [
       { path: 'notifications', name: 'admin-notifications', component: AdminNotifications },
       { path: 'clubs', name: 'admin-clubs', component: AdminClubs },
       { path: 'tournaments', name: 'admin-tournaments', component: AdminTournaments },
+      { path: 'subjects', name: 'admin-subjects', component: AdminSubjects },
       { path: 'profile', name: 'admin-profile', component: StudentProfile },
       { path: 'settings', name: 'admin-settings', component: StudentSettings },
       { path: 'help', name: 'admin-help', component: StudentHelp }

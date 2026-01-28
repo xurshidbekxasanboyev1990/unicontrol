@@ -1,11 +1,50 @@
+/**
+ * ============================================
+ * UNI CONTROL - Autentifikatsiya Store
+ * ============================================
+ * 
+ * Bu store foydalanuvchi autentifikatsiyasini boshqaradi.
+ * 
+ * STATE:
+ * ------
+ * - user: Joriy foydalanuvchi ma'lumotlari (null = login qilinmagan)
+ * - isAuthenticated: Login holatini ko'rsatadi
+ * - loginError: Login xatosi ('blocked' = guruh bloklangan)
+ * - adminUsers: Admin va SuperAdmin foydalanuvchilar ro'yxati
+ * 
+ * COMPUTED (GETTERS):
+ * -------------------
+ * - isStudent, isLeader, isAdmin, isSuperAdmin: Rol tekshirish
+ * - canManageStudents: ['leader', 'admin', 'superadmin']
+ * - canManageGroups: ['admin', 'superadmin']
+ * - canSendNotifications: faqat SuperAdmin
+ * 
+ * ACTIONS:
+ * --------
+ * - login(credentials): Tizimga kirish
+ *   1. Avval adminUsers ichidan qidiradi
+ *   2. Topilmasa, dataStore.students ichidan qidiradi
+ *   3. Guruh holatini tekshiradi (isActive)
+ *   4. localStorage'ga saqlaydi
+ * 
+ * - logout(): Tizimdan chiqish, localStorage tozalash
+ * - checkAuth(): Sahifa yuklanganda localStorage'dan auth tekshirish
+ * - updateProfile(): Profil ma'lumotlarini yangilash (telefon, manzil, transport)
+ * - refreshUserRole(): Sardor tayinlanganda rolni yangilash
+ * 
+ * MUHIM: Talaba login qilganda guruh holati tekshiriladi!
+ * Agar guruh bloklangan bo'lsa (isActive = false), login rad etiladi.
+ */
+
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { useDataStore } from './data'
 
 export const useAuthStore = defineStore('auth', () => {
-  const user = ref(null)
-  const isAuthenticated = ref(false)
-  const loginError = ref(null)
+  // ===== STATE =====
+  const user = ref(null)                    // Joriy foydalanuvchi
+  const isAuthenticated = ref(false)        // Login holatimi?
+  const loginError = ref(null)              // Xato turi: 'blocked' | null
 
   // Rol turlari: 'student', 'leader', 'admin', 'superadmin'
   const roles = {
