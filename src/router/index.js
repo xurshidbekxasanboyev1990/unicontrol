@@ -34,6 +34,7 @@ import { createRouter, createWebHistory } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
 
 // Views
+import LandingView from '../views/LandingView.vue'
 import LoginView from '../views/LoginView.vue'
 import MainLayout from '../layouts/MainLayout.vue'
 
@@ -81,7 +82,9 @@ import SuperLogs from '../views/super/LogsView.vue'
 const routes = [
   {
     path: '/',
-    redirect: '/login'
+    name: 'landing',
+    component: LandingView,
+    meta: { guest: true }
   },
   {
     path: '/login',
