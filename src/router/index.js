@@ -17,6 +17,7 @@ import StudentSettings from '../views/student/SettingsView.vue'
 import StudentHelp from '../views/student/HelpView.vue'
 import StudentClubs from '../views/student/ClubsView.vue'
 import StudentCanteen from '../views/student/CanteenView.vue'
+import StudentTournaments from '../views/student/TournamentsView.vue'
 
 // Leader views
 import LeaderDashboard from '../views/leader/DashboardView.vue'
@@ -36,6 +37,7 @@ import AdminUsers from '../views/admin/UsersView.vue'
 import AdminReports from '../views/admin/ReportsView.vue'
 import AdminNotifications from '../views/admin/NotificationsView.vue'
 import AdminClubs from '../views/admin/ClubsView.vue'
+import AdminTournaments from '../views/admin/TournamentsView.vue'
 
 // Super Admin views
 import SuperDashboard from '../views/super/DashboardView.vue'
@@ -72,7 +74,8 @@ const routes = [
       { path: 'settings', name: 'student-settings', component: StudentSettings },
       { path: 'help', name: 'student-help', component: StudentHelp },
       { path: 'clubs', name: 'student-clubs', component: StudentClubs },
-      { path: 'canteen', name: 'student-canteen', component: StudentCanteen }
+      { path: 'canteen', name: 'student-canteen', component: StudentCanteen },
+      { path: 'tournaments', name: 'student-tournaments', component: StudentTournaments }
     ]
   },
 
@@ -111,6 +114,7 @@ const routes = [
       { path: 'reports', name: 'admin-reports', component: AdminReports },
       { path: 'notifications', name: 'admin-notifications', component: AdminNotifications },
       { path: 'clubs', name: 'admin-clubs', component: AdminClubs },
+      { path: 'tournaments', name: 'admin-tournaments', component: AdminTournaments },
       { path: 'profile', name: 'admin-profile', component: StudentProfile },
       { path: 'settings', name: 'admin-settings', component: StudentSettings },
       { path: 'help', name: 'admin-help', component: StudentHelp }
