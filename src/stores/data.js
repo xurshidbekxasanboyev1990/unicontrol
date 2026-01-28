@@ -207,6 +207,62 @@ export const useDataStore = defineStore('data', () => {
     { id: 1, title: 'Tizimga xush kelibsiz!', message: 'Uni Control tizimiga muvaffaqiyatli kirdingiz.', date: '2024-01-22', read: false },
   ])
 
+  // To'garaklar (Repititorlar)
+  const clubs = ref([
+    { 
+      id: 1, 
+      name: 'Matematika to\'garagi', 
+      teacher: 'Karimov Aziz Shavkatovich',
+      phone: '+998 90 111 22 33',
+      description: 'Oliy matematika, chiziqli algebra va matematik analiz bo\'yicha qo\'shimcha darslar',
+      schedule: 'Dushanba, Chorshanba - 16:00',
+      price: 200000,
+      room: 'A-301',
+      isActive: true,
+      category: 'fan',
+      image: null
+    },
+    { 
+      id: 2, 
+      name: 'Ingliz tili kursi', 
+      teacher: 'Johnson Michael',
+      phone: '+998 91 222 33 44',
+      description: 'IELTS tayyorgarlik kursi. Speaking, Writing, Reading, Listening',
+      schedule: 'Seshanba, Payshanba - 15:00',
+      price: 350000,
+      room: 'B-205',
+      isActive: true,
+      category: 'til',
+      image: null
+    },
+    { 
+      id: 3, 
+      name: 'Dasturlash kursi', 
+      teacher: 'Toshmatov Islom',
+      phone: '+998 93 333 44 55',
+      description: 'Python, JavaScript va Web dasturlash asoslari',
+      schedule: 'Shanba - 10:00',
+      price: 400000,
+      room: 'Kompyuter xonasi',
+      isActive: true,
+      category: 'texnik',
+      image: null
+    },
+    { 
+      id: 4, 
+      name: 'Fizika to\'garagi', 
+      teacher: 'Rahimov Sardor',
+      phone: '+998 94 444 55 66',
+      description: 'Mexanika, Elektrodinamika va Optika bo\'yicha tayyorgarlik',
+      schedule: 'Juma - 14:00',
+      price: 180000,
+      room: 'C-102',
+      isActive: false,
+      category: 'fan',
+      image: null
+    }
+  ])
+
   // Computed
   const getStudentsByGroup = computed(() => (groupId) => {
     return students.value.filter(s => s.groupId === groupId)
@@ -504,6 +560,37 @@ export const useDataStore = defineStore('data', () => {
     }
   })
 
+  // To'garaklar CRUD
+  const addClub = (club) => {
+    const newId = clubs.value.length > 0 ? Math.max(...clubs.value.map(c => c.id)) + 1 : 1
+    clubs.value.push({ ...club, id: newId, isActive: true })
+  }
+
+  const updateClub = (id, updates) => {
+    const index = clubs.value.findIndex(c => c.id === id)
+    if (index !== -1) {
+      clubs.value[index] = { ...clubs.value[index], ...updates }
+    }
+  }
+
+  const deleteClub = (id) => {
+    const index = clubs.value.findIndex(c => c.id === id)
+    if (index !== -1) {
+      clubs.value.splice(index, 1)
+    }
+  }
+
+  const toggleClubStatus = (id) => {
+    const index = clubs.value.findIndex(c => c.id === id)
+    if (index !== -1) {
+      clubs.value[index].isActive = !clubs.value[index].isActive
+    }
+  }
+
+  const getActiveClubs = computed(() => {
+    return clubs.value.filter(c => c.isActive)
+  })
+
   return {
     groups,
     students,
@@ -511,6 +598,7 @@ export const useDataStore = defineStore('data', () => {
     attendanceRecords,
     reports,
     notifications,
+    clubs,
     getStudentsByGroup,
     getScheduleByGroup,
     getAttendanceByStudent,
@@ -541,6 +629,11 @@ export const useDataStore = defineStore('data', () => {
     deleteNotification,
     sendNotification,
     importStudentsFromExcel,
-    getStatistics
+    getStatistics,
+    addClub,
+    updateClub,
+    deleteClub,
+    toggleClubStatus,
+    getActiveClubs
   }
 })
