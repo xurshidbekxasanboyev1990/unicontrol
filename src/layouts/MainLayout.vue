@@ -275,7 +275,10 @@ import {
   BookOpen,
   Brain,
   Home,
-  User
+  User,
+  Palette,
+  UtensilsCrossed,
+  Trophy
 } from 'lucide-vue-next'
 
 const router = useRouter()
@@ -306,6 +309,8 @@ const currentPageTitle = computed(() => {
     'student-notifications': 'Bildirishnomalar',
     'student-settings': 'Sozlamalar',
     'student-help': 'Yordam',
+    'student-clubs': "To'garaklar",
+    'student-canteen': 'Oshxona menyusi',
     'leader-dashboard': 'Boshqaruv paneli',
     'leader-attendance': 'Davomat olish',
     'leader-students': 'Talabalar',
@@ -323,6 +328,8 @@ const currentPageTitle = computed(() => {
     'admin-reports': 'Hisobotlar',
     'admin-notifications': 'Bildirishnomalar',
     'admin-users': 'Foydalanuvchilar',
+    'admin-clubs': "To'garaklar",
+    'admin-tournaments': "Turnirlar",
     'admin-profile': 'Profil',
     'admin-settings': 'Sozlamalar',
     'admin-help': 'Yordam',
@@ -357,6 +364,9 @@ const menuSections = computed(() => {
       items: [
         { path: '/student/library', label: 'Kutubxona', icon: markRaw(BookOpen) },
         { path: '/student/ai-analysis', label: 'AI Tahlil', icon: markRaw(Brain) },
+        { path: '/student/clubs', label: "To'garaklar", icon: markRaw(Palette) },
+        { path: '/student/tournaments', label: "Turnirlar", icon: markRaw(Trophy) },
+        { path: '/student/canteen', label: 'Oshxona', icon: markRaw(UtensilsCrossed) },
         { path: '/student/notifications', label: 'Bildirishnomalar', icon: markRaw(Bell), badge: '3' }
       ]
     })
@@ -406,7 +416,9 @@ const menuSections = computed(() => {
         { path: '/admin/dashboard', label: 'Dashboard', icon: markRaw(LayoutDashboard) },
         { path: '/admin/students', label: 'Talabalar', icon: markRaw(Users) },
         { path: '/admin/groups', label: 'Guruhlar', icon: markRaw(Building2) },
-        { path: '/admin/users', label: 'Foydalanuvchilar', icon: markRaw(Shield) }
+        { path: '/admin/users', label: 'Foydalanuvchilar', icon: markRaw(Shield) },
+        { path: '/admin/clubs', label: "To'garaklar", icon: markRaw(Palette) },
+        { path: '/admin/tournaments', label: "Turnirlar", icon: markRaw(Trophy) }
       ]
     })
     sections.push({

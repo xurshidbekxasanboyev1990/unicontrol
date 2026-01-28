@@ -101,98 +101,30 @@ export const useDataStore = defineStore('data', () => {
       avatar: null,
       email: 'ulugbek@uni.uz',
       password: '123456'
-    },
-    {
-      id: 6,
-      studentId: 'ST-2024-006',
-      name: 'Normatov Amir',
-      phone: '+998 95 678 90 12',
-      address: 'Toshkent sh., Yakkasaroy tumani',
-      commute: 'Metro',
-      groupId: 2,
-      group: 'DI_25-21',
-      contractPaid: 18411000,
-      passport: 'AF 6789012',
-      jshshir: '67890123456789',
-      birthDate: '14.02.2003',
-      role: 'student',
-      avatar: null,
-      email: 'amir@uni.uz',
-      password: '123456'
-    },
-    {
-      id: 7,
-      studentId: 'ST-2024-007',
-      name: 'Qodirov Shoxrux',
-      phone: '+998 96 789 01 23',
-      address: 'Toshkent sh., Bektemir tumani',
-      commute: 'Avtobus #12',
-      groupId: 2,
-      group: 'DI_25-21',
-      contractPaid: 14000000,
-      passport: 'AG 7890123',
-      jshshir: '78901234567890',
-      birthDate: '03.09.2004',
-      role: 'student',
-      avatar: null,
-      email: 'shoxrux@uni.uz',
-      password: '123456'
-    },
-    {
-      id: 8,
-      studentId: 'ST-2024-008',
-      name: 'Yusupova Nilufar',
-      phone: '+998 97 890 12 34',
-      address: 'Toshkent sh., Shayxontohur tumani',
-      commute: 'Piyoda',
-      groupId: 3,
-      group: 'FTO_24-03',
-      contractPaid: 16500000,
-      passport: 'AH 8901234',
-      jshshir: '89012345678901',
-      birthDate: '19.12.2003',
-      role: 'student',
-      avatar: null,
-      email: 'nilufar@uni.uz',
-      password: '123456'
     }
   ])
 
   // Dars jadvali
   const schedule = ref([
-    { id: 1, day: 'Dushanba', time: '08:30-09:50', subject: 'Matematika', teacher: 'Karimov A.', room: 'A-401', groupId: 1 },
-    { id: 2, day: 'Dushanba', time: '10:00-11:20', subject: 'Dasturlash', teacher: 'Toshmatov I.', room: 'B-302', groupId: 1 },
-    { id: 3, day: 'Dushanba', time: '11:30-12:50', subject: 'Fizika', teacher: 'Raximov S.', room: 'C-201', groupId: 1 },
-    { id: 4, day: 'Seshanba', time: '08:30-09:50', subject: 'Ingliz tili', teacher: 'Johnson M.', room: 'D-105', groupId: 1 },
-    { id: 5, day: 'Seshanba', time: '10:00-11:20', subject: 'Algoritm', teacher: 'Karimov A.', room: 'A-401', groupId: 1 },
-    { id: 6, day: 'Chorshanba', time: '08:30-09:50', subject: 'Ma\'lumotlar bazasi', teacher: 'Normatov U.', room: 'B-302', groupId: 1 },
-    { id: 7, day: 'Chorshanba', time: '10:00-11:20', subject: 'Web dasturlash', teacher: 'Toshmatov I.', room: 'B-303', groupId: 1 },
-    { id: 8, day: 'Payshanba', time: '08:30-09:50', subject: 'Matematika', teacher: 'Karimov A.', room: 'A-401', groupId: 1 },
-    { id: 9, day: 'Payshanba', time: '10:00-11:20', subject: 'Jismoniy tarbiya', teacher: 'Salimov B.', room: 'Sport zal', groupId: 1 },
-    { id: 10, day: 'Juma', time: '08:30-09:50', subject: 'Dasturlash', teacher: 'Toshmatov I.', room: 'B-302', groupId: 1 },
-    { id: 11, day: 'Juma', time: '10:00-11:20', subject: 'Falsafa', teacher: 'Xolmatov R.', room: 'C-401', groupId: 1 },
+    { id: 1, groupId: 1, day: 'Dushanba', time: '08:30-10:00', subject: 'Oliy matematika', teacher: 'Karimov A.', room: 'A-301', type: 'Ma\'ruza' },
+    { id: 2, groupId: 1, day: 'Dushanba', time: '10:10-11:40', subject: 'Fizika', teacher: 'Saidov B.', room: 'B-205', type: 'Amaliy' },
+    { id: 3, groupId: 1, day: 'Dushanba', time: '12:30-14:00', subject: 'Dasturlash', teacher: 'Toshmatov I.', room: 'Kompyuter xonasi', type: 'Laboratoriya' },
+    { id: 4, groupId: 1, day: 'Seshanba', time: '08:30-10:00', subject: 'Ingliz tili', teacher: 'Johnson M.', room: 'C-102', type: 'Amaliy' },
+    { id: 5, groupId: 1, day: 'Seshanba', time: '10:10-11:40', subject: 'Oliy matematika', teacher: 'Karimov A.', room: 'A-301', type: 'Amaliy' },
+    { id: 6, groupId: 1, day: 'Chorshanba', time: '08:30-10:00', subject: 'Fizika', teacher: 'Saidov B.', room: 'Fizika laboratoriyasi', type: 'Laboratoriya' },
+    { id: 7, groupId: 1, day: 'Chorshanba', time: '10:10-11:40', subject: 'Falsafa', teacher: 'Rahmonov S.', room: 'D-401', type: 'Ma\'ruza' },
+    { id: 8, groupId: 1, day: 'Payshanba', time: '08:30-10:00', subject: 'Dasturlash', teacher: 'Toshmatov I.', room: 'Kompyuter xonasi', type: 'Ma\'ruza' },
+    { id: 9, groupId: 1, day: 'Payshanba', time: '10:10-11:40', subject: 'Chiziqli algebra', teacher: 'Karimov A.', room: 'A-302', type: 'Ma\'ruza' },
+    { id: 10, groupId: 1, day: 'Juma', time: '08:30-10:00', subject: 'Jismoniy tarbiya', teacher: 'Azimov R.', room: 'Sport zali', type: 'Amaliy' },
   ])
 
-  // Davomat yozuvlari
+  // Davomat
   const attendanceRecords = ref([
-    // Matematika - Dushanba
-    { id: 1, studentId: 1, date: '2024-01-22', subject: 'Matematika', status: 'present', note: '' },
-    { id: 2, studentId: 2, date: '2024-01-22', subject: 'Matematika', status: 'present', note: '' },
-    { id: 3, studentId: 3, date: '2024-01-22', subject: 'Matematika', status: 'late', note: 'Transport muammosi' },
-    { id: 4, studentId: 4, date: '2024-01-22', subject: 'Matematika', status: 'absent', note: '' },
-    { id: 5, studentId: 5, date: '2024-01-22', subject: 'Matematika', status: 'present', note: '' },
-    // Dasturlash - Dushanba
-    { id: 6, studentId: 1, date: '2024-01-22', subject: 'Dasturlash', status: 'present', note: '' },
-    { id: 7, studentId: 2, date: '2024-01-22', subject: 'Dasturlash', status: 'present', note: '' },
-    { id: 8, studentId: 3, date: '2024-01-22', subject: 'Dasturlash', status: 'present', note: '' },
-    { id: 9, studentId: 4, date: '2024-01-22', subject: 'Dasturlash', status: 'absent', note: '' },
-    { id: 10, studentId: 5, date: '2024-01-22', subject: 'Dasturlash', status: 'present', note: '' },
-    // Previous days...
-    { id: 11, studentId: 1, date: '2024-01-21', subject: 'Ingliz tili', status: 'present', note: '' },
-    { id: 12, studentId: 2, date: '2024-01-21', subject: 'Ingliz tili', status: 'late', note: '' },
-    { id: 13, studentId: 3, date: '2024-01-21', subject: 'Ingliz tili', status: 'present', note: '' },
-    { id: 14, studentId: 4, date: '2024-01-21', subject: 'Ingliz tili', status: 'present', note: '' },
-    { id: 15, studentId: 5, date: '2024-01-21', subject: 'Ingliz tili', status: 'absent', note: 'Kasallik' },
+    { id: 1, studentId: 1, date: '2024-01-22', status: 'present', note: '' },
+    { id: 2, studentId: 2, date: '2024-01-22', status: 'present', note: '' },
+    { id: 3, studentId: 3, date: '2024-01-22', status: 'absent', note: 'Kasal' },
+    { id: 4, studentId: 4, date: '2024-01-22', status: 'present', note: '' },
+    { id: 5, studentId: 5, date: '2024-01-22', status: 'late', note: '15 daqiqa kechikdi' },
   ])
 
   // Hisobotlar
@@ -202,9 +134,136 @@ export const useDataStore = defineStore('data', () => {
     { id: 3, title: 'Dekabr oyi yakuniy hisobot', type: 'monthly', groupId: 1, createdBy: 2, date: '2024-12-31', status: 'completed' },
   ])
 
-  // Push bildirishnomalar
+  // Bildirishnomalar
   const notifications = ref([
     { id: 1, title: 'Tizimga xush kelibsiz!', message: 'Uni Control tizimiga muvaffaqiyatli kirdingiz.', date: '2024-01-22', read: false },
+  ])
+
+  // To'garaklar
+  const clubs = ref([
+    { 
+      id: 1, 
+      name: 'Matematika to\'garagi', 
+      teacher: 'Karimov Aziz Shavkatovich',
+      phone: '+998 90 111 22 33',
+      description: 'Oliy matematika, chiziqli algebra va matematik analiz bo\'yicha qo\'shimcha darslar',
+      schedule: 'Dushanba, Chorshanba - 16:00',
+      price: 200000,
+      room: 'A-301',
+      isActive: true,
+      category: 'fan',
+      image: null
+    },
+    { 
+      id: 2, 
+      name: 'Ingliz tili kursi', 
+      teacher: 'Johnson Michael',
+      phone: '+998 91 222 33 44',
+      description: 'IELTS tayyorgarlik kursi. Speaking, Writing, Reading, Listening',
+      schedule: 'Seshanba, Payshanba - 15:00',
+      price: 350000,
+      room: 'B-205',
+      isActive: true,
+      category: 'til',
+      image: null
+    },
+    { 
+      id: 3, 
+      name: 'Dasturlash kursi', 
+      teacher: 'Toshmatov Islom',
+      phone: '+998 93 333 44 55',
+      description: 'Python, JavaScript va Web dasturlash asoslari',
+      schedule: 'Shanba - 10:00',
+      price: 400000,
+      room: 'Kompyuter xonasi',
+      isActive: true,
+      category: 'texnik',
+      image: null
+    },
+    { 
+      id: 4, 
+      name: 'Futbol to\'garagi', 
+      teacher: 'Azimov Rustam',
+      phone: '+998 94 444 55 66',
+      description: 'Professional murabbiy nazoratida futbol mashg\'ulotlari',
+      schedule: 'Dushanba, Chorshanba, Juma - 17:00',
+      price: 150000,
+      room: 'Stadium',
+      isActive: true,
+      category: 'sport',
+      image: null
+    }
+  ])
+
+  // Turnirlar
+  const tournaments = ref([
+    {
+      id: 1,
+      title: 'Dasturlash olimpiadasi 2026',
+      description: 'Universitet miqyosidagi dasturlash bellashuvi. Python, C++, Java tillarida algoritmik masalalar yechiladi.',
+      category: 'intellektual',
+      type: 'olimpiada',
+      startDate: '2026-02-15',
+      endDate: '2026-02-15',
+      registrationDeadline: '2026-02-10',
+      location: 'Kompyuter laboratoriyasi, A-korpus',
+      maxParticipants: 50,
+      prize: '1-o\'rin: 2,000,000 so\'m, 2-o\'rin: 1,000,000 so\'m, 3-o\'rin: 500,000 so\'m',
+      organizer: 'IT fakulteti',
+      contactPhone: '+998 90 123 45 67',
+      isActive: true,
+      image: null,
+      customFields: [
+        { id: 1, name: 'Dasturlash tili', type: 'select', options: ['Python', 'C++', 'Java', 'JavaScript'], required: true },
+        { id: 2, name: 'Tajriba darajasi', type: 'select', options: ['Boshlang\'ich', 'O\'rta', 'Yuqori'], required: true }
+      ],
+      registrations: []
+    },
+    {
+      id: 2,
+      title: 'Futbol chempionati',
+      description: 'Fakultetlar o\'rtasida futbol bellashuvi. Har bir jamoa 11 nafardan iborat.',
+      category: 'sport',
+      type: 'chempionat',
+      startDate: '2026-03-01',
+      endDate: '2026-03-30',
+      registrationDeadline: '2026-02-25',
+      location: 'Universitet stadioni',
+      maxParticipants: 100,
+      prize: 'G\'olib jamoaga kubok va medallar',
+      organizer: 'Sport bo\'limi',
+      contactPhone: '+998 91 234 56 78',
+      isActive: true,
+      image: null,
+      customFields: [
+        { id: 1, name: 'Pozitsiya', type: 'select', options: ['Darvozabon', 'Himoyachi', 'Yarim himoyachi', 'Hujumchi'], required: true },
+        { id: 2, name: 'Jamoa nomi', type: 'text', required: true },
+        { id: 3, name: 'Futbolka raqami', type: 'number', required: true }
+      ],
+      registrations: []
+    },
+    {
+      id: 3,
+      title: 'Ingliz tili olimpiadasi',
+      description: 'Speaking, Writing, Reading va Listening bo\'limlari bo\'yicha sinov',
+      category: 'intellektual',
+      type: 'olimpiada',
+      startDate: '2026-02-20',
+      endDate: '2026-02-20',
+      registrationDeadline: '2026-02-15',
+      location: 'Tillar fakulteti, B-korpus',
+      maxParticipants: 80,
+      prize: 'IELTS kursiga bepul yo\'llanma',
+      organizer: 'Tillar fakulteti',
+      contactPhone: '+998 93 345 67 89',
+      isActive: true,
+      image: null,
+      customFields: [
+        { id: 1, name: 'Ingliz tili darajasi', type: 'select', options: ['A1', 'A2', 'B1', 'B2', 'C1'], required: true },
+        { id: 2, name: 'IELTS ball (agar mavjud)', type: 'text', required: false }
+      ],
+      registrations: []
+    }
   ])
 
   // Computed
@@ -220,247 +279,32 @@ export const useDataStore = defineStore('data', () => {
     return attendanceRecords.value.filter(a => a.studentId === studentId)
   })
 
-  const getAttendanceByDate = computed(() => (date, groupId) => {
-    const groupStudents = students.value.filter(s => s.groupId === groupId).map(s => s.id)
-    return attendanceRecords.value.filter(a => a.date === date && groupStudents.includes(a.studentId))
+  const getAttendanceByDate = computed(() => (date) => {
+    return attendanceRecords.value.filter(a => a.date === date)
   })
 
-  const calculateContractPercentage = (paidAmount, groupId) => {
-    const group = groups.value.find(g => g.id === groupId)
-    if (!group) return 0
-    return Math.round((paidAmount / group.contractAmount) * 100)
-  }
+  const calculateContractPercentage = computed(() => (paid, total) => {
+    return Math.round((paid / total) * 100)
+  })
 
-  // Actions
+  // Student methods
   const addStudent = (student) => {
-    const newId = Math.max(...students.value.map(s => s.id)) + 1
-    const newStudentId = `ST-2024-${String(newId).padStart(3, '0')}`
-    students.value.push({
-      ...student,
-      id: newId,
-      studentId: newStudentId
-    })
+    const newId = students.value.length > 0 ? Math.max(...students.value.map(s => s.id)) + 1 : 1
+    students.value.push({ id: newId, ...student })
+    return newId
   }
 
-  const updateStudent = (id, updates) => {
+  const updateStudent = (id, data) => {
     const index = students.value.findIndex(s => s.id === id)
     if (index !== -1) {
-      // studentId va name o'zgartirilmaydi
-      const { studentId, name, ...allowedUpdates } = updates
-      students.value[index] = { ...students.value[index], ...allowedUpdates }
+      students.value[index] = { ...students.value[index], ...data }
     }
   }
 
-  const updateStudentFull = (id, updates) => {
+  const updateStudentFull = (id, data) => {
     const index = students.value.findIndex(s => s.id === id)
     if (index !== -1) {
-      students.value[index] = { ...students.value[index], ...updates }
-    }
-  }
-
-  const addGroup = (group) => {
-    const newId = Math.max(...groups.value.map(g => g.id)) + 1
-    groups.value.push({ ...group, id: newId })
-  }
-
-  const updateGroupContract = (groupId, amount) => {
-    const index = groups.value.findIndex(g => g.id === groupId)
-    if (index !== -1) {
-      groups.value[index].contractAmount = amount
-    }
-  }
-
-  const assignGroupLeader = (groupId, studentId) => {
-    const groupIndex = groups.value.findIndex(g => g.id === groupId)
-    const group = groups.value[groupIndex]
-    
-    // Eski sardorni oddiy talabaga aylantirish
-    if (group && group.leaderId) {
-      const oldLeaderIndex = students.value.findIndex(s => s.id === group.leaderId)
-      if (oldLeaderIndex !== -1) {
-        students.value[oldLeaderIndex].role = 'student'
-      }
-    }
-    
-    // Yangi sardorni belgilash
-    if (groupIndex !== -1) {
-      const student = students.value.find(s => s.id === studentId)
-      groups.value[groupIndex].leaderId = studentId
-      groups.value[groupIndex].leaderName = student?.name || ''
-    }
-    const studentIndex = students.value.findIndex(s => s.id === studentId)
-    if (studentIndex !== -1) {
-      students.value[studentIndex].role = 'leader'
-    }
-  }
-
-  // Sardorlikni olib tashlash
-  const removeGroupLeader = (groupId) => {
-    const groupIndex = groups.value.findIndex(g => g.id === groupId)
-    if (groupIndex !== -1) {
-      const leaderId = groups.value[groupIndex].leaderId
-      if (leaderId) {
-        const studentIndex = students.value.findIndex(s => s.id === leaderId)
-        if (studentIndex !== -1) {
-          students.value[studentIndex].role = 'student'
-        }
-      }
-      groups.value[groupIndex].leaderId = null
-      groups.value[groupIndex].leaderName = ''
-    }
-  }
-
-  // Guruh holatini o'zgartirish (yoqish/o'chirish)
-  const toggleGroupStatus = (groupId) => {
-    const index = groups.value.findIndex(g => g.id === groupId)
-    if (index !== -1) {
-      groups.value[index].isActive = !groups.value[index].isActive
-    }
-  }
-
-  // Guruh holatini tekshirish
-  const isGroupActive = (groupName) => {
-    const group = groups.value.find(g => g.name === groupName)
-    return group ? group.isActive : false
-  }
-
-  // Excel'dan guruh va talabalarni import qilish
-  const importFromExcel = (data) => {
-    // data = [{ group: 'KI_25-04', faculty: 'Kompyuter injiniringi', students: [...] }, ...]
-    data.forEach(item => {
-      // Guruh mavjudligini tekshirish
-      let group = groups.value.find(g => g.name === item.group)
-      
-      if (!group) {
-        // Yangi guruh qo'shish
-        const newGroupId = groups.value.length > 0 ? Math.max(...groups.value.map(g => g.id)) + 1 : 1
-        group = {
-          id: newGroupId,
-          name: item.group,
-          faculty: item.faculty || 'Noma\'lum',
-          year: item.year || 1,
-          leaderId: null,
-          leaderName: '',
-          contractAmount: item.contractAmount || 18411000,
-          isActive: true
-        }
-        groups.value.push(group)
-      }
-      
-      // Talabalarni qo'shish
-      if (item.students && Array.isArray(item.students)) {
-        item.students.forEach(studentData => {
-          // Talaba mavjudligini tekshirish (studentId bo'yicha)
-          const existingStudent = students.value.find(s => s.studentId === studentData.studentId)
-          if (!existingStudent) {
-            const newId = students.value.length > 0 ? Math.max(...students.value.map(s => s.id)) + 1 : 1
-            students.value.push({
-              id: newId,
-              studentId: studentData.studentId || `ST-${Date.now()}-${newId}`,
-              name: studentData.name,
-              phone: studentData.phone || '',
-              address: studentData.address || '',
-              commute: studentData.commute || '',
-              groupId: group.id,
-              group: group.name,
-              contractPaid: studentData.contractPaid || 0,
-              passport: studentData.passport || '',
-              jshshir: studentData.jshshir || '',
-              birthDate: studentData.birthDate || '',
-              role: 'student',
-              avatar: null,
-              email: studentData.email || '',
-              password: studentData.password || '123456'
-            })
-          }
-        })
-      }
-    })
-  }
-
-  // Talaba parolini yangilash
-  const updateStudentPassword = (studentId, newPassword) => {
-    const student = students.value.find(s => s.id === studentId || s.studentId === studentId)
-    if (student) {
-      student.password = newPassword
-      return true
-    }
-    return false
-  }
-
-  // Talaba ID bo'yicha topish
-  const findStudentByStudentId = (studentId) => {
-    return students.value.find(s => s.studentId === studentId)
-  }
-
-  const addAttendanceRecord = (record) => {
-    const newId = Math.max(...attendanceRecords.value.map(a => a.id)) + 1
-    attendanceRecords.value.push({ ...record, id: newId })
-  }
-
-  const updateAttendanceRecord = (id, updates) => {
-    const index = attendanceRecords.value.findIndex(a => a.id === id)
-    if (index !== -1) {
-      attendanceRecords.value[index] = { ...attendanceRecords.value[index], ...updates }
-    }
-  }
-
-  const addScheduleItem = (item) => {
-    const newId = Math.max(...schedule.value.map(s => s.id)) + 1
-    schedule.value.push({ ...item, id: newId })
-  }
-
-  const updateScheduleItem = (id, updates) => {
-    const index = schedule.value.findIndex(s => s.id === id)
-    if (index !== -1) {
-      schedule.value[index] = { ...schedule.value[index], ...updates }
-    }
-  }
-
-  const deleteScheduleItem = (id) => {
-    const index = schedule.value.findIndex(s => s.id === id)
-    if (index !== -1) {
-      schedule.value.splice(index, 1)
-    }
-  }
-
-  const addReport = (report) => {
-    const newId = Math.max(...reports.value.map(r => r.id)) + 1
-    reports.value.push({ ...report, id: newId, date: new Date().toISOString().split('T')[0] })
-  }
-
-  const addNotification = (notification) => {
-    const newId = Math.max(...notifications.value.map(n => n.id), 0) + 1
-    notifications.value.unshift({ 
-      ...notification, 
-      id: newId, 
-      createdAt: new Date().toISOString()
-    })
-  }
-
-  const deleteNotification = (id) => {
-    const index = notifications.value.findIndex(n => n.id === id)
-    if (index !== -1) {
-      notifications.value.splice(index, 1)
-    }
-  }
-
-  const sendNotification = (notification) => {
-    const newId = Math.max(...notifications.value.map(n => n.id)) + 1
-    notifications.value.unshift({ ...notification, id: newId, date: new Date().toISOString().split('T')[0], read: false })
-  }
-
-  const updateGroup = (id, updates) => {
-    const index = groups.value.findIndex(g => g.id === id)
-    if (index !== -1) {
-      groups.value[index] = { ...groups.value[index], ...updates }
-    }
-  }
-
-  const deleteGroup = (id) => {
-    const index = groups.value.findIndex(g => g.id === id)
-    if (index !== -1) {
-      groups.value.splice(index, 1)
+      students.value[index] = { ...students.value[index], ...data }
     }
   }
 
@@ -471,38 +315,316 @@ export const useDataStore = defineStore('data', () => {
     }
   }
 
-  const importStudentsFromExcel = (studentsData) => {
-    studentsData.forEach(student => {
-      addStudent(student)
+  // Group methods
+  const addGroup = (group) => {
+    const newId = groups.value.length > 0 ? Math.max(...groups.value.map(g => g.id)) + 1 : 1
+    groups.value.push({ id: newId, ...group, isActive: true })
+    return newId
+  }
+
+  const updateGroup = (id, data) => {
+    const index = groups.value.findIndex(g => g.id === id)
+    if (index !== -1) {
+      groups.value[index] = { ...groups.value[index], ...data }
+    }
+  }
+
+  const deleteGroup = (id) => {
+    const index = groups.value.findIndex(g => g.id === id)
+    if (index !== -1) {
+      groups.value.splice(index, 1)
+    }
+  }
+
+  const updateGroupContract = (id, amount) => {
+    const index = groups.value.findIndex(g => g.id === id)
+    if (index !== -1) {
+      groups.value[index].contractAmount = amount
+    }
+  }
+
+  const assignGroupLeader = (groupId, studentId, studentName) => {
+    const gIndex = groups.value.findIndex(g => g.id === groupId)
+    if (gIndex !== -1) {
+      groups.value[gIndex].leaderId = studentId
+      groups.value[gIndex].leaderName = studentName
+    }
+    const sIndex = students.value.findIndex(s => s.id === studentId)
+    if (sIndex !== -1) {
+      students.value[sIndex].role = 'leader'
+    }
+  }
+
+  const removeGroupLeader = (groupId) => {
+    const group = groups.value.find(g => g.id === groupId)
+    if (group && group.leaderId) {
+      const sIndex = students.value.findIndex(s => s.id === group.leaderId)
+      if (sIndex !== -1) {
+        students.value[sIndex].role = 'student'
+      }
+      group.leaderId = null
+      group.leaderName = ''
+    }
+  }
+
+  const toggleGroupStatus = (id) => {
+    const index = groups.value.findIndex(g => g.id === id)
+    if (index !== -1) {
+      groups.value[index].isActive = !groups.value[index].isActive
+    }
+  }
+
+  const isGroupActive = (groupId) => {
+    const group = groups.value.find(g => g.id === groupId)
+    return group ? group.isActive : false
+  }
+
+  const importFromExcel = (data, groupId, groupName) => {
+    data.forEach(row => {
+      const newId = students.value.length > 0 ? Math.max(...students.value.map(s => s.id)) + 1 : 1
+      students.value.push({
+        id: newId,
+        studentId: row.studentId || `ST-${Date.now()}-${newId}`,
+        name: row.name,
+        phone: row.phone || '',
+        address: row.address || '',
+        commute: row.commute || '',
+        groupId: groupId,
+        group: groupName,
+        contractPaid: row.contractPaid || 0,
+        passport: row.passport || '',
+        jshshir: row.jshshir || '',
+        birthDate: row.birthDate || '',
+        role: 'student',
+        avatar: null,
+        email: row.email || '',
+        password: '123456'
+      })
     })
   }
 
-  // Statistikalar
-  const getStatistics = computed(() => {
-    const totalStudents = students.value.length
-    const totalGroups = groups.value.length
-    
-    const presentCount = attendanceRecords.value.filter(a => a.status === 'present').length
-    const totalRecords = attendanceRecords.value.length
-    const attendanceRate = totalRecords > 0 ? Math.round((presentCount / totalRecords) * 100) : 0
-    
-    const totalContract = students.value.reduce((sum, s) => {
-      const group = groups.value.find(g => g.id === s.groupId)
-      return sum + (group?.contractAmount || 0)
-    }, 0)
-    
-    const paidContract = students.value.reduce((sum, s) => sum + s.contractPaid, 0)
-    const contractRate = totalContract > 0 ? Math.round((paidContract / totalContract) * 100) : 0
-
-    return {
-      totalStudents,
-      totalGroups,
-      attendanceRate,
-      contractRate,
-      totalContract,
-      paidContract
+  const updateStudentPassword = (studentId, newPassword) => {
+    const index = students.value.findIndex(s => s.id === studentId)
+    if (index !== -1) {
+      students.value[index].password = newPassword
     }
+  }
+
+  const findStudentByStudentId = (studentIdCode) => {
+    return students.value.find(s => s.studentId === studentIdCode)
+  }
+
+  // Attendance methods
+  const addAttendanceRecord = (record) => {
+    const newId = attendanceRecords.value.length > 0 ? Math.max(...attendanceRecords.value.map(a => a.id)) + 1 : 1
+    attendanceRecords.value.push({ id: newId, ...record })
+  }
+
+  const updateAttendanceRecord = (id, data) => {
+    const index = attendanceRecords.value.findIndex(a => a.id === id)
+    if (index !== -1) {
+      attendanceRecords.value[index] = { ...attendanceRecords.value[index], ...data }
+    }
+  }
+
+  // Schedule methods
+  const addScheduleItem = (item) => {
+    const newId = schedule.value.length > 0 ? Math.max(...schedule.value.map(s => s.id)) + 1 : 1
+    schedule.value.push({ id: newId, ...item })
+  }
+
+  const updateScheduleItem = (id, data) => {
+    const index = schedule.value.findIndex(s => s.id === id)
+    if (index !== -1) {
+      schedule.value[index] = { ...schedule.value[index], ...data }
+    }
+  }
+
+  const deleteScheduleItem = (id) => {
+    const index = schedule.value.findIndex(s => s.id === id)
+    if (index !== -1) {
+      schedule.value.splice(index, 1)
+    }
+  }
+
+  // Report methods
+  const addReport = (report) => {
+    const newId = reports.value.length > 0 ? Math.max(...reports.value.map(r => r.id)) + 1 : 1
+    reports.value.push({ id: newId, ...report })
+  }
+
+  // Notification methods
+  const addNotification = (notification) => {
+    const newId = notifications.value.length > 0 ? Math.max(...notifications.value.map(n => n.id)) + 1 : 1
+    notifications.value.push({ id: newId, ...notification, read: false })
+  }
+
+  const deleteNotification = (id) => {
+    const index = notifications.value.findIndex(n => n.id === id)
+    if (index !== -1) {
+      notifications.value.splice(index, 1)
+    }
+  }
+
+  const sendNotification = (notification) => {
+    addNotification(notification)
+  }
+
+  const importStudentsFromExcel = (studentsData, groupId, groupName) => {
+    studentsData.forEach(row => {
+      const newId = students.value.length > 0 ? Math.max(...students.value.map(s => s.id)) + 1 : 1
+      students.value.push({
+        id: newId,
+        studentId: row.studentId || `ST-${Date.now()}-${newId}`,
+        name: row.name,
+        phone: row.phone || '',
+        address: row.address || '',
+        commute: row.commute || '',
+        groupId: groupId,
+        group: groupName,
+        contractPaid: row.contractPaid || 0,
+        passport: row.passport || '',
+        jshshir: row.jshshir || '',
+        birthDate: row.birthDate || '',
+        role: 'student',
+        avatar: null,
+        email: row.email || '',
+        password: '123456'
+      })
+    })
+  }
+
+  const getStatistics = () => {
+    return {
+      totalStudents: students.value.length,
+      totalGroups: groups.value.length,
+      activeGroups: groups.value.filter(g => g.isActive).length
+    }
+  }
+
+  // Club methods
+  const addClub = (club) => {
+    const newId = clubs.value.length > 0 ? Math.max(...clubs.value.map(c => c.id)) + 1 : 1
+    clubs.value.push({ id: newId, ...club, isActive: true })
+    return newId
+  }
+
+  const updateClub = (id, data) => {
+    const index = clubs.value.findIndex(c => c.id === id)
+    if (index !== -1) {
+      clubs.value[index] = { ...clubs.value[index], ...data }
+    }
+  }
+
+  const deleteClub = (id) => {
+    const index = clubs.value.findIndex(c => c.id === id)
+    if (index !== -1) {
+      clubs.value.splice(index, 1)
+    }
+  }
+
+  const toggleClubStatus = (id) => {
+    const index = clubs.value.findIndex(c => c.id === id)
+    if (index !== -1) {
+      clubs.value[index].isActive = !clubs.value[index].isActive
+    }
+  }
+
+  const getActiveClubs = computed(() => {
+    return clubs.value.filter(c => c.isActive)
   })
+
+  // Tournament methods
+  const addTournament = (tournament) => {
+    const newId = tournaments.value.length > 0 ? Math.max(...tournaments.value.map(t => t.id)) + 1 : 1
+    tournaments.value.push({ id: newId, ...tournament, registrations: [], isActive: true })
+    return newId
+  }
+
+  const updateTournament = (id, data) => {
+    const index = tournaments.value.findIndex(t => t.id === id)
+    if (index !== -1) {
+      tournaments.value[index] = { ...tournaments.value[index], ...data }
+    }
+  }
+
+  const deleteTournament = (id) => {
+    const index = tournaments.value.findIndex(t => t.id === id)
+    if (index !== -1) {
+      tournaments.value.splice(index, 1)
+    }
+  }
+
+  const toggleTournamentStatus = (id) => {
+    const index = tournaments.value.findIndex(t => t.id === id)
+    if (index !== -1) {
+      tournaments.value[index].isActive = !tournaments.value[index].isActive
+    }
+  }
+
+  const getActiveTournaments = computed(() => {
+    return tournaments.value.filter(t => t.isActive)
+  })
+
+  const registerForTournament = (tournamentId, registration) => {
+    const index = tournaments.value.findIndex(t => t.id === tournamentId)
+    if (index !== -1) {
+      const newId = tournaments.value[index].registrations.length > 0
+        ? Math.max(...tournaments.value[index].registrations.map(r => r.id)) + 1
+        : 1
+      tournaments.value[index].registrations.push({
+        id: newId,
+        ...registration,
+        registeredAt: new Date().toISOString(),
+        status: 'pending'
+      })
+      return true
+    }
+    return false
+  }
+
+  const cancelRegistration = (tournamentId, registrationId) => {
+    const tIndex = tournaments.value.findIndex(t => t.id === tournamentId)
+    if (tIndex !== -1) {
+      const rIndex = tournaments.value[tIndex].registrations.findIndex(r => r.id === registrationId)
+      if (rIndex !== -1) {
+        tournaments.value[tIndex].registrations.splice(rIndex, 1)
+        return true
+      }
+    }
+    return false
+  }
+
+  const updateRegistrationStatus = (tournamentId, registrationId, status) => {
+    const tIndex = tournaments.value.findIndex(t => t.id === tournamentId)
+    if (tIndex !== -1) {
+      const rIndex = tournaments.value[tIndex].registrations.findIndex(r => r.id === registrationId)
+      if (rIndex !== -1) {
+        tournaments.value[tIndex].registrations[rIndex].status = status
+        return true
+      }
+    }
+    return false
+  }
+
+  const isStudentRegistered = (tournamentId, studentId) => {
+    const tournament = tournaments.value.find(t => t.id === tournamentId)
+    if (tournament) {
+      return tournament.registrations.some(r => r.studentId === studentId)
+    }
+    return false
+  }
+
+  const getStudentRegistrations = (studentId) => {
+    const result = []
+    tournaments.value.forEach(t => {
+      const reg = t.registrations.find(r => r.studentId === studentId)
+      if (reg) {
+        result.push({ tournament: t, registration: reg })
+      }
+    })
+    return result
+  }
 
   return {
     groups,
@@ -511,6 +633,8 @@ export const useDataStore = defineStore('data', () => {
     attendanceRecords,
     reports,
     notifications,
+    clubs,
+    tournaments,
     getStudentsByGroup,
     getScheduleByGroup,
     getAttendanceByStudent,
@@ -541,6 +665,21 @@ export const useDataStore = defineStore('data', () => {
     deleteNotification,
     sendNotification,
     importStudentsFromExcel,
-    getStatistics
+    getStatistics,
+    addClub,
+    updateClub,
+    deleteClub,
+    toggleClubStatus,
+    getActiveClubs,
+    addTournament,
+    updateTournament,
+    deleteTournament,
+    toggleTournamentStatus,
+    getActiveTournaments,
+    registerForTournament,
+    cancelRegistration,
+    updateRegistrationStatus,
+    isStudentRegistered,
+    getStudentRegistrations
   }
 })
