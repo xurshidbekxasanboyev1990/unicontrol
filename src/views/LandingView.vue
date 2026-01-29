@@ -14,23 +14,23 @@
     </div>
 
     <!-- ========== NAVBAR ========== -->
-    <nav class="relative z-50 px-6 lg:px-20 py-5 sticky top-0 bg-slate-900/80 backdrop-blur-xl border-b border-white/5">
+    <nav class="relative z-50 px-4 sm:px-6 lg:px-20 py-4 sm:py-5 sticky top-0 bg-slate-900/80 backdrop-blur-xl border-b border-white/5">
       <div class="max-w-7xl mx-auto flex items-center justify-between">
         <!-- Logo -->
-        <div class="flex items-center gap-3 group cursor-pointer">
+        <div class="flex items-center gap-2 sm:gap-3 group cursor-pointer">
           <div class="relative">
-            <div class="absolute inset-0 bg-gradient-to-br from-emerald-400 to-teal-500 rounded-2xl blur-lg opacity-50 group-hover:opacity-75 transition-opacity"></div>
-            <div class="relative w-12 h-12 bg-gradient-to-br from-emerald-400 via-emerald-500 to-teal-600 rounded-2xl flex items-center justify-center shadow-xl">
-              <GraduationCap class="w-6 h-6 text-white" />
+            <div class="absolute inset-0 bg-gradient-to-br from-emerald-400 to-teal-500 rounded-xl sm:rounded-2xl blur-lg opacity-50 group-hover:opacity-75 transition-opacity"></div>
+            <div class="relative w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-emerald-400 via-emerald-500 to-teal-600 rounded-xl sm:rounded-2xl flex items-center justify-center shadow-xl">
+              <GraduationCap class="w-5 h-5 sm:w-6 sm:h-6 text-white" />
             </div>
           </div>
           <div class="flex flex-col">
-            <span class="text-xl font-bold text-white tracking-tight">Uni Control</span>
-            <span class="text-[10px] text-slate-500 font-medium tracking-wider uppercase">Education Platform</span>
+            <span class="text-lg sm:text-xl font-bold text-white tracking-tight">Uni Control</span>
+            <span class="text-[9px] sm:text-[10px] text-slate-500 font-medium tracking-wider uppercase hidden sm:block">Education Platform</span>
           </div>
         </div>
 
-        <!-- Nav Links -->
+        <!-- Nav Links - Desktop -->
         <div class="hidden lg:flex items-center gap-1 bg-white/5 backdrop-blur-sm rounded-2xl p-1.5 border border-white/5">
           <a href="#features" class="px-5 py-2.5 text-sm font-medium text-slate-300 hover:text-white hover:bg-white/10 rounded-xl transition-all">Xususiyatlar</a>
           <a href="#how-it-works" class="px-5 py-2.5 text-sm font-medium text-slate-300 hover:text-white hover:bg-white/10 rounded-xl transition-all">Qanday ishlaydi</a>
@@ -38,29 +38,60 @@
           <a href="#contact" class="px-5 py-2.5 text-sm font-medium text-slate-300 hover:text-white hover:bg-white/10 rounded-xl transition-all">Bog'lanish</a>
         </div>
 
-        <!-- CTA -->
-        <router-link to="/login" class="group relative">
-          <div class="absolute inset-0 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-xl blur-lg opacity-50 group-hover:opacity-75 transition-opacity"></div>
-          <div class="relative flex items-center gap-2 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 px-6 py-3 rounded-xl font-semibold text-white text-sm transition-all">
-            <LogIn class="w-4 h-4" />
-            <span>Kirish</span>
-          </div>
-        </router-link>
+        <!-- Mobile Menu Button + CTA -->
+        <div class="flex items-center gap-2 sm:gap-3">
+          <!-- Mobile Menu Button -->
+          <button 
+            @click="mobileMenuOpen = !mobileMenuOpen"
+            class="lg:hidden p-2 text-slate-400 hover:text-white hover:bg-white/10 rounded-xl transition-colors"
+          >
+            <Menu v-if="!mobileMenuOpen" class="w-6 h-6" />
+            <X v-else class="w-6 h-6" />
+          </button>
+
+          <!-- CTA -->
+          <router-link to="/login" class="group relative">
+            <div class="absolute inset-0 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-xl blur-lg opacity-50 group-hover:opacity-75 transition-opacity"></div>
+            <div class="relative flex items-center gap-2 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 px-4 sm:px-6 py-2.5 sm:py-3 rounded-xl font-semibold text-white text-sm transition-all">
+              <LogIn class="w-4 h-4" />
+              <span class="hidden sm:inline">Kirish</span>
+            </div>
+          </router-link>
+        </div>
       </div>
+
+      <!-- Mobile Menu -->
+      <Transition
+        enter-active-class="transition-all duration-300 ease-out"
+        enter-from-class="opacity-0 -translate-y-4"
+        enter-to-class="opacity-100 translate-y-0"
+        leave-active-class="transition-all duration-200 ease-in"
+        leave-from-class="opacity-100 translate-y-0"
+        leave-to-class="opacity-0 -translate-y-4"
+      >
+        <div v-if="mobileMenuOpen" class="lg:hidden absolute left-4 right-4 top-full mt-2 bg-slate-800/95 backdrop-blur-xl border border-white/10 rounded-2xl p-4 shadow-xl">
+          <div class="space-y-1">
+            <a href="#features" @click="mobileMenuOpen = false" class="block px-4 py-3 text-slate-300 hover:text-white hover:bg-white/10 rounded-xl transition-all">Xususiyatlar</a>
+            <a href="#how-it-works" @click="mobileMenuOpen = false" class="block px-4 py-3 text-slate-300 hover:text-white hover:bg-white/10 rounded-xl transition-all">Qanday ishlaydi</a>
+            <a href="#about" @click="mobileMenuOpen = false" class="block px-4 py-3 text-slate-300 hover:text-white hover:bg-white/10 rounded-xl transition-all">Biz haqimizda</a>
+            <a href="#contact" @click="mobileMenuOpen = false" class="block px-4 py-3 text-slate-300 hover:text-white hover:bg-white/10 rounded-xl transition-all">Bog'lanish</a>
+          </div>
+        </div>
+      </Transition>
     </nav>
 
     <!-- ========== HERO ========== -->
-    <section class="relative z-10 px-6 lg:px-20 pt-16 lg:pt-24 pb-20">
+    <section class="relative z-10 px-4 sm:px-6 lg:px-20 pt-10 sm:pt-16 lg:pt-24 pb-12 sm:pb-20">
       <div class="max-w-7xl mx-auto">
-        <div class="grid lg:grid-cols-2 gap-16 items-center">
+        <div class="grid lg:grid-cols-2 gap-8 sm:gap-12 lg:gap-16 items-center">
           <!-- Left -->
-          <div class="space-y-8">
+          <div class="space-y-6 sm:space-y-8 text-center lg:text-left">
             <!-- Badge -->
-            <div class="inline-flex items-center gap-2 bg-emerald-500/10 border border-emerald-500/20 rounded-full pl-2 pr-4 py-1.5 animate-fade-in">
-              <span class="flex items-center justify-center w-6 h-6 bg-emerald-500 rounded-full">
-                <Zap class="w-3.5 h-3.5 text-white" />
+            <div class="inline-flex items-center gap-2 bg-emerald-500/10 border border-emerald-500/20 rounded-full pl-2 pr-3 sm:pr-4 py-1 sm:py-1.5 animate-fade-in">
+              <span class="flex items-center justify-center w-5 h-5 sm:w-6 sm:h-6 bg-emerald-500 rounded-full">
+                <Zap class="w-3 h-3 sm:w-3.5 sm:h-3.5 text-white" />
               </span>
-              <span class="text-emerald-400 text-sm font-medium">Yangi avlod ta'lim tizimi</span>
+              <span class="text-emerald-400 text-xs sm:text-sm font-medium">Yangi avlod ta'lim tizimi</span>
             </div>
 
             <!-- Title -->
@@ -102,34 +133,34 @@
             </div>
 
             <!-- Stats -->
-            <div class="flex items-center gap-8 pt-8 animate-fade-in animation-delay-600">
-              <div class="flex items-center gap-3">
-                <div class="w-12 h-12 rounded-xl bg-emerald-500/10 flex items-center justify-center">
-                  <Users class="w-6 h-6 text-emerald-400" />
+            <div class="flex flex-wrap items-center justify-center lg:justify-start gap-4 sm:gap-6 lg:gap-8 pt-6 sm:pt-8 animate-fade-in animation-delay-600">
+              <div class="flex items-center gap-2 sm:gap-3">
+                <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-lg sm:rounded-xl bg-emerald-500/10 flex items-center justify-center">
+                  <Users class="w-5 h-5 sm:w-6 sm:h-6 text-emerald-400" />
                 </div>
                 <div>
-                  <div class="text-2xl font-bold text-white">500+</div>
-                  <div class="text-xs text-slate-500">Talabalar</div>
+                  <div class="text-xl sm:text-2xl font-bold text-white">500+</div>
+                  <div class="text-[10px] sm:text-xs text-slate-500">Talabalar</div>
                 </div>
               </div>
-              <div class="w-px h-12 bg-white/10"></div>
-              <div class="flex items-center gap-3">
-                <div class="w-12 h-12 rounded-xl bg-teal-500/10 flex items-center justify-center">
-                  <Layers class="w-6 h-6 text-teal-400" />
+              <div class="w-px h-10 sm:h-12 bg-white/10 hidden sm:block"></div>
+              <div class="flex items-center gap-2 sm:gap-3">
+                <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-lg sm:rounded-xl bg-teal-500/10 flex items-center justify-center">
+                  <Layers class="w-5 h-5 sm:w-6 sm:h-6 text-teal-400" />
                 </div>
                 <div>
-                  <div class="text-2xl font-bold text-white">50+</div>
-                  <div class="text-xs text-slate-500">Guruhlar</div>
+                  <div class="text-xl sm:text-2xl font-bold text-white">50+</div>
+                  <div class="text-[10px] sm:text-xs text-slate-500">Guruhlar</div>
                 </div>
               </div>
-              <div class="w-px h-12 bg-white/10"></div>
-              <div class="flex items-center gap-3">
-                <div class="w-12 h-12 rounded-xl bg-cyan-500/10 flex items-center justify-center">
-                  <TrendingUp class="w-6 h-6 text-cyan-400" />
+              <div class="w-px h-10 sm:h-12 bg-white/10 hidden sm:block"></div>
+              <div class="flex items-center gap-2 sm:gap-3">
+                <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-lg sm:rounded-xl bg-cyan-500/10 flex items-center justify-center">
+                  <TrendingUp class="w-5 h-5 sm:w-6 sm:h-6 text-cyan-400" />
                 </div>
                 <div>
-                  <div class="text-2xl font-bold text-white">99%</div>
-                  <div class="text-xs text-slate-500">Natija</div>
+                  <div class="text-xl sm:text-2xl font-bold text-white">99%</div>
+                  <div class="text-[10px] sm:text-xs text-slate-500">Natija</div>
                 </div>
               </div>
             </div>
@@ -244,7 +275,7 @@
     </section>
 
     <!-- ========== HOW IT WORKS ========== -->
-    <section id="how-it-works" class="relative z-10 px-6 lg:px-20 py-24 border-t border-white/5">
+    <section id="how-it-works" class="relative z-10 px-4 sm:px-6 lg:px-20 py-16 sm:py-24 border-t border-white/5">
       <div class="max-w-7xl mx-auto">
         <!-- Header -->
         <div class="text-center mb-16 reveal-on-scroll">
@@ -257,7 +288,7 @@
         </div>
 
         <!-- Steps - 3D Stacked Cards -->
-        <div class="grid md:grid-cols-3 gap-8 perspective-container">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8 perspective-container">
           <!-- Step 1 -->
           <div class="relative group card-stack stagger-child" style="--index: 0">
             <div class="absolute -inset-1 bg-gradient-to-r from-emerald-500/20 to-teal-500/20 rounded-3xl blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
@@ -310,7 +341,7 @@
     </section>
 
     <!-- ========== FEATURES ========== -->
-    <section id="features" class="relative z-10 px-6 lg:px-20 py-24 border-t border-white/5">
+    <section id="features" class="relative z-10 px-4 sm:px-6 lg:px-20 py-16 sm:py-24 border-t border-white/5">
       <div class="max-w-7xl mx-auto">
         <!-- Header -->
         <div class="text-center mb-16 reveal-on-scroll">
@@ -323,7 +354,7 @@
         </div>
 
         <!-- Features Grid - 3D Stacked Cards -->
-        <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6 perspective-container">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 perspective-container">
           <div class="group relative bg-slate-800/30 backdrop-blur border border-white/5 rounded-3xl p-8 hover:border-emerald-500/30 transition-all duration-500 card-stack stagger-child hover-lift" style="--index: 0">
             <div class="absolute inset-0 bg-gradient-to-br from-emerald-500/5 to-transparent rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity"></div>
             <div class="relative">
@@ -394,9 +425,9 @@
     </section>
 
     <!-- ========== ABOUT US ========== -->
-    <section id="about" class="relative z-10 px-6 lg:px-20 py-24 border-t border-white/5">
+    <section id="about" class="relative z-10 px-4 sm:px-6 lg:px-20 py-16 sm:py-24 border-t border-white/5">
       <div class="max-w-7xl mx-auto">
-        <div class="grid lg:grid-cols-2 gap-16 items-center">
+        <div class="grid lg:grid-cols-2 gap-8 sm:gap-12 lg:gap-16 items-center">
           <!-- Left - Image/Visual -->
           <div class="relative reveal-left reveal-on-scroll">
             <div class="absolute -inset-4 bg-gradient-to-r from-emerald-500/20 to-teal-500/20 rounded-[40px] blur-3xl opacity-50"></div>
@@ -491,7 +522,7 @@
     </section>
 
     <!-- ========== TESTIMONIALS ========== -->
-    <section class="relative z-10 px-6 lg:px-20 py-24 border-t border-white/5">
+    <section class="relative z-10 px-4 sm:px-6 lg:px-20 py-16 sm:py-24 border-t border-white/5">
       <div class="max-w-7xl mx-auto">
         <!-- Header -->
         <div class="text-center mb-16 reveal-on-scroll">
@@ -504,7 +535,7 @@
         </div>
 
         <!-- Testimonials Grid - 3D Cards -->
-        <div class="grid md:grid-cols-3 gap-6 perspective-container">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 perspective-container">
           <!-- Testimonial 1 -->
           <div class="bg-slate-800/30 backdrop-blur border border-white/5 rounded-3xl p-8 card-stack stagger-child hover-lift" style="--index: 0">
             <div class="flex items-center gap-1 mb-4">
@@ -560,7 +591,7 @@
     </section>
 
     <!-- ========== FAQ ========== -->
-    <section class="relative z-10 px-6 lg:px-20 py-24 border-t border-white/5">
+    <section class="relative z-10 px-4 sm:px-6 lg:px-20 py-16 sm:py-24 border-t border-white/5">
       <div class="max-w-4xl mx-auto">
         <!-- Header -->
         <div class="text-center mb-16 reveal-on-scroll">
@@ -618,7 +649,7 @@
     </section>
 
     <!-- ========== CTA SECTION ========== -->
-    <section class="relative z-10 px-6 lg:px-20 py-24 border-t border-white/5">
+    <section class="relative z-10 px-4 sm:px-6 lg:px-20 py-16 sm:py-24 border-t border-white/5">
       <div class="max-w-5xl mx-auto reveal-scale">
         <div class="relative overflow-hidden rounded-[40px] hover-scale">
           <!-- Background -->
@@ -626,8 +657,8 @@
           <div class="absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg width=\'60\' height=\'60\' viewBox=\'0 0 60 60\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cg fill=\'none\' fill-rule=\'evenodd\'%3E%3Cg fill=\'%23ffffff\' fill-opacity=\'0.05\'%3E%3Cpath d=\'M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z\'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')]"></div>
           
           <!-- Content -->
-          <div class="relative px-8 py-16 lg:px-16 lg:py-20 text-center">
-            <h2 class="text-3xl lg:text-5xl font-bold text-white mb-6">
+          <div class="relative px-6 py-12 sm:px-8 sm:py-16 lg:px-16 lg:py-20 text-center">
+            <h2 class="text-2xl sm:text-3xl lg:text-5xl font-bold text-white mb-4 sm:mb-6">
               Hoziroq boshlang!
             </h2>
             <p class="text-xl text-white/80 mb-10 max-w-2xl mx-auto">
@@ -651,9 +682,9 @@
     </section>
 
     <!-- ========== CONTACT ========== -->
-    <section id="contact" class="relative z-10 px-6 lg:px-20 py-24 border-t border-white/5">
+    <section id="contact" class="relative z-10 px-4 sm:px-6 lg:px-20 py-16 sm:py-24 border-t border-white/5">
       <div class="max-w-7xl mx-auto">
-        <div class="grid lg:grid-cols-2 gap-16">
+        <div class="grid lg:grid-cols-2 gap-8 sm:gap-12 lg:gap-16">
           <!-- Left -->
           <div class="space-y-8 reveal-left reveal-on-scroll">
             <div class="inline-flex items-center gap-2 bg-rose-500/10 border border-rose-500/20 rounded-full px-4 py-2">
@@ -744,10 +775,10 @@
     </section>
 
     <!-- ========== FOOTER ========== -->
-    <footer class="relative z-10 px-6 lg:px-20 py-12 border-t border-white/5">
+    <footer class="relative z-10 px-4 sm:px-6 lg:px-20 py-8 sm:py-12 border-t border-white/5">
       <div class="max-w-7xl mx-auto reveal-on-scroll">
         <!-- Top -->
-        <div class="grid md:grid-cols-4 gap-10 mb-12">
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-6 sm:gap-10 mb-8 sm:mb-12">
           <!-- Brand -->
           <div class="md:col-span-2 space-y-4 stagger-child">
             <div class="flex items-center gap-3">
@@ -799,7 +830,7 @@
         <!-- Team Section -->
         <div class="pt-8 border-t border-white/5 mb-8">
           <h4 class="font-semibold text-white mb-6 text-center">Loyiha jamoasi</h4>
-          <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
             <div class="bg-white/5 rounded-2xl p-4 text-center stagger-child hover-lift">
               <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center mx-auto mb-3">
                 <Crown class="w-6 h-6 text-white" />
@@ -842,14 +873,17 @@
 </template>
 
 <script setup>
-import { onMounted, onUnmounted } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 import { 
   GraduationCap, LogIn, ArrowRight, Play, Zap, Rocket, Users, Layers, TrendingUp,
   Calendar, BarChart3, Brain, Bell, Trophy, Shield, CheckCircle, Sparkles,
   BookOpen, Code, Globe, MessageCircle, Phone, Mail, Building2, Settings,
   UserPlus, Smartphone, Heart, Check, Target, Star, HelpCircle, ChevronRight,
-  MapPin, Send, Crown, Palette, Server
+  MapPin, Send, Crown, Palette, Server, Menu, X
 } from 'lucide-vue-next'
+
+// Mobile menu state
+const mobileMenuOpen = ref(false)
 
 let observer = null
 

@@ -1,10 +1,10 @@
 <template>
   <div class="space-y-6">
     <!-- Header -->
-    <div class="flex items-center justify-between">
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
       <div>
-        <h1 class="text-2xl font-bold text-slate-800">Guruh talabalari</h1>
-        <p class="text-slate-500">SE-401 guruhi — {{ groupStudents.length }} ta talaba</p>
+        <h1 class="text-xl sm:text-2xl font-bold text-slate-800">Guruh talabalari</h1>
+        <p class="text-sm text-slate-500">SE-401 guruhi — {{ groupStudents.length }} ta talaba</p>
       </div>
       <div class="relative">
         <Search class="w-5 h-5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
@@ -12,7 +12,7 @@
           v-model="searchQuery"
           type="text"
           placeholder="Qidirish..."
-          class="pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 outline-none w-64"
+          class="w-full sm:w-64 pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 outline-none"
         />
       </div>
     </div>
