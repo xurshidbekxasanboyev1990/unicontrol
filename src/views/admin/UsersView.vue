@@ -8,6 +8,13 @@
       </div>
     </div>
 
+    <!-- Loading State -->
+    <div v-if="loading" class="flex items-center justify-center py-20">
+      <Loader2 class="w-8 h-8 text-violet-500 animate-spin" />
+      <span class="ml-3 text-slate-600">Foydalanuvchilar yuklanmoqda...</span>
+    </div>
+
+    <template v-else>
     <!-- Search Section -->
     <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
       <div class="mb-4 flex items-center gap-3">
@@ -245,21 +252,24 @@
           <div class="mt-6 flex gap-3">
             <button 
               @click="showResetModal = false"
-              class="flex-1 rounded-xl bg-slate-100 py-3 font-medium text-slate-700 hover:bg-slate-200"
+              :disabled="resetting"
+              class="flex-1 rounded-xl bg-slate-100 py-3 font-medium text-slate-700 hover:bg-slate-200 disabled:opacity-50"
             >
               Bekor qilish
             </button>
             <button 
               @click="confirmReset"
-              :disabled="!newPassword"
-              class="flex-1 rounded-xl bg-violet-500 py-3 font-medium text-white hover:bg-violet-600 disabled:opacity-50"
+              :disabled="!newPassword || resetting"
+              class="flex-1 rounded-xl bg-violet-500 py-3 font-medium text-white hover:bg-violet-600 disabled:opacity-50 flex items-center justify-center gap-2"
             >
-              Saqlash
+              <Loader2 v-if="resetting" class="w-4 h-4 animate-spin" />
+              {{ resetting ? 'Saqlanmoqda...' : 'Saqlash' }}
             </button>
           </div>
         </div>
       </div>
     </Teleport>
+    </template>
   </div>
 </template>
 
@@ -273,9 +283,10 @@
  * - Parolni tiklash
  */
 
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useDataStore } from '@/stores/data'
 import { useToastStore } from '@/stores/toast'
+import api from '@/services/api'
 import {
   Search,
   Eye,
@@ -283,7 +294,8 @@ import {
   X,
   Copy,
   AlertTriangle,
-  UserX
+  UserX,
+  Loader2
 } from 'lucide-vue-next'
 
 const dataStore = useDataStore()
@@ -296,6 +308,21 @@ const showPasswordModal = ref(false)
 const showResetModal = ref(false)
 const selectedUser = ref(null)
 const newPassword = ref('')
+const loading = ref(true)
+const resetting = ref(false)
+
+// Load students on mount
+onMounted(async () => {
+  loading.value = true
+  try {
+    await dataStore.fetchStudents({ page_size: 100 })
+  } catch (err) {
+    console.error('Error loading students:', err)
+    toast.error('Foydalanuvchilarni yuklashda xatolik')
+  } finally {
+    loading.value = false
+  }
+})
 
 // Barcha foydalanuvchilar (talabalar + adminlar)
 const allUsers = computed(() => {
@@ -403,12 +430,24 @@ function generatePassword() {
 }
 
 // Parolni tasdiqlash
-function confirmReset() {
+async function confirmReset() {
   if (!newPassword.value) return
   
-  // Frontend demo - real backendda API chaqiriladi
-  toast.success('Parol yangilandi', `${selectedUser.value.name} uchun yangi parol: ${newPassword.value}`)
-  showResetModal.value = false
+  resetting.value = true
+  try {
+    // Only reset password for students (admins need separate handling)
+    if (selectedUser.value.role === 'student' || selectedUser.value.role === 'leader') {
+      await api.resetStudentPassword(selectedUser.value.id, newPassword.value)
+    }
+    
+    toast.success('Parol yangilandi', `${selectedUser.value.name} uchun yangi parol o'rnatildi`)
+    showResetModal.value = false
+  } catch (err) {
+    console.error('Error resetting password:', err)
+    toast.error('Parolni tiklashda xatolik yuz berdi')
+  } finally {
+    resetting.value = false
+  }
 }
 
 // Clipboard

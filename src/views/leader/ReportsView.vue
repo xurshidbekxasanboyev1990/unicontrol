@@ -868,10 +868,11 @@ import { ref, computed, onMounted } from 'vue'
 import { useDataStore } from '@/stores/data'
 import { useAuthStore } from '@/stores/auth'
 import { useToastStore } from '@/stores/toast'
+import api from '@/services/api'
 import { 
   Plus, FileText, Eye, Download, Trash2, Pencil, X, Bell,
   CheckCircle, AlertCircle, Calendar, Upload, 
-  Image as ImageIcon, Video
+  Image as ImageIcon, Video, Loader2
 } from 'lucide-vue-next'
 
 // ============ STORES ============
@@ -889,6 +890,8 @@ const showViewModal = ref(false)
 const selectedReport = ref(null)
 const activeSection = ref('attendance')
 const showDeadlineReminder = ref(true)
+const loading = ref(false)
+const saving = ref(false)
 
 // File uploads
 const uploadedImages = ref([])
@@ -1040,51 +1043,82 @@ const autoData = computed(() => {
   }
 })
 
-// Mening hisobotlarim (demo data)
-const myReports = ref([
-  {
-    id: 1,
-    title: 'Yanvar oyi hisoboti',
-    period: 'Yanvar 2026',
-    status: 'approved',
-    createdAt: '25.01.2026',
-    stats: { attendance: 87, contract: 75, activities: 3, meetings: 2 },
-    files: { images: 5, videos: 1, docs: 2 },
-    content: {
-      activities: 'Sport musobaqasi o\'tkazildi, 3 nafar talaba g\'olib bo\'ldi',
-      parents: '2 marta ota-onalar yig\'ilishi, 15 oila qatnashdi',
-      problems: 'Davomat bilan bog\'liq muammolar mavjud',
-      plans: 'Fevralda davomat 95% ga ko\'tarish maqsad'
+// Mening hisobotlarim (from API)
+const myReports = ref([])
+
+// Load reports from API
+const loadReports = async () => {
+  loading.value = true
+  try {
+    const response = await api.getReports({ group_id: currentGroup.value?.id })
+    if (response?.items) {
+      myReports.value = response.items.map(r => ({
+        id: r.id,
+        title: r.title || `${getMonthLabel(r.month)} oyi hisoboti`,
+        period: `${getMonthLabel(r.month)} ${r.year}`,
+        month: r.month,
+        year: r.year,
+        status: r.status || 'pending',
+        createdAt: new Date(r.created_at).toLocaleDateString('uz-UZ'),
+        stats: r.stats || { attendance: 0, contract: 0, activities: 0, meetings: 0 },
+        files: r.files || { images: 0, videos: 0, docs: 0 },
+        content: r.content || {}
+      }))
+    } else if (Array.isArray(response)) {
+      myReports.value = response.map(r => ({
+        id: r.id,
+        title: r.title || `${getMonthLabel(r.month)} oyi hisoboti`,
+        period: `${getMonthLabel(r.month)} ${r.year}`,
+        month: r.month,
+        year: r.year,
+        status: r.status || 'pending',
+        createdAt: new Date(r.created_at).toLocaleDateString('uz-UZ'),
+        stats: r.stats || { attendance: 0, contract: 0, activities: 0, meetings: 0 },
+        files: r.files || { images: 0, videos: 0, docs: 0 },
+        content: r.content || {}
+      }))
     }
-  },
-  {
-    id: 2,
-    title: 'Dekabr oyi hisoboti',
-    period: 'Dekabr 2025',
-    status: 'approved',
-    createdAt: '28.12.2025',
-    stats: { attendance: 92, contract: 68, activities: 2, meetings: 1 },
-    files: { images: 3, videos: 0, docs: 1 },
-    content: {
-      activities: 'Yangi yil bayramiga tayyorgarlik',
-      parents: '1 yig\'ilish o\'tkazildi',
-      problems: 'Kontrakt to\'lovlari kechikmoqda',
-      plans: 'Yanvarda kontrakt yig\'ish'
-    }
+  } catch (err) {
+    console.error('Error loading reports:', err)
+    // Keep empty if API fails
+  } finally {
+    loading.value = false
   }
-])
+}
 
 // Boshqa guruhlar hisobotlari
-const otherGroupsReports = computed(() => {
-  const demoReports = [
-    { id: 101, title: 'Yanvar oyi hisoboti', groupName: 'DI_25-21', groupId: 2, period: 'Yanvar 2026' },
-    { id: 102, title: 'Yanvar oyi hisoboti', groupName: 'FTO_24-03', groupId: 3, period: 'Yanvar 2026' },
-  ]
-  
-  if (selectedOtherGroup.value) {
-    return demoReports.filter(r => r.groupId === selectedOtherGroup.value)
+const otherGroupsReports = ref([])
+
+const loadOtherReports = async () => {
+  try {
+    const response = await api.getReports({ exclude_group: currentGroup.value?.id })
+    if (response?.items) {
+      otherGroupsReports.value = response.items.map(r => ({
+        id: r.id,
+        title: r.title || `${getMonthLabel(r.month)} oyi hisoboti`,
+        groupName: r.group_name || 'Noma\'lum',
+        groupId: r.group_id,
+        period: `${getMonthLabel(r.month)} ${r.year}`
+      }))
+    } else if (Array.isArray(response)) {
+      otherGroupsReports.value = response.map(r => ({
+        id: r.id,
+        title: r.title || `${getMonthLabel(r.month)} oyi hisoboti`,
+        groupName: r.group_name || 'Noma\'lum',
+        groupId: r.group_id,
+        period: `${getMonthLabel(r.month)} ${r.year}`
+      }))
+    }
+  } catch (err) {
+    console.error('Error loading other reports:', err)
   }
-  return demoReports
+}
+
+const filteredOtherReports = computed(() => {
+  if (selectedOtherGroup.value) {
+    return otherGroupsReports.value.filter(r => r.groupId === selectedOtherGroup.value)
+  }
+  return otherGroupsReports.value
 })
 
 // To'ldirilgan bo'limlar soni
@@ -1279,36 +1313,68 @@ const saveDraft = () => {
 }
 
 // Hisobot topshirish
-const submitReport = () => {
-  const report = {
-    id: Date.now(),
-    title: `${getMonthLabel(newReport.value.month)} oyi hisoboti`,
-    period: `${getMonthLabel(newReport.value.month)} ${newReport.value.year}`,
-    status: 'pending',
-    createdAt: new Date().toLocaleDateString('uz-UZ'),
-    stats: {
-      attendance: autoData.value.attendance.rate,
-      contract: autoData.value.contract.rate,
-      activities: newReport.value.activities.events ? 1 : 0,
-      meetings: newReport.value.parents.meetingsCount
-    },
-    files: {
-      images: uploadedImages.value.length,
-      videos: uploadedVideos.value.length,
-      docs: uploadedDocs.value.length
-    },
-    content: {
-      activities: newReport.value.activities.events,
-      parents: newReport.value.parents.meetings,
-      problems: newReport.value.problems.main,
-      plans: newReport.value.plans.events
+const submitReport = async () => {
+  saving.value = true
+  try {
+    const reportData = {
+      title: `${getMonthLabel(newReport.value.month)} oyi hisoboti`,
+      month: newReport.value.month,
+      year: newReport.value.year,
+      group_id: currentGroup.value?.id,
+      status: 'pending',
+      stats: {
+        attendance: autoData.value.attendance.rate,
+        contract: autoData.value.contract.rate,
+        activities: newReport.value.activities.events ? 1 : 0,
+        meetings: newReport.value.parents.meetingsCount
+      },
+      content: {
+        activities: newReport.value.activities.events,
+        achievements: newReport.value.activities.achievements,
+        parents: newReport.value.parents.meetings,
+        problems: newReport.value.problems.main,
+        plans: newReport.value.plans.events
+      }
     }
+
+    const response = await api.createReport(reportData)
+    
+    // Add to local list
+    const report = {
+      id: response?.id || Date.now(),
+      title: reportData.title,
+      period: `${getMonthLabel(newReport.value.month)} ${newReport.value.year}`,
+      status: 'pending',
+      createdAt: new Date().toLocaleDateString('uz-UZ'),
+      stats: reportData.stats,
+      files: {
+        images: uploadedImages.value.length,
+        videos: uploadedVideos.value.length,
+        docs: uploadedDocs.value.length
+      },
+      content: reportData.content
+    }
+    
+    myReports.value.unshift(report)
+    showCreateModal.value = false
+    toastStore.success('Hisobot muvaffaqiyatli topshirildi!')
+  } catch (err) {
+    console.error('Error submitting report:', err)
+    toastStore.error('Hisobotni topshirishda xatolik yuz berdi')
+  } finally {
+    saving.value = false
   }
-  
-  myReports.value.unshift(report)
-  showCreateModal.value = false
-  toastStore.success('Hisobot muvaffaqiyatli topshirildi!')
 }
+
+// Load data on mount
+onMounted(async () => {
+  await Promise.all([
+    dataStore.fetchGroups(),
+    dataStore.fetchStudents(),
+    loadReports(),
+    loadOtherReports()
+  ])
+})
 
 // Hisobotni ko'rish
 const viewReport = (report) => {

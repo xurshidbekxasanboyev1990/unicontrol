@@ -19,7 +19,7 @@ from sqlalchemy import (
     Column, Integer, String, DateTime, ForeignKey, 
     Text, Boolean, BigInteger, Enum as SQLEnum
 )
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import relationship, backref
 
 from app.database import Base
 
@@ -196,12 +196,7 @@ class Folder(Base):
     
     # Relationships
     files = relationship("File", back_populates="folder", cascade="all, delete-orphan")
-    children = relationship(
-        "Folder", 
-        backref="parent",
-        remote_side=[id],
-        cascade="all, delete-orphan"
-    )
+    parent = relationship("Folder", remote_side=[id], backref="children")
     user = relationship("User", backref="folders")
     group = relationship("Group", backref="folders")
     

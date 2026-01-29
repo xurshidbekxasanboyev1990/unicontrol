@@ -1,28 +1,49 @@
 <template>
   <div class="space-y-6">
-    <!-- Header -->
-    <div class="flex items-center justify-between">
-      <div>
-        <h1 class="text-2xl font-bold text-slate-800">Tizim jurnali</h1>
-        <p class="text-slate-500">Barcha faoliyatlar tarixi</p>
-      </div>
-      <div class="flex items-center gap-3">
-        <select v-model="filterType" class="px-4 py-2 rounded-xl border border-slate-200 focus:border-amber-500 outline-none">
-          <option value="">Barcha turlar</option>
-          <option value="auth">Autentifikatsiya</option>
-          <option value="crud">CRUD amallar</option>
-          <option value="system">Tizim</option>
-          <option value="error">Xatolar</option>
-        </select>
-        <button 
-          @click="exportLogs"
-          class="px-4 py-2 bg-amber-500 text-white rounded-xl font-medium hover:bg-amber-600 transition-colors flex items-center gap-2"
-        >
-          <Download class="w-4 h-4" />
-          Eksport
-        </button>
-      </div>
+    <!-- Loading State -->
+    <div v-if="loading" class="flex items-center justify-center py-12">
+      <Loader2 class="w-8 h-8 animate-spin text-amber-600" />
+      <span class="ml-3 text-slate-600">Yuklanmoqda...</span>
     </div>
+
+    <!-- Error State -->
+    <div v-else-if="error" class="bg-red-50 border border-red-200 rounded-xl p-6">
+      <div class="flex items-center gap-3 text-red-600">
+        <AlertCircle class="w-6 h-6" />
+        <span>{{ error }}</span>
+      </div>
+      <button 
+        @click="loadLogs" 
+        class="mt-4 px-4 py-2 bg-red-100 hover:bg-red-200 text-red-700 rounded-lg transition-colors"
+      >
+        Qayta urinish
+      </button>
+    </div>
+
+    <template v-else>
+      <!-- Header -->
+      <div class="flex items-center justify-between">
+        <div>
+          <h1 class="text-2xl font-bold text-slate-800">Tizim jurnali</h1>
+          <p class="text-slate-500">Barcha faoliyatlar tarixi</p>
+        </div>
+        <div class="flex items-center gap-3">
+          <select v-model="filterType" @change="loadLogs" class="px-4 py-2 rounded-xl border border-slate-200 focus:border-amber-500 outline-none">
+            <option value="">Barcha turlar</option>
+            <option value="auth">Autentifikatsiya</option>
+            <option value="crud">CRUD amallar</option>
+            <option value="system">Tizim</option>
+            <option value="error">Xatolar</option>
+          </select>
+          <button 
+            @click="exportLogs"
+            class="px-4 py-2 bg-amber-500 text-white rounded-xl font-medium hover:bg-amber-600 transition-colors flex items-center gap-2"
+          >
+            <Download class="w-4 h-4" />
+            Eksport
+          </button>
+        </div>
+      </div>
 
     <!-- Stats -->
     <div class="grid grid-cols-4 gap-4">
@@ -142,11 +163,14 @@
         </div>
       </div>
     </div>
+    </template>
   </div>
 </template>
 
 <script setup>
-import { ref, computed, markRaw } from 'vue'
+import { ref, computed, onMounted } from 'vue'
+import { useToastStore } from '@/stores/toast'
+import api from '../../services/api'
 import {
   Download,
   ScrollText,
@@ -156,25 +180,52 @@ import {
   CheckCircle,
   XCircle,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  Loader2
 } from 'lucide-vue-next'
 
-const filterType = ref('')
+const toast = useToastStore()
 
-const logs = ref([
-  { id: 1, timestamp: '2026-01-25T10:30:00', type: 'auth', user: 'Super Admin', action: 'Tizimga kirdi', ip: '192.168.1.100', status: 'success' },
-  { id: 2, timestamp: '2026-01-25T10:25:00', type: 'crud', user: 'Admin', action: 'Yangi talaba qo\'shdi: Ali Valiyev', ip: '192.168.1.101', status: 'success' },
-  { id: 3, timestamp: '2026-01-25T10:20:00', type: 'crud', user: 'Sardor', action: 'Davomat yozuvi qo\'shildi', ip: '192.168.1.102', status: 'success' },
-  { id: 4, timestamp: '2026-01-25T10:15:00', type: 'auth', user: 'Student', action: 'Tizimga kirdi', ip: '192.168.1.103', status: 'success' },
-  { id: 5, timestamp: '2026-01-25T10:10:00', type: 'error', user: 'Unknown', action: 'Noto\'g\'ri parol kiritildi', ip: '192.168.1.200', status: 'error' },
-  { id: 6, timestamp: '2026-01-25T10:05:00', type: 'system', user: 'System', action: 'Avtomatik zaxira nusxa yaratildi', ip: 'localhost', status: 'success' },
-  { id: 7, timestamp: '2026-01-25T09:55:00', type: 'crud', user: 'Admin', action: 'Guruh ma\'lumoti yangilandi: SE-401', ip: '192.168.1.101', status: 'success' },
-  { id: 8, timestamp: '2026-01-25T09:50:00', type: 'auth', user: 'Admin', action: 'Tizimdan chiqdi', ip: '192.168.1.101', status: 'success' },
-  { id: 9, timestamp: '2026-01-25T09:45:00', type: 'crud', user: 'Super Admin', action: 'Bildirishnoma yuborildi', ip: '192.168.1.100', status: 'success' },
-  { id: 10, timestamp: '2026-01-25T09:40:00', type: 'error', user: 'System', action: 'Email yuborishda xato', ip: 'localhost', status: 'error' },
-  { id: 11, timestamp: '2026-01-25T09:35:00', type: 'crud', user: 'Sardor', action: 'Talaba ma\'lumoti yangilandi', ip: '192.168.1.102', status: 'success' },
-  { id: 12, timestamp: '2026-01-25T09:30:00', type: 'auth', user: 'Sardor', action: 'Tizimga kirdi', ip: '192.168.1.102', status: 'success' }
-])
+// State
+const loading = ref(true)
+const error = ref(null)
+const filterType = ref('')
+const logs = ref([])
+const page = ref(1)
+const totalPages = ref(1)
+const totalCount = ref(0)
+
+// Load logs from API
+const loadLogs = async () => {
+  loading.value = true
+  error.value = null
+  
+  try {
+    const params = { page: page.value, limit: 50 }
+    if (filterType.value) {
+      params.type = filterType.value
+    }
+    
+    const response = await api.getLogs(params)
+    logs.value = (response.items || response || []).map(l => ({
+      id: l.id,
+      timestamp: l.created_at || l.timestamp,
+      type: l.type || 'system',
+      user: l.user_name || l.user || 'Unknown',
+      action: l.action || l.message,
+      ip: l.ip_address || l.ip || '-',
+      status: l.status || 'success'
+    }))
+    
+    totalPages.value = response.pages || Math.ceil((response.total || logs.value.length) / 50)
+    totalCount.value = response.total || logs.value.length
+  } catch (e) {
+    console.error('Error loading logs:', e)
+    error.value = 'Loglarni yuklashda xatolik'
+  } finally {
+    loading.value = false
+  }
+}
 
 const authLogs = computed(() => logs.value.filter(l => l.type === 'auth').length)
 const crudLogs = computed(() => logs.value.filter(l => l.type === 'crud').length)
@@ -186,6 +237,7 @@ const filteredLogs = computed(() => {
 })
 
 const formatDate = (timestamp) => {
+  if (!timestamp) return '-'
   return new Date(timestamp).toLocaleString('uz-UZ', {
     day: '2-digit',
     month: '2-digit',
@@ -215,7 +267,34 @@ const getTypeLabel = (type) => {
   return labels[type] || type
 }
 
-const exportLogs = () => {
-  alert('Loglar yuklanmoqda...')
+const exportLogs = async () => {
+  try {
+    toast.info('Loglar yuklanmoqda...')
+    const response = await api.exportToExcel('logs')
+    
+    const url = window.URL.createObjectURL(new Blob([response]))
+    const link = document.createElement('a')
+    link.href = url
+    link.setAttribute('download', 'logs.xlsx')
+    document.body.appendChild(link)
+    link.click()
+    link.remove()
+    window.URL.revokeObjectURL(url)
+    
+    toast.success('Loglar yuklandi')
+  } catch (e) {
+    console.error('Error exporting logs:', e)
+    toast.error('Eksport qilishda xatolik')
+  }
 }
+
+const goToPage = (p) => {
+  page.value = p
+  loadLogs()
+}
+
+// Initialize
+onMounted(() => {
+  loadLogs()
+})
 </script>

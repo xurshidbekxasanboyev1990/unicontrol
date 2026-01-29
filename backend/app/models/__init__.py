@@ -38,6 +38,13 @@ from app.models.library import (
     BookStatus,
     BorrowStatus,
 )
+from app.models.canteen import (
+    MenuCategory,
+    MenuItem,
+    Order,
+    OrderItem,
+    OrderStatus,
+)
 
 __all__ = [
     # User
@@ -85,4 +92,10 @@ __all__ = [
     "BookLanguage",
     "BookStatus",
     "BorrowStatus",
+    # Canteen
+    "MenuCategory",
+    "MenuItem",
+    "Order",
+    "OrderItem",
+    "OrderStatus",
 ]

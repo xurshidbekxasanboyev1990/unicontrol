@@ -262,8 +262,9 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useToastStore } from '@/stores/toast'
+import api from '@/services/api'
 import {
   Search, MessageCircle, Phone, Send, HelpCircle, ChevronDown,
   ThumbsUp, ThumbsDown, Play, BookOpen, Download, ExternalLink,
@@ -277,11 +278,46 @@ const searchQuery = ref('')
 const activeCategory = ref('all')
 const openFaqs = ref([])
 const showContactForm = ref(false)
+const loading = ref(false)
+const faqs = ref([])
+
 const contactForm = ref({
   subject: '',
   message: '',
   file: null
 })
+
+// Load data on mount
+onMounted(async () => {
+  await loadFaqs()
+})
+
+async function loadFaqs() {
+  loading.value = true
+  try {
+    const response = await api.getFaqs()
+    if (Array.isArray(response)) {
+      faqs.value = response.map(f => ({
+        id: f.id,
+        category: f.category || 'all',
+        question: f.question,
+        answer: f.answer
+      }))
+    } else if (response?.data) {
+      faqs.value = response.data.map(f => ({
+        id: f.id,
+        category: f.category || 'all',
+        question: f.question,
+        answer: f.answer
+      }))
+    }
+  } catch (err) {
+    console.error('Load FAQs error:', err)
+    // Keep empty faqs if API fails
+  } finally {
+    loading.value = false
+  }
+}
 
 // Categories
 const categories = [
@@ -292,59 +328,10 @@ const categories = [
   { id: 'profile', name: 'Profil', icon: User }
 ]
 
-// FAQs
-const faqs = ref([
-  {
-    id: 1,
-    category: 'attendance',
-    question: 'Davomatim noto\'g\'ri ko\'rsatilmoqda. Nima qilishim kerak?',
-    answer: 'Agar davomatingiz noto\'g\'ri ko\'rsatilayotgan bo\'lsa, guruh sardoringizga murojaat qiling. Sardor davomatni tuzatish huquqiga ega. Agar muammo hal bo\'lmasa, admin bilan bog\'laning.'
-  },
-  {
-    id: 2,
-    category: 'attendance',
-    question: 'Davomat qachon belgilanadi?',
-    answer: 'Davomat har bir dars boshlanishida guruh sardori tomonidan belgilanadi. Dars tugaganidan keyin davomat o\'zgartirilishi mumkin, lekin buning uchun asosli sabab talab etiladi.'
-  },
-  {
-    id: 3,
-    category: 'library',
-    question: 'Kitobni qanday qilib yuklab olish mumkin?',
-    answer: 'Kutubxona bo\'limiga o\'ting, kerakli kitobni toping va "Yuklab olish" tugmasini bosing. Kitob PDF formatida qurilmangizga yuklanadi. Ba\'zi kitoblar faqat onlayn o\'qish uchun mavjud.'
-  },
-  {
-    id: 4,
-    category: 'library',
-    question: 'Nechta kitob olish mumkin?',
-    answer: 'Bir vaqtning o\'zida 5 tagacha kitob olish mumkin. Kitobni qaytarganingizdan keyin yangi kitob olishingiz mumkin.'
-  },
-  {
-    id: 5,
-    category: 'settings',
-    question: 'Parolni qanday o\'zgartirish mumkin?',
-    answer: 'Sozlamalar > Xavfsizlik > Parolni o\'zgartirish bo\'limiga o\'ting. Joriy parolni kiriting, keyin yangi parolni ikki marta kiriting va "Saqlash" tugmasini bosing.'
-  },
-  {
-    id: 6,
-    category: 'settings',
-    question: 'Bildirishnomalarni qanday o\'chirish mumkin?',
-    answer: 'Sozlamalar > Bildirishnomalar bo\'limiga o\'ting. U yerda har xil turdagi bildirishnomalarni alohida-alohida yoqish yoki o\'chirish mumkin.'
-  },
-  {
-    id: 7,
-    category: 'profile',
-    question: 'Profil rasmini qanday o\'zgartirish mumkin?',
-    answer: 'Profil sahifasiga o\'ting, profil rasmi ustiga bosing va "Rasm yuklash" tugmasini tanlang. Rasm JPG yoki PNG formatida, 5MB dan kichik bo\'lishi kerak.'
-  },
-  {
-    id: 8,
-    category: 'profile',
-    question: 'Telefon raqamni qanday o\'zgartirish mumkin?',
-    answer: 'Profil > Tahrirlash bo\'limida telefon raqamni o\'zgartirishingiz mumkin. Yangi raqamga tasdiqlash kodi yuboriladi.'
-  }
-])
+// FAQs - Now loaded from API
+// Removed hardcoded demo data
 
-// Videos
+// Videos (placeholder - no API for this)
 const videos = [
   { id: 1, title: 'Tizimga kirish va profil', thumbnail: 'https://picsum.photos/320/180?random=1', duration: '3:45' },
   { id: 2, title: 'Davomat ko\'rish', thumbnail: 'https://picsum.photos/320/180?random=2', duration: '2:30' },

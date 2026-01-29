@@ -699,19 +699,9 @@ const availableIcons = [
 ]
 
 // FAQ data
-const categories = ref([
-  { id: 1, name: 'Umumiy', icon: 'HelpCircle' },
-  { id: 2, name: 'Davomat', icon: 'ClipboardCheck' },
-  { id: 3, name: 'To\'lov', icon: 'CreditCard' },
-  { id: 4, name: 'Dars jadvali', icon: 'Calendar' },
-  { id: 5, name: 'Texnik yordam', icon: 'Settings' }
-])
+const categories = ref([])
 
-const faqs = ref([
-  { id: 1, category_id: 1, question: 'Tizimga qanday kiraman?', answer: 'Tizimga kirish uchun talaba ID va parolingizni kiriting. Agar parolni unutgan bo\'lsangiz, guruh sardoringizga murojaat qiling.', is_active: true, order: 1 },
-  { id: 2, category_id: 2, question: 'Davomat qanday hisoblanadi?', answer: 'Davomat har bir dars uchun alohida hisoblanadi. Darsga kelmaslik "nb" sifatida belgilanadi va umumiy foizga ta\'sir qiladi.', is_active: true, order: 2 },
-  { id: 3, category_id: 3, question: 'Kontrakt to\'lovini qanday amalga oshiraman?', answer: 'Kontrakt to\'lovini Click, Payme yoki bank orqali amalga oshirishingiz mumkin. To\'lov qilingandan so\'ng tizimda avtomatik aks etadi.', is_active: true, order: 3 }
-])
+const faqs = ref([])
 
 const filterCategory = ref('')
 
@@ -722,22 +712,18 @@ const filteredFaqs = computed(() => {
 
 // Contact info
 const contactInfo = reactive({
-  phones: ['+998 71 234 56 78', '+998 71 234 56 79'],
-  emails: ['info@university.uz', 'support@university.uz'],
-  telegram: '@university_support',
-  instagram: '@university_official',
-  facebook: 'university.official',
+  phones: [],
+  emails: [],
+  telegram: '',
+  instagram: '',
+  facebook: '',
   youtube: '',
-  address: 'Toshkent shahri, Yunusobod tumani, Amir Temur ko\'chasi, 108-uy',
-  working_hours: 'Dushanba - Juma: 9:00 - 18:00'
+  address: '',
+  working_hours: ''
 })
 
 // Messages
-const messages = ref([
-  { id: 1, user_name: 'Alisher Karimov', user_email: 'alisher@mail.com', subject: 'Davomat xatosi', message: 'Salom, mening davomatim noto\'g\'ri ko\'rsatilmoqda. 15-yanvar kuni darsda bo\'lganman lekin "nb" deb yozilgan.', status: 'new', created_at: '2026-01-27T10:30:00' },
-  { id: 2, user_name: 'Dilnoza Rahimova', user_email: 'dilnoza@mail.com', subject: 'Parolni tiklash', message: 'Parolimni unutdim, tiklashda yordam bering.', status: 'in_progress', created_at: '2026-01-26T15:45:00' },
-  { id: 3, user_name: 'Bobur Aliyev', user_email: 'bobur@mail.com', subject: 'To\'lov muammosi', message: 'To\'lov qildim lekin tizimda aks etmayapti. Chek raqami: 123456789', status: 'resolved', created_at: '2026-01-25T09:15:00' }
-])
+const messages = ref([])
 
 const messageFilter = ref('')
 const filteredMessages = computed(() => {
@@ -844,16 +830,28 @@ const saveFaq = async () => {
   isSaving.value = true
   try {
     if (editingFaq.value) {
-      // Update
+      // Update via API
+      const response = await api.updateFaq(editingFaq.value.id, {
+        category_id: faqForm.category_id,
+        question: faqForm.question,
+        answer: faqForm.answer,
+        is_active: faqForm.is_active
+      })
       const index = faqs.value.findIndex(f => f.id === editingFaq.value.id)
       if (index !== -1) {
         faqs.value[index] = { ...faqs.value[index], ...faqForm }
       }
       toast.success('Muvaffaqiyat', 'Savol yangilandi')
     } else {
-      // Create
+      // Create via API
+      const response = await api.createFaq({
+        category_id: faqForm.category_id,
+        question: faqForm.question,
+        answer: faqForm.answer,
+        is_active: faqForm.is_active
+      })
       const newFaq = {
-        id: Date.now(),
+        id: response?.id || Date.now(),
         ...faqForm,
         order: faqs.value.length + 1
       }
@@ -862,16 +860,21 @@ const saveFaq = async () => {
     }
     showFaqModal.value = false
   } catch (error) {
-    toast.error('Xatolik', 'Saqlashda xatolik yuz berdi')
+    toast.error('Xatolik', error.message || 'Saqlashda xatolik yuz berdi')
   } finally {
     isSaving.value = false
   }
 }
 
-const deleteFaq = (faq) => {
+const deleteFaq = async (faq) => {
   if (confirm(`"${faq.question}" savolini o'chirishni xohlaysizmi?`)) {
-    faqs.value = faqs.value.filter(f => f.id !== faq.id)
-    toast.success('O\'chirildi', 'Savol o\'chirildi')
+    try {
+      await api.deleteFaq(faq.id)
+      faqs.value = faqs.value.filter(f => f.id !== faq.id)
+      toast.success('O\'chirildi', 'Savol o\'chirildi')
+    } catch (error) {
+      toast.error('Xatolik', error.message || 'O\'chirishda xatolik')
+    }
   }
 }
 
@@ -945,11 +948,19 @@ const removeContactField = (field, index) => {
 const saveContactInfo = async () => {
   isSaving.value = true
   try {
-    // API call
-    // await api.updateContactInfo(contactInfo)
+    await api.updateContactInfo({
+      phones: contactInfo.phones,
+      emails: contactInfo.emails,
+      telegram: contactInfo.telegram,
+      instagram: contactInfo.instagram,
+      facebook: contactInfo.facebook,
+      youtube: contactInfo.youtube,
+      address: contactInfo.address,
+      working_hours: contactInfo.working_hours
+    })
     toast.success('Muvaffaqiyat', 'Kontakt ma\'lumotlari saqlandi')
   } catch (error) {
-    toast.error('Xatolik', 'Saqlashda xatolik yuz berdi')
+    toast.error('Xatolik', error.message || 'Saqlashda xatolik yuz berdi')
   } finally {
     isSaving.value = false
   }
@@ -972,11 +983,12 @@ const sendReply = async () => {
   isSaving.value = true
   try {
     // API call to send reply
+    await api.replySupportMessage(selectedMessage.value.id, replyMessage.value)
     selectedMessage.value.status = 'resolved'
     toast.success('Yuborildi', 'Javob yuborildi')
     showMessageModal.value = false
   } catch (error) {
-    toast.error('Xatolik', 'Yuborishda xatolik')
+    toast.error('Xatolik', error.message || 'Yuborishda xatolik')
   } finally {
     isSaving.value = false
   }
@@ -985,15 +997,70 @@ const sendReply = async () => {
 // Load data
 const loadData = async () => {
   try {
-    // Load FAQ, categories, contact info, messages from API
-    // const [faqsRes, categoriesRes, contactRes, messagesRes] = await Promise.all([
-    //   api.getFaqs(),
-    //   api.getFaqCategories(),
-    //   api.getContactInfo(),
-    //   api.getSupportMessages()
-    // ])
+    // Load FAQs from API
+    const faqsRes = await api.getFaqs()
+    if (Array.isArray(faqsRes)) {
+      faqs.value = faqsRes.map(f => ({
+        id: f.id,
+        category_id: f.category_id || 1,
+        question: f.question,
+        answer: f.answer,
+        is_active: f.is_active !== false,
+        order: f.order || 1
+      }))
+    } else if (faqsRes?.data) {
+      faqs.value = faqsRes.data.map(f => ({
+        id: f.id,
+        category_id: f.category_id || 1,
+        question: f.question,
+        answer: f.answer,
+        is_active: f.is_active !== false,
+        order: f.order || 1
+      }))
+    }
+
+    // Load contact info
+    try {
+      const contactRes = await api.getContactInfo()
+      if (contactRes) {
+        contactInfo.phones = contactRes.phones || []
+        contactInfo.emails = contactRes.emails || []
+        contactInfo.telegram = contactRes.telegram || ''
+        contactInfo.instagram = contactRes.instagram || ''
+        contactInfo.facebook = contactRes.facebook || ''
+        contactInfo.youtube = contactRes.youtube || ''
+        contactInfo.address = contactRes.address || ''
+        contactInfo.working_hours = contactRes.working_hours || ''
+      }
+    } catch (e) {
+      console.log('Contact info not available')
+    }
+
+    // Load support messages
+    try {
+      const messagesRes = await api.getSupportMessages()
+      if (Array.isArray(messagesRes)) {
+        messages.value = messagesRes
+      } else if (messagesRes?.data) {
+        messages.value = messagesRes.data
+      }
+    } catch (e) {
+      console.log('Support messages not available')
+    }
+
+    // Set default categories if none exist
+    if (categories.value.length === 0) {
+      categories.value = [
+        { id: 1, name: 'Umumiy', icon: 'HelpCircle' },
+        { id: 2, name: 'Davomat', icon: 'ClipboardCheck' },
+        { id: 3, name: 'To\'lov', icon: 'CreditCard' },
+        { id: 4, name: 'Dars jadvali', icon: 'Calendar' },
+        { id: 5, name: 'Texnik yordam', icon: 'Settings' }
+      ]
+    }
   } catch (error) {
     console.error('Error loading data:', error)
+    toast.error('Xatolik', 'Ma\'lumotlar yuklanmadi')
   } finally {
     isLoading.value = false
   }

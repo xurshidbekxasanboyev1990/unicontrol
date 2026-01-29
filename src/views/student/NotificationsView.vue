@@ -43,13 +43,26 @@
 
     <!-- Notifications List -->
     <div class="space-y-3">
-      <TransitionGroup name="list">
-        <div
-          v-for="notification in filteredNotifications"
-          :key="notification.id"
-          class="flex gap-4 rounded-2xl border bg-white p-4 shadow-sm transition-all"
-          :class="notification.read ? 'border-slate-200' : 'border-blue-200 bg-blue-50/50'"
-        >
+      <!-- Loading State -->
+      <div v-if="loading" class="flex items-center justify-center py-8">
+        <Loader2 class="w-8 h-8 animate-spin text-blue-600" />
+        <span class="ml-3 text-slate-600">Yuklanmoqda...</span>
+      </div>
+
+      <!-- Error State -->
+      <div v-else-if="error" class="bg-red-50 border border-red-200 rounded-xl p-4">
+        <p class="text-red-600">{{ error }}</p>
+        <button @click="loadNotifications" class="mt-2 text-red-700 underline">Qayta urinish</button>
+      </div>
+
+      <template v-else>
+        <TransitionGroup name="list">
+          <div
+            v-for="notification in filteredNotifications"
+            :key="notification.id"
+            class="flex gap-4 rounded-2xl border bg-white p-4 shadow-sm transition-all"
+            :class="notification.read ? 'border-slate-200' : 'border-blue-200 bg-blue-50/50'"
+          >
           <!-- Icon -->
           <div 
             class="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl"
@@ -101,19 +114,20 @@
             </button>
           </div>
         </div>
-      </TransitionGroup>
+        </TransitionGroup>
 
-      <!-- Empty State -->
-      <div 
-        v-if="filteredNotifications.length === 0"
-        class="flex flex-col items-center justify-center rounded-2xl border border-slate-200 bg-white py-16"
-      >
-        <div class="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-slate-100">
-          <Bell :size="32" class="text-slate-400" />
+        <!-- Empty State -->
+        <div 
+          v-if="filteredNotifications.length === 0"
+          class="flex flex-col items-center justify-center rounded-2xl border border-slate-200 bg-white py-16"
+        >
+          <div class="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-slate-100">
+            <Bell :size="32" class="text-slate-400" />
+          </div>
+          <h3 class="text-lg font-medium text-slate-800">Xabarlar yo'q</h3>
+          <p class="mt-1 text-slate-500">Yangi xabarlar shu yerda ko'rsatiladi</p>
         </div>
-        <h3 class="text-lg font-medium text-slate-800">Xabarlar yo'q</h3>
-        <p class="mt-1 text-slate-500">Yangi xabarlar shu yerda ko'rsatiladi</p>
-      </div>
+      </template>
     </div>
 
     <!-- Push Notification Settings -->
@@ -158,18 +172,21 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useToastStore } from '@/stores/toast'
+import api from '../../services/api'
 import {
   Bell, BellRing, Check, CheckCheck, Trash2, ArrowRight,
-  Megaphone, Calendar, AlertTriangle, BookOpen, Users, Info
+  Megaphone, Calendar, AlertTriangle, BookOpen, Users, Info, Loader2
 } from 'lucide-vue-next'
 
 const router = useRouter()
 const toast = useToastStore()
 
 // State
+const loading = ref(true)
+const error = ref(null)
 const activeTab = ref('all')
 const pushEnabled = ref(true)
 const pushSettings = ref({
@@ -189,62 +206,59 @@ const tabs = computed(() => [
 ])
 
 // Notifications
-const notifications = ref([
-  {
-    id: 1,
-    type: 'announcement',
-    title: 'Muhim e\'lon',
-    message: 'Ertaga 3-chi juft dars bo\'lmaydi. O\'qituvchi kasallik sababli dars berolmaydi.',
-    time: '10 daqiqa oldin',
-    read: false,
-    action: 'schedule',
-    actionText: 'Jadvalga o\'tish'
-  },
-  {
-    id: 2,
-    type: 'attendance',
-    title: 'Davomat ogohlantirishi',
-    message: 'Sizning davomatingiz 75% dan pastga tushdi. Darslarga muntazam boring.',
-    time: '1 soat oldin',
-    read: false,
-    action: 'attendance',
-    actionText: 'Davomatni ko\'rish'
-  },
-  {
-    id: 3,
-    type: 'schedule',
-    title: 'Jadval o\'zgarishi',
-    message: 'Dushanba kuni Matematika darsi 2-juftdan 3-juftga ko\'chirildi.',
-    time: '3 soat oldin',
-    read: true
-  },
-  {
-    id: 4,
-    type: 'library',
-    title: 'Kitob qaytarish eslatmasi',
-    message: '"Dasturlash asoslari" kitobini qaytarish muddati 3 kunga qoldi.',
-    time: 'Kecha',
-    read: true,
-    action: 'library',
-    actionText: 'Kutubxonaga o\'tish'
-  },
-  {
-    id: 5,
-    type: 'announcement',
-    title: 'Guruh yig\'ilishi',
-    message: 'Juma kuni soat 14:00 da guruh yig\'ilishi bo\'ladi. Barcha talabalar qatnashishi shart.',
-    time: '2 kun oldin',
-    read: true
-  },
-  {
-    id: 6,
-    type: 'attendance',
-    title: 'Bugungi davomat',
-    message: 'Bugun 3 ta darsga qatnashish belgilandi. Ajoyib!',
-    time: '2 kun oldin',
-    read: true
+const notifications = ref([])
+
+// Load notifications from API
+const loadNotifications = async () => {
+  loading.value = true
+  error.value = null
+  
+  try {
+    const response = await api.getNotifications({ limit: 50 })
+    notifications.value = (response.items || response || []).map(n => ({
+      id: n.id,
+      type: n.type || 'announcement',
+      title: n.title,
+      message: n.message || n.content,
+      time: formatTime(n.created_at),
+      read: n.is_read || n.read || false,
+      action: n.action_type,
+      actionText: n.action_text || getActionText(n.action_type)
+    }))
+  } catch (e) {
+    console.error('Error loading notifications:', e)
+    error.value = 'Bildirishnomalarni yuklashda xatolik'
+  } finally {
+    loading.value = false
   }
-])
+}
+
+// Format time helper
+const formatTime = (dateStr) => {
+  if (!dateStr) return ''
+  const date = new Date(dateStr)
+  const now = new Date()
+  const diffMs = now - date
+  const diffMins = Math.floor(diffMs / 60000)
+  const diffHours = Math.floor(diffMs / 3600000)
+  const diffDays = Math.floor(diffMs / 86400000)
+  
+  if (diffMins < 60) return `${diffMins} daqiqa oldin`
+  if (diffHours < 24) return `${diffHours} soat oldin`
+  if (diffDays === 1) return 'Kecha'
+  if (diffDays < 7) return `${diffDays} kun oldin`
+  return date.toLocaleDateString('uz-UZ')
+}
+
+// Get action text
+const getActionText = (actionType) => {
+  const texts = {
+    schedule: 'Jadvalga o\'tish',
+    attendance: 'Davomatni ko\'rish',
+    library: 'Kutubxonaga o\'tish'
+  }
+  return texts[actionType] || 'Ko\'rish'
+}
 
 // Computed
 const filteredNotifications = computed(() => {
@@ -296,23 +310,47 @@ function getNotificationIconColor(type) {
   return colors[type] || 'text-slate-600'
 }
 
-function markAsRead(id) {
-  const notification = notifications.value.find(n => n.id === id)
-  if (notification) {
-    notification.read = true
+async function markAsRead(id) {
+  try {
+    await api.markNotificationRead(id)
+    const notification = notifications.value.find(n => n.id === id)
+    if (notification) {
+      notification.read = true
+    }
+  } catch (e) {
+    console.error('Error marking as read:', e)
+    // Still update locally
+    const notification = notifications.value.find(n => n.id === id)
+    if (notification) {
+      notification.read = true
+    }
   }
 }
 
-function markAllAsRead() {
-  notifications.value.forEach(n => n.read = true)
-  toast.success('Barcha xabarlar o\'qilgan deb belgilandi')
+async function markAllAsRead() {
+  try {
+    await api.markAllNotificationsRead()
+    notifications.value.forEach(n => n.read = true)
+    toast.success('Barcha xabarlar o\'qilgan deb belgilandi')
+  } catch (e) {
+    console.error('Error marking all as read:', e)
+    // Still update locally
+    notifications.value.forEach(n => n.read = true)
+    toast.success('Barcha xabarlar o\'qilgan deb belgilandi')
+  }
 }
 
-function deleteNotification(id) {
-  const index = notifications.value.findIndex(n => n.id === id)
-  if (index > -1) {
-    notifications.value.splice(index, 1)
-    toast.success('Xabar o\'chirildi')
+async function deleteNotification(id) {
+  try {
+    await api.deleteNotification(id)
+    const index = notifications.value.findIndex(n => n.id === id)
+    if (index > -1) {
+      notifications.value.splice(index, 1)
+      toast.success('Xabar o\'chirildi')
+    }
+  } catch (e) {
+    console.error('Error deleting notification:', e)
+    toast.error('O\'chirishda xatolik')
   }
 }
 
@@ -329,6 +367,11 @@ function handleAction(notification) {
     router.push(routes[notification.action])
   }
 }
+
+// Initialize
+onMounted(() => {
+  loadNotifications()
+})
 </script>
 
 <style scoped>

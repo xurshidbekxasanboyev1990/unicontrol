@@ -6,6 +6,24 @@
       <p class="text-slate-500">Asosiy konfiguratsiya va sozlamalar</p>
     </div>
 
+    <!-- Loading State -->
+    <div v-if="loading" class="flex items-center justify-center py-20">
+      <Loader2 class="w-8 h-8 text-amber-500 animate-spin" />
+      <span class="ml-3 text-slate-600">Sozlamalar yuklanmoqda...</span>
+    </div>
+
+    <!-- Error State -->
+    <div v-else-if="error" class="bg-red-50 border border-red-200 rounded-2xl p-6 text-center">
+      <AlertCircle class="w-12 h-12 text-red-400 mx-auto mb-3" />
+      <p class="text-red-600 mb-4">{{ error }}</p>
+      <button @click="loadSettings" class="px-4 py-2 bg-red-500 text-white rounded-xl hover:bg-red-600 transition-colors flex items-center gap-2 mx-auto">
+        <RefreshCw class="w-4 h-4" />
+        Qayta urinish
+      </button>
+    </div>
+
+    <template v-else>
+
     <!-- Settings Sections -->
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
       <!-- General Settings -->
@@ -230,12 +248,15 @@
     <div class="flex justify-end">
       <button 
         @click="saveSettings"
-        class="px-6 py-3 bg-amber-500 text-white rounded-xl font-medium hover:bg-amber-600 transition-colors flex items-center gap-2"
+        :disabled="saving"
+        class="px-6 py-3 bg-amber-500 text-white rounded-xl font-medium hover:bg-amber-600 transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
       >
-        <Save class="w-5 h-5" />
-        Sozlamalarni saqlash
+        <Loader2 v-if="saving" class="w-5 h-5 animate-spin" />
+        <Save v-else class="w-5 h-5" />
+        {{ saving ? 'Saqlanmoqda...' : 'Sozlamalarni saqlash' }}
       </button>
     </div>
+    </template>
 
     <!-- Success Toast -->
     <Transition
@@ -258,23 +279,32 @@
 </template>
 
 <script setup>
-import { ref, reactive } from 'vue'
+import { ref, reactive, onMounted } from 'vue'
 import {
   Settings,
   ClipboardCheck,
   Bell,
   Shield,
   Save,
-  CheckCircle
+  CheckCircle,
+  Loader2,
+  AlertCircle,
+  RefreshCw
 } from 'lucide-vue-next'
+import api from '@/services/api'
+import { useToastStore } from '@/stores/toast'
 
+const toast = useToastStore()
+const loading = ref(true)
+const saving = ref(false)
+const error = ref(null)
 const showSuccess = ref(false)
 
 const settings = reactive({
   systemName: 'Uni Control',
-  universityName: 'Toshkent Axborot Texnologiyalari Universiteti',
-  academicYear: '2025-2026',
-  semester: '2',
+  universityName: '',
+  academicYear: '2024-2025',
+  semester: '1',
   minAttendance: 70,
   lateThreshold: 15,
   autoWarning: true,
@@ -287,10 +317,39 @@ const settings = reactive({
   ipRestriction: false
 })
 
-const saveSettings = () => {
-  showSuccess.value = true
-  setTimeout(() => {
-    showSuccess.value = false
-  }, 3000)
+const loadSettings = async () => {
+  loading.value = true
+  error.value = null
+  try {
+    const response = await api.getSettings()
+    if (response && response.data) {
+      Object.assign(settings, response.data)
+    }
+  } catch (err) {
+    console.error('Error loading settings:', err)
+    error.value = 'Sozlamalarni yuklashda xatolik yuz berdi'
+    // Keep defaults if API fails
+  } finally {
+    loading.value = false
+  }
 }
+
+const saveSettings = async () => {
+  saving.value = true
+  try {
+    await api.updateSettings({ ...settings })
+    showSuccess.value = true
+    toast.success('Sozlamalar saqlandi!')
+    setTimeout(() => {
+      showSuccess.value = false
+    }, 3000)
+  } catch (err) {
+    console.error('Error saving settings:', err)
+    toast.error('Sozlamalarni saqlashda xatolik yuz berdi')
+  } finally {
+    saving.value = false
+  }
+}
+
+onMounted(loadSettings)
 </script>

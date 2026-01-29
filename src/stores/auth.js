@@ -1,52 +1,56 @@
 /**
  * ============================================
- * UNI CONTROL - Autentifikatsiya Store
+ * UNI CONTROL - Autentifikatsiya Store (Real API)
  * ============================================
  * 
- * Bu store foydalanuvchi autentifikatsiyasini boshqaradi.
+ * Bu store foydalanuvchi autentifikatsiyasini backend API orqali boshqaradi.
  * 
- * STATE:
- * ------
- * - user: Joriy foydalanuvchi ma'lumotlari (null = login qilinmagan)
- * - isAuthenticated: Login holatini ko'rsatadi
- * - loginError: Login xatosi ('blocked' = guruh bloklangan)
- * - adminUsers: Admin va SuperAdmin foydalanuvchilar ro'yxati
+ * FEATURES:
+ * ---------
+ * - Real JWT authentication (access + refresh tokens)
+ * - Token auto-refresh mechanism
+ * - Persistent login state
+ * - Role-based access control
+ * - Error handling with user-friendly messages
  * 
- * COMPUTED (GETTERS):
- * -------------------
- * - isStudent, isLeader, isAdmin, isSuperAdmin: Rol tekshirish
- * - canManageStudents: ['leader', 'admin', 'superadmin']
- * - canManageGroups: ['admin', 'superadmin']
- * - canSendNotifications: faqat SuperAdmin
+ * ENDPOINTS USED:
+ * ---------------
+ * POST /auth/login     - Login
+ * POST /auth/logout    - Logout
+ * POST /auth/refresh   - Token refresh
+ * GET  /auth/me        - Get current user
+ * POST /auth/change-password - Password change
  * 
- * ACTIONS:
- * --------
- * - login(credentials): Tizimga kirish
- *   1. Avval adminUsers ichidan qidiradi
- *   2. Topilmasa, dataStore.students ichidan qidiradi
- *   3. Guruh holatini tekshiradi (isActive)
- *   4. localStorage'ga saqlaydi
- * 
- * - logout(): Tizimdan chiqish, localStorage tozalash
- * - checkAuth(): Sahifa yuklanganda localStorage'dan auth tekshirish
- * - updateProfile(): Profil ma'lumotlarini yangilash (telefon, manzil, transport)
- * - refreshUserRole(): Sardor tayinlanganda rolni yangilash
- * 
- * MUHIM: Talaba login qilganda guruh holati tekshiriladi!
- * Agar guruh bloklangan bo'lsa (isActive = false), login rad etiladi.
+ * Author: UniControl Team
+ * Version: 2.0.0 (Real API)
  */
 
 import { defineStore } from 'pinia'
-import { ref, computed } from 'vue'
-import { useDataStore } from './data'
+import { computed, ref } from 'vue'
+import api from '../services/api'
 
 export const useAuthStore = defineStore('auth', () => {
   // ===== STATE =====
-  const user = ref(null)                    // Joriy foydalanuvchi
-  const isAuthenticated = ref(false)        // Login holatimi?
-  const loginError = ref(null)              // Xato turi: 'blocked' | null
 
-  // Rol turlari: 'student', 'leader', 'admin', 'superadmin'
+  /** 
+   * Joriy foydalanuvchi ma'lumotlari
+   * null = login qilinmagan
+   */
+  const user = ref(null)
+
+  /** Login holatimi? */
+  const isAuthenticated = ref(false)
+
+  /** Yuklanish holati */
+  const loading = ref(false)
+
+  /** Xato xabari */
+  const error = ref(null)
+
+  /** Login xatosi turi: 'blocked' | 'invalid' | 'network' | null */
+  const loginError = ref(null)
+
+  // Rol konstantalari
   const roles = {
     STUDENT: 'student',
     LEADER: 'leader',
@@ -54,182 +58,350 @@ export const useAuthStore = defineStore('auth', () => {
     SUPERADMIN: 'superadmin'
   }
 
-  // Admin va superadmin foydalanuvchilari (tizim administratorlari)
-  const adminUsers = ref([
-    {
-      id: 1001,
-      login: 'admin',
-      password: '123',
-      role: 'admin',
-      name: 'Toshmatov Admin',
-      phone: '+998 93 345 67 89',
-      avatar: null,
-      email: 'admin@uni.uz'
-    },
-    {
-      id: 1002,
-      login: 'super',
-      password: '123',
-      role: 'superadmin',
-      name: 'Super Administrator',
-      phone: '+998 94 456 78 90',
-      avatar: null,
-      email: 'super@uni.uz'
-    }
-  ])
+  // ===== COMPUTED (GETTERS) =====
 
-  // Computed
+  /** Talabami? */
   const isStudent = computed(() => user.value?.role === roles.STUDENT)
+
+  /** Sardormi? */
   const isLeader = computed(() => user.value?.role === roles.LEADER)
+
+  /** Adminmi? */
   const isAdmin = computed(() => user.value?.role === roles.ADMIN)
+
+  /** Super Adminmi? */
   const isSuperAdmin = computed(() => user.value?.role === roles.SUPERADMIN)
-  const canManageStudents = computed(() => ['leader', 'admin', 'superadmin'].includes(user.value?.role))
-  const canManageGroups = computed(() => ['admin', 'superadmin'].includes(user.value?.role))
-  const canSendNotifications = computed(() => user.value?.role === roles.SUPERADMIN)
 
-  // Login - dinamik (dataStore'dan talabalarni tekshiradi)
-  const login = (credentials) => {
-    loginError.value = null
-    const dataStore = useDataStore()
-    
-    // 1. Admin/SuperAdmin tekshirish
-    const adminUser = adminUsers.value.find(
-      u => u.login === credentials.login && u.password === credentials.password
-    )
-    
-    if (adminUser) {
-      user.value = { ...adminUser }
-      delete user.value.password
-      isAuthenticated.value = true
-      localStorage.setItem('user', JSON.stringify(user.value))
-      localStorage.setItem('isAuthenticated', 'true')
-      return { success: true, user: user.value }
+  /** Talabalarni boshqara oladimi? (leader, admin, superadmin) */
+  const canManageStudents = computed(() =>
+    ['leader', 'admin', 'superadmin'].includes(user.value?.role)
+  )
+
+  /** Guruhlarni boshqara oladimi? (admin, superadmin) */
+  const canManageGroups = computed(() =>
+    ['admin', 'superadmin'].includes(user.value?.role)
+  )
+
+  /** Bildirishnoma jo'nata oladimi? (superadmin) */
+  const canSendNotifications = computed(() =>
+    user.value?.role === roles.SUPERADMIN
+  )
+
+  /** Foydalanuvchi to'liq ismi */
+  const fullName = computed(() => user.value?.name || user.value?.full_name || '')
+
+  /** Foydalanuvchi roli (o'zbek tilida) */
+  const roleLabel = computed(() => {
+    const labels = {
+      student: 'Talaba',
+      leader: 'Guruh sardori',
+      admin: 'Administrator',
+      superadmin: 'Super Administrator'
     }
-    
-    // 2. Talaba/Sardor tekshirish (studentId bilan login)
-    const student = dataStore.students.find(
-      s => s.studentId === credentials.login && s.password === credentials.password
-    )
-    
-    if (student) {
-      // Guruh holatini tekshirish
-      const group = dataStore.groups.find(g => g.name === student.group)
-      
-      if (!group || !group.isActive) {
-        loginError.value = 'blocked'
-        return { 
-          success: false, 
-          blocked: true,
-          message: 'Guruhingiz ruxsatga ega emas. Iltimos, adminga murojaat qiling.' 
-        }
+    return labels[user.value?.role] || 'Noma\'lum'
+  })
+
+  // ===== ACTIONS =====
+
+  /**
+   * Tizimga kirish (Login)
+   * Backend /auth/login endpoint ga so'rov yuboradi
+   * 
+   * @param {Object} credentials - { login, password }
+   * @returns {Object} - { success, user?, message? }
+   */
+  const login = async (credentials) => {
+    loading.value = true
+    error.value = null
+    loginError.value = null
+
+    try {
+      // Backend API ga login so'rovi
+      const response = await api.login(credentials.login, credentials.password)
+
+      // User ma'lumotlarini olish
+      const userData = await api.getMe()
+
+      // Userning rolini backend format dan frontend format ga o'girish
+      const roleMap = {
+        'student': 'student',
+        'leader': 'leader',
+        'admin': 'admin',
+        'superadmin': 'superadmin'
       }
-      
-      // Talabaning hozirgi roli (sardor yoki oddiy talaba)
-      const role = student.role || 'student'
-      
+
+      // User obyektini shakllantirish
       user.value = {
-        id: student.id,
-        login: student.studentId,
-        role: role,
-        name: student.name,
-        studentId: student.studentId,
-        groupId: student.groupId,
-        group: student.group,
-        phone: student.phone,
-        address: student.address,
-        commute: student.commute,
-        avatar: student.avatar,
-        email: student.email,
-        managedGroup: role === 'leader' ? student.group : null
+        id: userData.id,
+        login: userData.login || userData.username,
+        role: roleMap[userData.role] || userData.role,
+        name: userData.name || userData.full_name,
+        full_name: userData.full_name || userData.name,
+        email: userData.email,
+        phone: userData.phone,
+        avatar: userData.avatar,
+        studentId: userData.student_id || userData.studentId,
+        groupId: userData.group_id || userData.groupId,
+        group: userData.group_name || userData.group,
+        managedGroup: userData.managed_group,
+        // Qo'shimcha ma'lumotlar
+        hemis_id: userData.hemis_id,
+        address: userData.address,
+        commute: userData.commute,
+        created_at: userData.created_at
       }
-      
+
       isAuthenticated.value = true
+
+      // LocalStorage ga saqlash (refresh uchun)
       localStorage.setItem('user', JSON.stringify(user.value))
       localStorage.setItem('isAuthenticated', 'true')
-      return { success: true, user: user.value }
-    }
-    
-    return { success: false, message: 'Talaba ID yoki parol noto\'g\'ri' }
-  }
 
-  // Logout
-  const logout = () => {
-    user.value = null
-    isAuthenticated.value = false
-    loginError.value = null
-    localStorage.removeItem('user')
-    localStorage.removeItem('isAuthenticated')
-  }
-
-  // Check auth
-  const checkAuth = () => {
-    const storedUser = localStorage.getItem('user')
-    const storedAuth = localStorage.getItem('isAuthenticated')
-    
-    if (storedUser && storedAuth === 'true') {
-      const parsedUser = JSON.parse(storedUser)
-      
-      // Agar talaba yoki sardor bo'lsa, roli yangilangan bo'lishi mumkin
-      if (parsedUser.studentId) {
-        const dataStore = useDataStore()
-        const student = dataStore.students.find(s => s.studentId === parsedUser.studentId)
-        
-        if (student) {
-          // Guruh holatini tekshirish
-          const group = dataStore.groups.find(g => g.name === student.group)
-          if (!group || !group.isActive) {
-            logout()
-            return false
-          }
-          
-          // Rolni yangilash (sardor bo'lsa leader, aks holda student)
-          parsedUser.role = student.role || 'student'
-          parsedUser.managedGroup = student.role === 'leader' ? student.group : null
-        }
+      return {
+        success: true,
+        user: user.value
       }
-      
-      user.value = parsedUser
+
+    } catch (err) {
+      console.error('Login error:', err)
+
+      // Xato turini aniqlash
+      if (err.status === 401) {
+        loginError.value = 'invalid'
+        error.value = 'Login yoki parol noto\'g\'ri'
+      } else if (err.status === 403) {
+        loginError.value = 'blocked'
+        error.value = 'Sizning hisobingiz bloklangan. Adminga murojaat qiling.'
+      } else if (err.message?.includes('network') || !navigator.onLine) {
+        loginError.value = 'network'
+        error.value = 'Internet aloqasi yo\'q'
+      } else {
+        loginError.value = 'error'
+        error.value = err.data?.detail || err.message || 'Tizimda xatolik yuz berdi'
+      }
+
+      return {
+        success: false,
+        message: error.value,
+        blocked: loginError.value === 'blocked'
+      }
+
+    } finally {
+      loading.value = false
+    }
+  }
+
+  /**
+   * Tizimdan chiqish (Logout)
+   * Backend ga logout so'rovi yuborib, tokenlarni tozalaydi
+   */
+  const logout = async () => {
+    loading.value = true
+
+    try {
+      // Backend ga logout so'rovi
+      await api.logout()
+    } catch (err) {
+      // Logout xatosi bo'lsa ham, mahalliy holatni tozalaymiz
+      console.warn('Logout API error (ignored):', err)
+    } finally {
+      // Holatni tozalash
+      user.value = null
+      isAuthenticated.value = false
+      error.value = null
+      loginError.value = null
+
+      // LocalStorage tozalash
+      localStorage.removeItem('user')
+      localStorage.removeItem('isAuthenticated')
+
+      loading.value = false
+    }
+  }
+
+  /**
+   * Autentifikatsiyani tekshirish
+   * Sahifa yuklanganda chaqiriladi
+   * Token bor bo'lsa, user ma'lumotlarini yangilaydi
+   * 
+   * @returns {boolean} - Autentifikatsiya muvaffaqiyatlimi?
+   */
+  const checkAuth = async () => {
+    // LocalStorage dan tekshirish
+    const storedAuth = localStorage.getItem('isAuthenticated')
+    const storedUser = localStorage.getItem('user')
+    const token = localStorage.getItem('access_token')
+
+    // Token yoki auth yo'q bo'lsa
+    if (!token || storedAuth !== 'true') {
+      user.value = null
+      isAuthenticated.value = false
+      return false
+    }
+
+    // Oldingi user ma'lumotlarini yuklash (tez ko'rsatish uchun)
+    if (storedUser) {
+      try {
+        user.value = JSON.parse(storedUser)
+        isAuthenticated.value = true
+      } catch (e) {
+        console.warn('Stored user parse error:', e)
+      }
+    }
+
+    // Backend dan yangi ma'lumotlarni olish
+    try {
+      const userData = await api.getMe()
+
+      // Userning rolini yangilash
+      const roleMap = {
+        'student': 'student',
+        'leader': 'leader',
+        'admin': 'admin',
+        'superadmin': 'superadmin'
+      }
+
+      user.value = {
+        id: userData.id,
+        login: userData.login || userData.username,
+        role: roleMap[userData.role] || userData.role,
+        name: userData.name || userData.full_name,
+        full_name: userData.full_name || userData.name,
+        email: userData.email,
+        phone: userData.phone,
+        avatar: userData.avatar,
+        studentId: userData.student_id || userData.studentId,
+        groupId: userData.group_id || userData.groupId,
+        group: userData.group_name || userData.group,
+        managedGroup: userData.managed_group,
+        hemis_id: userData.hemis_id,
+        address: userData.address,
+        commute: userData.commute,
+        created_at: userData.created_at
+      }
+
       isAuthenticated.value = true
       localStorage.setItem('user', JSON.stringify(user.value))
+
       return true
-    }
-    return false
-  }
 
-  // Update profile (faqat ruxsat etilgan maydonlar)
-  const updateProfile = (updates) => {
-    const allowedFields = ['phone', 'address', 'commute', 'password']
-    
-    allowedFields.forEach(field => {
-      if (updates[field] !== undefined) {
-        user.value[field] = updates[field]
+    } catch (err) {
+      console.error('Auth check error:', err)
+
+      // 401 bo'lsa, token expired
+      if (err.status === 401) {
+        user.value = null
+        isAuthenticated.value = false
+        localStorage.removeItem('user')
+        localStorage.removeItem('isAuthenticated')
+        return false
       }
-    })
-    
-    localStorage.setItem('user', JSON.stringify(user.value))
-    return { success: true }
+
+      // Boshqa xatolar uchun oldingi holatni saqlab qolish
+      return isAuthenticated.value
+    }
   }
 
-  // Foydalanuvchi rolini yangilash
-  const refreshUserRole = () => {
-    if (user.value?.studentId) {
-      const dataStore = useDataStore()
-      const student = dataStore.students.find(s => s.studentId === user.value.studentId)
-      
-      if (student) {
-        user.value.role = student.role || 'student'
-        user.value.managedGroup = student.role === 'leader' ? student.group : null
+  /**
+   * Profil ma'lumotlarini yangilash
+   * 
+   * @param {Object} updates - Yangilanayotgan maydonlar
+   * @returns {Object} - { success, message? }
+   */
+  const updateProfile = async (updates) => {
+    loading.value = true
+    error.value = null
+
+    try {
+      // Backend ga yangilanishlarni yuborish
+      const response = await api.request('/auth/profile', {
+        method: 'PATCH',
+        body: updates
+      })
+
+      // Local state ni yangilash
+      Object.keys(updates).forEach(key => {
+        if (user.value && key in user.value) {
+          user.value[key] = updates[key]
+        }
+      })
+
+      localStorage.setItem('user', JSON.stringify(user.value))
+
+      return { success: true }
+
+    } catch (err) {
+      error.value = err.message || 'Profil yangilashda xatolik'
+      return { success: false, message: error.value }
+
+    } finally {
+      loading.value = false
+    }
+  }
+
+  /**
+   * Parolni o'zgartirish
+   * 
+   * @param {string} currentPassword - Joriy parol
+   * @param {string} newPassword - Yangi parol
+   * @returns {Object} - { success, message? }
+   */
+  const changePassword = async (currentPassword, newPassword) => {
+    loading.value = true
+    error.value = null
+
+    try {
+      await api.changePassword(currentPassword, newPassword)
+      return { success: true, message: 'Parol muvaffaqiyatli o\'zgartirildi' }
+
+    } catch (err) {
+      error.value = err.data?.detail || err.message || 'Parol o\'zgartirishda xatolik'
+      return { success: false, message: error.value }
+
+    } finally {
+      loading.value = false
+    }
+  }
+
+  /**
+   * Foydalanuvchi rolini yangilash
+   * Sardor tayinlanganda yoki olib tashlanganda chaqiriladi
+   */
+  const refreshUserRole = async () => {
+    if (!isAuthenticated.value) return
+
+    try {
+      const userData = await api.getMe()
+
+      if (user.value) {
+        user.value.role = userData.role
+        user.value.managedGroup = userData.managed_group
         localStorage.setItem('user', JSON.stringify(user.value))
       }
+    } catch (err) {
+      console.error('Role refresh error:', err)
     }
   }
 
+  /**
+   * Xato xabarini tozalash
+   */
+  const clearError = () => {
+    error.value = null
+    loginError.value = null
+  }
+
+  // ===== RETURN =====
   return {
+    // State
     user,
     isAuthenticated,
+    loading,
+    error,
     loginError,
     roles,
-    adminUsers,
+
+    // Computed
     isStudent,
     isLeader,
     isAdmin,
@@ -237,10 +409,16 @@ export const useAuthStore = defineStore('auth', () => {
     canManageStudents,
     canManageGroups,
     canSendNotifications,
+    fullName,
+    roleLabel,
+
+    // Actions
     login,
     logout,
     checkAuth,
     updateProfile,
-    refreshUserRole
+    changePassword,
+    refreshUserRole,
+    clearError
   }
 })

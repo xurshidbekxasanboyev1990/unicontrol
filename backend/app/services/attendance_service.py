@@ -15,6 +15,7 @@ from sqlalchemy.orm import joinedload
 
 from app.models.attendance import Attendance, AttendanceStatus
 from app.models.student import Student
+from app.models.group import Group
 from app.schemas.attendance import (
     AttendanceCreate,
     AttendanceUpdate,
@@ -206,13 +207,37 @@ class AttendanceService:
     async def get_daily_summary(
         self,
         target_date: date,
-        group_id: Optional[int] = None
+        group_id: Optional[str] = None
     ) -> DailyAttendanceSummary:
-        """Get attendance summary for a day."""
+        """
+        Get attendance summary for a day.
+        group_id can be numeric ID or group name string.
+        """
         query = select(Attendance).where(Attendance.date == target_date)
         
         if group_id:
-            query = query.join(Student).where(Student.group_id == group_id)
+            # Check if group_id is numeric or string (group name)
+            if group_id.isdigit():
+                query = query.join(Student).where(Student.group_id == int(group_id))
+            else:
+                # Find group by name first
+                group_result = await self.db.execute(
+                    select(Group).where(Group.name == group_id)
+                )
+                group = group_result.scalar_one_or_none()
+                if group:
+                    query = query.join(Student).where(Student.group_id == group.id)
+                else:
+                    # Return empty summary if group not found
+                    return DailyAttendanceSummary(
+                        date=target_date,
+                        total_students=0,
+                        present_count=0,
+                        absent_count=0,
+                        late_count=0,
+                        excused_count=0,
+                        attendance_rate=0.0
+                    )
         
         result = await self.db.execute(query)
         attendances = result.scalars().all()

@@ -25,6 +25,7 @@ from app.api.v1 import (
     telegram,
     files,
     library,
+    canteen,
 )
 
 api_router = APIRouter()
@@ -131,4 +132,11 @@ api_router.include_router(
     library.router,
     prefix="/library",
     tags=["Library"]
+)
+
+# Canteen (Oshxona)
+api_router.include_router(
+    canteen.router,
+    prefix="/canteen",
+    tags=["Canteen"]
 )

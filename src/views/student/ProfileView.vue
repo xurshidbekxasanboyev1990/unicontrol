@@ -238,9 +238,10 @@
 </template>
 
 <script setup>
-import { ref, computed, reactive, watch, onMounted } from 'vue'
-import { useDataStore } from '../../stores/data'
+import { ref, reactive, watch, computed, onMounted } from 'vue'
 import { useAuthStore } from '../../stores/auth'
+import { useToastStore } from '../../stores/toast'
+import api from '../../services/api'
 import {
   Camera,
   UserCircle,
@@ -258,44 +259,74 @@ import {
   CheckCircle
 } from 'lucide-vue-next'
 
-const dataStore = useDataStore()
 const authStore = useAuthStore()
+const toast = useToastStore()
 
-// Foydalanuvchi ma'lumotlarini olish
-const student = computed(() => {
-  // Student yoki Leader uchun - o'z ma'lumotlarini ko'rsatish
-  if (authStore.isStudent || authStore.isLeader) {
-    return dataStore.students.find(s => s.id === authStore.user?.studentId) || 
-           dataStore.students.find(s => s.name === authStore.user?.name) ||
-           dataStore.students[0]
+// State
+const loading = ref(true)
+const error = ref(null)
+const student = ref(null)
+const group = ref(null)
+
+// Load profile data
+const loadProfile = async () => {
+  loading.value = true
+  error.value = null
+  
+  try {
+    // Get current user profile from API
+    const response = await api.getMe()
+    student.value = response
+    
+    // Get group info if student has a group
+    if (response.group_id) {
+      try {
+        const groupResponse = await api.getGroup(response.group_id)
+        group.value = groupResponse
+      } catch (e) {
+        console.warn('Could not load group info:', e)
+      }
+    }
+    
+    // Initialize form with current data
+    if (student.value) {
+      form.phone = student.value.phone || ''
+      form.address = student.value.address || ''
+      form.commute = student.value.commute || ''
+    }
+  } catch (e) {
+    console.error('Error loading profile:', e)
+    error.value = 'Profil ma\'lumotlarini yuklashda xatolik'
+    
+    // Fallback to auth store user data
+    if (authStore.user) {
+      student.value = {
+        id: authStore.user.student_id || authStore.user.id,
+        name: authStore.user.name || authStore.user.full_name,
+        student_id: authStore.user.email,
+        phone: authStore.user.phone || '',
+        address: authStore.user.address || '',
+        commute: authStore.user.commute || '',
+        passport: authStore.user.passport || '-',
+        jshshir: authStore.user.jshshir || '-',
+        group_id: authStore.user.group_id,
+        contract_paid: authStore.user.contract_paid || 0
+      }
+    }
+  } finally {
+    loading.value = false
   }
-  // Admin yoki Super uchun - auth dan user
-  return {
-    name: authStore.user?.name || 'Admin',
-    studentId: authStore.user?.email || 'admin@uni.uz',
-    phone: '+998 71 123 45 67',
-    address: 'Toshkent shahar',
-    commute: 'Shaxsiy transport',
-    passport: '-',
-    jshshir: '-',
-    groupId: null,
-    contractPaid: 0
-  }
-})
+}
 
-const group = computed(() => {
-  if (!student.value?.groupId) return null
-  return dataStore.groups.find(g => g.id === student.value?.groupId)
-})
-
-const contractAmount = computed(() => group.value?.contractAmount || 18411000)
+// Contract calculations
+const contractAmount = computed(() => group.value?.contract_amount || 18411000)
 const debt = computed(() => {
   if (!group.value) return 0
-  return Math.max(0, contractAmount.value - (student.value?.contractPaid || 0))
+  return Math.max(0, contractAmount.value - (student.value?.contract_paid || 0))
 })
 const contractPercent = computed(() => {
   if (!group.value) return 100
-  return Math.round((student.value?.contractPaid || 0) / contractAmount.value * 100)
+  return Math.round((student.value?.contract_paid || 0) / contractAmount.value * 100)
 })
 
 const form = reactive({
@@ -304,15 +335,7 @@ const form = reactive({
   commute: ''
 })
 
-// Form ni student ma'lumotlari bilan to'ldirish
-onMounted(() => {
-  if (student.value) {
-    form.phone = student.value.phone || ''
-    form.address = student.value.address || ''
-    form.commute = student.value.commute || ''
-  }
-})
-
+// Watch for student changes
 watch(student, (newVal) => {
   if (newVal) {
     form.phone = newVal.phone || ''
@@ -332,6 +355,7 @@ const showPasswords = reactive({
 })
 
 const isSaving = ref(false)
+const isChangingPassword = ref(false)
 const showToast = ref(false)
 const toastMessage = ref('')
 
@@ -340,27 +364,69 @@ const formatMoney = (amount) => {
 }
 
 const saveProfile = async () => {
+  if (!student.value?.id) {
+    toast.error('Talaba topilmadi')
+    return
+  }
+  
   isSaving.value = true
-  await new Promise(resolve => setTimeout(resolve, 800))
   
-  dataStore.updateStudent(student.value.id, {
-    phone: form.phone,
-    address: form.address,
-    commute: form.commute
-  })
-  
-  isSaving.value = false
-  showToastMessage('Ma\'lumotlar saqlandi')
+  try {
+    await api.updateStudent(student.value.id, {
+      phone: form.phone,
+      address: form.address,
+      commute: form.commute
+    })
+    
+    // Update local state
+    student.value = {
+      ...student.value,
+      phone: form.phone,
+      address: form.address,
+      commute: form.commute
+    }
+    
+    toast.success('Ma\'lumotlar saqlandi')
+    showToastMessage('Ma\'lumotlar saqlandi')
+  } catch (e) {
+    console.error('Error saving profile:', e)
+    toast.error('Saqlashda xatolik yuz berdi')
+    showToastMessage('Xatolik yuz berdi')
+  } finally {
+    isSaving.value = false
+  }
 }
 
-const changePassword = () => {
+const changePassword = async () => {
   if (!passwordForm.current || !passwordForm.new) {
+    toast.error('Parollarni kiriting')
     showToastMessage('Parollarni kiriting')
     return
   }
-  passwordForm.current = ''
-  passwordForm.new = ''
-  showToastMessage('Parol o\'zgartirildi')
+  
+  if (passwordForm.new.length < 6) {
+    toast.error('Yangi parol kamida 6 ta belgidan iborat bo\'lishi kerak')
+    return
+  }
+  
+  isChangingPassword.value = true
+  
+  try {
+    await api.changePassword(passwordForm.current, passwordForm.new)
+    
+    passwordForm.current = ''
+    passwordForm.new = ''
+    
+    toast.success('Parol muvaffaqiyatli o\'zgartirildi')
+    showToastMessage('Parol o\'zgartirildi')
+  } catch (e) {
+    console.error('Error changing password:', e)
+    const errorMsg = e.response?.data?.detail || 'Parolni o\'zgartirishda xatolik'
+    toast.error(errorMsg)
+    showToastMessage(errorMsg)
+  } finally {
+    isChangingPassword.value = false
+  }
 }
 
 const showToastMessage = (message) => {
@@ -370,6 +436,11 @@ const showToastMessage = (message) => {
     showToast.value = false
   }, 3000)
 }
+
+// Initialize
+onMounted(() => {
+  loadProfile()
+})
 </script>
 
 <style scoped>

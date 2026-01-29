@@ -156,9 +156,10 @@
 </template>
 
 <script setup>
-import { computed, markRaw } from 'vue'
-import { useDataStore } from '../../stores/data'
+import { ref, computed, markRaw, onMounted } from 'vue'
 import { useAuthStore } from '../../stores/auth'
+import { useToastStore } from '../../stores/toast'
+import api from '../../services/api'
 import {
   CalendarDays,
   CheckCircle,
@@ -168,16 +169,50 @@ import {
   FileText
 } from 'lucide-vue-next'
 
-const dataStore = useDataStore()
 const authStore = useAuthStore()
+const toast = useToastStore()
 
-const student = computed(() => {
-  return dataStore.students.find(s => s.id === authStore.user?.studentId) || dataStore.students[0]
+const loading = ref(false)
+const error = ref(null)
+const records = ref([])
+
+// Load attendance on mount
+onMounted(async () => {
+  await loadAttendance()
 })
 
-const records = computed(() => {
-  return dataStore.attendanceRecords.filter(r => r.studentId === student.value?.id)
-})
+async function loadAttendance() {
+  loading.value = true
+  error.value = null
+  
+  try {
+    const response = await api.getStudentAttendance(authStore.user?.studentId || authStore.user?.id)
+    
+    if (Array.isArray(response)) {
+      records.value = response.map(r => ({
+        id: r.id,
+        studentId: r.student_id,
+        date: r.date,
+        subject: r.subject || 'Fan',
+        status: r.status || 'present'
+      }))
+    } else if (response?.data) {
+      records.value = response.data.map(r => ({
+        id: r.id,
+        studentId: r.student_id,
+        date: r.date,
+        subject: r.subject || 'Fan',
+        status: r.status || 'present'
+      }))
+    }
+  } catch (err) {
+    console.error('Load attendance error:', err)
+    error.value = err.message || 'Davomat yuklanmadi'
+    toast.error('Davomat yuklanmadi')
+  } finally {
+    loading.value = false
+  }
+}
 
 const recentRecords = computed(() => {
   return [...records.value]

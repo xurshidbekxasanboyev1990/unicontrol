@@ -259,24 +259,78 @@
 </template>
 
 <script setup>
+/**
+ * Student Dashboard - Real API Integration
+ */
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import { useDataStore } from '@/stores/data'
+import api from '@/services/api'
 import {
   TrendingUp, BookOpen, Book, Bell, Calendar,
-  CheckCircle, XCircle, Clock, GraduationCap, FileText, User
+  CheckCircle, XCircle, Clock, GraduationCap, FileText, User,
+  RefreshCw
 } from 'lucide-vue-next'
 
 const authStore = useAuthStore()
 const dataStore = useDataStore()
 
+// State
+const loading = ref(true)
 const currentTime = ref(new Date())
+const dashboardData = ref(null)
+const scheduleList = ref([])
+const attendanceList = ref([])
+
 let timeInterval = null
+
+// Load dashboard data
+async function loadDashboard() {
+  loading.value = true
+  
+  try {
+    // Try student dashboard endpoint
+    try {
+      const response = await api.request('/dashboard/student')
+      dashboardData.value = response
+    } catch (e) {
+      console.log('Student dashboard endpoint not available')
+    }
+    
+    // Load schedule for group
+    const groupId = authStore.user?.groupId || authStore.user?.group_id
+    if (groupId) {
+      try {
+        const scheduleResp = await api.getSchedule({ group_id: groupId })
+        scheduleList.value = scheduleResp.data || []
+      } catch (e) {
+        console.log('Schedule not available')
+      }
+    }
+    
+    // Load attendance for current student
+    const studentId = authStore.user?.id
+    if (studentId) {
+      try {
+        const attResp = await api.getAttendance({ student_id: studentId, limit: 10 })
+        attendanceList.value = attResp.data || []
+      } catch (e) {
+        console.log('Attendance not available')
+      }
+    }
+  } catch (e) {
+    console.error('Dashboard load error:', e)
+  } finally {
+    loading.value = false
+  }
+}
 
 onMounted(() => {
   timeInterval = setInterval(() => {
     currentTime.value = new Date()
   }, 1000)
+  
+  loadDashboard()
 })
 
 onUnmounted(() => {
@@ -287,7 +341,9 @@ onUnmounted(() => {
 const user = computed(() => authStore.user)
 
 const currentGroup = computed(() => {
-  return dataStore.groups.find(g => g.id === user.value?.groupId)
+  return {
+    name: authStore.user?.group || authStore.user?.group_name || 'Noma\'lum guruh'
+  }
 })
 
 const formattedDate = computed(() => {
@@ -306,39 +362,46 @@ const formattedTime = computed(() => {
 })
 
 const todayLessons = computed(() => {
-  const today = new Date().toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase()
-  return dataStore.schedule.filter(s => 
-    s.groupId === user.value?.groupId && s.day.toLowerCase() === today
+  const days = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday']
+  const today = days[new Date().getDay()]
+  return scheduleList.value.filter(s => 
+    s.day?.toLowerCase() === today
   )
 })
 
 const attendanceRate = computed(() => {
-  const records = dataStore.attendanceRecords.filter(a => a.studentId === user.value?.id)
-  if (records.length === 0) return 100
-  const present = records.filter(a => a.status === 'present' || a.status === 'late').length
-  return Math.round((present / records.length) * 100)
+  if (dashboardData.value?.attendanceRate) {
+    return Math.round(dashboardData.value.attendanceRate)
+  }
+  if (attendanceList.value.length === 0) return 100
+  const present = attendanceList.value.filter(a => 
+    a.status === 'present' || a.status === 'late' || a.status === 'keldi' || a.status === 'kechikdi'
+  ).length
+  return Math.round((present / attendanceList.value.length) * 100)
 })
 
 const recentAttendance = computed(() => {
-  return dataStore.attendanceRecords
-    .filter(a => a.studentId === user.value?.id)
+  return attendanceList.value
     .sort((a, b) => new Date(b.date) - new Date(a.date))
     .slice(0, 5)
     .map(a => ({
       ...a,
-      subject: 'Matematika' // Mock subject
+      subject: a.subject || 'Umumiy'
     }))
 })
 
-const borrowedBooks = ref(2)
-const unreadNotifications = ref(3)
+const borrowedBooks = computed(() => dashboardData.value?.borrowedBooks || 0)
+const unreadNotifications = computed(() => dashboardData.value?.unreadNotifications || 0)
 const totalBooks = ref(5000)
 
 // Methods
 function getLessonStatus(lesson) {
   const now = new Date()
-  const [startHour, startMin] = lesson.time.split('-')[0].split(':').map(Number)
-  const [endHour, endMin] = lesson.time.split('-')[1].split(':').map(Number)
+  const timeStr = lesson.time || lesson.start_time || ''
+  if (!timeStr.includes('-')) return 'Kutilmoqda'
+  
+  const [startHour, startMin] = timeStr.split('-')[0].split(':').map(Number)
+  const [endHour, endMin] = timeStr.split('-')[1].split(':').map(Number)
   
   const startTime = new Date()
   startTime.setHours(startHour, startMin, 0)
@@ -359,20 +422,20 @@ function getLessonStatusClass(lesson) {
 }
 
 function getAttendanceColor(status) {
-  if (status === 'present') return 'bg-green-100 text-green-600'
-  if (status === 'absent') return 'bg-red-100 text-red-600'
+  if (status === 'present' || status === 'keldi') return 'bg-green-100 text-green-600'
+  if (status === 'absent' || status === 'kelmadi') return 'bg-red-100 text-red-600'
   return 'bg-yellow-100 text-yellow-600'
 }
 
 function getAttendanceBadge(status) {
-  if (status === 'present') return 'bg-green-100 text-green-600'
-  if (status === 'absent') return 'bg-red-100 text-red-600'
+  if (status === 'present' || status === 'keldi') return 'bg-green-100 text-green-600'
+  if (status === 'absent' || status === 'kelmadi') return 'bg-red-100 text-red-600'
   return 'bg-yellow-100 text-yellow-600'
 }
 
 function getAttendanceText(status) {
-  if (status === 'present') return 'Keldi'
-  if (status === 'absent') return 'Kelmadi'
+  if (status === 'present' || status === 'keldi') return 'Keldi'
+  if (status === 'absent' || status === 'kelmadi') return 'Kelmadi'
   return 'Kechikdi'
 }
 

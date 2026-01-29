@@ -125,8 +125,9 @@
 </template>
 
 <script setup>
-import { ref, computed, markRaw } from 'vue'
+import { ref, computed, markRaw, onMounted } from 'vue'
 import { useDataStore } from '../../stores/data'
+import { useToastStore } from '../../stores/toast'
 import {
   BookOpen,
   Clock,
@@ -142,7 +143,22 @@ import {
 } from 'lucide-vue-next'
 
 const dataStore = useDataStore()
+const toast = useToastStore()
 const filterCategory = ref('all')
+const loading = ref(false)
+
+// Load data on mount
+onMounted(async () => {
+  loading.value = true
+  try {
+    await dataStore.fetchClubs()
+  } catch (err) {
+    toast.error('To\'garaklarni yuklashda xatolik')
+    console.error(err)
+  } finally {
+    loading.value = false
+  }
+})
 
 const categories = [
   { value: 'all', label: 'Barchasi', icon: markRaw(Layers) },

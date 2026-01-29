@@ -494,6 +494,7 @@
 <script setup>
 /**
  * AttendanceView.vue - Davomat olish sahifasi (Leader)
+ * Real API Integration
  * 
  * QOIDALAR:
  * 1. Davomat har bir dars boshlanishida belgilanadi
@@ -503,7 +504,9 @@
 
 import { ref, computed, reactive, watch, onMounted } from 'vue'
 import { useDataStore } from '../../stores/data'
+import { useAuthStore } from '../../stores/auth'
 import { useToastStore } from '../../stores/toast'
+import api from '../../services/api'
 import {
   User,
   CheckCircle,
@@ -518,13 +521,16 @@ import {
   AlertCircle,
   Lock,
   ClipboardCheck,
-  ArrowRight
+  ArrowRight,
+  RefreshCw
 } from 'lucide-vue-next'
 
 const dataStore = useDataStore()
+const authStore = useAuthStore()
 const toast = useToastStore()
 
 // ============ STATE ============
+const loading = ref(true)
 const saving = ref(false)
 const showSummary = ref(false)
 const showReasonModal = ref(false)
@@ -534,19 +540,8 @@ const selectedSubject = ref('')
 const changeReason = ref('')
 const pendingReasonStudent = ref(null)
 const pendingReasonData = ref(null)
-
-// Simulated pending changes (in real app, from backend)
-const pendingChanges = ref([
-  {
-    id: 1,
-    studentId: 2,
-    studentName: 'Karimov Bobur',
-    oldStatus: 'present',
-    newStatus: 'absent',
-    reason: 'Talaba aslida darsda bo\'lmagan, ro\'yxatda xato belgilangan',
-    requestedAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString()
-  }
-])
+const groupStudentsList = ref([])
+const pendingChanges = ref([])
 
 // Check if lesson is ended (past date or current date after class time)
 const isLessonEnded = computed(() => {
@@ -565,12 +560,11 @@ const isLessonEnded = computed(() => {
 // Original attendance data (to track what was changed)
 const originalAttendance = ref({})
 
-const groupStudents = computed(() => {
-  return dataStore.students.filter(s => s.groupId === 1)
-})
+const groupStudents = computed(() => groupStudentsList.value)
 
 const subjects = computed(() => {
-  return [...new Set(dataStore.schedule.filter(s => s.groupId === 1).map(s => s.subject))]
+  // Bu backend'dan kelishi kerak
+  return ['Matematika', 'Fizika', 'Dasturlash', 'Ingliz tili', 'Tarix']
 })
 
 const recentDates = computed(() => {
@@ -585,33 +579,91 @@ const recentDates = computed(() => {
 
 const attendance = reactive({})
 
+// ============ LOAD DATA ============
+async function loadGroupStudents() {
+  const groupId = authStore.user?.groupId || authStore.user?.managed_group_id
+  if (!groupId) {
+    console.warn('No group ID found')
+    return
+  }
+  
+  try {
+    const response = await api.getStudents({ group_id: groupId, limit: 100 })
+    groupStudentsList.value = response.data?.map(s => ({
+      id: s.id,
+      name: s.full_name,
+      studentId: s.student_id,
+      groupId: s.group_id,
+      phone: s.phone
+    })) || []
+  } catch (e) {
+    console.error('Load students error:', e)
+    toast.error('Talabalar yuklanmadi')
+  }
+}
+
+async function loadAttendanceForDate() {
+  loading.value = true
+  
+  const groupId = authStore.user?.groupId || authStore.user?.managed_group_id
+  if (!groupId) return
+  
+  try {
+    const response = await api.getAttendance({
+      group_id: groupId,
+      date: selectedDate.value
+    })
+    
+    const records = response.data || []
+    
+    // Initialize attendance with loaded data
+    groupStudents.value.forEach(student => {
+      const existing = records.find(r => r.student_id === student.id)
+      if (existing) {
+        const data = {
+          status: existing.status,
+          reason: existing.note || existing.reason || '',
+          lateMinutes: existing.late_minutes || 0
+        }
+        attendance[student.id] = { ...data }
+        originalAttendance.value[student.id] = { ...data }
+      } else {
+        const data = {
+          status: 'present',
+          reason: '',
+          lateMinutes: 0
+        }
+        attendance[student.id] = { ...data }
+        originalAttendance.value[student.id] = { ...data }
+      }
+    })
+  } catch (e) {
+    console.error('Load attendance error:', e)
+    // Initialize with defaults
+    initializeAttendance()
+  } finally {
+    loading.value = false
+  }
+}
+
 const initializeAttendance = () => {
   groupStudents.value.forEach(student => {
-    const existing = dataStore.attendanceRecords.find(
-      r => r.studentId === student.id && r.date === selectedDate.value
-    )
-    if (existing) {
-      const data = {
-        status: existing.status,
-        reason: existing.note || '',
-        lateMinutes: existing.lateMinutes || 0
-      }
-      attendance[student.id] = { ...data }
-      originalAttendance.value[student.id] = { ...data }
-    } else {
-      const data = {
-        status: 'present',
-        reason: '',
-        lateMinutes: 0
-      }
-      attendance[student.id] = { ...data }
-      originalAttendance.value[student.id] = { ...data }
+    const data = {
+      status: 'present',
+      reason: '',
+      lateMinutes: 0
     }
+    attendance[student.id] = { ...data }
+    originalAttendance.value[student.id] = { ...data }
   })
 }
 
-watch(selectedDate, () => initializeAttendance())
-onMounted(() => initializeAttendance())
+watch(selectedDate, () => loadAttendanceForDate())
+
+onMounted(async () => {
+  await loadGroupStudents()
+  await loadAttendanceForDate()
+})
 
 // ============ STATUS CHANGE HANDLING ============
 const handleStatusChange = (studentId, newStatus) => {
@@ -647,7 +699,7 @@ const setStatus = (studentId, status) => {
 
 const confirmChange = () => {
   if (!changeReason.value.trim()) {
-    toast.error('Sabab kiritilmagan', 'O\'zgartirish uchun sabab kiritish majburiy')
+    toast.error('Sabab kiritilmagan')
     return
   }
   
@@ -667,7 +719,7 @@ const confirmChange = () => {
   // Update local state (with pending indicator)
   setStatus(pendingReasonData.value.studentId, pendingReasonData.value.newStatus)
   
-  toast.info('So\'rov yuborildi', 'O\'zgartirish admin tasdiqlashini kutmoqda')
+  toast.info('So\'rov yuborildi')
   showReasonModal.value = false
   changeReason.value = ''
   pendingReasonStudent.value = null
@@ -687,16 +739,16 @@ const hasPendingChange = (studentId) => {
 
 const markAllAs = (status) => {
   if (isLessonEnded.value) {
-    toast.warning('Cheklangan', 'Dars tugagandan keyin ommaviy o\'zgartirish mumkin emas')
+    toast.warning('Dars tugagandan keyin ommaviy o\'zgartirish mumkin emas')
     return
   }
   groupStudents.value.forEach(student => setStatus(student.id, status))
-  toast.info('Hammasi belgilandi', `Barcha talabalar "${status === 'present' ? 'Keldi' : 'Kelmadi'}" deb belgilandi`)
+  toast.info(`Barcha talabalar "${status === 'present' ? 'Keldi' : 'Kelmadi'}" deb belgilandi`)
 }
 
 const resetAll = () => {
   initializeAttendance()
-  toast.info('Tozalandi', 'Barcha belgilar boshlang\'ich holatga qaytarildi')
+  toast.info('Barcha belgilar boshlang\'ich holatga qaytarildi')
 }
 
 // ============ COMPUTED COUNTS ============
@@ -746,34 +798,48 @@ const getStatusColor = (status) => {
 // ============ SAVE ============
 const saveAttendance = async () => {
   saving.value = true
+  
   try {
-    await new Promise(resolve => setTimeout(resolve, 1500))
+    const records = groupStudents.value.map(student => {
+      const record = attendance[student.id]
+      return {
+        student_id: student.id,
+        date: selectedDate.value,
+        subject: selectedSubject.value || 'Umumiy',
+        status: record.status,
+        note: record.reason || null,
+        late_minutes: record.status === 'late' ? record.lateMinutes : 0
+      }
+    })
+    
+    // Bulk save endpoint
+    try {
+      await api.createBulkAttendance(records)
+    } catch (e) {
+      // Fallback: save one by one
+      for (const record of records) {
+        await api.createAttendance(record)
+      }
+    }
     
     if (!isLessonEnded.value) {
-      // Direct save during class
-      groupStudents.value.forEach(student => {
-        const record = attendance[student.id]
-        dataStore.addAttendanceRecord({
-          studentId: student.id,
-          date: selectedDate.value,
-          subject: selectedSubject.value || 'Umumiy',
-          status: record.status,
-          note: record.reason,
-          lateMinutes: record.status === 'late' ? record.lateMinutes : 0
-        })
-      })
-      toast.success('Muvaffaqiyatli saqlandi!', `${groupStudents.value.length} ta talaba uchun davomat yozildi`)
+      toast.success(`${groupStudents.value.length} ta talaba uchun davomat saqlandi`)
     } else {
-      // Changes will be pending approval
-      toast.info('So\'rov yuborildi', 'O\'zgartirishlar admin tasdiqlashini kutmoqda')
+      toast.info('O\'zgartirishlar admin tasdiqlashini kutmoqda')
     }
     
     showSummary.value = true
   } catch (error) {
-    toast.error('Xatolik!', 'Davomatni saqlashda xatolik yuz berdi')
+    console.error('Save attendance error:', error)
+    toast.error('Davomatni saqlashda xatolik yuz berdi')
   } finally {
     saving.value = false
   }
+}
+
+// Refresh
+async function refresh() {
+  await loadAttendanceForDate()
 }
 </script>
 

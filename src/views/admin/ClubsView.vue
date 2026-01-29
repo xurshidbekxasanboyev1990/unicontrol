@@ -15,6 +15,13 @@
       </button>
     </div>
 
+    <!-- Loading State -->
+    <div v-if="loading" class="flex items-center justify-center py-20">
+      <Loader2 class="w-8 h-8 text-violet-500 animate-spin" />
+      <span class="ml-3 text-slate-600">To'garaklar yuklanmoqda...</span>
+    </div>
+
+    <template v-else>
     <!-- Categories Filter -->
     <div class="flex items-center gap-2 flex-wrap">
       <button 
@@ -119,6 +126,7 @@
         Yangi to'garak qo'shish
       </button>
     </div>
+    </template>
 
     <!-- Add/Edit Modal -->
     <Transition
@@ -297,7 +305,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed, markRaw } from 'vue'
+import { ref, reactive, computed, markRaw, onMounted } from 'vue'
 import { useDataStore } from '../../stores/data'
 import { useToastStore } from '../../stores/toast'
 import {
@@ -316,7 +324,8 @@ import {
   Globe,
   Code,
   Dumbbell,
-  Palette
+  Palette,
+  Loader2
 } from 'lucide-vue-next'
 
 const dataStore = useDataStore()
@@ -327,6 +336,21 @@ const showDeleteConfirm = ref(false)
 const editingClub = ref(null)
 const deletingClub = ref(null)
 const filterCategory = ref('all')
+const loading = ref(true)
+const saving = ref(false)
+
+// Load clubs on mount
+onMounted(async () => {
+  loading.value = true
+  try {
+    await dataStore.fetchClubs()
+  } catch (err) {
+    console.error('Error loading clubs:', err)
+    toast.error('To\'garaklarni yuklashda xatolik')
+  } finally {
+    loading.value = false
+  }
+})
 
 const categories = [
   { value: 'all', label: 'Barchasi' },
@@ -426,15 +450,23 @@ const openModal = (club = null) => {
   showModal.value = true
 }
 
-const saveClub = () => {
-  if (editingClub.value) {
-    dataStore.updateClub(editingClub.value.id, { ...form })
-    toast.success('To\'garak yangilandi')
-  } else {
-    dataStore.addClub({ ...form })
-    toast.success('Yangi to\'garak qo\'shildi')
+const saveClub = async () => {
+  saving.value = true
+  try {
+    if (editingClub.value) {
+      await dataStore.updateClub(editingClub.value.id, { ...form })
+      toast.success('To\'garak yangilandi')
+    } else {
+      await dataStore.addClub({ ...form })
+      toast.success('Yangi to\'garak qo\'shildi')
+    }
+    showModal.value = false
+  } catch (err) {
+    console.error('Error saving club:', err)
+    toast.error('To\'garakni saqlashda xatolik')
+  } finally {
+    saving.value = false
   }
-  showModal.value = false
 }
 
 const confirmDelete = (club) => {
@@ -442,17 +474,27 @@ const confirmDelete = (club) => {
   showDeleteConfirm.value = true
 }
 
-const deleteClub = () => {
+const deleteClub = async () => {
   if (deletingClub.value) {
-    dataStore.deleteClub(deletingClub.value.id)
-    toast.success('To\'garak o\'chirildi')
+    try {
+      await dataStore.deleteClub(deletingClub.value.id)
+      toast.success('To\'garak o\'chirildi')
+    } catch (err) {
+      console.error('Error deleting club:', err)
+      toast.error('To\'garakni o\'chirishda xatolik')
+    }
   }
   showDeleteConfirm.value = false
   deletingClub.value = null
 }
 
-const toggleStatus = (club) => {
-  dataStore.toggleClubStatus(club.id)
-  toast.info(club.isActive ? 'To\'garak o\'chirildi' : 'To\'garak yoqildi')
+const toggleStatus = async (club) => {
+  try {
+    await dataStore.toggleClubStatus(club.id)
+    toast.info(club.isActive ? 'To\'garak o\'chirildi' : 'To\'garak yoqildi')
+  } catch (err) {
+    console.error('Error toggling club status:', err)
+    toast.error('Statusni o\'zgartirishda xatolik')
+  }
 }
 </script>

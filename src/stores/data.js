@@ -1,1200 +1,1702 @@
 /**
  * ============================================
- * UNI CONTROL - Asosiy Ma'lumotlar Store
+ * UNI CONTROL - Asosiy Ma'lumotlar Store (Real API)
  * ============================================
  * 
- * Bu eng katta store bo'lib, barcha asosiy ma'lumotlarni saqlaydi.
- * Production'da bu ma'lumotlar backend API'dan keladi.
+ * Bu store barcha asosiy ma'lumotlarni backend API orqali boshqaradi.
  * 
- * MA'LUMOTLAR TUZILISHI:
- * ======================
+ * FEATURES:
+ * ---------
+ * - Real-time data from backend
+ * - Caching for performance
+ * - Pagination support
+ * - Search & filter capabilities
+ * - Error handling
  * 
- * 1. DIRECTIONS (Yo'nalishlar)
- *    Ta'lim yo'nalishlari: KI, DI, TIB, IQT va h.k.
- *    Har bir guruh bitta yo'nalishga tegishli.
+ * ENDPOINTS USED:
+ * ---------------
+ * /groups     - Guruhlar CRUD
+ * /students   - Talabalar CRUD
+ * /attendance - Davomat
+ * /schedule   - Dars jadvali
+ * /reports    - Hisobotlar
+ * /notifications - Bildirishnomalar
+ * /dashboard  - Statistika
+ * /excel      - Import/Export
  * 
- * 2. SUBJECTS (Fanlar)
- *    Bellashuv fanlari: Informatika, Matematika, Fizika va h.k.
- *    Turnirlar fan bo'yicha o'tkazilishi mumkin.
- * 
- * 3. DIRECTION_SUBJECTS (Yo'nalish-Fan bog'lanishi)
- *    Qaysi yo'nalish qaysi fanlarda qatnashishi mumkinligini belgilaydi.
- *    Masalan: KI -> [Informatika, Matematika, Fizika, Dasturlash]
- * 
- * 4. GROUPS (Guruhlar)
- *    Talabalar guruhlari. Har bir guruhda:
- *    - directionId: Yo'nalish
- *    - leaderId: Sardor (null bo'lishi mumkin)
- *    - isActive: Faol/Bloklangan holat
- *    - contractAmount: Yillik kontrakt summasi
- * 
- * 5. STUDENTS (Talabalar)
- *    Talabalar ro'yxati. Har bir talabada:
- *    - studentId: Login uchun ID (masalan: ST-2024-001)
- *    - role: 'student' yoki 'leader'
- *    - contractPaid: To'langan summa
- *    - password: Login paroli
- * 
- * 6. SCHEDULE (Dars jadvali)
- *    Haftalik dars jadvali: kun, vaqt, fan, o'qituvchi, xona
- * 
- * 7. ATTENDANCE_RECORDS (Davomat)
- *    Kunlik davomat: present, absent, late
- * 
- * 8. REPORTS (Hisobotlar)
- *    Sardor/Admin tomonidan yaratilgan hisobotlar
- * 
- * 9. NOTIFICATIONS (Bildirishnomalar)
- *    Tizim xabarlari
- * 
- * 10. CLUBS (To'garaklar)
- *     Qo'shimcha ta'lim to'garaklari
- * 
- * 11. TOURNAMENTS (Turnirlar)
- *     Bellashuvlar va olimpiadalar.
- *     isSubjectBased: true bo'lsa, faqat tegishli yo'nalish qatnashadi
- * 
- * MUHIM METODLAR:
- * ===============
- * - assignGroupLeader(): Sardor tayinlash (student.role = 'leader')
- * - toggleGroupStatus(): Guruhni bloklash (login taqiqlanadi)
- * - getAvailableSubjectsForStudent(): Turnir uchun mavjud fanlar
- * - registerForTournament(): Turnirga ro'yxatdan o'tish
+ * Author: UniControl Team
+ * Version: 2.0.0 (Real API)
  */
 
 import { defineStore } from 'pinia'
-import { ref, computed } from 'vue'
+import { computed, ref } from 'vue'
+import api from '../services/api'
 
 export const useDataStore = defineStore('data', () => {
-  // ===================================================================
-  // 1. YO'NALISHLAR (Ta'lim yo'nalishlari)
-  // ===================================================================
-  const directions = ref([
-    { id: 1, code: 'KI', name: 'Kompyuter injiniringi', faculty: 'Axborot texnologiyalari', isActive: true },
-    { id: 2, code: 'DI', name: 'Dasturiy injiniring', faculty: 'Axborot texnologiyalari', isActive: true },
-    { id: 3, code: 'AT', name: 'Axborot tizimlari', faculty: 'Axborot texnologiyalari', isActive: true },
-    { id: 4, code: 'TIB', name: 'Tibbiyot', faculty: 'Tibbiyot fakulteti', isActive: true },
-    { id: 5, code: 'IQT', name: 'Iqtisodiyot', faculty: 'Iqtisodiyot fakulteti', isActive: true },
-    { id: 6, code: 'HUQ', name: 'Huquqshunoslik', faculty: 'Huquq fakulteti', isActive: true },
-    { id: 7, code: 'FIL', name: 'Filologiya', faculty: 'Filologiya fakulteti', isActive: true },
-    { id: 8, code: 'FTO', name: 'Fizika-texnika', faculty: 'Fizika-matematika fakulteti', isActive: true },
-    { id: 9, code: 'KIM', name: 'Kimyo', faculty: 'Tabiiy fanlar fakulteti', isActive: true },
-    { id: 10, code: 'BIO', name: 'Biologiya', faculty: 'Tabiiy fanlar fakulteti', isActive: true }
-  ])
+  // ============================================================
+  // STATE - Reactive data containers
+  // ============================================================
 
-  // Fanlar (Bellashuv fanlari)
-  const subjects = ref([
-    { id: 1, name: 'Informatika', icon: 'Monitor', color: 'blue', isActive: true },
-    { id: 2, name: 'Matematika', icon: 'Calculator', color: 'indigo', isActive: true },
-    { id: 3, name: 'Fizika', icon: 'Atom', color: 'amber', isActive: true },
-    { id: 4, name: 'Kimyo', icon: 'FlaskConical', color: 'green', isActive: true },
-    { id: 5, name: 'Biologiya', icon: 'Leaf', color: 'emerald', isActive: true },
-    { id: 6, name: 'Ingliz tili', icon: 'Languages', color: 'red', isActive: true },
-    { id: 7, name: 'Tarix', icon: 'BookText', color: 'yellow', isActive: true },
-    { id: 8, name: 'Huquq asoslari', icon: 'Scale', color: 'slate', isActive: true },
-    { id: 9, name: 'Iqtisodiyot asoslari', icon: 'Banknote', color: 'cyan', isActive: true },
-    { id: 10, name: 'Adabiyot', icon: 'BookOpen', color: 'purple', isActive: true },
-    { id: 11, name: 'Dasturlash', icon: 'Code', color: 'teal', isActive: true },
-    { id: 12, name: 'Robototexnika', icon: 'Cpu', color: 'orange', isActive: true }
-  ])
-
-  // Yo'nalish - Fan bog'lanishi (Qaysi yo'nalish qaysi fanlardan qatnashishi mumkin)
-  const directionSubjects = ref([
-    // Kompyuter injiniringi -> Informatika, Matematika, Fizika, Dasturlash, Robototexnika, Ingliz tili
-    { directionId: 1, subjectIds: [1, 2, 3, 11, 12, 6] },
-    // Dasturiy injiniring -> Informatika, Matematika, Dasturlash, Ingliz tili
-    { directionId: 2, subjectIds: [1, 2, 11, 6] },
-    // Axborot tizimlari -> Informatika, Matematika, Dasturlash
-    { directionId: 3, subjectIds: [1, 2, 11] },
-    // Tibbiyot -> Kimyo, Biologiya, Ingliz tili
-    { directionId: 4, subjectIds: [4, 5, 6] },
-    // Iqtisodiyot -> Matematika, Iqtisodiyot asoslari, Ingliz tili
-    { directionId: 5, subjectIds: [2, 9, 6] },
-    // Huquqshunoslik -> Huquq asoslari, Tarix, Ingliz tili
-    { directionId: 6, subjectIds: [8, 7, 6] },
-    // Filologiya -> Ingliz tili, Adabiyot, Tarix
-    { directionId: 7, subjectIds: [6, 10, 7] },
-    // Fizika-texnika -> Fizika, Matematika, Informatika
-    { directionId: 8, subjectIds: [3, 2, 1] },
-    // Kimyo -> Kimyo, Biologiya, Matematika
-    { directionId: 9, subjectIds: [4, 5, 2] },
-    // Biologiya -> Biologiya, Kimyo
-    { directionId: 10, subjectIds: [5, 4] }
-  ])
-
-  // Guruhlar
-  const groups = ref([
-    { id: 1, name: 'KI_25-04', faculty: 'Kompyuter injiniringi', directionId: 1, year: 1, leaderId: 2, leaderName: 'Karimov Sardor', contractAmount: 18411000, isActive: true },
-    { id: 2, name: 'DI_25-21', faculty: 'Dasturiy injiniring', directionId: 2, year: 1, leaderId: null, leaderName: '', contractAmount: 18411000, isActive: true },
-    { id: 3, name: 'FTO_24-03', faculty: 'Fizika-texnika', directionId: 8, year: 2, leaderId: null, leaderName: '', contractAmount: 16500000, isActive: false },
-    { id: 4, name: 'SE_25-01', faculty: 'Dasturiy injiniring', directionId: 2, year: 1, leaderId: null, leaderName: '', contractAmount: 18411000, isActive: true },
-    { id: 5, name: 'TIB_25-01', faculty: 'Tibbiyot', directionId: 4, year: 1, leaderId: null, leaderName: '', contractAmount: 25000000, isActive: true },
-    { id: 6, name: 'IQT_25-02', faculty: 'Iqtisodiyot', directionId: 5, year: 1, leaderId: null, leaderName: '', contractAmount: 15000000, isActive: true }
-  ])
-
-  // Talabalar
-  const students = ref([
-    {
-      id: 1,
-      studentId: 'ST-2024-001',
-      name: 'Aliyev Jasur Vali o\'g\'li',
-      phone: '+998 90 123 45 67',
-      address: 'Toshkent sh., Chilonzor tumani',
-      commute: 'Avtobus #45',
-      groupId: 1,
-      group: 'KI_25-04',
-      contractPaid: 18411000,
-      passport: 'AA 1234567',
-      jshshir: '12345678901234',
-      birthDate: '27.01.2004',
-      role: 'student',
-      avatar: null,
-      email: 'jasur@uni.uz',
-      password: '123456'
-    },
-    {
-      id: 2,
-      studentId: 'ST-2024-002',
-      name: 'Karimov Sardor',
-      phone: '+998 91 234 56 78',
-      address: 'Toshkent sh., Yunusobod tumani',
-      commute: 'Metro',
-      groupId: 1,
-      group: 'KI_25-04',
-      contractPaid: 18411000,
-      passport: 'AB 2345678',
-      jshshir: '23456789012345',
-      birthDate: '15.03.2003',
-      role: 'leader',
-      avatar: null,
-      email: 'sardor@uni.uz',
-      password: '123456'
-    },
-    {
-      id: 3,
-      studentId: 'ST-2024-003',
-      name: 'Toshmatov Alisher',
-      phone: '+998 92 345 67 89',
-      address: 'Toshkent sh., Mirzo Ulug\'bek tumani',
-      commute: 'Piyoda',
-      groupId: 1,
-      group: 'KI_25-04',
-      contractPaid: 13808250,
-      passport: 'AC 3456789',
-      jshshir: '34567890123456',
-      birthDate: '08.07.2004',
-      role: 'student',
-      avatar: null,
-      email: 'alisher@uni.uz',
-      password: '123456'
-    },
-    {
-      id: 4,
-      studentId: 'ST-2024-004',
-      name: 'Rahimov Bekzod',
-      phone: '+998 93 456 78 90',
-      address: 'Toshkent sh., Sergeli tumani',
-      commute: 'Avtobus #67',
-      groupId: 1,
-      group: 'KI_25-04',
-      contractPaid: 9205500,
-      passport: 'AD 4567890',
-      jshshir: '45678901234567',
-      birthDate: '22.11.2003',
-      role: 'student',
-      avatar: null,
-      email: 'bekzod@uni.uz',
-      password: '123456'
-    },
-    {
-      id: 5,
-      studentId: 'ST-2024-005',
-      name: 'Xolmatov Ulug\'bek',
-      phone: '+998 94 567 89 01',
-      address: 'Toshkent sh., Olmazor tumani',
-      commute: 'Tramvay',
-      groupId: 1,
-      group: 'KI_25-04',
-      contractPaid: 20000000,
-      passport: 'AE 5678901',
-      jshshir: '56789012345678',
-      birthDate: '30.05.2004',
-      role: 'student',
-      avatar: null,
-      email: 'ulugbek@uni.uz',
-      password: '123456'
-    }
-  ])
-
-  // Dars jadvali
-  const schedule = ref([
-    { id: 1, groupId: 1, day: 'Dushanba', time: '08:30-10:00', subject: 'Oliy matematika', teacher: 'Karimov A.', room: 'A-301', type: 'Ma\'ruza' },
-    { id: 2, groupId: 1, day: 'Dushanba', time: '10:10-11:40', subject: 'Fizika', teacher: 'Saidov B.', room: 'B-205', type: 'Amaliy' },
-    { id: 3, groupId: 1, day: 'Dushanba', time: '12:30-14:00', subject: 'Dasturlash', teacher: 'Toshmatov I.', room: 'Kompyuter xonasi', type: 'Laboratoriya' },
-    { id: 4, groupId: 1, day: 'Seshanba', time: '08:30-10:00', subject: 'Ingliz tili', teacher: 'Johnson M.', room: 'C-102', type: 'Amaliy' },
-    { id: 5, groupId: 1, day: 'Seshanba', time: '10:10-11:40', subject: 'Oliy matematika', teacher: 'Karimov A.', room: 'A-301', type: 'Amaliy' },
-    { id: 6, groupId: 1, day: 'Chorshanba', time: '08:30-10:00', subject: 'Fizika', teacher: 'Saidov B.', room: 'Fizika laboratoriyasi', type: 'Laboratoriya' },
-    { id: 7, groupId: 1, day: 'Chorshanba', time: '10:10-11:40', subject: 'Falsafa', teacher: 'Rahmonov S.', room: 'D-401', type: 'Ma\'ruza' },
-    { id: 8, groupId: 1, day: 'Payshanba', time: '08:30-10:00', subject: 'Dasturlash', teacher: 'Toshmatov I.', room: 'Kompyuter xonasi', type: 'Ma\'ruza' },
-    { id: 9, groupId: 1, day: 'Payshanba', time: '10:10-11:40', subject: 'Chiziqli algebra', teacher: 'Karimov A.', room: 'A-302', type: 'Ma\'ruza' },
-    { id: 10, groupId: 1, day: 'Juma', time: '08:30-10:00', subject: 'Jismoniy tarbiya', teacher: 'Azimov R.', room: 'Sport zali', type: 'Amaliy' },
-  ])
-
-  // Davomat
-  const attendanceRecords = ref([
-    { id: 1, studentId: 1, date: '2024-01-22', status: 'present', note: '' },
-    { id: 2, studentId: 2, date: '2024-01-22', status: 'present', note: '' },
-    { id: 3, studentId: 3, date: '2024-01-22', status: 'absent', note: 'Kasal' },
-    { id: 4, studentId: 4, date: '2024-01-22', status: 'present', note: '' },
-    { id: 5, studentId: 5, date: '2024-01-22', status: 'late', note: '15 daqiqa kechikdi' },
-  ])
-
-  // Hisobotlar
-  const reports = ref([
-    { id: 1, title: 'Yanvar oyi davomat hisoboti', type: 'attendance', groupId: 1, createdBy: 2, date: '2024-01-31', status: 'completed' },
-    { id: 2, title: 'KI_25-04 guruh haftalik hisoboti', type: 'weekly', groupId: 1, createdBy: 2, date: '2024-01-28', status: 'completed' },
-    { id: 3, title: 'Dekabr oyi yakuniy hisobot', type: 'monthly', groupId: 1, createdBy: 2, date: '2024-12-31', status: 'completed' },
-  ])
-
-  // Bildirishnomalar
-  const notifications = ref([
-    { id: 1, title: 'Tizimga xush kelibsiz!', message: 'Uni Control tizimiga muvaffaqiyatli kirdingiz.', date: '2024-01-22', read: false },
-  ])
-
-  // To'garaklar
-  const clubs = ref([
-    { 
-      id: 1, 
-      name: 'Matematika to\'garagi', 
-      teacher: 'Karimov Aziz Shavkatovich',
-      phone: '+998 90 111 22 33',
-      description: 'Oliy matematika, chiziqli algebra va matematik analiz bo\'yicha qo\'shimcha darslar',
-      schedule: 'Dushanba, Chorshanba - 16:00',
-      price: 200000,
-      room: 'A-301',
-      isActive: true,
-      category: 'fan',
-      image: null
-    },
-    { 
-      id: 2, 
-      name: 'Ingliz tili kursi', 
-      teacher: 'Johnson Michael',
-      phone: '+998 91 222 33 44',
-      description: 'IELTS tayyorgarlik kursi. Speaking, Writing, Reading, Listening',
-      schedule: 'Seshanba, Payshanba - 15:00',
-      price: 350000,
-      room: 'B-205',
-      isActive: true,
-      category: 'til',
-      image: null
-    },
-    { 
-      id: 3, 
-      name: 'Dasturlash kursi', 
-      teacher: 'Toshmatov Islom',
-      phone: '+998 93 333 44 55',
-      description: 'Python, JavaScript va Web dasturlash asoslari',
-      schedule: 'Shanba - 10:00',
-      price: 400000,
-      room: 'Kompyuter xonasi',
-      isActive: true,
-      category: 'texnik',
-      image: null
-    },
-    { 
-      id: 4, 
-      name: 'Futbol to\'garagi', 
-      teacher: 'Azimov Rustam',
-      phone: '+998 94 444 55 66',
-      description: 'Professional murabbiy nazoratida futbol mashg\'ulotlari',
-      schedule: 'Dushanba, Chorshanba, Juma - 17:00',
-      price: 150000,
-      room: 'Stadium',
-      isActive: true,
-      category: 'sport',
-      image: null
-    }
-  ])
-
-  // ===================================================================
-  // 11. TURNIRLAR - YANGI TUZILISH
-  // ===================================================================
-  // 
-  // YANGI MODEL:
-  // - participationRules[]: Har bir yo'nalish uchun alohida qoidalar
-  // - selectionMode: 'fixed' | 'single' | 'multiple'
-  // - registration.selectedSubjectIds[]: Bir nechta fan tanlash imkoniyati
-  //
-  // SELECTION MODES:
-  // - fixed: Tanlov yo'q, 1 ta fan avtomatik (masalan: KI -> Informatika)
-  // - single: allowedSubjectIds ichidan faqat 1 ta tanlash (masalan: MED -> Bio YOKI Kimyo)
-  // - multiple: allowedSubjectIds ichidan bir nechta tanlash (masalan: MED -> Bio VA Kimyo)
-  //
-  const tournaments = ref([
-    {
-      id: 1,
-      title: 'Dasturlash olimpiadasi 2026',
-      description: 'Universitet miqyosidagi dasturlash bellashuvi. Python, C++, Java tillarida algoritmik masalalar yechiladi.',
-      category: 'intellektual',
-      type: 'olimpiada',
-      startDate: '2026-02-15',
-      endDate: '2026-02-15',
-      registrationDeadline: '2026-02-10',
-      location: 'Kompyuter laboratoriyasi, A-korpus',
-      maxParticipants: 50,
-      prize: '1-o\'rin: 2,000,000 so\'m, 2-o\'rin: 1,000,000 so\'m, 3-o\'rin: 500,000 so\'m',
-      organizer: 'IT fakulteti',
-      contactPhone: '+998 90 123 45 67',
-      isActive: true,
-      image: null,
-      // Qatnashish qoidalari - bu oddiy turnir, hamma qatnashishi mumkin (qoidalar bo'sh)
-      participationRules: [],
-      customFields: [
-        { id: 1, name: 'Dasturlash tili', type: 'select', options: ['Python', 'C++', 'Java', 'JavaScript'], required: true },
-        { id: 2, name: 'Tajriba darajasi', type: 'select', options: ['Boshlang\'ich', 'O\'rta', 'Yuqori'], required: true }
-      ],
-      registrations: []
-    },
-    {
-      id: 2,
-      title: 'Futbol chempionati',
-      description: 'Fakultetlar o\'rtasida futbol bellashuvi. Har bir jamoa 11 nafardan iborat.',
-      category: 'sport',
-      type: 'chempionat',
-      startDate: '2026-03-01',
-      endDate: '2026-03-30',
-      registrationDeadline: '2026-02-25',
-      location: 'Universitet stadioni',
-      maxParticipants: 100,
-      prize: 'G\'olib jamoaga kubok va medallar',
-      organizer: 'Sport bo\'limi',
-      contactPhone: '+998 91 234 56 78',
-      isActive: true,
-      image: null,
-      participationRules: [], // Hamma qatnashishi mumkin
-      customFields: [
-        { id: 1, name: 'Pozitsiya', type: 'select', options: ['Darvozabon', 'Himoyachi', 'Yarim himoyachi', 'Hujumchi'], required: true },
-        { id: 2, name: 'Jamoa nomi', type: 'text', required: true },
-        { id: 3, name: 'Futbolka raqami', type: 'number', required: true }
-      ],
-      registrations: []
-    },
-    {
-      id: 3,
-      title: 'Ingliz tili olimpiadasi',
-      description: 'Speaking, Writing, Reading va Listening bo\'limlari bo\'yicha sinov',
-      category: 'intellektual',
-      type: 'olimpiada',
-      startDate: '2026-02-20',
-      endDate: '2026-02-20',
-      registrationDeadline: '2026-02-15',
-      location: 'Tillar fakulteti, B-korpus',
-      maxParticipants: 80,
-      prize: 'IELTS kursiga bepul yo\'llanma',
-      organizer: 'Tillar fakulteti',
-      contactPhone: '+998 93 345 67 89',
-      isActive: true,
-      image: null,
-      participationRules: [], // Hamma qatnashishi mumkin
-      customFields: [
-        { id: 1, name: 'Ingliz tili darajasi', type: 'select', options: ['A1', 'A2', 'B1', 'B2', 'C1'], required: true },
-        { id: 2, name: 'IELTS ball (agar mavjud)', type: 'text', required: false }
-      ],
-      registrations: []
-    },
-    {
-      id: 4,
-      title: 'Bilimlar bellashuvi 2026',
-      description: 'Har bir yo\'nalish o\'z fanlaridan bellashadi. Yo\'nalishga qarab 1 yoki 2 ta fan tanlash mumkin.',
-      category: 'intellektual',
-      type: 'olimpiada',
-      startDate: '2026-03-10',
-      endDate: '2026-03-12',
-      registrationDeadline: '2026-03-05',
-      location: 'Bosh bino, barcha auditoriyalar',
-      maxParticipants: 500,
-      prize: 'Har bir fan bo\'yicha: 1-o\'rin: 1,500,000 so\'m, 2-o\'rin: 1,000,000 so\'m, 3-o\'rin: 500,000 so\'m',
-      organizer: 'O\'quv bo\'limi',
-      contactPhone: '+998 90 999 88 77',
-      isActive: true,
-      image: null,
-      // ===== QATNASHISH QOIDALARI =====
-      // Har bir yo'nalish uchun alohida qoida
-      participationRules: [
-        {
-          id: 1,
-          directionId: 1, // KI - Kompyuter injiniringi
-          allowedSubjectIds: [1], // Faqat Informatika
-          selectionMode: 'fixed', // Tanlov yo'q
-          minSelect: 1,
-          maxSelect: 1
-        },
-        {
-          id: 2,
-          directionId: 2, // DI - Dasturiy injiniring
-          allowedSubjectIds: [1], // Faqat Informatika
-          selectionMode: 'fixed',
-          minSelect: 1,
-          maxSelect: 1
-        },
-        {
-          id: 3,
-          directionId: 4, // TIB - Tibbiyot (MED)
-          allowedSubjectIds: [4, 5], // Kimyo va Biologiya
-          selectionMode: 'single', // 1 ta tanlash kerak
-          minSelect: 1,
-          maxSelect: 1
-        },
-        {
-          id: 4,
-          directionId: 5, // IQT - Iqtisodiyot
-          allowedSubjectIds: [2], // Faqat Matematika
-          selectionMode: 'fixed',
-          minSelect: 1,
-          maxSelect: 1
-        },
-        {
-          id: 5,
-          directionId: 6, // HUQ - Huquqshunoslik
-          allowedSubjectIds: [7], // Faqat Tarix
-          selectionMode: 'fixed',
-          minSelect: 1,
-          maxSelect: 1
-        },
-        {
-          id: 6,
-          directionId: 7, // FIL - Filologiya (Ingliz tili)
-          allowedSubjectIds: [6], // Faqat Ingliz tili
-          selectionMode: 'fixed',
-          minSelect: 1,
-          maxSelect: 1
-        },
-        {
-          id: 7,
-          directionId: 8, // FTO - Fizika-texnika
-          allowedSubjectIds: [3], // Faqat Fizika
-          selectionMode: 'fixed',
-          minSelect: 1,
-          maxSelect: 1
-        },
-        {
-          id: 8,
-          directionId: 9, // KIM - Kimyo
-          allowedSubjectIds: [4, 5], // Kimyo va Biologiya
-          selectionMode: 'multiple', // 1 yoki 2 ta tanlash mumkin
-          minSelect: 1,
-          maxSelect: 2
-        },
-        {
-          id: 9,
-          directionId: 10, // BIO - Biologiya
-          allowedSubjectIds: [5, 4], // Biologiya va Kimyo
-          selectionMode: 'multiple', // 1 yoki 2 ta tanlash mumkin
-          minSelect: 1,
-          maxSelect: 2
-        }
-      ],
-      customFields: [],
-      registrations: []
-    }
-  ])
-
-  // Computed
-  const getStudentsByGroup = computed(() => (groupId) => {
-    return students.value.filter(s => s.groupId === groupId)
+  // === GROUPS ===
+  const groups = ref([])
+  const groupsLoading = ref(false)
+  const groupsError = ref(null)
+  const groupsPagination = ref({
+    page: 1,
+    pageSize: 100,
+    total: 0,
+    totalPages: 0
   })
 
-  const getScheduleByGroup = computed(() => (groupId) => {
-    return schedule.value.filter(s => s.groupId === groupId)
+  // === STUDENTS ===
+  const students = ref([])
+  const studentsLoading = ref(false)
+  const studentsError = ref(null)
+  const studentsPagination = ref({
+    page: 1,
+    pageSize: 100,
+    total: 0,
+    totalPages: 0
   })
 
-  const getAttendanceByStudent = computed(() => (studentId) => {
-    return attendanceRecords.value.filter(a => a.studentId === studentId)
+  // === ATTENDANCE ===
+  const attendanceRecords = ref([])
+  const attendanceLoading = ref(false)
+  const attendanceError = ref(null)
+
+  // === SCHEDULE ===
+  const schedules = ref([])
+  const schedulesLoading = ref(false)
+
+  // === NOTIFICATIONS ===
+  const notifications = ref([])
+  const notificationsLoading = ref(false)
+  const unreadCount = ref(0)
+
+  // === REPORTS ===
+  const reports = ref([])
+  const reportsLoading = ref(false)
+
+  // === CLUBS ===
+  const clubs = ref([])
+  const clubsLoading = ref(false)
+  const clubsError = ref(null)
+
+  // === SUBJECTS ===
+  const subjects = ref([])
+  const subjectsLoading = ref(false)
+  const subjectsError = ref(null)
+
+  // === DIRECTIONS ===
+  const directions = ref([])
+  const directionsLoading = ref(false)
+  const directionsError = ref(null)
+
+  // === TOURNAMENTS ===
+  const tournaments = ref([])
+  const tournamentsLoading = ref(false)
+  const tournamentsError = ref(null)
+
+  // === DASHBOARD STATS ===
+  const dashboardStats = ref(null)
+  const statsLoading = ref(false)
+
+  // === CACHE ===
+  const cache = ref({
+    groups: { data: null, timestamp: null, ttl: 60000 }, // 1 minute
+    students: { data: null, timestamp: null, ttl: 60000 },
+    stats: { data: null, timestamp: null, ttl: 30000 }  // 30 seconds
   })
 
-  const getAttendanceByDate = computed(() => (date) => {
-    return attendanceRecords.value.filter(a => a.date === date)
-  })
+  // ============================================================
+  // COMPUTED - Derived data
+  // ============================================================
 
-  const calculateContractPercentage = computed(() => (paid, total) => {
-    return Math.round((paid / total) * 100)
-  })
+  /** Faol guruhlar */
+  const activeGroups = computed(() =>
+    groups.value.filter(g => g.is_active !== false)
+  )
 
-  // Student methods
-  const addStudent = (student) => {
-    const newId = students.value.length > 0 ? Math.max(...students.value.map(s => s.id)) + 1 : 1
-    students.value.push({ id: newId, ...student })
-    return newId
-  }
+  /** Faol talabalar */
+  const activeStudents = computed(() =>
+    students.value.filter(s => s.is_active !== false)
+  )
 
-  const updateStudent = (id, data) => {
-    const index = students.value.findIndex(s => s.id === id)
-    if (index !== -1) {
-      students.value[index] = { ...students.value[index], ...data }
-    }
-  }
+  /** O'qilmagan bildirishnomalar */
+  const unreadNotifications = computed(() =>
+    notifications.value.filter(n => !n.is_read)
+  )
 
-  const updateStudentFull = (id, data) => {
-    const index = students.value.findIndex(s => s.id === id)
-    if (index !== -1) {
-      students.value[index] = { ...students.value[index], ...data }
-    }
-  }
+  /** Guruhlar soni */
+  const groupsCount = computed(() => groupsPagination.value.total)
 
-  const deleteStudent = (id) => {
-    const index = students.value.findIndex(s => s.id === id)
-    if (index !== -1) {
-      students.value.splice(index, 1)
-    }
-  }
+  /** Talabalar soni */
+  const studentsCount = computed(() => studentsPagination.value.total)
 
-  // Group methods
-  const addGroup = (group) => {
-    const newId = groups.value.length > 0 ? Math.max(...groups.value.map(g => g.id)) + 1 : 1
-    groups.value.push({ id: newId, ...group, isActive: true })
-    return newId
-  }
-
-  const updateGroup = (id, data) => {
-    const index = groups.value.findIndex(g => g.id === id)
-    if (index !== -1) {
-      groups.value[index] = { ...groups.value[index], ...data }
-    }
-  }
-
-  const deleteGroup = (id) => {
-    const index = groups.value.findIndex(g => g.id === id)
-    if (index !== -1) {
-      groups.value.splice(index, 1)
-    }
-  }
-
-  const updateGroupContract = (id, amount) => {
-    const index = groups.value.findIndex(g => g.id === id)
-    if (index !== -1) {
-      groups.value[index].contractAmount = amount
-    }
-  }
-
-  const assignGroupLeader = (groupId, studentId, studentName) => {
-    const gIndex = groups.value.findIndex(g => g.id === groupId)
-    if (gIndex !== -1) {
-      groups.value[gIndex].leaderId = studentId
-      groups.value[gIndex].leaderName = studentName
-    }
-    const sIndex = students.value.findIndex(s => s.id === studentId)
-    if (sIndex !== -1) {
-      students.value[sIndex].role = 'leader'
-    }
-  }
-
-  const removeGroupLeader = (groupId) => {
-    const group = groups.value.find(g => g.id === groupId)
-    if (group && group.leaderId) {
-      const sIndex = students.value.findIndex(s => s.id === group.leaderId)
-      if (sIndex !== -1) {
-        students.value[sIndex].role = 'student'
-      }
-      group.leaderId = null
-      group.leaderName = ''
-    }
-  }
-
-  const toggleGroupStatus = (id) => {
-    const index = groups.value.findIndex(g => g.id === id)
-    if (index !== -1) {
-      groups.value[index].isActive = !groups.value[index].isActive
-    }
-  }
-
-  const isGroupActive = (groupId) => {
-    const group = groups.value.find(g => g.id === groupId)
-    return group ? group.isActive : false
-  }
-
-  const importFromExcel = (data, groupId, groupName) => {
-    data.forEach(row => {
-      const newId = students.value.length > 0 ? Math.max(...students.value.map(s => s.id)) + 1 : 1
-      students.value.push({
-        id: newId,
-        studentId: row.studentId || `ST-${Date.now()}-${newId}`,
-        name: row.name,
-        phone: row.phone || '',
-        address: row.address || '',
-        commute: row.commute || '',
-        groupId: groupId,
-        group: groupName,
-        contractPaid: row.contractPaid || 0,
-        passport: row.passport || '',
-        jshshir: row.jshshir || '',
-        birthDate: row.birthDate || '',
-        role: 'student',
-        avatar: null,
-        email: row.email || '',
-        password: '123456'
-      })
-    })
-  }
-
-  const updateStudentPassword = (studentId, newPassword) => {
-    const index = students.value.findIndex(s => s.id === studentId)
-    if (index !== -1) {
-      students.value[index].password = newPassword
-    }
-  }
-
-  const findStudentByStudentId = (studentIdCode) => {
-    return students.value.find(s => s.studentId === studentIdCode)
-  }
-
-  // Attendance methods
-  const addAttendanceRecord = (record) => {
-    const newId = attendanceRecords.value.length > 0 ? Math.max(...attendanceRecords.value.map(a => a.id)) + 1 : 1
-    attendanceRecords.value.push({ id: newId, ...record })
-  }
-
-  const updateAttendanceRecord = (id, data) => {
-    const index = attendanceRecords.value.findIndex(a => a.id === id)
-    if (index !== -1) {
-      attendanceRecords.value[index] = { ...attendanceRecords.value[index], ...data }
-    }
-  }
-
-  // Schedule methods
-  const addScheduleItem = (item) => {
-    const newId = schedule.value.length > 0 ? Math.max(...schedule.value.map(s => s.id)) + 1 : 1
-    schedule.value.push({ id: newId, ...item })
-  }
-
-  const updateScheduleItem = (id, data) => {
-    const index = schedule.value.findIndex(s => s.id === id)
-    if (index !== -1) {
-      schedule.value[index] = { ...schedule.value[index], ...data }
-    }
-  }
-
-  const deleteScheduleItem = (id) => {
-    const index = schedule.value.findIndex(s => s.id === id)
-    if (index !== -1) {
-      schedule.value.splice(index, 1)
-    }
-  }
-
-  // Report methods
-  const addReport = (report) => {
-    const newId = reports.value.length > 0 ? Math.max(...reports.value.map(r => r.id)) + 1 : 1
-    reports.value.push({ id: newId, ...report })
-  }
-
-  // Notification methods
-  const addNotification = (notification) => {
-    const newId = notifications.value.length > 0 ? Math.max(...notifications.value.map(n => n.id)) + 1 : 1
-    notifications.value.push({ id: newId, ...notification, read: false })
-  }
-
-  const deleteNotification = (id) => {
-    const index = notifications.value.findIndex(n => n.id === id)
-    if (index !== -1) {
-      notifications.value.splice(index, 1)
-    }
-  }
-
-  const sendNotification = (notification) => {
-    addNotification(notification)
-  }
-
-  const importStudentsFromExcel = (studentsData, groupId, groupName) => {
-    studentsData.forEach(row => {
-      const newId = students.value.length > 0 ? Math.max(...students.value.map(s => s.id)) + 1 : 1
-      students.value.push({
-        id: newId,
-        studentId: row.studentId || `ST-${Date.now()}-${newId}`,
-        name: row.name,
-        phone: row.phone || '',
-        address: row.address || '',
-        commute: row.commute || '',
-        groupId: groupId,
-        group: groupName,
-        contractPaid: row.contractPaid || 0,
-        passport: row.passport || '',
-        jshshir: row.jshshir || '',
-        birthDate: row.birthDate || '',
-        role: 'student',
-        avatar: null,
-        email: row.email || '',
-        password: '123456'
-      })
-    })
-  }
-
-  const getStatistics = () => {
-    return {
-      totalStudents: students.value.length,
-      totalGroups: groups.value.length,
-      activeGroups: groups.value.filter(g => g.isActive).length
-    }
-  }
-
-  // Club methods
-  const addClub = (club) => {
-    const newId = clubs.value.length > 0 ? Math.max(...clubs.value.map(c => c.id)) + 1 : 1
-    clubs.value.push({ id: newId, ...club, isActive: true })
-    return newId
-  }
-
-  const updateClub = (id, data) => {
-    const index = clubs.value.findIndex(c => c.id === id)
-    if (index !== -1) {
-      clubs.value[index] = { ...clubs.value[index], ...data }
-    }
-  }
-
-  const deleteClub = (id) => {
-    const index = clubs.value.findIndex(c => c.id === id)
-    if (index !== -1) {
-      clubs.value.splice(index, 1)
-    }
-  }
-
-  const toggleClubStatus = (id) => {
-    const index = clubs.value.findIndex(c => c.id === id)
-    if (index !== -1) {
-      clubs.value[index].isActive = !clubs.value[index].isActive
-    }
-  }
-
-  const getActiveClubs = computed(() => {
-    return clubs.value.filter(c => c.isActive)
-  })
-
-  // Tournament methods
-  const addTournament = (tournament) => {
-    const newId = tournaments.value.length > 0 ? Math.max(...tournaments.value.map(t => t.id)) + 1 : 1
-    tournaments.value.push({ id: newId, ...tournament, registrations: [], isActive: true })
-    return newId
-  }
-
-  const updateTournament = (id, data) => {
-    const index = tournaments.value.findIndex(t => t.id === id)
-    if (index !== -1) {
-      tournaments.value[index] = { ...tournaments.value[index], ...data }
-    }
-  }
-
-  const deleteTournament = (id) => {
-    const index = tournaments.value.findIndex(t => t.id === id)
-    if (index !== -1) {
-      tournaments.value.splice(index, 1)
-    }
-  }
-
-  const toggleTournamentStatus = (id) => {
-    const index = tournaments.value.findIndex(t => t.id === id)
-    if (index !== -1) {
-      tournaments.value[index].isActive = !tournaments.value[index].isActive
-    }
-  }
-
-  const getActiveTournaments = computed(() => {
-    return tournaments.value.filter(t => t.isActive)
-  })
-
-  // ========================================
-  // YANGI TURNIR MODELI HELPER FUNKSIYALARI
-  // ========================================
+  // ============================================================
+  // GROUPS - Guruhlar bilan ishlash
+  // ============================================================
 
   /**
-   * Yo'nalish uchun qatnashish qoidasini olish
-   * @param {number} tournamentId - Turnir ID
-   * @param {number} directionId - Yo'nalish ID
-   * @returns {Object|null} - Qatnashish qoidasi yoki null
+   * Guruhlarni yuklash
+   * @param {Object} params - { page, pageSize, search, is_active, course_year, faculty }
+   * @param {boolean} forceReload - Cache ni e'tiborsiz qoldirish
    */
-  const getParticipationRuleForDirection = (tournamentId, directionId) => {
-    const tournament = tournaments.value.find(t => t.id === tournamentId)
-    if (!tournament || !tournament.participationRules) return null
-    return tournament.participationRules.find(r => r.directionId === directionId) || null
+  const fetchGroups = async (params = {}, forceReload = false) => {
+    // Cache tekshirish
+    const cacheEntry = cache.value.groups
+    if (!forceReload && cacheEntry.data &&
+      Date.now() - cacheEntry.timestamp < cacheEntry.ttl) {
+      return cacheEntry.data
+    }
+
+    groupsLoading.value = true
+    groupsError.value = null
+
+    try {
+      const response = await api.getGroups({
+        page: params.page || 1,
+        page_size: params.pageSize || params.page_size || 500,
+        search: params.search,
+        is_active: params.is_active,
+        course_year: params.course_year,
+        faculty: params.faculty
+      })
+
+      // Response formatini tekshirish
+      if (response.items) {
+        groups.value = response.items.map(normalizeGroup)
+        groupsPagination.value = {
+          page: response.page,
+          pageSize: response.page_size,
+          total: response.total,
+          totalPages: response.total_pages
+        }
+      } else if (Array.isArray(response)) {
+        groups.value = response.map(normalizeGroup)
+        groupsPagination.value.total = response.length
+      }
+
+      // Cache yangilash
+      cache.value.groups = {
+        data: groups.value,
+        timestamp: Date.now(),
+        ttl: 60000
+      }
+
+      return groups.value
+
+    } catch (err) {
+      console.error('Groups fetch error:', err)
+      groupsError.value = err.message || 'Guruhlarni yuklashda xatolik'
+      throw err
+    } finally {
+      groupsLoading.value = false
+    }
   }
 
   /**
-   * Talaba uchun qatnashish qoidasini olish (groupId orqali)
-   * @param {number} tournamentId - Turnir ID
+   * Bitta guruhni olish
+   * @param {number} id - Guruh ID
+   */
+  const getGroup = async (id) => {
+    try {
+      const response = await api.getGroup(id)
+      return normalizeGroup(response)
+    } catch (err) {
+      console.error('Get group error:', err)
+      throw err
+    }
+  }
+
+  /**
+   * Guruh qo'shish
+   * @param {Object} data - Guruh ma'lumotlari
+   */
+  const addGroup = async (data) => {
+    groupsLoading.value = true
+    try {
+      const response = await api.createGroup({
+        name: data.name,
+        faculty: data.faculty,
+        course_year: data.course_year || data.courseYear,
+        education_type: data.education_type || data.educationType || 'kunduzgi',
+        contract_amount: data.contract_amount || data.contractAmount || 0,
+        is_active: data.is_active !== false
+      })
+
+      const newGroup = normalizeGroup(response)
+      groups.value.push(newGroup)
+      groupsPagination.value.total++
+
+      // Cache invalidate
+      cache.value.groups.timestamp = null
+
+      return newGroup
+    } catch (err) {
+      console.error('Add group error:', err)
+      throw err
+    } finally {
+      groupsLoading.value = false
+    }
+  }
+
+  /**
+   * Guruhni yangilash
+   * @param {number} id - Guruh ID
+   * @param {Object} data - Yangilanadigan ma'lumotlar
+   */
+  const updateGroup = async (id, data) => {
+    try {
+      const response = await api.updateGroup(id, {
+        name: data.name,
+        faculty: data.faculty,
+        course_year: data.course_year || data.courseYear,
+        education_type: data.education_type || data.educationType,
+        contract_amount: data.contract_amount || data.contractAmount,
+        is_active: data.is_active
+      })
+
+      const updatedGroup = normalizeGroup(response)
+      const index = groups.value.findIndex(g => g.id === id)
+      if (index !== -1) {
+        groups.value[index] = updatedGroup
+      }
+
+      cache.value.groups.timestamp = null
+      return updatedGroup
+    } catch (err) {
+      console.error('Update group error:', err)
+      throw err
+    }
+  }
+
+  /**
+   * Guruhni o'chirish
+   * @param {number} id - Guruh ID
+   */
+  const deleteGroup = async (id) => {
+    try {
+      await api.deleteGroup(id)
+      groups.value = groups.value.filter(g => g.id !== id)
+      groupsPagination.value.total--
+      cache.value.groups.timestamp = null
+      return true
+    } catch (err) {
+      console.error('Delete group error:', err)
+      throw err
+    }
+  }
+
+  /**
+   * Guruh holatini o'zgartirish (faol/bloklangan)
+   * @param {number} id - Guruh ID
+   */
+  const toggleGroupStatus = async (id) => {
+    try {
+      const group = groups.value.find(g => g.id === id)
+      if (!group) throw new Error('Guruh topilmadi')
+
+      const response = await api.updateGroup(id, {
+        is_active: !group.isActive
+      })
+
+      const updatedGroup = normalizeGroup(response)
+      const index = groups.value.findIndex(g => g.id === id)
+      if (index !== -1) {
+        groups.value[index] = updatedGroup
+      }
+
+      return updatedGroup
+    } catch (err) {
+      console.error('Toggle group status error:', err)
+      throw err
+    }
+  }
+
+  /**
+   * Guruhga sardor tayinlash
    * @param {number} groupId - Guruh ID
-   * @returns {Object|null} - Qatnashish qoidasi yoki null
+   * @param {number} studentId - Talaba ID (null = sardorni olib tashlash)
    */
-  const getParticipationRuleForStudent = (tournamentId, groupId) => {
-    const direction = getDirectionByGroupId(groupId)
-    if (!direction) return null
-    return getParticipationRuleForDirection(tournamentId, direction.id)
+  const assignGroupLeader = async (groupId, studentId = null) => {
+    try {
+      const response = await api.assignGroupLeader(groupId, studentId)
+
+      // Guruhni yangilash
+      const updatedGroup = normalizeGroup(response)
+      const groupIndex = groups.value.findIndex(g => g.id === groupId)
+      if (groupIndex !== -1) {
+        groups.value[groupIndex] = updatedGroup
+      }
+
+      // Talabani ham yangilash (agar mavjud bo'lsa)
+      if (studentId) {
+        const studentIndex = students.value.findIndex(s => s.id === studentId)
+        if (studentIndex !== -1) {
+          students.value[studentIndex].role = 'leader'
+        }
+      }
+
+      return updatedGroup
+    } catch (err) {
+      console.error('Assign leader error:', err)
+      throw err
+    }
   }
 
-  /**
-   * Turnirda qatnashish qoidalari borligini tekshirish
-   * @param {number} tournamentId - Turnir ID
-   * @returns {boolean}
-   */
-  const hasParticipationRules = (tournamentId) => {
-    const tournament = tournaments.value.find(t => t.id === tournamentId)
-    return tournament?.participationRules?.length > 0
-  }
+  // ============================================================
+  // STUDENTS - Talabalar bilan ishlash
+  // ============================================================
 
   /**
-   * Ro'yxatdan o'tish validatsiyasi
-   * @param {number} tournamentId - Turnir ID
-   * @param {number} directionId - Yo'nalish ID
-   * @param {number[]} selectedSubjectIds - Tanlangan fanlar
-   * @returns {Object} - { valid: boolean, message: string }
+   * Talabalarni yuklash
+   * @param {Object} params - { page, pageSize, search, group_id, is_active }
+   * @param {boolean} forceReload - Cache ni e'tiborsiz qoldirish
    */
-  const validateTournamentRegistration = (tournamentId, directionId, selectedSubjectIds) => {
-    const rule = getParticipationRuleForDirection(tournamentId, directionId)
-    
-    if (!rule) {
-      return { valid: false, message: 'Sizning yo\'nalishingiz bu turnirda qatnasha olmaydi' }
+  const fetchStudents = async (params = {}, forceReload = false) => {
+    // Cache tekshirish
+    const cacheEntry = cache.value.students
+    if (!forceReload && cacheEntry.data &&
+      Date.now() - cacheEntry.timestamp < cacheEntry.ttl &&
+      !params.search && !params.group_id) {
+      return cacheEntry.data
     }
 
-    // Tanlangan fanlar ruxsat etilgan fanlar ichida ekanligini tekshirish
-    const invalidSubjects = selectedSubjectIds.filter(id => !rule.allowedSubjectIds.includes(id))
-    if (invalidSubjects.length > 0) {
-      return { valid: false, message: 'Tanlangan fanlardan ba\'zilari ruxsat etilmagan' }
-    }
+    studentsLoading.value = true
+    studentsError.value = null
 
-    // selectionMode bo'yicha tekshirish
-    switch (rule.selectionMode) {
-      case 'fixed':
-        // Fixed rejimda faqat bitta ruxsat etilgan fan bo'ladi va u avtomatik tanlanadi
-        if (selectedSubjectIds.length !== 1 || selectedSubjectIds[0] !== rule.allowedSubjectIds[0]) {
-          return { valid: false, message: 'Bu yo\'nalish uchun fan avtomatik belgilangan' }
-        }
-        break
-      
-      case 'single':
-        // Faqat bitta fan tanlash kerak
-        if (selectedSubjectIds.length !== 1) {
-          return { valid: false, message: 'Faqat bitta fan tanlashingiz kerak' }
-        }
-        break
-      
-      case 'multiple':
-        // Min va max chegaralarni tekshirish
-        if (selectedSubjectIds.length < rule.minSelect) {
-          return { valid: false, message: `Kamida ${rule.minSelect} ta fan tanlashingiz kerak` }
-        }
-        if (selectedSubjectIds.length > rule.maxSelect) {
-          return { valid: false, message: `Ko'pi bilan ${rule.maxSelect} ta fan tanlashingiz mumkin` }
-        }
-        break
-      
-      default:
-        return { valid: false, message: 'Noma\'lum tanlash rejimi' }
-    }
-
-    return { valid: true, message: 'Validatsiya muvaffaqiyatli' }
-  }
-
-  /**
-   * Turnirga ro'yxatdan o'tish (YANGI MODEL)
-   * @param {number} tournamentId - Turnir ID
-   * @param {Object} registration - Ro'yxatdan o'tish ma'lumotlari
-   *   - studentId: Talaba ID
-   *   - selectedSubjectIds: Tanlangan fanlar ro'yxati (agar qoidalar bo'lsa)
-   */
-  const registerForTournament = (tournamentId, registration) => {
-    const index = tournaments.value.findIndex(t => t.id === tournamentId)
-    if (index === -1) {
-      return { success: false, message: 'Turnir topilmadi' }
-    }
-
-    const tournament = tournaments.value[index]
-    const { studentId, selectedSubjectIds = [] } = registration
-
-    // Tekshirish: allaqachon ro'yxatdan o'tganmi?
-    if (tournament.registrations.some(r => r.studentId === studentId)) {
-      return { success: false, message: 'Siz allaqachon ro\'yxatdan o\'tgansiz' }
-    }
-
-    // Talabani topish
-    const student = students.value.find(s => s.id === studentId)
-    if (!student) {
-      return { success: false, message: 'Talaba topilmadi' }
-    }
-
-    // Talaba yo'nalishini aniqlash
-    const direction = getDirectionByGroupId(student.groupId)
-    
-    let finalSelectedSubjectIds = selectedSubjectIds
-    let selectedSubjectNames = []
-
-    // Qatnashish qoidalarini tekshirish (agar mavjud bo'lsa)
-    if (hasParticipationRules(tournamentId)) {
-      if (!direction) {
-        return { success: false, message: 'Talaba yo\'nalishi aniqlanmadi' }
-      }
-
-      const rule = getParticipationRuleForDirection(tournamentId, direction.id)
-      
-      if (!rule) {
-        return { success: false, message: 'Sizning yo\'nalishingiz bu turnirda qatnasha olmaydi' }
-      }
-
-      // Fixed rejimda avtomatik fan belgilash
-      if (rule.selectionMode === 'fixed') {
-        finalSelectedSubjectIds = [...rule.allowedSubjectIds]
-      }
-
-      // Validatsiya
-      const validation = validateTournamentRegistration(tournamentId, direction.id, finalSelectedSubjectIds)
-      if (!validation.valid) {
-        return { success: false, message: validation.message }
-      }
-    }
-
-    // Tanlangan fanlar nomlarini olish
-    if (finalSelectedSubjectIds.length > 0) {
-      selectedSubjectNames = finalSelectedSubjectIds.map(id => {
-        const subject = subjects.value.find(s => s.id === id)
-        return subject?.name || 'Noma\'lum'
+    try {
+      const response = await api.getStudents({
+        page: params.page || 1,
+        page_size: params.pageSize || params.page_size || 10000,
+        search: params.search,
+        group_id: params.group_id || params.groupId,
+        is_active: params.is_active
       })
-    }
-    
-    const newId = tournament.registrations.length > 0
-      ? Math.max(...tournament.registrations.map(r => r.id)) + 1
-      : 1
 
-    tournament.registrations.push({
-      id: newId,
-      studentId,
-      studentName: student.name,
-      directionId: direction?.id || null,
-      directionName: direction?.name || null,
-      selectedSubjectIds: finalSelectedSubjectIds,
-      selectedSubjectNames,
-      registeredAt: new Date().toISOString(),
-      status: 'pending'
-    })
-    
-    return { success: true, message: 'Muvaffaqiyatli ro\'yxatdan o\'tdingiz' }
-  }
-
-  const cancelRegistration = (tournamentId, registrationId) => {
-    const tIndex = tournaments.value.findIndex(t => t.id === tournamentId)
-    if (tIndex !== -1) {
-      const rIndex = tournaments.value[tIndex].registrations.findIndex(r => r.id === registrationId)
-      if (rIndex !== -1) {
-        tournaments.value[tIndex].registrations.splice(rIndex, 1)
-        return true
+      if (response.items) {
+        students.value = response.items.map(normalizeStudent)
+        studentsPagination.value = {
+          page: response.page,
+          pageSize: response.page_size,
+          total: response.total,
+          totalPages: response.total_pages
+        }
+      } else if (Array.isArray(response)) {
+        students.value = response.map(normalizeStudent)
+        studentsPagination.value.total = response.length
       }
-    }
-    return false
-  }
 
-  const updateRegistrationStatus = (tournamentId, registrationId, status) => {
-    const tIndex = tournaments.value.findIndex(t => t.id === tournamentId)
-    if (tIndex !== -1) {
-      const rIndex = tournaments.value[tIndex].registrations.findIndex(r => r.id === registrationId)
-      if (rIndex !== -1) {
-        tournaments.value[tIndex].registrations[rIndex].status = status
-        return true
+      // Cache yangilash (faqat filtrsiz so'rovlar uchun)
+      if (!params.search && !params.group_id) {
+        cache.value.students = {
+          data: students.value,
+          timestamp: Date.now(),
+          ttl: 60000
+        }
       }
+
+      return students.value
+
+    } catch (err) {
+      console.error('Students fetch error:', err)
+      studentsError.value = err.message || 'Talabalarni yuklashda xatolik'
+      throw err
+    } finally {
+      studentsLoading.value = false
     }
-    return false
   }
 
-  const isStudentRegistered = (tournamentId, studentId) => {
-    const tournament = tournaments.value.find(t => t.id === tournamentId)
-    if (tournament) {
-      return tournament.registrations.some(r => r.studentId === studentId)
+  /**
+   * Bitta talabani olish
+   * @param {number} id - Talaba ID
+   */
+  const getStudent = async (id) => {
+    try {
+      const response = await api.getStudent(id)
+      return normalizeStudent(response)
+    } catch (err) {
+      console.error('Get student error:', err)
+      throw err
     }
-    return false
   }
 
-  const getStudentRegistrations = (studentId) => {
-    const result = []
-    tournaments.value.forEach(t => {
-      const reg = t.registrations.find(r => r.studentId === studentId)
-      if (reg) {
-        result.push({ tournament: t, registration: reg })
+  /**
+   * Talaba qo'shish
+   * @param {Object} data - Talaba ma'lumotlari
+   */
+  const addStudent = async (data) => {
+    studentsLoading.value = true
+    try {
+      const response = await api.createStudent({
+        full_name: data.full_name || data.name,
+        hemis_id: data.hemis_id || data.studentId,
+        group_id: data.group_id || data.groupId,
+        phone: data.phone,
+        email: data.email,
+        address: data.address,
+        birth_date: data.birth_date,
+        contract_amount: data.contract_amount || data.contractAmount || 0,
+        is_active: data.is_active !== false
+      })
+
+      const newStudent = normalizeStudent(response)
+      students.value.push(newStudent)
+      studentsPagination.value.total++
+
+      cache.value.students.timestamp = null
+      return newStudent
+    } catch (err) {
+      console.error('Add student error:', err)
+      throw err
+    } finally {
+      studentsLoading.value = false
+    }
+  }
+
+  /**
+   * Talabani yangilash
+   * @param {number} id - Talaba ID
+   * @param {Object} data - Yangilanadigan ma'lumotlar
+   */
+  const updateStudent = async (id, data) => {
+    try {
+      const response = await api.updateStudent(id, {
+        full_name: data.full_name || data.name,
+        hemis_id: data.hemis_id || data.studentId,
+        group_id: data.group_id || data.groupId,
+        phone: data.phone,
+        email: data.email,
+        address: data.address,
+        birth_date: data.birth_date,
+        contract_amount: data.contract_amount,
+        paid_amount: data.paid_amount,
+        is_active: data.is_active
+      })
+
+      const updatedStudent = normalizeStudent(response)
+      const index = students.value.findIndex(s => s.id === id)
+      if (index !== -1) {
+        students.value[index] = updatedStudent
       }
-    })
-    return result
+
+      cache.value.students.timestamp = null
+      return updatedStudent
+    } catch (err) {
+      console.error('Update student error:', err)
+      throw err
+    }
   }
 
-  // Yo'nalish va Fan funksiyalari
-  const getDirectionById = (id) => {
-    return directions.value.find(d => d.id === id)
+  /**
+   * Talabani o'chirish
+   * @param {number} id - Talaba ID
+   */
+  const deleteStudent = async (id) => {
+    try {
+      await api.deleteStudent(id)
+      students.value = students.value.filter(s => s.id !== id)
+      studentsPagination.value.total--
+      cache.value.students.timestamp = null
+      return true
+    } catch (err) {
+      console.error('Delete student error:', err)
+      throw err
+    }
   }
 
+  /**
+   * Talaba parolini tiklash
+   * @param {number} id - Talaba ID
+   * @param {string} newPassword - Yangi parol
+   */
+  const resetStudentPassword = async (id, newPassword) => {
+    try {
+      await api.resetStudentPassword(id, newPassword)
+      return true
+    } catch (err) {
+      console.error('Reset password error:', err)
+      throw err
+    }
+  }
+
+  // ============================================================
+  // ATTENDANCE - Davomat bilan ishlash
+  // ============================================================
+
+  /**
+   * Davomatni yuklash
+   * @param {Object} params - { date, group_id }
+   */
+  const fetchAttendance = async (params = {}) => {
+    attendanceLoading.value = true
+    attendanceError.value = null
+
+    try {
+      const response = await api.getAttendance(params)
+
+      if (response.items) {
+        attendanceRecords.value = response.items.map(normalizeAttendance)
+      } else if (Array.isArray(response)) {
+        attendanceRecords.value = response.map(normalizeAttendance)
+      }
+
+      return attendanceRecords.value
+    } catch (err) {
+      console.error('Attendance fetch error:', err)
+      attendanceError.value = err.message
+      throw err
+    } finally {
+      attendanceLoading.value = false
+    }
+  }
+
+  /**
+   * Kun bo'yicha davomatni olish
+   * @param {string} date - Sana (YYYY-MM-DD)
+   * @param {number} groupId - Guruh ID
+   */
+  const getAttendanceByDate = async (date, groupId) => {
+    try {
+      const response = await api.getAttendanceByDate(date, groupId)
+      return Array.isArray(response) ? response.map(normalizeAttendance) : []
+    } catch (err) {
+      console.error('Get attendance by date error:', err)
+      throw err
+    }
+  }
+
+  /**
+   * Davomat qo'shish/yangilash
+   * @param {Object} data - { student_id, date, status, reason }
+   */
+  const saveAttendance = async (data) => {
+    try {
+      const response = await api.createAttendance({
+        student_id: data.student_id || data.studentId,
+        date: data.date,
+        status: data.status,
+        reason: data.reason
+      })
+      return normalizeAttendance(response)
+    } catch (err) {
+      console.error('Save attendance error:', err)
+      throw err
+    }
+  }
+
+  /**
+   * Ko'p talabaga davomat qo'shish
+   * @param {Array} records - Davomat yozuvlari
+   */
+  const bulkSaveAttendance = async (records) => {
+    try {
+      const response = await api.bulkCreateAttendance(records.map(r => ({
+        student_id: r.student_id || r.studentId,
+        date: r.date,
+        status: r.status,
+        reason: r.reason
+      })))
+      return response
+    } catch (err) {
+      console.error('Bulk save attendance error:', err)
+      throw err
+    }
+  }
+
+  /**
+   * Kunlik davomat xulosasi
+   * @param {string} date - Sana
+   * @param {number} groupId - Guruh ID (ixtiyoriy)
+   */
+  const getDailySummary = async (date = null, groupId = null) => {
+    try {
+      const response = await api.getAttendanceDailySummary(date, groupId)
+      return response
+    } catch (err) {
+      console.error('Get daily summary error:', err)
+      throw err
+    }
+  }
+
+  /**
+   * Guruh davomat statistikasi
+   * @param {number} groupId - Guruh ID
+   * @param {string} dateFrom - Boshlanish sanasi
+   * @param {string} dateTo - Tugash sanasi
+   */
+  const getGroupAttendanceStats = async (groupId, dateFrom, dateTo) => {
+    try {
+      const response = await api.getGroupAttendanceSummary(groupId, dateFrom, dateTo)
+      return response
+    } catch (err) {
+      console.error('Get group attendance stats error:', err)
+      throw err
+    }
+  }
+
+  // ============================================================
+  // SCHEDULE - Dars jadvali bilan ishlash
+  // ============================================================
+
+  /**
+   * Dars jadvalini yuklash
+   * @param {number} groupId - Guruh ID
+   */
+  const fetchSchedule = async (groupId = null) => {
+    schedulesLoading.value = true
+
+    try {
+      const params = groupId ? { group_id: groupId } : {}
+      const response = await api.getSchedules(params)
+
+      if (response.items) {
+        schedules.value = response.items
+      } else if (Array.isArray(response)) {
+        schedules.value = response
+      }
+
+      return schedules.value
+    } catch (err) {
+      console.error('Schedule fetch error:', err)
+      throw err
+    } finally {
+      schedulesLoading.value = false
+    }
+  }
+
+  /**
+   * Bugungi dars jadvalini olish
+   * @param {number} groupId - Guruh ID
+   */
+  const getTodaySchedule = async (groupId) => {
+    try {
+      const response = await api.getTodaySchedule(groupId)
+      return response
+    } catch (err) {
+      console.error('Get today schedule error:', err)
+      throw err
+    }
+  }
+
+  /**
+   * Dars qo'shish
+   * @param {Object} data - Dars ma'lumotlari
+   */
+  const addSchedule = async (data) => {
+    try {
+      const response = await api.createSchedule(data)
+      schedules.value.push(response)
+      return response
+    } catch (err) {
+      console.error('Add schedule error:', err)
+      throw err
+    }
+  }
+
+  /**
+   * Darsni yangilash
+   * @param {number} id - Dars ID
+   * @param {Object} data - Yangilanadigan ma'lumotlar
+   */
+  const updateSchedule = async (id, data) => {
+    try {
+      const response = await api.updateSchedule(id, data)
+      const index = schedules.value.findIndex(s => s.id === id)
+      if (index !== -1) {
+        schedules.value[index] = response
+      }
+      return response
+    } catch (err) {
+      console.error('Update schedule error:', err)
+      throw err
+    }
+  }
+
+  /**
+   * Darsni o'chirish
+   * @param {number} id - Dars ID
+   */
+  const deleteSchedule = async (id) => {
+    try {
+      await api.deleteSchedule(id)
+      schedules.value = schedules.value.filter(s => s.id !== id)
+      return true
+    } catch (err) {
+      console.error('Delete schedule error:', err)
+      throw err
+    }
+  }
+
+  // ============================================================
+  // NOTIFICATIONS - Bildirishnomalar bilan ishlash
+  // ============================================================
+
+  /**
+   * Bildirishnomalarni yuklash
+   * @param {Object} params - { page, page_size, is_read }
+   */
+  const fetchNotifications = async (params = {}) => {
+    notificationsLoading.value = true
+
+    try {
+      const response = await api.getNotifications(params)
+
+      if (response.items) {
+        notifications.value = response.items
+      } else if (Array.isArray(response)) {
+        notifications.value = response
+      }
+
+      // O'qilmaganlarni hisoblash
+      unreadCount.value = notifications.value.filter(n => !n.is_read).length
+
+      return notifications.value
+    } catch (err) {
+      console.error('Notifications fetch error:', err)
+      throw err
+    } finally {
+      notificationsLoading.value = false
+    }
+  }
+
+  /**
+   * Bildirishnomani o'qilgan deb belgilash
+   * @param {number} id - Bildirishnoma ID
+   */
+  const markNotificationRead = async (id) => {
+    try {
+      await api.markNotificationRead(id)
+      const index = notifications.value.findIndex(n => n.id === id)
+      if (index !== -1) {
+        notifications.value[index].is_read = true
+        unreadCount.value = Math.max(0, unreadCount.value - 1)
+      }
+      return true
+    } catch (err) {
+      console.error('Mark notification read error:', err)
+      throw err
+    }
+  }
+
+  /**
+   * Barcha bildirishnomalarni o'qilgan deb belgilash
+   */
+  const markAllNotificationsRead = async () => {
+    try {
+      await api.markAllNotificationsRead()
+      notifications.value.forEach(n => n.is_read = true)
+      unreadCount.value = 0
+      return true
+    } catch (err) {
+      console.error('Mark all notifications read error:', err)
+      throw err
+    }
+  }
+
+  /**
+   * Bildirishnoma yaratish
+   * @param {Object} data - Bildirishnoma ma'lumotlari
+   */
+  const createNotification = async (data) => {
+    try {
+      const response = await api.createNotification(data)
+      notifications.value.unshift(response)
+      return response
+    } catch (err) {
+      console.error('Create notification error:', err)
+      throw err
+    }
+  }
+
+  /**
+   * Ko'pchilikka bildirishnoma yuborish
+   * @param {Object} data - { title, message, recipient_type, recipient_ids }
+   */
+  const sendBulkNotification = async (data) => {
+    try {
+      const response = await api.sendBulkNotification(data)
+      return response
+    } catch (err) {
+      console.error('Send bulk notification error:', err)
+      throw err
+    }
+  }
+
+  // ============================================================
+  // REPORTS - Hisobotlar bilan ishlash
+  // ============================================================
+
+  /**
+   * Hisobotlarni yuklash
+   * @param {Object} params - Filtrlar
+   */
+  const fetchReports = async (params = {}) => {
+    reportsLoading.value = true
+
+    try {
+      const response = await api.getReports(params)
+
+      if (response.items) {
+        reports.value = response.items
+      } else if (Array.isArray(response)) {
+        reports.value = response
+      }
+
+      return reports.value
+    } catch (err) {
+      console.error('Reports fetch error:', err)
+      throw err
+    } finally {
+      reportsLoading.value = false
+    }
+  }
+
+  /**
+   * Hisobot yaratish
+   * @param {Object} data - Hisobot ma'lumotlari
+   */
+  const createReport = async (data) => {
+    try {
+      const response = await api.createReport(data)
+      reports.value.unshift(response)
+      return response
+    } catch (err) {
+      console.error('Create report error:', err)
+      throw err
+    }
+  }
+
+  /**
+   * Hisobotni o'chirish
+   * @param {number} id - Hisobot ID
+   */
+  const deleteReport = async (id) => {
+    try {
+      await api.deleteReport(id)
+      reports.value = reports.value.filter(r => r.id !== id)
+      return true
+    } catch (err) {
+      console.error('Delete report error:', err)
+      throw err
+    }
+  }
+
+  /**
+   * Hisobot generatsiya qilish
+   * @param {string} type - Hisobot turi
+   * @param {number} groupId - Guruh ID
+   * @param {string} startDate - Boshlanish sanasi
+   * @param {string} endDate - Tugash sanasi
+   */
+  const generateReport = async (type, groupId, startDate, endDate) => {
+    try {
+      const response = await api.generateReport(type, groupId, startDate, endDate)
+      return response
+    } catch (err) {
+      console.error('Generate report error:', err)
+      throw err
+    }
+  }
+
+  // ============================================================
+  // DASHBOARD STATS - Statistika
+  // ============================================================
+
+  /**
+   * Dashboard statistikasini yuklash
+   */
+  const fetchDashboardStats = async () => {
+    // Cache tekshirish
+    const cacheEntry = cache.value.stats
+    if (cacheEntry.data && Date.now() - cacheEntry.timestamp < cacheEntry.ttl) {
+      return cacheEntry.data
+    }
+
+    statsLoading.value = true
+
+    try {
+      const response = await api.getDashboardStats()
+      dashboardStats.value = response
+
+      // Cache saqlash
+      cache.value.stats = {
+        data: response,
+        timestamp: Date.now(),
+        ttl: 30000
+      }
+
+      return response
+    } catch (err) {
+      console.error('Dashboard stats fetch error:', err)
+      throw err
+    } finally {
+      statsLoading.value = false
+    }
+  }
+
+  // ============================================================
+  // EXCEL - Import/Export
+  // ============================================================
+
+  /**
+   * Exceldan import qilish
+   * @param {File} file - Excel fayl
+   * @param {number} groupId - Guruh ID (ixtiyoriy)
+   */
+  const importFromExcel = async (file, groupId = null) => {
+    try {
+      const response = await api.importFromExcel(file, groupId)
+
+      // Cache invalidate
+      cache.value.students.timestamp = null
+      cache.value.groups.timestamp = null
+
+      // Refresh data
+      await fetchStudents({}, true)
+      if (!groupId) {
+        await fetchGroups({}, true)
+      }
+
+      return response
+    } catch (err) {
+      console.error('Excel import error:', err)
+      throw err
+    }
+  }
+
+  /**
+   * Excelga export qilish
+   * @param {string} type - 'students' | 'groups' | 'attendance'
+   * @param {Object} params - Qo'shimcha parametrlar
+   */
+  const exportToExcel = async (type, params = {}) => {
+    try {
+      const blob = await api.exportToExcel(type, params)
+
+      // Faylni yuklab olish
+      const url = window.URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `${type}_${new Date().toISOString().split('T')[0]}.xlsx`
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+      window.URL.revokeObjectURL(url)
+
+      return true
+    } catch (err) {
+      console.error('Excel export error:', err)
+      throw err
+    }
+  }
+
+  // ============================================================
+  // HELPER FUNCTIONS - Yordamchi funksiyalar
+  // ============================================================
+
+  /**
+   * Backend guruh formatini frontend formatiga o'girish
+   */
+  function normalizeGroup(data) {
+    return {
+      id: data.id,
+      name: data.name,
+      faculty: data.faculty,
+      courseYear: data.course_year,
+      course_year: data.course_year,
+      educationType: data.education_type,
+      education_type: data.education_type,
+      contractAmount: data.contract_amount || 0,
+      contract_amount: data.contract_amount || 0,
+      isActive: data.is_active !== false,
+      is_active: data.is_active !== false,
+      leaderId: data.leader_id,
+      leader_id: data.leader_id,
+      leaderName: data.leader_name,
+      leader_name: data.leader_name,
+      studentsCount: data.students_count || 0,
+      students_count: data.students_count || 0,
+      created_at: data.created_at,
+      updated_at: data.updated_at
+    }
+  }
+
+  /**
+   * Backend talaba formatini frontend formatiga o'girish
+   */
+  function normalizeStudent(data) {
+    return {
+      id: data.id,
+      name: data.full_name || data.name,
+      full_name: data.full_name || data.name,
+      studentId: data.hemis_id || data.student_id,
+      hemis_id: data.hemis_id,
+      groupId: data.group_id,
+      group_id: data.group_id,
+      group: data.group_name || data.group,
+      group_name: data.group_name,
+      phone: data.phone,
+      email: data.email,
+      address: data.address,
+      birthDate: data.birth_date,
+      birth_date: data.birth_date,
+      role: data.role || 'student',
+      isActive: data.is_active !== false,
+      is_active: data.is_active !== false,
+      contractAmount: data.contract_amount || 0,
+      contract_amount: data.contract_amount || 0,
+      paidAmount: data.paid_amount || 0,
+      paid_amount: data.paid_amount || 0,
+      user_id: data.user_id,
+      created_at: data.created_at,
+      updated_at: data.updated_at
+    }
+  }
+
+  /**
+   * Backend davomat formatini frontend formatiga o'girish
+   */
+  function normalizeAttendance(data) {
+    return {
+      id: data.id,
+      studentId: data.student_id,
+      student_id: data.student_id,
+      studentName: data.student_name,
+      student_name: data.student_name,
+      date: data.date,
+      status: data.status,
+      reason: data.reason,
+      created_by: data.created_by,
+      created_at: data.created_at
+    }
+  }
+
+  /**
+   * Guruh ID bo'yicha talabalarni olish
+   * @param {number} groupId - Guruh ID
+   */
+  const getStudentsByGroup = (groupId) => {
+    return students.value.filter(s => s.groupId === groupId || s.group_id === groupId)
+  }
+
+  /**
+   * Guruh ID bo'yicha guruhni olish (local)
+   * @param {number} id - Guruh ID
+   */
+  const getGroupById = (id) => {
+    return groups.value.find(g => g.id === id)
+  }
+
+  /**
+   * Talaba ID bo'yicha talabani olish (local)
+   * @param {number} id - Talaba ID
+   */
+  const getStudentById = (id) => {
+    return students.value.find(s => s.id === id)
+  }
+
+  /**
+   * Cache ni tozalash
+   */
+  const clearCache = () => {
+    cache.value.groups.timestamp = null
+    cache.value.students.timestamp = null
+    cache.value.stats.timestamp = null
+  }
+
+  /**
+   * Barcha ma'lumotlarni qayta yuklash
+   */
+  const refreshAll = async () => {
+    clearCache()
+    await Promise.all([
+      fetchGroups({}, true),
+      fetchStudents({}, true),
+      fetchDashboardStats()
+    ])
+  }
+
+  // ============================================================
+  // CLUBS - To'garaklar bilan ishlash
+  // ============================================================
+
+  /**
+   * To'garaklarni yuklash
+   */
+  const fetchClubs = async (params = {}) => {
+    clubsLoading.value = true
+    clubsError.value = null
+    try {
+      const response = await api.getClubs(params)
+      if (response?.items) {
+        clubs.value = response.items
+      } else if (Array.isArray(response)) {
+        clubs.value = response
+      }
+      return clubs.value
+    } catch (err) {
+      console.error('Clubs fetch error:', err)
+      clubsError.value = err.message || 'To\'garaklarni yuklashda xatolik'
+      throw err
+    } finally {
+      clubsLoading.value = false
+    }
+  }
+
+  /**
+   * To'garak qo'shish
+   */
+  const addClub = async (data) => {
+    try {
+      const response = await api.createClub(data)
+      clubs.value.push(response)
+      return response
+    } catch (err) {
+      console.error('Add club error:', err)
+      throw err
+    }
+  }
+
+  /**
+   * To'garakni yangilash
+   */
+  const updateClub = async (id, data) => {
+    try {
+      const response = await api.updateClub(id, data)
+      const index = clubs.value.findIndex(c => c.id === id)
+      if (index !== -1) {
+        clubs.value[index] = { ...clubs.value[index], ...response }
+      }
+      return response
+    } catch (err) {
+      console.error('Update club error:', err)
+      throw err
+    }
+  }
+
+  /**
+   * To'garakni o'chirish
+   */
+  const deleteClub = async (id) => {
+    try {
+      await api.deleteClub(id)
+      clubs.value = clubs.value.filter(c => c.id !== id)
+    } catch (err) {
+      console.error('Delete club error:', err)
+      throw err
+    }
+  }
+
+  /**
+   * To'garak statusini o'zgartirish
+   */
+  const toggleClubStatus = async (id) => {
+    try {
+      const response = await api.toggleClubStatus(id)
+      const index = clubs.value.findIndex(c => c.id === id)
+      if (index !== -1) {
+        clubs.value[index].isActive = !clubs.value[index].isActive
+      }
+      return response
+    } catch (err) {
+      console.error('Toggle club status error:', err)
+      throw err
+    }
+  }
+
+  // ============================================================
+  // SUBJECTS - Fanlar bilan ishlash
+  // ============================================================
+
+  /**
+   * Fanlarni yuklash
+   */
+  const fetchSubjects = async (params = {}) => {
+    subjectsLoading.value = true
+    subjectsError.value = null
+    try {
+      const response = await api.getSubjects(params)
+      if (response?.items) {
+        subjects.value = response.items
+      } else if (Array.isArray(response)) {
+        subjects.value = response
+      }
+      return subjects.value
+    } catch (err) {
+      console.error('Subjects fetch error:', err)
+      subjectsError.value = err.message || 'Fanlarni yuklashda xatolik'
+      throw err
+    } finally {
+      subjectsLoading.value = false
+    }
+  }
+
+  /**
+   * Fan qo'shish
+   */
+  const addSubject = async (data) => {
+    try {
+      const response = await api.createSubject(data)
+      subjects.value.push(response)
+      return response
+    } catch (err) {
+      console.error('Add subject error:', err)
+      throw err
+    }
+  }
+
+  /**
+   * Fanni yangilash
+   */
+  const updateSubject = async (id, data) => {
+    try {
+      const response = await api.updateSubject(id, data)
+      const index = subjects.value.findIndex(s => s.id === id)
+      if (index !== -1) {
+        subjects.value[index] = { ...subjects.value[index], ...response }
+      }
+      return response
+    } catch (err) {
+      console.error('Update subject error:', err)
+      throw err
+    }
+  }
+
+  /**
+   * Fanni o'chirish
+   */
+  const deleteSubject = async (id) => {
+    try {
+      await api.deleteSubject(id)
+      subjects.value = subjects.value.filter(s => s.id !== id)
+    } catch (err) {
+      console.error('Delete subject error:', err)
+      throw err
+    }
+  }
+
+  /**
+   * Fan ID bo'yicha fanni olish
+   */
   const getSubjectById = (id) => {
     return subjects.value.find(s => s.id === id)
   }
 
-  const getSubjectsByDirection = (directionId) => {
-    const link = directionSubjects.value.find(ds => ds.directionId === directionId)
-    if (link) {
-      return subjects.value.filter(s => link.subjectIds.includes(s.id))
+  // ============================================================
+  // DIRECTIONS - Yo'nalishlar bilan ishlash
+  // ============================================================
+
+  /**
+   * Yo'nalishlarni yuklash
+   */
+  const fetchDirections = async (params = {}) => {
+    directionsLoading.value = true
+    directionsError.value = null
+    try {
+      const response = await api.getDirections(params)
+      if (response?.items) {
+        directions.value = response.items
+      } else if (Array.isArray(response)) {
+        directions.value = response
+      }
+      return directions.value
+    } catch (err) {
+      console.error('Directions fetch error:', err)
+      directionsError.value = err.message || 'Yo\'nalishlarni yuklashda xatolik'
+      throw err
+    } finally {
+      directionsLoading.value = false
     }
-    return []
   }
 
+  /**
+   * Yo'nalish qo'shish
+   */
+  const addDirection = async (data) => {
+    try {
+      const response = await api.createDirection(data)
+      directions.value.push(response)
+      return response
+    } catch (err) {
+      console.error('Add direction error:', err)
+      throw err
+    }
+  }
+
+  /**
+   * Yo'nalishni yangilash
+   */
+  const updateDirection = async (id, data) => {
+    try {
+      const response = await api.updateDirection(id, data)
+      const index = directions.value.findIndex(d => d.id === id)
+      if (index !== -1) {
+        directions.value[index] = { ...directions.value[index], ...response }
+      }
+      return response
+    } catch (err) {
+      console.error('Update direction error:', err)
+      throw err
+    }
+  }
+
+  /**
+   * Yo'nalishni o'chirish
+   */
+  const deleteDirection = async (id) => {
+    try {
+      await api.deleteDirection(id)
+      directions.value = directions.value.filter(d => d.id !== id)
+    } catch (err) {
+      console.error('Delete direction error:', err)
+      throw err
+    }
+  }
+
+  /**
+   * Yo'nalish statusini o'zgartirish
+   */
+  const toggleDirectionStatus = async (id) => {
+    try {
+      const response = await api.toggleDirectionStatus(id)
+      const index = directions.value.findIndex(d => d.id === id)
+      if (index !== -1) {
+        directions.value[index].isActive = !directions.value[index].isActive
+      }
+      return response
+    } catch (err) {
+      console.error('Toggle direction status error:', err)
+      throw err
+    }
+  }
+
+  /**
+   * Yo'nalish uchun fanlarni yangilash
+   */
+  const updateDirectionSubjects = async (directionId, subjectIds) => {
+    try {
+      const response = await api.updateDirectionSubjects(directionId, subjectIds)
+      const index = directions.value.findIndex(d => d.id === directionId)
+      if (index !== -1) {
+        directions.value[index].subjectIds = subjectIds
+      }
+      return response
+    } catch (err) {
+      console.error('Update direction subjects error:', err)
+      throw err
+    }
+  }
+
+  /**
+   * Guruh ID bo'yicha yo'nalishni olish
+   */
   const getDirectionByGroupId = (groupId) => {
     const group = groups.value.find(g => g.id === groupId)
-    if (group && group.directionId) {
-      return directions.value.find(d => d.id === group.directionId)
+    if (group?.direction_id) {
+      return directions.value.find(d => d.id === group.direction_id)
     }
     return null
   }
 
-  const canStudentRegisterForSubject = (studentGroupId, subjectId) => {
-    const group = groups.value.find(g => g.id === studentGroupId)
-    if (!group || !group.directionId) return false
-    
-    const link = directionSubjects.value.find(ds => ds.directionId === group.directionId)
-    if (link) {
-      return link.subjectIds.includes(subjectId)
-    }
-    return false
-  }
+  // ============================================================
+  // TOURNAMENTS - Turnirlar bilan ishlash
+  // ============================================================
 
-  const getAvailableSubjectsForStudent = (studentGroupId, tournamentSubjectIds) => {
-    const group = groups.value.find(g => g.id === studentGroupId)
-    if (!group || !group.directionId) return []
-    
-    const link = directionSubjects.value.find(ds => ds.directionId === group.directionId)
-    if (link) {
-      // Turnirdagi fanlar va talaba yo'nalishi fanlari kesishmasi
-      return subjects.value.filter(s => 
-        tournamentSubjectIds.includes(s.id) && link.subjectIds.includes(s.id)
-      )
-    }
-    return []
-  }
-
-  // Direction CRUD
-  const addDirection = (direction) => {
-    const newId = directions.value.length > 0 ? Math.max(...directions.value.map(d => d.id)) + 1 : 1
-    directions.value.push({ id: newId, ...direction, isActive: true })
-    return newId
-  }
-
-  const updateDirection = (id, data) => {
-    const index = directions.value.findIndex(d => d.id === id)
-    if (index !== -1) {
-      directions.value[index] = { ...directions.value[index], ...data }
+  /**
+   * Turnirlarni yuklash
+   */
+  const fetchTournaments = async (params = {}) => {
+    tournamentsLoading.value = true
+    tournamentsError.value = null
+    try {
+      const response = await api.getTournaments(params)
+      if (response?.items) {
+        tournaments.value = response.items
+      } else if (Array.isArray(response)) {
+        tournaments.value = response
+      }
+      return tournaments.value
+    } catch (err) {
+      console.error('Tournaments fetch error:', err)
+      tournamentsError.value = err.message || 'Turnirlarni yuklashda xatolik'
+      throw err
+    } finally {
+      tournamentsLoading.value = false
     }
   }
 
-  const deleteDirection = (id) => {
-    const index = directions.value.findIndex(d => d.id === id)
-    if (index !== -1) {
-      directions.value.splice(index, 1)
+  /**
+   * Turnir qo'shish
+   */
+  const addTournament = async (data) => {
+    try {
+      const response = await api.createTournament(data)
+      tournaments.value.push(response)
+      return response
+    } catch (err) {
+      console.error('Add tournament error:', err)
+      throw err
     }
   }
 
-  // Subject CRUD
-  const addSubject = (subject) => {
-    const newId = subjects.value.length > 0 ? Math.max(...subjects.value.map(s => s.id)) + 1 : 1
-    subjects.value.push({ id: newId, ...subject, isActive: true })
-    return newId
-  }
-
-  const updateSubject = (id, data) => {
-    const index = subjects.value.findIndex(s => s.id === id)
-    if (index !== -1) {
-      subjects.value[index] = { ...subjects.value[index], ...data }
+  /**
+   * Turnirni yangilash
+   */
+  const updateTournament = async (id, data) => {
+    try {
+      const response = await api.updateTournament(id, data)
+      const index = tournaments.value.findIndex(t => t.id === id)
+      if (index !== -1) {
+        tournaments.value[index] = { ...tournaments.value[index], ...response }
+      }
+      return response
+    } catch (err) {
+      console.error('Update tournament error:', err)
+      throw err
     }
   }
 
-  const deleteSubject = (id) => {
-    const index = subjects.value.findIndex(s => s.id === id)
-    if (index !== -1) {
-      subjects.value.splice(index, 1)
+  /**
+   * Turnir statusini o'zgartirish (faol/nofaol)
+   */
+  const toggleTournamentStatus = async (id) => {
+    try {
+      const response = await api.toggleTournamentStatus(id)
+      const index = tournaments.value.findIndex(t => t.id === id)
+      if (index !== -1) {
+        tournaments.value[index] = { ...tournaments.value[index], ...response }
+      }
+      return response
+    } catch (err) {
+      console.error('Toggle tournament status error:', err)
+      throw err
     }
   }
 
-  // Direction-Subject link
-  const updateDirectionSubjects = (directionId, subjectIds) => {
-    const index = directionSubjects.value.findIndex(ds => ds.directionId === directionId)
-    if (index !== -1) {
-      directionSubjects.value[index].subjectIds = subjectIds
-    } else {
-      directionSubjects.value.push({ directionId, subjectIds })
+  /**
+   * Turnirni o'chirish
+   */
+  const deleteTournament = async (id) => {
+    try {
+      await api.deleteTournament(id)
+      tournaments.value = tournaments.value.filter(t => t.id !== id)
+    } catch (err) {
+      console.error('Delete tournament error:', err)
+      throw err
     }
   }
+
+  /**
+   * Turnirga ro'yxatdan o'tish
+   */
+  const registerForTournament = async (tournamentId, studentId) => {
+    try {
+      const response = await api.registerForTournament(tournamentId, studentId)
+      const tournament = tournaments.value.find(t => t.id === tournamentId)
+      if (tournament && !tournament.registrations) {
+        tournament.registrations = []
+      }
+      if (tournament) {
+        tournament.registrations.push({ student_id: studentId })
+      }
+      return response
+    } catch (err) {
+      console.error('Register for tournament error:', err)
+      throw err
+    }
+  }
+
+  /**
+   * Turnirdan chiqish
+   */
+  const unregisterFromTournament = async (tournamentId, studentId) => {
+    try {
+      const response = await api.unregisterFromTournament(tournamentId, studentId)
+      const tournament = tournaments.value.find(t => t.id === tournamentId)
+      if (tournament?.registrations) {
+        tournament.registrations = tournament.registrations.filter(r => r.student_id !== studentId)
+      }
+      return response
+    } catch (err) {
+      console.error('Unregister from tournament error:', err)
+      throw err
+    }
+  }
+
+  /**
+   * Talaba turnirga ro'yxatdan o'tganmi tekshirish
+   */
+  const isStudentRegistered = (tournamentId, studentId) => {
+    const tournament = tournaments.value.find(t => t.id === tournamentId)
+    return tournament?.registrations?.some(r => r.student_id === studentId) || false
+  }
+
+  /**
+   * Talabaning barcha ro'yxatlarini olish
+   */
+  const getStudentRegistrations = (studentId) => {
+    return tournaments.value.filter(t =>
+      t.registrations?.some(r => r.student_id === studentId)
+    )
+  }
+
+  /**
+   * Turnir qatnashish qoidalari mavjudmi
+   */
+  const hasParticipationRules = (tournamentId) => {
+    const tournament = tournaments.value.find(t => t.id === tournamentId)
+    return !!tournament?.rules?.length
+  }
+
+  /**
+   * Talaba uchun qatnashish qoidasini olish
+   */
+  const getParticipationRuleForStudent = (tournamentId, studentId) => {
+    const tournament = tournaments.value.find(t => t.id === tournamentId)
+    return tournament?.rules?.find(r => r.student_id === studentId) || null
+  }
+
+  // ============================================================
+  // RETURN - Eksport qilinadigan qiymatlar
+  // ============================================================
 
   return {
+    // === State ===
     groups,
+    groupsLoading,
+    groupsError,
+    groupsPagination,
     students,
-    schedule,
+    studentsLoading,
+    studentsError,
+    studentsPagination,
     attendanceRecords,
-    reports,
+    attendanceLoading,
+    attendanceError,
+    schedules,
+    schedulesLoading,
     notifications,
-    clubs,
-    tournaments,
-    directions,
-    subjects,
-    directionSubjects,
-    getStudentsByGroup,
-    getScheduleByGroup,
-    getAttendanceByStudent,
-    getAttendanceByDate,
-    calculateContractPercentage,
-    addStudent,
-    updateStudent,
-    updateStudentFull,
-    deleteStudent,
+    notificationsLoading,
+    unreadCount,
+    reports,
+    reportsLoading,
+    dashboardStats,
+    statsLoading,
+
+    // === Computed ===
+    activeGroups,
+    activeStudents,
+    unreadNotifications,
+    groupsCount,
+    studentsCount,
+
+    // === Groups ===
+    fetchGroups,
+    getGroup,
     addGroup,
     updateGroup,
     deleteGroup,
-    updateGroupContract,
-    assignGroupLeader,
-    removeGroupLeader,
     toggleGroupStatus,
-    isGroupActive,
+    assignGroupLeader,
+    getGroupById,
+
+    // === Students ===
+    fetchStudents,
+    getStudent,
+    addStudent,
+    updateStudent,
+    deleteStudent,
+    resetStudentPassword,
+    getStudentById,
+    getStudentsByGroup,
+
+    // === Attendance ===
+    fetchAttendance,
+    getAttendanceByDate,
+    saveAttendance,
+    bulkSaveAttendance,
+    getDailySummary,
+    getGroupAttendanceStats,
+
+    // === Schedule ===
+    fetchSchedule,
+    getTodaySchedule,
+    addSchedule,
+    updateSchedule,
+    deleteSchedule,
+
+    // === Notifications ===
+    fetchNotifications,
+    markNotificationRead,
+    markAllNotificationsRead,
+    createNotification,
+    sendBulkNotification,
+
+    // === Reports ===
+    fetchReports,
+    createReport,
+    deleteReport,
+    generateReport,
+
+    // === Stats ===
+    fetchDashboardStats,
+
+    // === Excel ===
     importFromExcel,
-    updateStudentPassword,
-    findStudentByStudentId,
-    addAttendanceRecord,
-    updateAttendanceRecord,
-    addScheduleItem,
-    updateScheduleItem,
-    deleteScheduleItem,
-    addReport,
-    addNotification,
-    deleteNotification,
-    sendNotification,
-    importStudentsFromExcel,
-    getStatistics,
+    exportToExcel,
+
+    // === Clubs ===
+    clubs,
+    clubsLoading,
+    clubsError,
+    fetchClubs,
     addClub,
     updateClub,
     deleteClub,
     toggleClubStatus,
-    getActiveClubs,
+
+    // === Subjects ===
+    subjects,
+    subjectsLoading,
+    subjectsError,
+    fetchSubjects,
+    addSubject,
+    updateSubject,
+    deleteSubject,
+    getSubjectById,
+
+    // === Directions ===
+    directions,
+    directionsLoading,
+    directionsError,
+    fetchDirections,
+    addDirection,
+    updateDirection,
+    deleteDirection,
+    toggleDirectionStatus,
+    updateDirectionSubjects,
+    getDirectionByGroupId,
+
+    // === Tournaments ===
+    tournaments,
+    tournamentsLoading,
+    tournamentsError,
+    fetchTournaments,
     addTournament,
     updateTournament,
     deleteTournament,
     toggleTournamentStatus,
-    getActiveTournaments,
-    // Yangi turnir helper funksiyalari
-    getParticipationRuleForDirection,
-    getParticipationRuleForStudent,
-    hasParticipationRules,
-    validateTournamentRegistration,
     registerForTournament,
-    cancelRegistration,
-    updateRegistrationStatus,
+    unregisterFromTournament,
     isStudentRegistered,
     getStudentRegistrations,
-    getDirectionById,
-    getSubjectById,
-    getSubjectsByDirection,
-    getDirectionByGroupId,
-    canStudentRegisterForSubject,
-    getAvailableSubjectsForStudent,
-    addDirection,
-    updateDirection,
-    deleteDirection,
-    addSubject,
-    updateSubject,
-    deleteSubject,
-    updateDirectionSubjects
+    hasParticipationRules,
+    getParticipationRuleForStudent,
+
+    // === Helpers ===
+    clearCache,
+    refreshAll
   }
 })

@@ -1,10 +1,31 @@
 <template>
   <div class="space-y-6">
-    <!-- Header -->
-    <div class="mb-6">
-      <h1 class="text-2xl font-bold text-slate-800 md:text-3xl">Statistika va Tahlil</h1>
-      <p class="text-slate-500">{{ currentGroup?.name }} - Davomat va boshqa ko'rsatkichlar</p>
+    <!-- Loading State -->
+    <div v-if="loading" class="flex items-center justify-center py-12">
+      <Loader2 class="w-8 h-8 animate-spin text-emerald-600" />
+      <span class="ml-3 text-slate-600">Ma'lumotlar yuklanmoqda...</span>
     </div>
+
+    <!-- Error State -->
+    <div v-else-if="error" class="bg-red-50 border border-red-200 rounded-xl p-6">
+      <div class="flex items-center gap-3 text-red-600">
+        <AlertTriangle class="w-6 h-6" />
+        <span>{{ error }}</span>
+      </div>
+      <button 
+        @click="loadAnalyticsData" 
+        class="mt-4 px-4 py-2 bg-red-100 hover:bg-red-200 text-red-700 rounded-lg transition-colors"
+      >
+        Qayta urinish
+      </button>
+    </div>
+
+    <template v-else>
+      <!-- Header -->
+      <div class="mb-6">
+        <h1 class="text-2xl font-bold text-slate-800 md:text-3xl">Statistika va Tahlil</h1>
+        <p class="text-slate-500">{{ currentGroup?.name }} - Davomat va boshqa ko'rsatkichlar</p>
+      </div>
 
     <!-- Date Range Filter -->
     <div class="mb-6 flex flex-wrap items-center gap-4">
@@ -237,13 +258,15 @@
         </div>
       </div>
     </div>
+    </template>
   </div>
 </template>
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
-import { useDataStore } from '@/stores/data'
 import { useAuthStore } from '@/stores/auth'
+import { useToastStore } from '@/stores/toast'
+import api from '../../services/api'
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -261,7 +284,7 @@ import {
 import { Line, Bar, Doughnut, Radar } from 'vue-chartjs'
 import {
   TrendingUp, TrendingDown, Minus, BarChart3, PieChart, Calendar,
-  Users, BookOpen, Award, AlertTriangle, CheckCircle, XCircle, Clock
+  Users, BookOpen, Award, AlertTriangle, CheckCircle, XCircle, Clock, Loader2
 } from 'lucide-vue-next'
 
 // Register Chart.js components
@@ -279,14 +302,19 @@ ChartJS.register(
   Filler
 )
 
-const dataStore = useDataStore()
 const authStore = useAuthStore()
+const toast = useToastStore()
 
 // State
+const loading = ref(true)
+const error = ref(null)
 const selectedRange = ref('month')
 const customStartDate = ref('')
 const customEndDate = ref('')
 const trendChartType = ref('line')
+const currentGroup = ref(null)
+const groupStudents = ref([])
+const attendanceStats = ref(null)
 
 const dateRanges = [
   { label: 'Hafta', value: 'week' },
@@ -299,15 +327,44 @@ const weekDays = ['Du', 'Se', 'Cho', 'Pa', 'Ju', 'Sha', 'Ya']
 const statusLabels = ['Keldi', 'Kelmadi', 'Kech qoldi', 'Sababli']
 const statusColors = ['#22c55e', '#ef4444', '#f59e0b', '#3b82f6']
 
-// Computed
-const currentGroup = computed(() => {
-  const groupId = authStore.user?.groupId
-  return dataStore.groups.find(g => g.id === groupId)
-})
+// Load data from API
+const loadAnalyticsData = async () => {
+  loading.value = true
+  error.value = null
+  
+  try {
+    // Get current user info to get group_id
+    const user = await api.getMe()
+    const groupId = user.group_id
+    
+    if (groupId) {
+      // Load group info
+      const groupResponse = await api.getGroup(groupId)
+      currentGroup.value = groupResponse
+      
+      // Load group students
+      const studentsResponse = await api.getStudents({ group_id: groupId, limit: 100 })
+      groupStudents.value = studentsResponse.items || studentsResponse || []
+      
+      // Load attendance statistics
+      try {
+        const statsResponse = await api.getAttendanceStats({ group_id: groupId })
+        attendanceStats.value = statsResponse
+      } catch (e) {
+        console.warn('Could not load attendance stats:', e)
+      }
+    }
+  } catch (e) {
+    console.error('Error loading analytics data:', e)
+    error.value = 'Ma\'lumotlarni yuklashda xatolik'
+  } finally {
+    loading.value = false
+  }
+}
 
-const groupStudents = computed(() => {
-  const groupId = authStore.user?.groupId
-  return dataStore.students.filter(s => s.groupId === groupId)
+// Initialize
+onMounted(() => {
+  loadAnalyticsData()
 })
 
 const summaryCards = computed(() => [

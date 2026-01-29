@@ -112,9 +112,10 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
+import api from '@/services/api'
 import {
   Bell, BellOff, Info, AlertTriangle, CheckCircle, AlertOctagon,
   Calendar, FileText, Users, TrendingUp
@@ -124,45 +125,46 @@ const router = useRouter()
 const authStore = useAuthStore()
 
 const isOpen = ref(false)
+const notifications = ref([])
+const loading = ref(false)
 
-// Demo notifications
-const notifications = ref([
-  {
-    id: 1,
-    type: 'info',
-    title: 'Yangi dars jadvali',
-    message: 'Dushanba kuni Matematika darsi 10:00 ga ko\'chirildi',
-    createdAt: new Date(),
-    read: false,
-    action: { label: 'Jadvalga o\'tish', route: '/leader/schedule' }
-  },
-  {
-    id: 2,
-    type: 'warning',
-    title: 'Davomat ogohlantirishi',
-    message: '3 ta talabaning davomati 70% dan past. E\'tibor bering.',
-    createdAt: new Date(Date.now() - 3600000),
-    read: false,
-    action: { label: 'Batafsil', route: '/leader/students' }
-  },
-  {
-    id: 3,
-    type: 'success',
-    title: 'Hisobot tasdiqlandi',
-    message: 'Yanvar oyi hisoboti muvaffaqiyatli tasdiqlandi',
-    createdAt: new Date(Date.now() - 86400000),
-    read: true
-  },
-  {
-    id: 4,
-    type: 'urgent',
-    title: 'Muhim xabar!',
-    message: 'Ertaga fakultet yig\'ilishi bo\'lib o\'tadi. Barcha guruh sardorlari ishtirok etishi shart.',
-    createdAt: new Date(Date.now() - 172800000),
-    read: true,
-    action: { label: 'Tafsilotlar', route: '/leader/notifications' }
+// Load notifications from API
+const loadNotifications = async () => {
+  loading.value = true
+  try {
+    const response = await api.getNotifications({ limit: 10 })
+    if (response?.items) {
+      notifications.value = response.items.map(n => ({
+        id: n.id,
+        type: n.type || 'info',
+        title: n.title,
+        message: n.message,
+        createdAt: new Date(n.created_at),
+        read: n.read || false
+      }))
+    } else if (Array.isArray(response)) {
+      notifications.value = response.slice(0, 10).map(n => ({
+        id: n.id,
+        type: n.type || 'info',
+        title: n.title,
+        message: n.message,
+        createdAt: new Date(n.created_at),
+        read: n.read || false
+      }))
+    }
+  } catch (err) {
+    console.error('Error loading notifications:', err)
+    // Keep empty if API fails
+  } finally {
+    loading.value = false
   }
-])
+}
+
+// Load on mount and when dropdown opens
+onMounted(loadNotifications)
+watch(isOpen, (newVal) => {
+  if (newVal) loadNotifications()
+})
 
 const unreadCount = computed(() => {
   return notifications.value.filter(n => !n.read).length
@@ -175,12 +177,22 @@ const notificationsRoute = computed(() => {
   return '/super/notifications'
 })
 
-function markAllAsRead() {
-  notifications.value.forEach(n => n.read = true)
+async function markAllAsRead() {
+  try {
+    await api.markAllNotificationsRead()
+    notifications.value.forEach(n => n.read = true)
+  } catch (err) {
+    console.error('Error marking all as read:', err)
+  }
 }
 
-function handleNotificationClick(notification) {
-  notification.read = true
+async function handleNotificationClick(notification) {
+  try {
+    await api.markNotificationRead(notification.id)
+    notification.read = true
+  } catch (err) {
+    console.error('Error marking as read:', err)
+  }
   if (notification.action?.route) {
     router.push(notification.action.route)
     isOpen.value = false

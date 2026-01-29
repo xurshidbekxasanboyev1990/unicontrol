@@ -1,20 +1,41 @@
 <template>
   <div class="space-y-6">
-    <!-- Header -->
-    <div class="flex items-center justify-between">
-      <div>
-        <h1 class="text-2xl font-bold text-slate-800">AI Tahlil</h1>
-        <p class="text-slate-500">Sun'iy intellekt asosidagi tahlil va tavsiyalar</p>
+    <!-- Loading State -->
+    <div v-if="loading" class="flex items-center justify-center py-12">
+      <Loader2 class="w-8 h-8 animate-spin text-violet-600" />
+      <span class="ml-3 text-slate-600">Tahlil yuklanmoqda...</span>
+    </div>
+
+    <!-- Error State -->
+    <div v-else-if="error" class="bg-red-50 border border-red-200 rounded-xl p-6">
+      <div class="flex items-center gap-3 text-red-600">
+        <AlertTriangle class="w-6 h-6" />
+        <span>{{ error }}</span>
       </div>
       <button 
-        @click="refreshAnalysis"
-        :disabled="isAnalyzing"
-        class="flex items-center gap-2 rounded-xl bg-gradient-to-r from-violet-500 to-purple-600 px-4 py-2.5 text-white transition-all hover:from-violet-600 hover:to-purple-700 disabled:opacity-50"
+        @click="loadAnalysisData" 
+        class="mt-4 px-4 py-2 bg-red-100 hover:bg-red-200 text-red-700 rounded-lg transition-colors"
       >
-        <RefreshCw :size="18" :class="{ 'animate-spin': isAnalyzing }" />
-        <span>{{ isAnalyzing ? 'Tahlil qilinmoqda...' : 'Yangilash' }}</span>
+        Qayta urinish
       </button>
     </div>
+
+    <template v-else>
+      <!-- Header -->
+      <div class="flex items-center justify-between">
+        <div>
+          <h1 class="text-2xl font-bold text-slate-800">AI Tahlil</h1>
+          <p class="text-slate-500">Sun'iy intellekt asosidagi tahlil va tavsiyalar</p>
+        </div>
+        <button 
+          @click="refreshAnalysis"
+          :disabled="isAnalyzing"
+          class="flex items-center gap-2 rounded-xl bg-gradient-to-r from-violet-500 to-purple-600 px-4 py-2.5 text-white transition-all hover:from-violet-600 hover:to-purple-700 disabled:opacity-50"
+        >
+          <RefreshCw :size="18" :class="{ 'animate-spin': isAnalyzing }" />
+          <span>{{ isAnalyzing ? 'Tahlil qilinmoqda...' : 'Yangilash' }}</span>
+        </button>
+      </div>
 
     <!-- AI Summary Card -->
     <div class="rounded-2xl bg-gradient-to-br from-violet-500 via-purple-500 to-indigo-600 p-6 text-white shadow-xl">
@@ -191,6 +212,7 @@
         </div>
       </div>
     </div>
+    </template>
   </div>
 </template>
 
@@ -206,9 +228,10 @@
  * - Trend va statistika
  */
 
-import { ref, computed, markRaw } from 'vue'
-import { useDataStore } from '@/stores/data'
+import { ref, computed, markRaw, onMounted } from 'vue'
 import { useAuthStore } from '@/stores/auth'
+import { useToastStore } from '@/stores/toast'
+import api from '../../services/api'
 import {
   Sparkles,
   RefreshCw,
@@ -221,23 +244,45 @@ import {
   XCircle,
   AlertTriangle,
   Target,
-  Calendar
+  Calendar,
+  Loader2
 } from 'lucide-vue-next'
 
-const dataStore = useDataStore()
 const authStore = useAuthStore()
+const toast = useToastStore()
 
+const loading = ref(true)
+const error = ref(null)
 const isAnalyzing = ref(false)
+const records = ref([])
+const student = ref(null)
 
-// Talaba ma'lumotlari
-const student = computed(() => {
-  return dataStore.students.find(s => s.id === authStore.user?.studentId) || dataStore.students[0]
-})
-
-// Davomat yozuvlari
-const records = computed(() => {
-  return dataStore.attendanceRecords.filter(r => r.studentId === student.value?.id)
-})
+// Load data from API
+const loadAnalysisData = async () => {
+  loading.value = true
+  error.value = null
+  
+  try {
+    // Get current user profile
+    const profile = await api.getMe()
+    student.value = profile
+    
+    // Get attendance records
+    const attendanceResponse = await api.getStudentAttendance(profile.id)
+    records.value = (attendanceResponse.items || attendanceResponse || []).map(r => ({
+      id: r.id,
+      studentId: r.student_id,
+      subject: r.subject || r.lesson_name || 'Noma\'lum',
+      status: r.status,
+      date: r.date
+    }))
+  } catch (e) {
+    console.error('Error loading analysis data:', e)
+    error.value = 'Ma\'lumotlarni yuklashda xatolik'
+  } finally {
+    loading.value = false
+  }
+}
 
 // Statistika
 const stats = computed(() => {
@@ -377,7 +422,13 @@ function getTextColor(rate) {
 // Yangilash
 async function refreshAnalysis() {
   isAnalyzing.value = true
-  await new Promise(resolve => setTimeout(resolve, 2000))
+  await loadAnalysisData()
   isAnalyzing.value = false
+  toast.success('Tahlil yangilandi')
 }
+
+// Initialize
+onMounted(() => {
+  loadAnalysisData()
+})
 </script>

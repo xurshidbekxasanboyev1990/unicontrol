@@ -434,12 +434,12 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useDataStore } from '../../stores/data'
 import { useToastStore } from '../../stores/toast'
 import {
   GraduationCap, BookOpen, Plus, Pencil, Trash2, Power, Link2, Trophy,
-  Check, X, Info,
+  Check, X, Info, Loader2,
   // Subject icons
   Monitor, Calculator, Atom, FlaskConical, Leaf, Scale, BookText, Globe2,
   Languages, Heart, Banknote, Cpu, Code, Microscope, Palette, Music
@@ -447,6 +447,10 @@ import {
 
 const dataStore = useDataStore()
 const toast = useToastStore()
+
+// Loading
+const loading = ref(true)
+const saving = ref(false)
 
 // Modals
 const showDirectionModal = ref(false)
@@ -468,6 +472,23 @@ const directionForm = ref({
   name: '',
   code: '',
   faculty: ''
+})
+
+// Load data on mount
+onMounted(async () => {
+  loading.value = true
+  try {
+    await Promise.all([
+      dataStore.fetchDirections(),
+      dataStore.fetchSubjects(),
+      dataStore.fetchTournaments()
+    ])
+  } catch (err) {
+    console.error('Error loading data:', err)
+    toast.error('Ma\'lumotlarni yuklashda xatolik')
+  } finally {
+    loading.value = false
+  }
 })
 
 // Available icons for subjects
@@ -532,25 +553,38 @@ const editDirection = (direction) => {
   showDirectionModal.value = true
 }
 
-const saveDirection = () => {
+const saveDirection = async () => {
   if (!directionForm.value.name.trim() || !directionForm.value.code.trim()) {
     toast.error('Nom va kodni kiriting')
     return
   }
 
-  if (isEditingDirection.value) {
-    dataStore.updateDirection(directionForm.value.id, directionForm.value)
-    toast.success('Yo\'nalish yangilandi')
-  } else {
-    dataStore.addDirection(directionForm.value)
-    toast.success('Yangi yo\'nalish qo\'shildi')
+  saving.value = true
+  try {
+    if (isEditingDirection.value) {
+      await dataStore.updateDirection(directionForm.value.id, directionForm.value)
+      toast.success('Yo\'nalish yangilandi')
+    } else {
+      await dataStore.addDirection(directionForm.value)
+      toast.success('Yangi yo\'nalish qo\'shildi')
+    }
+    showDirectionModal.value = false
+  } catch (err) {
+    console.error('Error saving direction:', err)
+    toast.error('Yo\'nalishni saqlashda xatolik')
+  } finally {
+    saving.value = false
   }
-  showDirectionModal.value = false
 }
 
-const toggleDirectionStatus = (direction) => {
-  dataStore.updateDirection(direction.id, { isActive: !direction.isActive })
-  toast.success(direction.isActive ? 'Yo\'nalish o\'chirildi' : 'Yo\'nalish yoqildi')
+const toggleDirectionStatus = async (direction) => {
+  try {
+    await dataStore.toggleDirectionStatus(direction.id)
+    toast.success(direction.isActive ? 'Yo\'nalish o\'chirildi' : 'Yo\'nalish yoqildi')
+  } catch (err) {
+    console.error('Error toggling direction status:', err)
+    toast.error('Statusni o\'zgartirishda xatolik')
+  }
 }
 
 const confirmDeleteDirection = (direction) => {
@@ -558,11 +592,17 @@ const confirmDeleteDirection = (direction) => {
   showDeleteDirectionModal.value = true
 }
 
-const deleteDirection = () => {
-  dataStore.deleteDirection(directionToDelete.value.id)
-  toast.success('Yo\'nalish o\'chirildi')
-  showDeleteDirectionModal.value = false
-  directionToDelete.value = null
+const deleteDirection = async () => {
+  try {
+    await dataStore.deleteDirection(directionToDelete.value.id)
+    toast.success('Yo\'nalish o\'chirildi')
+  } catch (err) {
+    console.error('Error deleting direction:', err)
+    toast.error('Yo\'nalishni o\'chirishda xatolik')
+  } finally {
+    showDeleteDirectionModal.value = false
+    directionToDelete.value = null
+  }
 }
 
 // Subject management
@@ -575,7 +615,7 @@ const openDirectionSubjectsModal = (direction) => {
   showSubjectsModal.value = true
 }
 
-const addNewSubject = () => {
+const addNewSubject = async () => {
   if (!newSubjectName.value.trim()) {
     toast.error('Fan nomini kiriting')
     return
@@ -609,24 +649,40 @@ const addNewSubject = () => {
     BookOpen: 'blue'
   }
 
-  const newId = dataStore.addSubject({
-    name: newSubjectName.value.trim(),
-    icon: newSubjectIcon.value,
-    color: colorMap[newSubjectIcon.value] || 'blue'
-  })
+  saving.value = true
+  try {
+    const newSubject = await dataStore.addSubject({
+      name: newSubjectName.value.trim(),
+      icon: newSubjectIcon.value,
+      color: colorMap[newSubjectIcon.value] || 'blue'
+    })
 
-  // Automatically select the new subject
-  selectedSubjectIds.value.push(newId)
-  
-  toast.success('Yangi fan qo\'shildi')
-  newSubjectName.value = ''
-  newSubjectIcon.value = 'BookOpen'
+    // Automatically select the new subject
+    if (newSubject?.id) {
+      selectedSubjectIds.value.push(newSubject.id)
+    }
+    
+    toast.success('Yangi fan qo\'shildi')
+    newSubjectName.value = ''
+    newSubjectIcon.value = 'BookOpen'
+  } catch (err) {
+    toast.error(err.message || 'Xatolik yuz berdi')
+  } finally {
+    saving.value = false
+  }
 }
 
-const saveDirectionSubjects = () => {
-  dataStore.updateDirectionSubjects(selectedDirection.value.id, selectedSubjectIds.value)
-  toast.success(`${selectedDirection.value.name} uchun fanlar saqlandi`)
-  showSubjectsModal.value = false
+const saveDirectionSubjects = async () => {
+  saving.value = true
+  try {
+    await dataStore.updateDirectionSubjects(selectedDirection.value.id, selectedSubjectIds.value)
+    toast.success(`${selectedDirection.value.name} uchun fanlar saqlandi`)
+    showSubjectsModal.value = false
+  } catch (err) {
+    toast.error(err.message || 'Xatolik yuz berdi')
+  } finally {
+    saving.value = false
+  }
 }
 
 const confirmDeleteSubject = (subject) => {
@@ -634,15 +690,22 @@ const confirmDeleteSubject = (subject) => {
   showDeleteSubjectModal.value = true
 }
 
-const deleteSubject = () => {
-  // Remove from selected
-  selectedSubjectIds.value = selectedSubjectIds.value.filter(id => id !== subjectToDelete.value.id)
-  
-  // Delete subject
-  dataStore.deleteSubject(subjectToDelete.value.id)
-  toast.success('Fan o\'chirildi')
-  showDeleteSubjectModal.value = false
-  subjectToDelete.value = null
+const deleteSubject = async () => {
+  saving.value = true
+  try {
+    // Remove from selected
+    selectedSubjectIds.value = selectedSubjectIds.value.filter(id => id !== subjectToDelete.value.id)
+    
+    // Delete subject
+    await dataStore.deleteSubject(subjectToDelete.value.id)
+    toast.success('Fan o\'chirildi')
+    showDeleteSubjectModal.value = false
+    subjectToDelete.value = null
+  } catch (err) {
+    toast.error(err.message || 'O\'chirishda xatolik')
+  } finally {
+    saving.value = false
+  }
 }
 </script>
 

@@ -251,37 +251,103 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
+/**
+ * Leader Dashboard - Real API Integration
+ * Guruh sardorining boshqaruv paneli
+ */
+import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useDataStore } from '@/stores/data'
 import { useAuthStore } from '@/stores/auth'
+import api from '@/services/api'
 import { 
   Users, BookOpen, Calendar, TrendingUp,
-  CheckCircle, XCircle, Zap, Cake, Gift, Send
+  CheckCircle, XCircle, Zap, Cake, Gift, Send,
+  RefreshCw, AlertCircle
 } from 'lucide-vue-next'
 
 const router = useRouter()
 const dataStore = useDataStore()
 const authStore = useAuthStore()
 
+// State
+const loading = ref(true)
+const error = ref(null)
+const dashboardData = ref(null)
+const groupStudentsList = ref([])
+const scheduleList = ref([])
+const attendanceToday = ref([])
+
+// Load dashboard data
+async function loadDashboard() {
+  loading.value = true
+  error.value = null
+  
+  try {
+    // Leader dashboard endpoint mavjud bo'lsa
+    try {
+      const response = await api.request('/dashboard/leader')
+      dashboardData.value = response
+    } catch (e) {
+      console.log('Leader dashboard endpoint not available')
+    }
+    
+    // Guruh talabalarini yuklash
+    const groupId = authStore.user?.groupId || authStore.user?.managed_group_id
+    if (groupId) {
+      try {
+        const studentsResp = await api.getStudents({ group_id: groupId, limit: 100 })
+        groupStudentsList.value = studentsResp.data?.map(s => ({
+          id: s.id,
+          name: s.full_name,
+          studentId: s.student_id,
+          groupId: s.group_id,
+          phone: s.phone,
+          birthDate: s.birth_date
+        })) || []
+      } catch (e) {
+        console.log('Could not load group students')
+      }
+      
+      // Jadval yuklash
+      try {
+        const scheduleResp = await api.getSchedule({ group_id: groupId })
+        scheduleList.value = scheduleResp.data || []
+      } catch (e) {
+        console.log('Could not load schedule')
+      }
+      
+      // Bugungi davomat
+      try {
+        const today = new Date().toISOString().split('T')[0]
+        const attResp = await api.getAttendance({ 
+          group_id: groupId, 
+          date: today 
+        })
+        attendanceToday.value = attResp.data || []
+      } catch (e) {
+        console.log('Could not load today attendance')
+      }
+    }
+  } catch (e) {
+    console.error('Dashboard load error:', e)
+    error.value = e.message || 'Ma\'lumotlar yuklanmadi'
+  } finally {
+    loading.value = false
+  }
+}
+
 // Computed
 const currentGroup = computed(() => {
-  const groupId = authStore.user?.groupId
+  const groupId = authStore.user?.groupId || authStore.user?.managed_group_id
   const groupName = authStore.user?.group || authStore.user?.managedGroup
-  if (groupId) {
-    return dataStore.groups.find(g => g.id === groupId)
+  return {
+    id: groupId,
+    name: groupName || authStore.user?.group_name || 'Noma\'lum guruh'
   }
-  return dataStore.groups.find(g => g.name === groupName)
 })
 
-const groupStudents = computed(() => {
-  const groupId = authStore.user?.groupId
-  const groupName = authStore.user?.group || authStore.user?.managedGroup
-  if (groupId) {
-    return dataStore.students.filter(s => s.groupId === groupId)
-  }
-  return dataStore.students.filter(s => s.group === groupName)
-})
+const groupStudents = computed(() => groupStudentsList.value)
 
 // Ertangi tug'ilgan kunlar
 const tomorrowBirthdays = computed(() => {
@@ -292,7 +358,6 @@ const tomorrowBirthdays = computed(() => {
   
   return groupStudents.value.filter(student => {
     if (!student.birthDate) return false
-    // birthDate format: "15.05.2003" yoki "2003-05-15"
     let day, month
     if (student.birthDate.includes('.')) {
       const parts = student.birthDate.split('.')
@@ -335,29 +400,24 @@ function calculateAge(birthDate) {
 }
 
 const todayLessons = computed(() => {
-  const today = new Date().toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase()
-  const groupId = authStore.user?.groupId
-  return dataStore.schedule.filter(s => 
-    s.groupId === groupId && s.day.toLowerCase() === today
+  const days = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday']
+  const today = days[new Date().getDay()]
+  return scheduleList.value.filter(s => 
+    s.day?.toLowerCase() === today
   )
-})
-
-const todayAttendance = computed(() => {
-  const today = new Date().toISOString().split('T')[0]
-  return dataStore.attendanceRecords.filter(a => a.date === today)
 })
 
 // Attendance stats
 const presentToday = computed(() => {
-  return todayAttendance.value.filter(a => a.status === 'present').length
+  return attendanceToday.value.filter(a => a.status === 'present' || a.status === 'keldi').length
 })
 
 const absentToday = computed(() => {
-  return todayAttendance.value.filter(a => a.status === 'absent').length
+  return attendanceToday.value.filter(a => a.status === 'absent' || a.status === 'kelmadi').length
 })
 
 const lateToday = computed(() => {
-  return todayAttendance.value.filter(a => a.status === 'late').length
+  return attendanceToday.value.filter(a => a.status === 'late' || a.status === 'kechikdi').length
 })
 
 const attendanceRate = computed(() => {
@@ -387,8 +447,11 @@ function navigateTo(path) {
 
 function getLessonStatus(lesson) {
   const now = new Date()
-  const [startHour, startMin] = lesson.time.split('-')[0].split(':').map(Number)
-  const [endHour, endMin] = lesson.time.split('-')[1].split(':').map(Number)
+  const timeStr = lesson.time || lesson.start_time || ''
+  if (!timeStr.includes('-')) return 'Kutilmoqda'
+  
+  const [startHour, startMin] = timeStr.split('-')[0].split(':').map(Number)
+  const [endHour, endMin] = timeStr.split('-')[1].split(':').map(Number)
   
   const startTime = new Date()
   startTime.setHours(startHour, startMin, 0)
@@ -407,6 +470,16 @@ function getLessonStatusClass(lesson) {
   if (status === 'Tugadi') return 'bg-slate-200 text-slate-500'
   return 'bg-blue-100 text-blue-600'
 }
+
+// Refresh
+async function refresh() {
+  await loadDashboard()
+}
+
+// Mount
+onMounted(() => {
+  loadDashboard()
+})
 </script>
 
 <style scoped>

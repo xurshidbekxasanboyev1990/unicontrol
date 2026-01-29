@@ -4,9 +4,20 @@
     <div class="flex items-center justify-between flex-wrap gap-4">
       <div>
         <h1 class="text-2xl font-bold text-slate-800">Guruhlar boshqaruvi</h1>
-        <p class="text-slate-500">{{ dataStore.groups.length }} ta guruh</p>
+        <p class="text-slate-500">{{ totalItems.toLocaleString() }} ta guruh</p>
       </div>
       <div class="flex items-center gap-3">
+        <!-- Search -->
+        <div class="relative">
+          <Search class="w-5 h-5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+          <input 
+            v-model="searchQuery"
+            type="text"
+            placeholder="Qidirish..."
+            class="pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 focus:border-violet-500 focus:ring-2 focus:ring-violet-500/20 outline-none w-48"
+          />
+        </div>
+        
         <!-- Excel Import -->
         <label class="px-4 py-2.5 bg-emerald-500 text-white rounded-xl font-medium hover:bg-emerald-600 transition-colors flex items-center gap-2 cursor-pointer">
           <FileSpreadsheet class="w-5 h-5" />
@@ -18,6 +29,15 @@
             class="hidden"
           />
         </label>
+        
+        <button 
+          @click="refresh"
+          class="p-2.5 border border-slate-200 text-slate-600 rounded-xl hover:bg-slate-50 transition-colors"
+          :class="{ 'animate-spin': loading }"
+        >
+          <RefreshCw class="w-5 h-5" />
+        </button>
+        
         <button 
           @click="openModal()"
           class="px-4 py-2.5 bg-violet-500 text-white rounded-xl font-medium hover:bg-violet-600 transition-colors flex items-center gap-2"
@@ -44,127 +64,182 @@
       </div>
     </div>
 
-    <!-- Groups Grid -->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-      <div 
-        v-for="group in dataStore.groups" 
-        :key="group.id"
-        class="bg-white rounded-2xl border border-slate-200 overflow-hidden hover:shadow-lg transition-shadow"
-        :class="{ 'opacity-60 border-rose-200': !group.isActive }"
-      >
-        <!-- Status Badge -->
-        <div class="px-6 pt-4 flex items-center justify-between">
-          <span 
-            class="px-3 py-1 rounded-full text-xs font-semibold"
-            :class="group.isActive ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'"
-          >
-            {{ group.isActive ? 'Faol' : 'O\'chirilgan' }}
-          </span>
-          <button 
-            @click="toggleStatus(group)"
-            class="p-2 rounded-lg transition-colors"
-            :class="group.isActive ? 'text-emerald-500 hover:bg-emerald-50' : 'text-rose-500 hover:bg-rose-50'"
-            :title="group.isActive ? 'O\'chirish' : 'Yoqish'"
-          >
-            <Power class="w-4 h-4" />
-          </button>
-        </div>
-
-        <div class="p-6 pt-3">
-          <div class="flex items-start justify-between mb-4">
-            <div 
-              class="w-14 h-14 rounded-xl flex items-center justify-center text-white text-xl font-bold"
-              :class="groupColors[group.id % groupColors.length]"
-            >
-              {{ group.name.slice(-3) }}
-            </div>
-            <div class="flex items-center gap-1">
-              <button 
-                @click="openLeaderModal(group)"
-                class="p-2 text-slate-400 hover:text-amber-500 hover:bg-amber-50 rounded-lg transition-colors"
-                title="Sardor tayinlash"
-              >
-                <Crown class="w-4 h-4" />
-              </button>
-              <button 
-                @click="openModal(group)"
-                class="p-2 text-slate-400 hover:text-violet-500 hover:bg-violet-50 rounded-lg transition-colors"
-              >
-                <Pencil class="w-4 h-4" />
-              </button>
-              <button 
-                @click="confirmDelete(group)"
-                class="p-2 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-colors"
-              >
-                <Trash2 class="w-4 h-4" />
-              </button>
-            </div>
-          </div>
-
-          <h3 class="text-xl font-bold text-slate-800">{{ group.name }}</h3>
-          <p class="text-slate-500 text-sm mt-1">{{ group.year }}-kurs • {{ group.faculty || 'Noma\'lum' }}</p>
-
-          <div class="mt-4 pt-4 border-t border-slate-100 space-y-3">
-            <div class="flex items-center justify-between">
-              <span class="text-sm text-slate-500 flex items-center gap-2">
-                <Users class="w-4 h-4" />
-                Talabalar
-              </span>
-              <span class="font-semibold text-slate-700">{{ getStudentCount(group.name) }}</span>
-            </div>
-            <div class="flex items-center justify-between">
-              <span class="text-sm text-slate-500 flex items-center gap-2">
-                <Crown class="w-4 h-4" />
-                Sardor
-              </span>
-              <span 
-                class="font-medium"
-                :class="group.leaderName ? 'text-amber-600' : 'text-slate-400'"
-              >
-                {{ group.leaderName || 'Tayinlanmagan' }}
-              </span>
-            </div>
-            <div class="flex items-center justify-between">
-              <span class="text-sm text-slate-500 flex items-center gap-2">
-                <TrendingUp class="w-4 h-4" />
-                Davomat
-              </span>
-              <span 
-                class="font-semibold"
-                :class="getGroupAttendance(group.name) >= 85 ? 'text-emerald-600' : getGroupAttendance(group.name) >= 70 ? 'text-amber-600' : 'text-rose-600'"
-              >
-                {{ getGroupAttendance(group.name) }}%
-              </span>
-            </div>
-          </div>
-        </div>
+    <!-- Loading State -->
+    <div v-if="loading" class="flex items-center justify-center py-20">
+      <div class="text-center">
+        <RefreshCw class="w-12 h-12 text-violet-500 animate-spin mx-auto mb-4" />
+        <p class="text-slate-600">Guruhlar yuklanmoqda...</p>
       </div>
     </div>
 
-    <!-- Empty State -->
-    <div v-if="dataStore.groups.length === 0" class="bg-white rounded-2xl border border-slate-200 p-12 text-center">
-      <Layers class="w-12 h-12 text-slate-300 mx-auto mb-4" />
-      <p class="text-slate-500">Hali guruh yo'q</p>
-      <p class="text-sm text-slate-400 mt-2">Excel fayl yuklash yoki qo'lda qo'shish mumkin</p>
-      <div class="flex items-center justify-center gap-3 mt-4">
-        <label class="px-4 py-2 bg-emerald-500 text-white rounded-xl font-medium hover:bg-emerald-600 transition-colors cursor-pointer">
-          <FileSpreadsheet class="w-4 h-4 inline mr-2" />
-          Excel yuklash
-          <input 
-            type="file"
-            accept=".xlsx,.xls,.csv"
-            @change="handleExcelUpload"
-            class="hidden"
-          />
-        </label>
-        <button 
-          @click="openModal()"
-          class="px-4 py-2 bg-violet-500 text-white rounded-xl font-medium hover:bg-violet-600 transition-colors"
-        >
-          Qo'lda qo'shish
+    <!-- Error State -->
+    <div v-else-if="error" class="bg-rose-50 border border-rose-200 rounded-2xl p-6">
+      <div class="flex items-center gap-3">
+        <AlertCircle class="w-6 h-6 text-rose-500" />
+        <div>
+          <h3 class="font-semibold text-rose-700">Xatolik yuz berdi</h3>
+          <p class="text-rose-600 text-sm mt-1">{{ error }}</p>
+        </div>
+        <button @click="refresh" class="ml-auto px-4 py-2 bg-rose-500 text-white rounded-lg hover:bg-rose-600">
+          Qayta urinish
         </button>
       </div>
     </div>
+
+    <!-- Groups Grid -->
+    <template v-else>
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div 
+          v-for="group in groups" 
+          :key="group.id"
+          class="bg-white rounded-2xl border border-slate-200 overflow-hidden hover:shadow-lg transition-shadow"
+          :class="{ 'opacity-60 border-rose-200': !group.isActive }"
+        >
+          <!-- Status Badge -->
+          <div class="px-6 pt-4 flex items-center justify-between">
+            <span 
+              class="px-3 py-1 rounded-full text-xs font-semibold"
+              :class="group.isActive ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'"
+            >
+              {{ group.isActive ? 'Faol' : 'O\'chirilgan' }}
+            </span>
+            <button 
+              @click="toggleStatus(group)"
+              class="p-2 rounded-lg transition-colors"
+              :class="group.isActive ? 'text-emerald-500 hover:bg-emerald-50' : 'text-rose-500 hover:bg-rose-50'"
+              :title="group.isActive ? 'O\'chirish' : 'Yoqish'"
+            >
+              <Power class="w-4 h-4" />
+            </button>
+          </div>
+
+          <div class="p-6 pt-3">
+            <div class="flex items-start justify-between mb-4">
+              <div 
+                class="w-14 h-14 rounded-xl flex items-center justify-center text-white text-xl font-bold"
+                :class="groupColors[group.id % groupColors.length]"
+              >
+                {{ group.name.slice(-3) }}
+              </div>
+              <div class="flex items-center gap-1">
+                <button 
+                  @click="openLeaderModal(group)"
+                  class="p-2 text-slate-400 hover:text-amber-500 hover:bg-amber-50 rounded-lg transition-colors"
+                  title="Sardor tayinlash"
+                >
+                  <Crown class="w-4 h-4" />
+                </button>
+                <button 
+                  @click="openModal(group)"
+                  class="p-2 text-slate-400 hover:text-violet-500 hover:bg-violet-50 rounded-lg transition-colors"
+                >
+                  <Pencil class="w-4 h-4" />
+                </button>
+                <button 
+                  @click="confirmDelete(group)"
+                  class="p-2 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-colors"
+                >
+                  <Trash2 class="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+
+            <h3 class="text-xl font-bold text-slate-800">{{ group.name }}</h3>
+            <p class="text-slate-500 text-sm mt-1">{{ group.year }}-kurs • {{ group.faculty || 'Noma\'lum' }}</p>
+
+            <div class="mt-4 pt-4 border-t border-slate-100 space-y-3">
+              <div class="flex items-center justify-between">
+                <span class="text-sm text-slate-500 flex items-center gap-2">
+                  <Users class="w-4 h-4" />
+                  Talabalar
+                </span>
+                <span class="font-semibold text-slate-700">{{ group.studentCount.toLocaleString() }}</span>
+              </div>
+              <div class="flex items-center justify-between">
+                <span class="text-sm text-slate-500 flex items-center gap-2">
+                  <Crown class="w-4 h-4" />
+                  Sardor
+                </span>
+                <span 
+                  class="font-medium"
+                  :class="group.leaderName ? 'text-amber-600' : 'text-slate-400'"
+                >
+                  {{ group.leaderName || 'Tayinlanmagan' }}
+                </span>
+              </div>
+              <div class="flex items-center justify-between">
+                <span class="text-sm text-slate-500 flex items-center gap-2">
+                  <TrendingUp class="w-4 h-4" />
+                  Davomat
+                </span>
+                <span 
+                  class="font-semibold"
+                  :class="group.attendanceRate >= 85 ? 'text-emerald-600' : group.attendanceRate >= 70 ? 'text-amber-600' : 'text-rose-600'"
+                >
+                  {{ group.attendanceRate }}%
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Empty State -->
+      <div v-if="groups.length === 0" class="bg-white rounded-2xl border border-slate-200 p-12 text-center">
+        <Layers class="w-12 h-12 text-slate-300 mx-auto mb-4" />
+        <p class="text-slate-500">Guruh topilmadi</p>
+        <p class="text-sm text-slate-400 mt-2">Excel fayl yuklash yoki qo'lda qo'shish mumkin</p>
+        <div class="flex items-center justify-center gap-3 mt-4">
+          <label class="px-4 py-2 bg-emerald-500 text-white rounded-xl font-medium hover:bg-emerald-600 transition-colors cursor-pointer">
+            <FileSpreadsheet class="w-4 h-4 inline mr-2" />
+            Excel yuklash
+            <input 
+              type="file"
+              accept=".xlsx,.xls,.csv"
+              @change="handleExcelUpload"
+              class="hidden"
+            />
+          </label>
+          <button 
+            @click="openModal()"
+            class="px-4 py-2 bg-violet-500 text-white rounded-xl font-medium hover:bg-violet-600 transition-colors"
+          >
+            Qo'lda qo'shish
+          </button>
+        </div>
+      </div>
+
+      <!-- Pagination -->
+      <div v-if="totalPages > 1" class="flex items-center justify-center gap-2 pt-4">
+        <button 
+          @click="goToPage(currentPage - 1)"
+          :disabled="currentPage === 1"
+          class="p-2 rounded-lg border border-slate-200 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          <ChevronLeft class="w-5 h-5" />
+        </button>
+        
+        <template v-for="page in Math.min(5, totalPages)" :key="page">
+          <button 
+            @click="goToPage(page)"
+            class="w-10 h-10 rounded-lg font-medium transition-colors"
+            :class="currentPage === page ? 'bg-violet-500 text-white' : 'border border-slate-200 hover:bg-slate-50'"
+          >
+            {{ page }}
+          </button>
+        </template>
+        
+        <span v-if="totalPages > 5" class="text-slate-400">...</span>
+        
+        <button 
+          @click="goToPage(currentPage + 1)"
+          :disabled="currentPage === totalPages"
+          class="p-2 rounded-lg border border-slate-200 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          <ChevronRight class="w-5 h-5" />
+        </button>
+      </div>
+    </template>
 
     <!-- Add/Edit Modal -->
     <Transition
@@ -192,7 +267,7 @@
 
           <form @submit.prevent="saveGroup" class="p-6 space-y-4">
             <div>
-              <label class="block text-sm font-medium text-slate-700 mb-2">Guruh nomi</label>
+              <label class="block text-sm font-medium text-slate-700 mb-2">Guruh nomi *</label>
               <input 
                 v-model="form.name"
                 type="text"
@@ -227,7 +302,7 @@
             <div>
               <label class="block text-sm font-medium text-slate-700 mb-2">Kontrakt summasi</label>
               <input 
-                v-model.number="form.contractAmount"
+                v-model.number="form.contract_amount"
                 type="number"
                 class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-violet-500 focus:ring-2 focus:ring-violet-500/20 outline-none"
                 placeholder="18411000"
@@ -243,9 +318,11 @@
               </button>
               <button 
                 type="submit"
-                class="flex-1 px-4 py-3 bg-violet-500 text-white rounded-xl font-medium hover:bg-violet-600 transition-colors"
+                :disabled="saving"
+                class="flex-1 px-4 py-3 bg-violet-500 text-white rounded-xl font-medium hover:bg-violet-600 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
               >
-                Saqlash
+                <Loader2 v-if="saving" class="w-5 h-5 animate-spin" />
+                {{ saving ? 'Saqlanmoqda...' : 'Saqlash' }}
               </button>
             </div>
           </form>
@@ -279,26 +356,33 @@
           </div>
 
           <div class="p-6">
-            <!-- Current Leader -->
-            <div v-if="selectedGroup?.leaderName" class="mb-4 p-4 bg-amber-50 border border-amber-200 rounded-xl">
-              <div class="flex items-center justify-between">
-                <div class="flex items-center gap-3">
-                  <div class="w-10 h-10 rounded-full bg-amber-500 flex items-center justify-center text-white font-bold">
-                    <Crown class="w-5 h-5" />
-                  </div>
-                  <div>
-                    <p class="font-medium text-amber-800">Hozirgi sardor</p>
-                    <p class="text-sm text-amber-600">{{ selectedGroup.leaderName }}</p>
-                  </div>
-                </div>
-                <button 
-                  @click="removeLeader"
-                  class="px-3 py-1.5 bg-rose-100 text-rose-600 rounded-lg text-sm font-medium hover:bg-rose-200 transition-colors"
-                >
-                  Olib tashlash
-                </button>
-              </div>
+            <!-- Loading -->
+            <div v-if="loadingStudents" class="py-8 text-center">
+              <RefreshCw class="w-8 h-8 text-violet-500 animate-spin mx-auto mb-2" />
+              <p class="text-slate-500">Talabalar yuklanmoqda...</p>
             </div>
+            
+            <template v-else>
+              <!-- Current Leader -->
+              <div v-if="selectedGroup?.leaderName" class="mb-4 p-4 bg-amber-50 border border-amber-200 rounded-xl">
+                <div class="flex items-center justify-between">
+                  <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-full bg-amber-500 flex items-center justify-center text-white font-bold">
+                      <Crown class="w-5 h-5" />
+                    </div>
+                    <div>
+                      <p class="font-medium text-amber-800">Hozirgi sardor</p>
+                      <p class="text-sm text-amber-600">{{ selectedGroup.leaderName }}</p>
+                    </div>
+                  </div>
+                  <button 
+                    @click="removeLeader"
+                    class="px-3 py-1.5 bg-rose-100 text-rose-600 rounded-lg text-sm font-medium hover:bg-rose-200 transition-colors"
+                  >
+                    Olib tashlash
+                  </button>
+                </div>
+              </div>
 
             <!-- Search -->
             <div class="relative mb-4">
@@ -338,6 +422,7 @@
                 <p>Talaba topilmadi</p>
               </div>
             </div>
+            </template>
           </div>
         </div>
       </div>
@@ -448,9 +533,15 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed } from 'vue'
+/**
+ * Groups Management - Real API Integration
+ * Backend /groups endpoint dan ma'lumot oladi
+ * CRUD operatsiyalari, sardor tayinlash
+ */
+import { ref, reactive, computed, onMounted, watch } from 'vue'
 import { useDataStore } from '../../stores/data'
 import { useToastStore } from '../../stores/toast'
+import api from '../../services/api'
 import {
   FolderPlus,
   FileSpreadsheet,
@@ -464,12 +555,22 @@ import {
   X,
   AlertTriangle,
   Info,
-  Search
+  Search,
+  RefreshCw,
+  Loader2,
+  ChevronLeft,
+  ChevronRight,
+  AlertCircle
 } from 'lucide-vue-next'
 
 const dataStore = useDataStore()
 const toast = useToastStore()
 
+// State
+const loading = ref(true)
+const saving = ref(false)
+const error = ref(null)
+const groups = ref([])
 const showModal = ref(false)
 const showDeleteConfirm = ref(false)
 const showLeaderModal = ref(false)
@@ -479,6 +580,17 @@ const deletingGroup = ref(null)
 const selectedGroup = ref(null)
 const leaderSearch = ref('')
 const importData = ref([])
+const groupStudents = ref([])
+const loadingStudents = ref(false)
+
+// Pagination
+const currentPage = ref(1)
+const pageSize = ref(24)
+const totalItems = ref(0)
+const totalPages = computed(() => Math.ceil(totalItems.value / pageSize.value))
+
+// Search
+const searchQuery = ref('')
 
 const groupColors = [
   'bg-gradient-to-br from-violet-500 to-purple-600',
@@ -492,202 +604,236 @@ const form = reactive({
   name: '',
   year: 1,
   faculty: '',
-  contractAmount: 18411000
+  contract_amount: 18411000
 })
 
-const getStudentCount = (groupName) => {
-  return dataStore.students.filter(s => s.group === groupName).length
+// Load groups
+async function loadGroups() {
+  loading.value = true
+  error.value = null
+  
+  try {
+    const params = {
+      page: currentPage.value,
+      limit: pageSize.value
+    }
+    
+    if (searchQuery.value) {
+      params.search = searchQuery.value
+    }
+    
+    const response = await api.getGroups(params)
+    
+    if (response.data) {
+      groups.value = response.data.map(g => ({
+        id: g.id,
+        name: g.name,
+        year: g.year || 1,
+        faculty: g.faculty || '',
+        contractAmount: g.contract_amount || 18411000,
+        isActive: g.is_active !== false,
+        leaderId: g.leader_id,
+        leaderName: g.leader?.full_name || null,
+        studentCount: g.student_count || 0,
+        attendanceRate: g.attendance_rate || 0
+      }))
+      totalItems.value = response.total || response.data.length
+    }
+    
+    // Also update store cache
+    dataStore.groups = groups.value
+  } catch (e) {
+    console.error('Groups load error:', e)
+    error.value = e.message || 'Guruhlar yuklanmadi'
+  } finally {
+    loading.value = false
+  }
 }
 
-const getGroupStudents = (groupName) => {
-  return dataStore.students.filter(s => s.group === groupName)
+// Get student count (from loaded data)
+function getStudentCount(groupName) {
+  const group = groups.value.find(g => g.name === groupName)
+  return group?.studentCount || 0
+}
+
+// Get group attendance
+function getGroupAttendance(groupName) {
+  const group = groups.value.find(g => g.name === groupName)
+  return group?.attendanceRate || 0
+}
+
+// Load students for leader selection
+async function loadGroupStudents(groupId) {
+  loadingStudents.value = true
+  try {
+    const response = await api.getStudents({ group_id: groupId, limit: 100 })
+    groupStudents.value = response.data?.map(s => ({
+      id: s.id,
+      name: s.full_name,
+      studentId: s.student_id
+    })) || []
+  } catch (e) {
+    console.error('Load group students error:', e)
+    groupStudents.value = []
+  } finally {
+    loadingStudents.value = false
+  }
 }
 
 const filteredGroupStudents = computed(() => {
-  if (!selectedGroup.value) return []
-  const students = getGroupStudents(selectedGroup.value.name)
-  if (!leaderSearch.value) return students
-  return students.filter(s => 
-    s.name.toLowerCase().includes(leaderSearch.value.toLowerCase()) ||
-    s.studentId.toLowerCase().includes(leaderSearch.value.toLowerCase())
+  if (!leaderSearch.value) return groupStudents.value
+  const query = leaderSearch.value.toLowerCase()
+  return groupStudents.value.filter(s => 
+    s.name.toLowerCase().includes(query) ||
+    s.studentId.toLowerCase().includes(query)
   )
 })
 
-const getGroupAttendance = (groupName) => {
-  const groupStudents = dataStore.students.filter(s => s.group === groupName)
-  const studentIds = groupStudents.map(s => s.id)
-  const records = dataStore.attendanceRecords.filter(r => studentIds.includes(r.studentId))
-  const total = records.length
-  const attended = records.filter(r => r.status === 'present' || r.status === 'late').length
-  return total > 0 ? Math.round((attended / total) * 100) : 0
-}
-
-const openModal = (group = null) => {
+// Modal operations
+function openModal(group = null) {
   if (group) {
     editingGroup.value = group
     form.name = group.name
     form.year = group.year
     form.faculty = group.faculty || ''
-    form.contractAmount = group.contractAmount || 18411000
+    form.contract_amount = group.contractAmount || 18411000
   } else {
     editingGroup.value = null
     form.name = ''
     form.year = 1
     form.faculty = ''
-    form.contractAmount = 18411000
+    form.contract_amount = 18411000
   }
   showModal.value = true
 }
 
-const saveGroup = () => {
-  if (editingGroup.value) {
-    dataStore.updateGroup(editingGroup.value.id, { ...form })
-    toast.success('Guruh yangilandi')
-  } else {
-    dataStore.addGroup({ ...form, isActive: true })
-    toast.success('Yangi guruh qo\'shildi')
+// Save group
+async function saveGroup() {
+  if (!form.name) {
+    toast.error('Guruh nomini kiriting')
+    return
   }
-  showModal.value = false
+  
+  saving.value = true
+  
+  try {
+    const groupData = {
+      name: form.name,
+      year: form.year,
+      faculty: form.faculty || null,
+      contract_amount: form.contract_amount
+    }
+    
+    if (editingGroup.value) {
+      await api.updateGroup(editingGroup.value.id, groupData)
+      toast.success('Guruh yangilandi')
+    } else {
+      await api.createGroup(groupData)
+      toast.success('Yangi guruh qo\'shildi')
+    }
+    
+    showModal.value = false
+    await loadGroups()
+  } catch (e) {
+    console.error('Save group error:', e)
+    toast.error(e.message || 'Saqlashda xatolik')
+  } finally {
+    saving.value = false
+  }
 }
 
-const confirmDelete = (group) => {
+// Delete group
+function confirmDelete(group) {
   deletingGroup.value = group
   showDeleteConfirm.value = true
 }
 
-const deleteGroup = () => {
-  if (deletingGroup.value) {
-    // Guruhdagi talabalarni ham o'chirish
-    const groupStudents = dataStore.students.filter(s => s.group === deletingGroup.value.name)
-    groupStudents.forEach(s => dataStore.deleteStudent(s.id))
-    
-    dataStore.deleteGroup(deletingGroup.value.id)
+async function deleteGroup() {
+  if (!deletingGroup.value) return
+  
+  try {
+    await api.deleteGroup(deletingGroup.value.id)
     toast.success('Guruh o\'chirildi')
+    showDeleteConfirm.value = false
+    deletingGroup.value = null
+    await loadGroups()
+  } catch (e) {
+    console.error('Delete group error:', e)
+    toast.error(e.message || 'O\'chirishda xatolik')
   }
-  showDeleteConfirm.value = false
-  deletingGroup.value = null
 }
 
-const toggleStatus = (group) => {
-  dataStore.toggleGroupStatus(group.id)
-  toast.info(group.isActive ? 'Guruh o\'chirildi' : 'Guruh yoqildi')
+// Toggle group status
+async function toggleStatus(group) {
+  try {
+    await api.updateGroup(group.id, { is_active: !group.isActive })
+    group.isActive = !group.isActive
+    toast.info(group.isActive ? 'Guruh yoqildi' : 'Guruh o\'chirildi')
+  } catch (e) {
+    console.error('Toggle status error:', e)
+    toast.error('Xatolik yuz berdi')
+  }
 }
 
 // Leader Management
-const openLeaderModal = (group) => {
+async function openLeaderModal(group) {
   selectedGroup.value = group
   leaderSearch.value = ''
   showLeaderModal.value = true
+  await loadGroupStudents(group.id)
 }
 
-const assignLeader = (student) => {
-  if (selectedGroup.value) {
-    dataStore.assignGroupLeader(selectedGroup.value.id, student.id)
-    // Update selected group reference
-    selectedGroup.value = dataStore.groups.find(g => g.id === selectedGroup.value.id)
+async function assignLeader(student) {
+  if (!selectedGroup.value) return
+  
+  try {
+    await api.assignGroupLeader(selectedGroup.value.id, student.id)
+    selectedGroup.value.leaderId = student.id
+    selectedGroup.value.leaderName = student.name
     toast.success(`${student.name} sardor qilindi`)
     showLeaderModal.value = false
+    await loadGroups()
+  } catch (e) {
+    console.error('Assign leader error:', e)
+    toast.error(e.message || 'Sardor tayinlashda xatolik')
   }
 }
 
-const removeLeader = () => {
-  if (selectedGroup.value) {
-    dataStore.removeGroupLeader(selectedGroup.value.id)
-    selectedGroup.value = dataStore.groups.find(g => g.id === selectedGroup.value.id)
+async function removeLeader() {
+  if (!selectedGroup.value) return
+  
+  try {
+    await api.removeGroupLeader(selectedGroup.value.id)
+    selectedGroup.value.leaderId = null
+    selectedGroup.value.leaderName = null
     toast.info('Sardor olib tashlandi')
     showLeaderModal.value = false
+    await loadGroups()
+  } catch (e) {
+    console.error('Remove leader error:', e)
+    toast.error('Xatolik yuz berdi')
   }
 }
 
-// Excel Import
-const handleExcelUpload = (event) => {
+// Excel Import - use dataStore method
+async function handleExcelUpload(event) {
   const file = event.target.files[0]
   if (!file) return
   
-  // Reset input
   event.target.value = ''
   
-  // Simulated Excel parsing (real implementation would use xlsx library)
-  const reader = new FileReader()
-  reader.onload = (e) => {
-    try {
-      // For demo purposes, parsing CSV-like format
-      const text = e.target.result
-      const lines = text.split('\n').filter(l => l.trim())
-      
-      if (lines.length < 2) {
-        toast.error('Fayl bo\'sh yoki noto\'g\'ri format')
-        return
-      }
-      
-      // Parse header
-      const headers = lines[0].split(',').map(h => h.trim().toLowerCase())
-      const groupIdx = headers.findIndex(h => h.includes('guruh') || h.includes('group'))
-      const facultyIdx = headers.findIndex(h => h.includes('fakultet') || h.includes('faculty'))
-      const studentIdIdx = headers.findIndex(h => h.includes('talaba id') || h.includes('student id') || h.includes('id'))
-      const nameIdx = headers.findIndex(h => h.includes('ism') || h.includes('name') || h.includes('familiya'))
-      const phoneIdx = headers.findIndex(h => h.includes('telefon') || h.includes('phone'))
-      const passwordIdx = headers.findIndex(h => h.includes('parol') || h.includes('password'))
-      
-      if (groupIdx === -1 || nameIdx === -1) {
-        toast.error('Guruh yoki Ism ustuni topilmadi')
-        return
-      }
-      
-      // Parse data rows
-      const groupsMap = {}
-      
-      for (let i = 1; i < lines.length; i++) {
-        const cols = lines[i].split(',').map(c => c.trim())
-        const groupName = cols[groupIdx]
-        
-        if (!groupName) continue
-        
-        if (!groupsMap[groupName]) {
-          groupsMap[groupName] = {
-            group: groupName,
-            faculty: facultyIdx !== -1 ? cols[facultyIdx] : '',
-            year: 1,
-            students: []
-          }
-        }
-        
-        groupsMap[groupName].students.push({
-          studentId: studentIdIdx !== -1 ? cols[studentIdIdx] : `ST-${Date.now()}-${i}`,
-          name: cols[nameIdx],
-          phone: phoneIdx !== -1 ? cols[phoneIdx] : '',
-          password: passwordIdx !== -1 ? cols[passwordIdx] : '123456'
-        })
-      }
-      
-      importData.value = Object.values(groupsMap)
-      
-      if (importData.value.length > 0) {
-        showImportModal.value = true
-      } else {
-        toast.error('Ma\'lumot topilmadi')
-      }
-      
-    } catch (error) {
-      console.error('Parse error:', error)
-      toast.error('Faylni o\'qishda xatolik')
-    }
+  try {
+    toast.info('Import boshlanmoqda...')
+    const result = await dataStore.importFromExcel(file)
+    toast.success(`${result.imported || 0} ta ma'lumot import qilindi`)
+    await loadGroups()
+  } catch (e) {
+    console.error('Import error:', e)
+    toast.error(e.message || 'Import xatoligi')
   }
-  
-  reader.readAsText(file)
 }
 
-const confirmImport = () => {
-  dataStore.importFromExcel(importData.value)
-  
-  const totalStudents = importData.value.reduce((sum, g) => sum + g.students.length, 0)
-  toast.success(`${importData.value.length} ta guruh va ${totalStudents} ta talaba import qilindi`)
-  
-  showImportModal.value = false
-  importData.value = []
-}
-
-const downloadTemplate = () => {
+function downloadTemplate() {
   const csv = `Guruh,Fakultet,Talaba ID,Ism Familiya,Telefon,Parol
 KI_25-04,Kompyuter injiniringi,ST-2024-001,Aliyev Jasur,+998901234567,123456
 KI_25-04,Kompyuter injiniringi,ST-2024-002,Karimov Sardor,+998912345678,123456
@@ -701,4 +847,33 @@ DI_25-21,Dasturiy injiniring,ST-2024-003,Toshmatov Alisher,+998923456789,123456`
   
   toast.info('Namuna fayl yuklab olindi')
 }
+
+// Pagination
+function goToPage(page) {
+  if (page >= 1 && page <= totalPages.value) {
+    currentPage.value = page
+    loadGroups()
+  }
+}
+
+// Search with debounce
+let searchTimeout = null
+watch(searchQuery, () => {
+  clearTimeout(searchTimeout)
+  searchTimeout = setTimeout(() => {
+    currentPage.value = 1
+    loadGroups()
+  }, 500)
+})
+
+// Refresh
+async function refresh() {
+  dataStore.clearCache()
+  await loadGroups()
+}
+
+// Initialize
+onMounted(() => {
+  loadGroups()
+})
 </script>

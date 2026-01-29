@@ -476,6 +476,13 @@ class ApiService {
         return this.request(`/reports/${id}`)
     }
 
+    async updateReport(id, data) {
+        return this.request(`/reports/${id}`, {
+            method: 'PUT',
+            body: data
+        })
+    }
+
     async deleteReport(id) {
         return this.request(`/reports/${id}`, { method: 'DELETE' })
     }
@@ -603,6 +610,374 @@ class ApiService {
             method: 'PUT',
             body: data
         })
+    }
+
+    // ===== CLUBS =====
+    async getClubs(params = {}) {
+        const query = new URLSearchParams(params).toString()
+        return this.request(`/clubs${query ? '?' + query : ''}`)
+    }
+
+    async createClub(data) {
+        return this.request('/clubs', {
+            method: 'POST',
+            body: data
+        })
+    }
+
+    async updateClub(id, data) {
+        return this.request(`/clubs/${id}`, {
+            method: 'PUT',
+            body: data
+        })
+    }
+
+    async deleteClub(id) {
+        return this.request(`/clubs/${id}`, { method: 'DELETE' })
+    }
+
+    async toggleClubStatus(id) {
+        return this.request(`/clubs/${id}/toggle-status`, { method: 'PATCH' })
+    }
+
+    // ===== SUBJECTS =====
+    async getSubjects(params = {}) {
+        const query = new URLSearchParams(params).toString()
+        return this.request(`/subjects${query ? '?' + query : ''}`)
+    }
+
+    async createSubject(data) {
+        return this.request('/subjects', {
+            method: 'POST',
+            body: data
+        })
+    }
+
+    async updateSubject(id, data) {
+        return this.request(`/subjects/${id}`, {
+            method: 'PUT',
+            body: data
+        })
+    }
+
+    async deleteSubject(id) {
+        return this.request(`/subjects/${id}`, { method: 'DELETE' })
+    }
+
+    // ===== DIRECTIONS =====
+    async getDirections(params = {}) {
+        const query = new URLSearchParams(params).toString()
+        return this.request(`/directions${query ? '?' + query : ''}`)
+    }
+
+    async createDirection(data) {
+        return this.request('/directions', {
+            method: 'POST',
+            body: data
+        })
+    }
+
+    async updateDirection(id, data) {
+        return this.request(`/directions/${id}`, {
+            method: 'PUT',
+            body: data
+        })
+    }
+
+    async deleteDirection(id) {
+        return this.request(`/directions/${id}`, { method: 'DELETE' })
+    }
+
+    async toggleDirectionStatus(id) {
+        return this.request(`/directions/${id}/toggle-status`, { method: 'PATCH' })
+    }
+
+    async updateDirectionSubjects(directionId, subjectIds) {
+        return this.request(`/directions/${directionId}/subjects`, {
+            method: 'PUT',
+            body: { subject_ids: subjectIds }
+        })
+    }
+
+    // ===== TOURNAMENTS =====
+    async getTournaments(params = {}) {
+        const query = new URLSearchParams(params).toString()
+        return this.request(`/tournaments${query ? '?' + query : ''}`)
+    }
+
+    async createTournament(data) {
+        return this.request('/tournaments', {
+            method: 'POST',
+            body: data
+        })
+    }
+
+    async updateTournament(id, data) {
+        return this.request(`/tournaments/${id}`, {
+            method: 'PUT',
+            body: data
+        })
+    }
+
+    async deleteTournament(id) {
+        return this.request(`/tournaments/${id}`, { method: 'DELETE' })
+    }
+
+    async toggleTournamentStatus(id) {
+        return this.request(`/tournaments/${id}/toggle-status`, { method: 'PATCH' })
+    }
+
+    async registerForTournament(tournamentId, studentId) {
+        return this.request(`/tournaments/${tournamentId}/register`, {
+            method: 'POST',
+            body: { student_id: studentId }
+        })
+    }
+
+    async unregisterFromTournament(tournamentId, studentId) {
+        return this.request(`/tournaments/${tournamentId}/unregister`, {
+            method: 'POST',
+            body: { student_id: studentId }
+        })
+    }
+
+    // ===== HELP/FAQ =====
+    async getFaqs(params = {}) {
+        const query = new URLSearchParams(params).toString()
+        return this.request(`/faqs${query ? '?' + query : ''}`)
+    }
+
+    async createFaq(data) {
+        return this.request('/faqs', {
+            method: 'POST',
+            body: data
+        })
+    }
+
+    async updateFaq(id, data) {
+        return this.request(`/faqs/${id}`, {
+            method: 'PUT',
+            body: data
+        })
+    }
+
+    async deleteFaq(id) {
+        return this.request(`/faqs/${id}`, { method: 'DELETE' })
+    }
+
+    async getContactInfo() {
+        return this.request('/contact-info')
+    }
+
+    async updateContactInfo(data) {
+        return this.request('/contact-info', {
+            method: 'PUT',
+            body: data
+        })
+    }
+
+    async getSupportMessages(params = {}) {
+        const query = new URLSearchParams(params).toString()
+        return this.request(`/support-messages${query ? '?' + query : ''}`)
+    }
+
+    async replySupportMessage(id, reply) {
+        return this.request(`/support-messages/${id}/reply`, {
+            method: 'POST',
+            body: { reply }
+        })
+    }
+
+    async updateSupportMessageStatus(id, status) {
+        return this.request(`/support-messages/${id}/status`, {
+            method: 'PATCH',
+            body: { status }
+        })
+    }
+
+    // ===== FILE MANAGER =====
+
+    // Fayl yuklash (multipart/form-data)
+    async uploadFile(file, folderId = null, groupId = null, description = '', isPublic = false) {
+        const formData = new FormData()
+        formData.append('file', file)
+
+        let url = '/files/upload?'
+        if (folderId) url += `folder_id=${folderId}&`
+        if (groupId) url += `group_id=${groupId}&`
+        if (description) url += `description=${encodeURIComponent(description)}&`
+        url += `is_public=${isPublic}`
+
+        const token = this.getToken()
+        const response = await fetch(`${this.baseUrl}${url}`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${token}`
+            },
+            body: formData
+        })
+
+        return this.handleResponse(response)
+    }
+
+    // Fayllar ro'yxati
+    async getFiles(params = {}) {
+        const query = new URLSearchParams()
+        if (params.folder_id !== undefined) query.append('folder_id', params.folder_id)
+        if (params.file_type) query.append('file_type', params.file_type)
+        if (params.search) query.append('search', params.search)
+        if (params.page) query.append('page', params.page)
+        if (params.page_size) query.append('page_size', params.page_size)
+
+        const queryStr = query.toString()
+        return this.request(`/files${queryStr ? '?' + queryStr : ''}`)
+    }
+
+    // File Manager data (folders + files)
+    async getFileManager(folderId = null) {
+        const url = folderId ? `/files/manager?folder_id=${folderId}` : '/files/manager'
+        return this.request(url)
+    }
+
+    // Storage statistikasi
+    async getStorageStats() {
+        return this.request('/files/stats')
+    }
+
+    // Fayl ma'lumotlari
+    async getFile(id) {
+        return this.request(`/files/${id}`)
+    }
+
+    // Fayl yuklab olish URL
+    getFileDownloadUrl(id) {
+        const token = this.getToken()
+        return `${this.baseUrl}/files/${id}/download?token=${token}`
+    }
+
+    // Fayl yangilash
+    async updateFile(id, data) {
+        return this.request(`/files/${id}`, {
+            method: 'PUT',
+            body: data
+        })
+    }
+
+    // Fayl o'chirish
+    async deleteFile(id) {
+        return this.request(`/files/${id}`, { method: 'DELETE' })
+    }
+
+    // Papka yaratish
+    async createFolder(data) {
+        return this.request('/files/folders', {
+            method: 'POST',
+            body: data
+        })
+    }
+
+    // Papkalar ro'yxati
+    async getFolders(parentId = null) {
+        const url = parentId !== null ? `/files/folders?parent_id=${parentId}` : '/files/folders'
+        return this.request(url)
+    }
+
+    // Papka ma'lumotlari
+    async getFolder(id) {
+        return this.request(`/files/folders/${id}`)
+    }
+
+    // Papka yangilash
+    async updateFolder(id, data) {
+        return this.request(`/files/folders/${id}`, {
+            method: 'PUT',
+            body: data
+        })
+    }
+
+    // Papka o'chirish
+    async deleteFolder(id) {
+        return this.request(`/files/folders/${id}`, { method: 'DELETE' })
+    }
+
+    // ===== CANTEEN (OSHXONA) =====
+
+    // Menyu kategoriyalari
+    async getCanteenCategories() {
+        return this.request('/canteen/categories')
+    }
+
+    // Kategoriya yaratish (admin)
+    async createCanteenCategory(data) {
+        return this.request('/canteen/categories', {
+            method: 'POST',
+            body: data
+        })
+    }
+
+    // Menyu elementlari
+    async getCanteenMenu(params = {}) {
+        const query = new URLSearchParams()
+        if (params.category_id) query.append('category_id', params.category_id)
+        if (params.is_available !== undefined) query.append('is_available', params.is_available)
+        if (params.search) query.append('search', params.search)
+
+        const queryStr = query.toString()
+        return this.request(`/canteen/menu${queryStr ? '?' + queryStr : ''}`)
+    }
+
+    // Menyu elementi yaratish (admin)
+    async createMenuItem(data) {
+        return this.request('/canteen/menu', {
+            method: 'POST',
+            body: data
+        })
+    }
+
+    // Menyu elementi yangilash (admin)
+    async updateMenuItem(id, data) {
+        return this.request(`/canteen/menu/${id}`, {
+            method: 'PUT',
+            body: data
+        })
+    }
+
+    // Menyu elementi o'chirish (admin)
+    async deleteMenuItem(id) {
+        return this.request(`/canteen/menu/${id}`, { method: 'DELETE' })
+    }
+
+    // Buyurtma berish
+    async createCanteenOrder(data) {
+        return this.request('/canteen/orders', {
+            method: 'POST',
+            body: data
+        })
+    }
+
+    // O'z buyurtmalarim
+    async getMyCanteenOrders(params = {}) {
+        const query = new URLSearchParams(params).toString()
+        return this.request(`/canteen/orders/my${query ? '?' + query : ''}`)
+    }
+
+    // Barcha buyurtmalar (admin)
+    async getAllCanteenOrders(params = {}) {
+        const query = new URLSearchParams(params).toString()
+        return this.request(`/canteen/orders${query ? '?' + query : ''}`)
+    }
+
+    // Buyurtma holatini yangilash (admin)
+    async updateCanteenOrderStatus(id, status) {
+        return this.request(`/canteen/orders/${id}/status`, {
+            method: 'PATCH',
+            body: { status }
+        })
+    }
+
+    // Kunlik statistika (admin)
+    async getCanteenStats() {
+        return this.request('/canteen/stats')
     }
 }
 

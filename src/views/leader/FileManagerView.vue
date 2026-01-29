@@ -9,6 +9,13 @@
       
       <div class="flex items-center gap-3">
         <button
+          @click="loadFileManager"
+          class="rounded-lg p-2 bg-slate-100 text-slate-600 hover:bg-slate-200 transition-colors"
+          title="Yangilash"
+        >
+          <RefreshCw :size="20" :class="{ 'animate-spin': loading }" />
+        </button>
+        <button
           @click="viewMode = 'grid'"
           class="rounded-lg p-2 transition-colors"
           :class="viewMode === 'grid' ? 'bg-emerald-500 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'"
@@ -21,6 +28,13 @@
           :class="viewMode === 'list' ? 'bg-emerald-500 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'"
         >
           <List :size="20" />
+        </button>
+        <button
+          @click="showCreateFolderModal = true"
+          class="flex items-center gap-2 rounded-lg bg-blue-500 px-4 py-2 text-white hover:bg-blue-600"
+        >
+          <Plus :size="18" />
+          <span>Papka</span>
         </button>
         <button
           @click="showUploadModal = true"
@@ -36,8 +50,8 @@
     <div class="mb-4 flex items-center gap-2 text-sm">
       <button
         v-for="(crumb, index) in breadcrumbs"
-        :key="index"
-        @click="navigateToFolder(crumb.path)"
+        :key="crumb.id || 'root'"
+        @click="navigateToFolder(crumb)"
         class="flex items-center gap-1 text-slate-500 hover:text-slate-800 transition-colors"
       >
         <Folder v-if="index > 0" :size="16" />
@@ -99,8 +113,13 @@
       @dragenter.prevent="isDragging = true"
       class="min-h-[400px]"
     >
+      <!-- Loading state -->
+      <div v-if="loading" class="flex items-center justify-center py-12">
+        <Loader2 :size="32" class="animate-spin text-emerald-500" />
+      </div>
+      
       <!-- Grid View -->
-      <div v-if="viewMode === 'grid'" class="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
+      <div v-else-if="viewMode === 'grid'" class="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
         <!-- Folders -->
         <div
           v-for="folder in filteredFolders"
@@ -113,7 +132,7 @@
             <Folder :size="48" class="text-yellow-500" />
           </div>
           <p class="truncate text-center text-sm font-medium text-slate-800">{{ folder.name }}</p>
-          <p class="mt-1 text-center text-xs text-slate-500">{{ folder.itemCount }} ta element</p>
+          <p class="mt-1 text-center text-xs text-slate-500">{{ folder.item_count || 0 }} ta element</p>
         </div>
 
         <!-- Files -->
@@ -127,7 +146,7 @@
           :class="{ 'ring-2 ring-emerald-500': selectedFiles.includes(file.id) }"
         >
           <div class="mb-3 flex justify-center">
-            <component :is="getFileIcon(file.type)" :size="48" :class="getFileIconColor(file.type)" />
+            <component :is="getFileIcon(file.file_type)" :size="48" :class="getFileIconColor(file.file_type)" />
           </div>
           <p class="truncate text-center text-sm font-medium text-slate-800" :title="file.name">{{ file.name }}</p>
           <p class="mt-1 text-center text-xs text-slate-500">{{ formatFileSize(file.size) }}</p>
@@ -172,8 +191,8 @@
                 </div>
               </td>
               <td class="px-4 py-3 text-slate-500">Papka</td>
-              <td class="px-4 py-3 text-slate-500">{{ folder.itemCount }} element</td>
-              <td class="px-4 py-3 text-slate-500">{{ formatDate(folder.modified) }}</td>
+              <td class="px-4 py-3 text-slate-500">{{ folder.item_count || 0 }} element</td>
+              <td class="px-4 py-3 text-slate-500">{{ formatDate(folder.created_at || folder.modified) }}</td>
               <td class="px-4 py-3">
                 <button @click.stop="showContextMenu($event, folder, 'folder')" class="text-slate-400 hover:text-slate-600">
                   <MoreVertical :size="18" />
@@ -199,13 +218,13 @@
               </td>
               <td class="px-4 py-3">
                 <div class="flex items-center gap-3">
-                  <component :is="getFileIcon(file.type)" :size="20" :class="getFileIconColor(file.type)" />
-                  <span class="text-white">{{ file.name }}</span>
+                  <component :is="getFileIcon(file.file_type)" :size="20" :class="getFileIconColor(file.file_type)" />
+                  <span class="text-slate-700">{{ file.name }}</span>
                 </div>
               </td>
-              <td class="px-4 py-3 text-slate-400">{{ getFileTypeName(file.type) }}</td>
+              <td class="px-4 py-3 text-slate-400">{{ getFileTypeName(file.file_type) }}</td>
               <td class="px-4 py-3 text-slate-400">{{ formatFileSize(file.size) }}</td>
-              <td class="px-4 py-3 text-slate-400">{{ formatDate(file.modified) }}</td>
+              <td class="px-4 py-3 text-slate-400">{{ formatDate(file.created_at || file.modified) }}</td>
               <td class="px-4 py-3">
                 <div class="flex items-center gap-2">
                   <button @click.stop="downloadFile(file)" class="text-slate-400 hover:text-green-400">
@@ -390,7 +409,7 @@
               class="max-w-full max-h-[60vh] rounded-lg"
             />
             <div v-else class="text-center">
-              <component :is="getFileIcon(previewModal.file?.type)" :size="96" class="mx-auto mb-4 text-slate-400" />
+              <component :is="getFileIcon(previewModal.file?.file_type)" :size="96" class="mx-auto mb-4 text-slate-400" />
               <p class="text-lg font-medium text-white">{{ previewModal.file?.name }}</p>
               <p class="mt-2 text-slate-400">{{ formatFileSize(previewModal.file?.size) }}</p>
               <button
@@ -404,32 +423,82 @@
         </div>
       </div>
     </Teleport>
+
+    <!-- Create Folder Modal -->
+    <Teleport to="body">
+      <div
+        v-if="showCreateFolderModal"
+        class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm"
+        @click.self="showCreateFolderModal = false"
+      >
+        <div class="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-6 shadow-xl">
+          <div class="flex items-center justify-between mb-4">
+            <h2 class="text-lg font-bold text-slate-800">Yangi papka</h2>
+            <button @click="showCreateFolderModal = false" class="text-slate-400 hover:text-slate-600">
+              <X :size="20" />
+            </button>
+          </div>
+          <input
+            v-model="newFolderName"
+            type="text"
+            placeholder="Papka nomi"
+            class="w-full rounded-lg border border-slate-300 px-4 py-3 text-slate-700 placeholder-slate-400 focus:border-emerald-500 focus:outline-none"
+            @keyup.enter="createFolder"
+          />
+          <div class="flex justify-end gap-3 mt-4">
+            <button
+              @click="showCreateFolderModal = false"
+              class="rounded-lg border border-slate-300 px-4 py-2 text-slate-600 hover:bg-slate-100"
+            >
+              Bekor qilish
+            </button>
+            <button
+              @click="createFolder"
+              class="rounded-lg bg-blue-500 px-4 py-2 text-white hover:bg-blue-600"
+            >
+              Yaratish
+            </button>
+          </div>
+        </div>
+      </div>
+    </Teleport>
   </div>
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useToastStore } from '@/stores/toast'
+import api from '@/services/api'
 import {
   Grid, List, Upload, Search, Folder, FolderOpen, Home, ChevronRight,
   FileText, Image, File, FileSpreadsheet, FileArchive, Download, Eye,
-  MoreVertical, Edit, Move, Trash2, X, CheckCircle, XCircle, Loader2
+  MoreVertical, Edit, Move, Trash2, X, CheckCircle, XCircle, Loader2,
+  Plus, RefreshCw
 } from 'lucide-vue-next'
 
 const toast = useToastStore()
 
 // State
+const loading = ref(true)
 const viewMode = ref('grid')
 const searchQuery = ref('')
 const filterType = ref('all')
 const sortBy = ref('name')
-const currentPath = ref('/')
+const currentFolderId = ref(null)
 const isDragging = ref(false)
 const selectedFiles = ref([])
 const showUploadModal = ref(false)
+const showCreateFolderModal = ref(false)
+const newFolderName = ref('')
 const uploadDragover = ref(false)
 const uploadQueue = ref([])
 const uploading = ref(false)
+
+// Data from API
+const folders = ref([])
+const files = ref([])
+const breadcrumbs = ref([{ id: null, name: 'Asosiy', path: '/' }])
+const storageStats = ref(null)
 
 const contextMenu = ref({
   show: false,
@@ -444,35 +513,48 @@ const previewModal = ref({
   file: null
 })
 
-// Demo data
-const folders = ref([
-  { id: 1, name: 'Hisobotlar', path: '/hisobotlar', itemCount: 12, modified: '2024-01-15' },
-  { id: 2, name: 'Talabalar ma\'lumotlari', path: '/talabalar', itemCount: 45, modified: '2024-01-14' },
-  { id: 3, name: 'Kontrakt hujjatlari', path: '/kontrakt', itemCount: 23, modified: '2024-01-13' },
-  { id: 4, name: 'Jadvallar', path: '/jadvallar', itemCount: 8, modified: '2024-01-12' }
-])
+// API functions
+async function loadFileManager() {
+  loading.value = true
+  try {
+    const response = await api.getFileManager(currentFolderId.value)
+    folders.value = response.folders || []
+    files.value = response.files || []
+    
+    // Build breadcrumbs from response
+    if (response.breadcrumbs) {
+      breadcrumbs.value = [{ id: null, name: 'Asosiy', path: '/' }, ...response.breadcrumbs]
+    } else {
+      breadcrumbs.value = [{ id: null, name: 'Asosiy', path: '/' }]
+    }
+  } catch (error) {
+    console.error('Error loading file manager:', error)
+    toast.error('Fayllarni yuklashda xatolik')
+  } finally {
+    loading.value = false
+  }
+}
 
-const files = ref([
-  { id: 1, name: 'Davomat_yanvar_2024.xlsx', type: 'spreadsheet', size: 245760, modified: '2024-01-15', url: '' },
-  { id: 2, name: 'Guruh_royxati.pdf', type: 'document', size: 1048576, modified: '2024-01-14', url: '' },
-  { id: 3, name: 'Kontrakt_namuna.docx', type: 'document', size: 524288, modified: '2024-01-13', url: '' },
-  { id: 4, name: 'Talabalar_foto.jpg', type: 'image', size: 2097152, modified: '2024-01-12', url: 'https://picsum.photos/800/600' },
-  { id: 5, name: 'Arxiv_2023.zip', type: 'archive', size: 10485760, modified: '2024-01-11', url: '' },
-  { id: 6, name: 'Dars_jadvali.xlsx', type: 'spreadsheet', size: 153600, modified: '2024-01-10', url: '' }
-])
+async function loadStorageStats() {
+  try {
+    storageStats.value = await api.getStorageStats()
+  } catch (error) {
+    console.error('Error loading storage stats:', error)
+  }
+}
 
-// Computed
-const breadcrumbs = computed(() => {
-  const parts = currentPath.value.split('/').filter(Boolean)
-  const crumbs = [{ name: 'Asosiy', path: '/' }]
-  let path = ''
-  parts.forEach(part => {
-    path += '/' + part
-    crumbs.push({ name: part, path })
-  })
-  return crumbs
+// Watch for folder navigation
+watch(currentFolderId, () => {
+  loadFileManager()
 })
 
+// Initial load
+onMounted(() => {
+  loadFileManager()
+  loadStorageStats()
+})
+
+// Computed
 const filteredFolders = computed(() => {
   return folders.value.filter(f => {
     if (searchQuery.value) {
@@ -490,16 +572,16 @@ const filteredFiles = computed(() => {
   }
 
   if (filterType.value !== 'all') {
-    result = result.filter(f => f.type === filterType.value)
+    result = result.filter(f => f.file_type === filterType.value)
   }
 
   // Sort
   result = [...result].sort((a, b) => {
     switch (sortBy.value) {
       case 'name': return a.name.localeCompare(b.name)
-      case 'date': return new Date(b.modified) - new Date(a.modified)
+      case 'date': return new Date(b.created_at || b.modified) - new Date(a.created_at || a.modified)
       case 'size': return b.size - a.size
-      case 'type': return a.type.localeCompare(b.type)
+      case 'type': return (a.file_type || '').localeCompare(b.file_type || '')
       default: return 0
     }
   })
@@ -514,11 +596,11 @@ const allSelected = computed(() => {
 
 // Methods
 function openFolder(folder) {
-  currentPath.value = folder.path
+  currentFolderId.value = folder.id
 }
 
-function navigateToFolder(path) {
-  currentPath.value = path
+function navigateToFolder(crumb) {
+  currentFolderId.value = crumb.id
 }
 
 function selectFile(file) {
@@ -565,18 +647,28 @@ function previewFile(file) {
 }
 
 function downloadFile(file) {
+  const url = api.getFileDownloadUrl(file.id)
+  const link = document.createElement('a')
+  link.href = url
+  link.download = file.name
+  link.click()
   toast.success(`"${file.name}" yuklab olinmoqda...`)
-  // Simulate download
-  setTimeout(() => {
-    toast.success(`"${file.name}" yuklandi!`)
-  }, 1500)
 }
 
-function renameItem(item) {
+async function renameItem(item) {
   const newName = prompt('Yangi nomni kiriting:', item.name)
   if (newName && newName !== item.name) {
-    item.name = newName
-    toast.success('Nom o\'zgartirildi')
+    try {
+      if (contextMenu.value.type === 'folder') {
+        await api.updateFolder(item.id, { name: newName })
+      } else {
+        await api.updateFile(item.id, { name: newName })
+      }
+      toast.success('Nom o\'zgartirildi')
+      loadFileManager()
+    } catch (error) {
+      toast.error('Nomni o\'zgartirishda xatolik')
+    }
   }
 }
 
@@ -584,14 +676,20 @@ function moveItem(item) {
   toast.info('Ko\'chirish funksiyasi ishlab chiqilmoqda...')
 }
 
-function deleteItem(item) {
+async function deleteItem(item) {
   if (confirm(`"${item.name}" ni o'chirmoqchimisiz?`)) {
-    if (contextMenu.value.type === 'folder') {
-      folders.value = folders.value.filter(f => f.id !== item.id)
-    } else {
-      files.value = files.value.filter(f => f.id !== item.id)
+    try {
+      if (contextMenu.value.type === 'folder') {
+        await api.deleteFolder(item.id)
+        folders.value = folders.value.filter(f => f.id !== item.id)
+      } else {
+        await api.deleteFile(item.id)
+        files.value = files.value.filter(f => f.id !== item.id)
+      }
+      toast.success('O\'chirildi')
+    } catch (error) {
+      toast.error('O\'chirishda xatolik')
     }
-    toast.success('O\'chirildi')
   }
 }
 
@@ -628,46 +726,75 @@ function removeFromQueue(id) {
   uploadQueue.value = uploadQueue.value.filter(item => item.id !== id)
 }
 
-function startUpload() {
+async function startUpload() {
   uploading.value = true
   
-  uploadQueue.value.forEach((item, index) => {
+  for (const item of uploadQueue.value) {
+    try {
+      item.status = 'uploading'
+      item.progress = 30
+      
+      const response = await api.uploadFile(
+        item.file,
+        currentFolderId.value,
+        null, // group_id
+        '', // description
+        false // is_public
+      )
+      
+      item.progress = 100
+      item.status = 'done'
+      
+      // Add to files list
+      files.value.unshift({
+        id: response.id,
+        name: response.name,
+        file_type: response.file_type,
+        size: response.size,
+        created_at: new Date().toISOString(),
+        url: response.url
+      })
+    } catch (error) {
+      item.status = 'error'
+      console.error('Upload error:', error)
+    }
+  }
+  
+  uploading.value = false
+  
+  const successCount = uploadQueue.value.filter(q => q.status === 'done').length
+  if (successCount > 0) {
+    toast.success(`${successCount} ta fayl yuklandi!`)
     setTimeout(() => {
-      // Simulate upload progress
-      let progress = 0
-      const interval = setInterval(() => {
-        progress += Math.random() * 30
-        if (progress >= 100) {
-          progress = 100
-          clearInterval(interval)
-          item.status = 'done'
-          item.progress = 100
-          
-          // Add to files list
-          files.value.unshift({
-            id: Date.now(),
-            name: item.file.name,
-            type: getFileType(item.file.name),
-            size: item.file.size,
-            modified: new Date().toISOString().split('T')[0],
-            url: ''
-          })
-          
-          // Check if all done
-          if (uploadQueue.value.every(q => q.status === 'done')) {
-            uploading.value = false
-            toast.success('Barcha fayllar yuklandi!')
-            setTimeout(() => {
-              showUploadModal.value = false
-              uploadQueue.value = []
-            }, 1000)
-          }
-        } else {
-          item.progress = progress
-        }
-      }, 200)
-    }, index * 500)
-  })
+      showUploadModal.value = false
+      uploadQueue.value = []
+    }, 1000)
+  }
+  
+  // Reload storage stats
+  loadStorageStats()
+}
+
+// Papka yaratish
+async function createFolder() {
+  if (!newFolderName.value.trim()) {
+    toast.error('Papka nomini kiriting')
+    return
+  }
+  
+  try {
+    const response = await api.createFolder({
+      name: newFolderName.value,
+      parent_id: currentFolderId.value
+    })
+    
+    folders.value.push(response)
+    toast.success('Papka yaratildi')
+    showCreateFolderModal.value = false
+    newFolderName.value = ''
+  } catch (error) {
+    toast.error('Papka yaratishda xatolik')
+  }
 }
 
 function getFileType(filename) {

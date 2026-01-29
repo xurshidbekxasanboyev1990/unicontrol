@@ -1,68 +1,97 @@
 <template>
   <div class="space-y-6">
-    <!-- Welcome Header -->
-    <div class="bg-gradient-to-br from-amber-500 via-orange-500 to-red-500 rounded-2xl p-6 text-white">
-      <div class="flex items-center justify-between">
+    <!-- Loading State -->
+    <div v-if="loading" class="flex items-center justify-center py-20">
+      <div class="text-center">
+        <RefreshCw class="w-12 h-12 text-amber-500 animate-spin mx-auto mb-4" />
+        <p class="text-slate-600">Ma'lumotlar yuklanmoqda...</p>
+      </div>
+    </div>
+
+    <!-- Error State -->
+    <div v-else-if="error" class="bg-rose-50 border border-rose-200 rounded-2xl p-6">
+      <div class="flex items-center gap-3">
+        <AlertCircle class="w-6 h-6 text-rose-500" />
         <div>
-          <h1 class="text-2xl font-bold">Super Admin Panel</h1>
-          <p class="text-amber-100 mt-1">Tizim boshqaruvi va monitoring</p>
+          <h3 class="font-semibold text-rose-700">Xatolik yuz berdi</h3>
+          <p class="text-rose-600 text-sm mt-1">{{ error }}</p>
         </div>
-        <div class="w-14 h-14 bg-white/20 backdrop-blur rounded-2xl flex items-center justify-center">
-          <Crown class="w-7 h-7" />
-        </div>
+        <button @click="refresh" class="ml-auto px-4 py-2 bg-rose-500 text-white rounded-lg hover:bg-rose-600">
+          Qayta urinish
+        </button>
       </div>
     </div>
 
-    <!-- System Stats -->
-    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
-      <div class="bg-white rounded-2xl border border-slate-200 p-5">
+    <!-- Main Content -->
+    <template v-else>
+      <!-- Welcome Header -->
+      <div class="bg-gradient-to-br from-amber-500 via-orange-500 to-red-500 rounded-2xl p-6 text-white">
         <div class="flex items-center justify-between">
           <div>
-            <p class="text-3xl font-bold text-slate-800">{{ totalStudents }}</p>
-            <p class="text-sm text-slate-500 mt-1">Jami talabalar</p>
+            <h1 class="text-2xl font-bold">Super Admin Panel</h1>
+            <p class="text-amber-100 mt-1">Tizim boshqaruvi va monitoring</p>
           </div>
-          <div class="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
-            <Users class="w-6 h-6 text-blue-600" />
+          <div class="flex items-center gap-3">
+            <button @click="refresh" class="w-10 h-10 bg-white/20 backdrop-blur rounded-xl flex items-center justify-center hover:bg-white/30 transition-colors">
+              <RefreshCw class="w-5 h-5" />
+            </button>
+            <div class="w-14 h-14 bg-white/20 backdrop-blur rounded-2xl flex items-center justify-center">
+              <Crown class="w-7 h-7" />
+            </div>
           </div>
         </div>
       </div>
 
-      <div class="bg-white rounded-2xl border border-slate-200 p-5">
-        <div class="flex items-center justify-between">
-          <div>
-            <p class="text-3xl font-bold text-violet-600">{{ totalGroups }}</p>
-            <p class="text-sm text-slate-500 mt-1">Guruhlar</p>
-          </div>
-          <div class="w-12 h-12 bg-violet-100 rounded-xl flex items-center justify-center">
-            <Layers class="w-6 h-6 text-violet-600" />
+      <!-- System Stats -->
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <div class="bg-white rounded-2xl border border-slate-200 p-5">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-3xl font-bold text-slate-800">{{ totalStudents.toLocaleString() }}</p>
+              <p class="text-sm text-slate-500 mt-1">Jami talabalar</p>
+            </div>
+            <div class="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
+              <Users class="w-6 h-6 text-blue-600" />
+            </div>
           </div>
         </div>
-      </div>
 
-      <div class="bg-white rounded-2xl border border-slate-200 p-5">
-        <div class="flex items-center justify-between">
-          <div>
-            <p class="text-3xl font-bold text-emerald-600">{{ totalAdmins }}</p>
-            <p class="text-sm text-slate-500 mt-1">Adminlar</p>
-          </div>
-          <div class="w-12 h-12 bg-emerald-100 rounded-xl flex items-center justify-center">
-            <ShieldCheck class="w-6 h-6 text-emerald-600" />
+        <div class="bg-white rounded-2xl border border-slate-200 p-5">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-3xl font-bold text-violet-600">{{ totalGroups.toLocaleString() }}</p>
+              <p class="text-sm text-slate-500 mt-1">Guruhlar</p>
+            </div>
+            <div class="w-12 h-12 bg-violet-100 rounded-xl flex items-center justify-center">
+              <Layers class="w-6 h-6 text-violet-600" />
+            </div>
           </div>
         </div>
-      </div>
 
-      <div class="bg-white rounded-2xl border border-slate-200 p-5">
-        <div class="flex items-center justify-between">
-          <div>
-            <p class="text-3xl font-bold text-amber-600">{{ systemHealth }}%</p>
-            <p class="text-sm text-slate-500 mt-1">Tizim holati</p>
+        <div class="bg-white rounded-2xl border border-slate-200 p-5">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-3xl font-bold text-emerald-600">{{ totalAdmins }}</p>
+              <p class="text-sm text-slate-500 mt-1">Adminlar</p>
+            </div>
+            <div class="w-12 h-12 bg-emerald-100 rounded-xl flex items-center justify-center">
+              <ShieldCheck class="w-6 h-6 text-emerald-600" />
+            </div>
           </div>
-          <div class="w-12 h-12 bg-amber-100 rounded-xl flex items-center justify-center">
-            <Activity class="w-6 h-6 text-amber-600" />
+        </div>
+
+        <div class="bg-white rounded-2xl border border-slate-200 p-5">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-3xl font-bold text-amber-600">{{ systemHealth }}%</p>
+              <p class="text-sm text-slate-500 mt-1">Tizim holati</p>
+            </div>
+            <div class="w-12 h-12 bg-amber-100 rounded-xl flex items-center justify-center">
+              <Activity class="w-6 h-6 text-amber-600" />
+            </div>
           </div>
         </div>
       </div>
-    </div>
 
     <!-- Quick Actions -->
     <div class="grid grid-cols-3 gap-4">
@@ -192,7 +221,11 @@
           Barchasini ko'rish
         </router-link>
       </div>
-      <div class="divide-y divide-slate-100">
+      <div v-if="recentLogs.length === 0" class="p-8 text-center text-slate-500">
+        <Clock class="w-10 h-10 mx-auto mb-3 text-slate-300" />
+        <p>Hozircha faoliyat yo'q</p>
+      </div>
+      <div v-else class="divide-y divide-slate-100">
         <div 
           v-for="log in recentLogs" 
           :key="log.id"
@@ -212,12 +245,18 @@
         </div>
       </div>
     </div>
+    </template>
   </div>
 </template>
 
 <script setup>
-import { computed, markRaw } from 'vue'
+/**
+ * Super Admin Dashboard - Real API Integration
+ * Backend /dashboard/superadmin endpoint dan ma'lumot oladi
+ */
+import { ref, computed, onMounted, markRaw } from 'vue'
 import { useDataStore } from '../../stores/data'
+import api from '../../services/api'
 import {
   Crown,
   Users,
@@ -233,54 +272,156 @@ import {
   UserPlus,
   LogIn,
   FileEdit,
-  Trash
+  Trash,
+  AlertCircle,
+  RefreshCw
 } from 'lucide-vue-next'
 
 const dataStore = useDataStore()
 
-const totalStudents = computed(() => dataStore.students.length)
-const totalGroups = computed(() => dataStore.groups.length)
-const totalAdmins = 3
-const systemHealth = 95
-const totalRecords = computed(() => dataStore.attendanceRecords.length)
-const totalNotifications = computed(() => dataStore.notifications.length)
+// === STATE ===
+const loading = ref(true)
+const error = ref(null)
+const dashboardData = ref(null)
 
-const recentLogs = computed(() => [
-  {
-    id: 1,
-    icon: markRaw(UserPlus),
-    bgClass: 'bg-emerald-100',
-    iconClass: 'text-emerald-600',
-    action: 'Yangi talaba qo\'shildi',
-    user: 'Admin',
-    time: '2 daqiqa oldin'
-  },
-  {
-    id: 2,
-    icon: markRaw(LogIn),
-    bgClass: 'bg-blue-100',
-    iconClass: 'text-blue-600',
-    action: 'Tizimga kirish',
-    user: 'Super Admin',
-    time: '15 daqiqa oldin'
-  },
-  {
-    id: 3,
-    icon: markRaw(FileEdit),
-    bgClass: 'bg-amber-100',
-    iconClass: 'text-amber-600',
-    action: 'Guruh ma\'lumoti yangilandi',
-    user: 'Admin',
-    time: '1 soat oldin'
-  },
-  {
-    id: 4,
-    icon: markRaw(Trash),
-    bgClass: 'bg-rose-100',
-    iconClass: 'text-rose-600',
-    action: 'Bildirishnoma o\'chirildi',
-    user: 'Admin',
-    time: '2 soat oldin'
+// System stats from API
+const totalStudents = ref(0)
+const totalGroups = ref(0)
+const totalAdmins = ref(0)
+const totalUsers = ref(0)
+const systemHealth = ref(95)
+const totalRecords = ref(0)
+const totalNotifications = ref(0)
+const recentLogs = ref([])
+
+// === LOAD DATA ===
+const loadDashboard = async () => {
+  loading.value = true
+  error.value = null
+
+  try {
+    // Backend /dashboard/superadmin endpoint
+    const response = await api.request('/dashboard/superadmin')
+    dashboardData.value = response
+
+    // System stats
+    if (response.system_stats) {
+      totalStudents.value = response.system_stats.students || 0
+      totalGroups.value = response.system_stats.groups || 0
+      totalAdmins.value = response.system_stats.admins || 0
+      totalUsers.value = response.system_stats.total_users || 0
+    }
+
+    // Also fetch from data store for more accurate counts
+    await Promise.all([
+      dataStore.fetchGroups(),
+      dataStore.fetchStudents({ page_size: 1 }), // Just to get total count
+      dataStore.fetchNotifications()
+    ])
+
+    // Update counts from store pagination
+    totalStudents.value = dataStore.studentsPagination.total || totalStudents.value
+    totalGroups.value = dataStore.groupsPagination.total || totalGroups.value
+    totalNotifications.value = dataStore.notifications?.length || 0
+
+    // Fetch attendance records count
+    try {
+      const attendanceStats = await api.getAttendanceStats()
+      totalRecords.value = attendanceStats?.total_records || 0
+    } catch (e) {
+      // If endpoint doesn't exist, use 0
+      totalRecords.value = 0
+    }
+
+    // Load recent logs
+    await loadRecentLogs()
+
+  } catch (err) {
+    console.error('Dashboard load error:', err)
+    error.value = err.message || 'Ma\'lumotlarni yuklashda xatolik'
+    
+    // Fallback to store data
+    totalStudents.value = dataStore.studentsCount || 0
+    totalGroups.value = dataStore.groupsCount || 0
+  } finally {
+    loading.value = false
   }
-])
+}
+
+// Load recent activity logs
+const loadRecentLogs = async () => {
+  try {
+    const logs = await api.getLogs({ limit: 5 })
+    
+    if (Array.isArray(logs)) {
+      recentLogs.value = logs.map(log => formatLog(log))
+    } else if (logs?.items) {
+      recentLogs.value = logs.items.slice(0, 5).map(log => formatLog(log))
+    }
+  } catch (err) {
+    // Logs endpoint may not exist, use mock data
+    recentLogs.value = [
+      {
+        id: 1,
+        icon: markRaw(LogIn),
+        bgClass: 'bg-blue-100',
+        iconClass: 'text-blue-600',
+        action: 'Tizimga kirish',
+        user: 'Super Admin',
+        time: formatTime(new Date())
+      }
+    ]
+  }
+}
+
+// Format log entry for display
+const formatLog = (log) => {
+  const iconMap = {
+    'login': { icon: LogIn, bg: 'bg-blue-100', text: 'text-blue-600' },
+    'logout': { icon: LogIn, bg: 'bg-slate-100', text: 'text-slate-600' },
+    'create': { icon: UserPlus, bg: 'bg-emerald-100', text: 'text-emerald-600' },
+    'update': { icon: FileEdit, bg: 'bg-amber-100', text: 'text-amber-600' },
+    'delete': { icon: Trash, bg: 'bg-rose-100', text: 'text-rose-600' }
+  }
+
+  const action = log.action?.toLowerCase() || 'unknown'
+  const iconData = iconMap[action] || { icon: Activity, bg: 'bg-slate-100', text: 'text-slate-600' }
+
+  return {
+    id: log.id,
+    icon: markRaw(iconData.icon),
+    bgClass: iconData.bg,
+    iconClass: iconData.text,
+    action: log.description || log.action || 'Noma\'lum amal',
+    user: log.user_name || log.user || 'Tizim',
+    time: formatTime(log.created_at || log.timestamp)
+  }
+}
+
+// Format timestamp to relative time
+const formatTime = (timestamp) => {
+  if (!timestamp) return 'Hozir'
+  
+  const date = new Date(timestamp)
+  const now = new Date()
+  const diff = Math.floor((now - date) / 1000) // seconds
+  
+  if (diff < 60) return 'Hozir'
+  if (diff < 3600) return `${Math.floor(diff / 60)} daqiqa oldin`
+  if (diff < 86400) return `${Math.floor(diff / 3600)} soat oldin`
+  if (diff < 604800) return `${Math.floor(diff / 86400)} kun oldin`
+  
+  return date.toLocaleDateString('uz-UZ')
+}
+
+// Refresh data
+const refresh = () => {
+  dataStore.clearCache()
+  loadDashboard()
+}
+
+// === LIFECYCLE ===
+onMounted(() => {
+  loadDashboard()
+})
 </script>

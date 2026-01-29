@@ -156,25 +156,73 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
-import { useDataStore } from '../../stores/data'
+import { ref, computed, onMounted } from 'vue'
 import { useAuthStore } from '../../stores/auth'
+import { useToastStore } from '../../stores/toast'
+import api from '../../services/api'
 import { CalendarDays, User, MapPin, Coffee } from 'lucide-vue-next'
 
-const dataStore = useDataStore()
 const authStore = useAuthStore()
+const toast = useToastStore()
 
 const activeView = ref('Hafta')
 const days = ['Dushanba', 'Seshanba', 'Chorshanba', 'Payshanba', 'Juma', 'Shanba']
 const timeSlots = ['08:30-09:50', '10:00-11:20', '11:30-12:50', '14:00-15:20', '15:30-16:50']
 
-const student = computed(() => {
-  return dataStore.students.find(s => s.id === authStore.user?.studentId) || dataStore.students[0]
+const loading = ref(false)
+const schedule = ref([])
+
+// Load schedule on mount
+onMounted(async () => {
+  await loadSchedule()
 })
 
-const schedule = computed(() => {
-  return dataStore.schedule.filter(s => s.groupId === student.value?.groupId)
-})
+async function loadSchedule() {
+  loading.value = true
+  try {
+    // Try to get group's schedule
+    const groupId = authStore.user?.groupId || authStore.user?.group_id
+    if (groupId) {
+      const response = await api.request(`/schedule/group/${groupId}`)
+      if (Array.isArray(response)) {
+        schedule.value = response.map(s => ({
+          id: s.id,
+          day: s.day,
+          time: s.time,
+          subject: s.subject,
+          teacher: s.teacher,
+          room: s.room,
+          groupId: s.group_id
+        }))
+      } else if (response?.data) {
+        schedule.value = response.data.map(s => ({
+          id: s.id,
+          day: s.day,
+          time: s.time,
+          subject: s.subject,
+          teacher: s.teacher,
+          room: s.room,
+          groupId: s.group_id
+        }))
+      }
+    }
+  } catch (err) {
+    console.error('Load schedule error:', err)
+    // Fallback to general schedule
+    try {
+      const response = await api.getSchedule()
+      if (Array.isArray(response)) {
+        schedule.value = response
+      } else if (response?.data) {
+        schedule.value = response.data
+      }
+    } catch (e) {
+      toast.error('Jadval yuklanmadi')
+    }
+  } finally {
+    loading.value = false
+  }
+}
 
 const currentDayName = computed(() => {
   const dayNames = ['Yakshanba', 'Dushanba', 'Seshanba', 'Chorshanba', 'Payshanba', 'Juma', 'Shanba']

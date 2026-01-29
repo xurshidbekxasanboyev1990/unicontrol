@@ -814,7 +814,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useDataStore } from '../../stores/data'
 import { useToastStore } from '../../stores/toast'
 import {
@@ -828,6 +828,27 @@ import CustomSelect from '../../components/ui/CustomSelect.vue'
 
 const dataStore = useDataStore()
 const toast = useToastStore()
+
+// Loading states
+const loading = ref(false)
+const saving = ref(false)
+
+// Load data on mount
+onMounted(async () => {
+  loading.value = true
+  try {
+    await Promise.all([
+      dataStore.fetchTournaments(),
+      dataStore.fetchDirections(),
+      dataStore.fetchSubjects()
+    ])
+  } catch (err) {
+    toast.error('Ma\'lumotlarni yuklashda xatolik')
+    console.error(err)
+  } finally {
+    loading.value = false
+  }
+})
 
 const showModal = ref(false)
 const showRegistrationsModal = ref(false)
@@ -1088,7 +1109,7 @@ const updateFieldOptions = (field) => {
   field.options = field.optionsText.split(',').map(o => o.trim()).filter(o => o)
 }
 
-const saveTournament = () => {
+const saveTournament = async () => {
   if (!form.value.title || !form.value.description || !form.value.startDate || !form.value.registrationDeadline) {
     toast.error('Majburiy maydonlarni to\'ldiring')
     return
@@ -1140,14 +1161,21 @@ const saveTournament = () => {
     }))
   }
 
-  if (isEditing.value) {
-    dataStore.updateTournament(form.value.id, data)
-    toast.success('Turnir yangilandi')
-  } else {
-    dataStore.addTournament(data)
-    toast.success('Turnir yaratildi')
+  saving.value = true
+  try {
+    if (isEditing.value) {
+      await dataStore.updateTournament(form.value.id, data)
+      toast.success('Turnir yangilandi')
+    } else {
+      await dataStore.addTournament(data)
+      toast.success('Turnir yaratildi')
+    }
+    closeModal()
+  } catch (err) {
+    toast.error(err.message || 'Xatolik yuz berdi')
+  } finally {
+    saving.value = false
   }
-  closeModal()
 }
 
 const confirmDelete = (tournament) => {
@@ -1155,15 +1183,27 @@ const confirmDelete = (tournament) => {
   showDeleteModal.value = true
 }
 
-const deleteTournament = () => {
-  dataStore.deleteTournament(tournamentToDelete.value.id)
-  toast.success('Turnir o\'chirildi')
-  showDeleteModal.value = false
-  tournamentToDelete.value = null
+const deleteTournament = async () => {
+  saving.value = true
+  try {
+    await dataStore.deleteTournament(tournamentToDelete.value.id)
+    toast.success('Turnir o\'chirildi')
+    showDeleteModal.value = false
+    tournamentToDelete.value = null
+  } catch (err) {
+    toast.error(err.message || 'O\'chirishda xatolik')
+  } finally {
+    saving.value = false
+  }
 }
 
-const toggleStatus = (id) => {
-  dataStore.toggleTournamentStatus(id)
+const toggleStatus = async (id) => {
+  try {
+    await dataStore.toggleTournamentStatus(id)
+    toast.success('Status yangilandi')
+  } catch (err) {
+    toast.error(err.message || 'Status yangilashda xatolik')
+  }
 }
 
 const viewRegistrations = (tournament) => {

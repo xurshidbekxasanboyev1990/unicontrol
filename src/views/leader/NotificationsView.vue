@@ -371,22 +371,26 @@
  * - Tez shablonlar
  */
 
-import { ref, computed, markRaw } from 'vue'
+import { ref, computed, markRaw, onMounted } from 'vue'
 import { useAuthStore } from '@/stores/auth'
-import { useDataStore } from '@/stores/data'
 import { useToastStore } from '@/stores/toast'
+import api from '../../services/api'
 import {
   Send, PenLine, History, Users, Zap, Clock, CheckCheck,
   RefreshCw, Trash2, X, MessageSquare, Bell, AlertTriangle,
-  CheckCircle, Info
+  CheckCircle, Info, Loader2
 } from 'lucide-vue-next'
 
 // ==================== STORES ====================
 const authStore = useAuthStore()
-const dataStore = useDataStore()
 const toast = useToastStore()
 
 // ==================== STATE ====================
+
+// Loading
+const loading = ref(true)
+const error = ref(null)
+const sending = ref(false)
 
 // Tab: 'compose' yoki 'history'
 const activeTab = ref('compose')
@@ -396,6 +400,9 @@ const historyFilter = ref('all')
 
 // Modal
 const showComposeModal = ref(false)
+
+// Group students
+const groupStudents = ref([])
 
 // Tanlangan talabalar
 const selectedRecipients = ref([])
@@ -504,12 +511,6 @@ const messageHistory = ref([
 
 // ==================== COMPUTED ====================
 
-// Guruh talabalari
-const groupStudents = computed(() => {
-  const groupName = authStore.user?.group || authStore.user?.managedGroup
-  return dataStore.students.filter(s => s.group === groupName)
-})
-
 // Barchasi tanlanganmi?
 const allSelected = computed(() => {
   return selectedRecipients.value.length === groupStudents.value.length
@@ -529,6 +530,50 @@ const filteredHistory = computed(() => {
   }
   return messageHistory.value.filter(m => m.type === historyFilter.value)
 })
+
+// ==================== LOAD DATA ====================
+
+const loadData = async () => {
+  loading.value = true
+  error.value = null
+  
+  try {
+    // Get current user's group
+    const user = await api.getMe()
+    const groupId = user.group_id
+    
+    if (groupId) {
+      // Load group students
+      const studentsResponse = await api.getStudents({ group_id: groupId, limit: 100 })
+      groupStudents.value = (studentsResponse.items || studentsResponse || []).map(s => ({
+        id: s.id,
+        name: s.name || s.full_name
+      }))
+      
+      // Load sent notifications
+      try {
+        const notifResponse = await api.getNotifications({ sent_by_me: true, limit: 50 })
+        const notifications = notifResponse.items || notifResponse || []
+        messageHistory.value = notifications.map(n => ({
+          id: n.id,
+          title: n.title,
+          text: n.message || n.content,
+          type: n.type || 'info',
+          sentAt: new Date(n.created_at).toLocaleString('uz-UZ'),
+          recipientCount: n.recipient_count || 1,
+          readCount: n.read_count || 0
+        }))
+      } catch (e) {
+        console.warn('Could not load notification history:', e)
+      }
+    }
+  } catch (e) {
+    console.error('Error loading data:', e)
+    error.value = 'Ma\'lumotlarni yuklashda xatolik'
+  } finally {
+    loading.value = false
+  }
+}
 
 // ==================== METHODS ====================
 
@@ -560,49 +605,87 @@ function useTemplate(template) {
 }
 
 // Xabar yuborish
-function sendMessage() {
+async function sendMessage() {
   if (!canSend.value) return
   
-  const message = {
-    id: Date.now(),
-    title: newMessage.value.title,
-    text: newMessage.value.text,
-    type: newMessage.value.type,
-    sentAt: new Date().toLocaleString('uz-UZ'),
-    recipientCount: selectedRecipients.value.length,
-    readCount: 0
+  sending.value = true
+  
+  try {
+    // Send notification via API
+    await api.createNotification({
+      title: newMessage.value.title,
+      message: newMessage.value.text,
+      type: newMessage.value.type,
+      recipient_ids: selectedRecipients.value
+    })
+    
+    // Add to local history
+    const message = {
+      id: Date.now(),
+      title: newMessage.value.title,
+      text: newMessage.value.text,
+      type: newMessage.value.type,
+      sentAt: new Date().toLocaleString('uz-UZ'),
+      recipientCount: selectedRecipients.value.length,
+      readCount: 0
+    }
+    
+    messageHistory.value.unshift(message)
+    toast.success(`Xabar ${selectedRecipients.value.length} ta talabaga yuborildi!`)
+    
+    // Formni tozalash
+    newMessage.value = { title: '', text: '', type: 'info' }
+    selectedRecipients.value = []
+  } catch (e) {
+    console.error('Error sending message:', e)
+    toast.error('Xabar yuborishda xatolik')
+  } finally {
+    sending.value = false
   }
-  
-  messageHistory.value.unshift(message)
-  toast.success(`Xabar ${selectedRecipients.value.length} ta talabaga yuborildi!`)
-  
-  // Formni tozalash
-  newMessage.value = { title: '', text: '', type: 'info' }
-  selectedRecipients.value = []
 }
 
 // Modal orqali yuborish
-function sendModalMessage() {
+async function sendModalMessage() {
   if (!modalMessage.value.title || !modalMessage.value.text) {
     toast.error('Sarlavha va matnni kiriting')
     return
   }
   
-  const message = {
-    id: Date.now(),
-    title: modalMessage.value.title,
-    text: modalMessage.value.text,
-    type: 'info',
-    sentAt: new Date().toLocaleString('uz-UZ'),
-    recipientCount: modalMessage.value.toAll ? groupStudents.value.length : 1,
-    readCount: 0
+  sending.value = true
+  
+  try {
+    const recipientIds = modalMessage.value.toAll 
+      ? groupStudents.value.map(s => s.id) 
+      : selectedRecipients.value
+    
+    await api.createNotification({
+      title: modalMessage.value.title,
+      message: modalMessage.value.text,
+      type: 'info',
+      recipient_ids: recipientIds
+    })
+    
+    const message = {
+      id: Date.now(),
+      title: modalMessage.value.title,
+      text: modalMessage.value.text,
+      type: 'info',
+      sentAt: new Date().toLocaleString('uz-UZ'),
+      recipientCount: modalMessage.value.toAll ? groupStudents.value.length : 1,
+      readCount: 0
+    }
+  
+    messageHistory.value.unshift(message)
+    toast.success('Xabar yuborildi!')
+    
+    showComposeModal.value = false
+    modalMessage.value = { title: '', text: '', toAll: true }
+  } catch (e) {
+    console.error('Error sending modal message:', e)
+    toast.error('Xabar yuborishda xatolik')
+  } finally {
+    sending.value = false
   }
-  
-  messageHistory.value.unshift(message)
-  toast.success('Xabar yuborildi!')
-  
-  showComposeModal.value = false
-  modalMessage.value = { title: '', text: '', toAll: true }
 }
 
 // Qayta yuborish
@@ -642,4 +725,9 @@ function getTypeIcon(type) {
   }
   return icons[type] || Info
 }
+
+// Initialize
+onMounted(() => {
+  loadData()
+})
 </script>

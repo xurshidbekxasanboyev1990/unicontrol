@@ -488,7 +488,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useDataStore } from '../../stores/data'
 import { useAuthStore } from '../../stores/auth'
 import { useToastStore } from '../../stores/toast'
@@ -501,6 +501,27 @@ import {
 const dataStore = useDataStore()
 const authStore = useAuthStore()
 const toast = useToastStore()
+
+// Loading states
+const loading = ref(false)
+const submitting = ref(false)
+
+// Load data on mount
+onMounted(async () => {
+  loading.value = true
+  try {
+    await Promise.all([
+      dataStore.fetchTournaments(),
+      dataStore.fetchDirections(),
+      dataStore.fetchSubjects()
+    ])
+  } catch (err) {
+    toast.error('Ma\'lumotlarni yuklashda xatolik')
+    console.error(err)
+  } finally {
+    loading.value = false
+  }
+})
 
 const showRegisterModal = ref(false)
 const showSuccessModal = ref(false)
@@ -705,7 +726,7 @@ const getStudentDirectionName = () => {
   return direction?.name || ''
 }
 
-const submitRegistration = () => {
+const submitRegistration = async () => {
   // YANGI MODEL: Qatnashish qoidalarini tekshirish
   if (hasParticipationRules(selectedTournament.value)) {
     const rule = getStudentParticipationRule(selectedTournament.value)
@@ -746,13 +767,20 @@ const submitRegistration = () => {
     selectedSubjectIds: selectedSubjectIds.value // YANGI: array
   }
 
-  const result = dataStore.registerForTournament(selectedTournament.value.id, registrationData)
+  submitting.value = true
+  try {
+    const result = await dataStore.registerForTournament(selectedTournament.value.id, registrationData)
 
-  if (result.success) {
-    showRegisterModal.value = false
-    showSuccessModal.value = true
-  } else {
-    toast.error(result.message || 'Xatolik yuz berdi')
+    if (result.success) {
+      showRegisterModal.value = false
+      showSuccessModal.value = true
+    } else {
+      toast.error(result.message || 'Xatolik yuz berdi')
+    }
+  } catch (err) {
+    toast.error(err.message || 'Ro\'yxatdan o\'tishda xatolik')
+  } finally {
+    submitting.value = false
   }
 }
 </script>

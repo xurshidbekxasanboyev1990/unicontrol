@@ -225,15 +225,18 @@
           <div class="mt-6 flex gap-3">
             <button
               @click="showChangePassword = false"
-              class="flex-1 rounded-xl border border-slate-200 py-3 font-medium text-slate-600 hover:bg-slate-50"
+              :disabled="isChangingPassword"
+              class="flex-1 rounded-xl border border-slate-200 py-3 font-medium text-slate-600 hover:bg-slate-50 disabled:opacity-50"
             >
               Bekor qilish
             </button>
             <button
               @click="changePassword"
-              class="flex-1 rounded-xl bg-emerald-500 py-3 font-medium text-white hover:bg-emerald-600"
+              :disabled="isChangingPassword"
+              class="flex-1 rounded-xl bg-emerald-500 py-3 font-medium text-white hover:bg-emerald-600 disabled:opacity-50 flex items-center justify-center gap-2"
             >
-              Saqlash
+              <Loader2 v-if="isChangingPassword" class="w-5 h-5 animate-spin" />
+              <span>{{ isChangingPassword ? 'Saqlanmoqda...' : 'Saqlash' }}</span>
             </button>
           </div>
         </div>
@@ -258,9 +261,10 @@ import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useToastStore } from '@/stores/toast'
 import { useAuthStore } from '@/stores/auth'
+import api from '../../services/api'
 import {
   Globe, Bell, Lock, Database, Info, HelpCircle,
-  ChevronRight, Key, Download, Trash2, X
+  ChevronRight, Key, Download, Trash2, X, Loader2
 } from 'lucide-vue-next'
 
 const router = useRouter()
@@ -280,13 +284,14 @@ const notifications = ref({
 
 // ============ PAROL ============
 const showChangePassword = ref(false)
+const isChangingPassword = ref(false)
 const passwordForm = ref({
   current: '',
   new: '',
   confirm: ''
 })
 
-function changePassword() {
+async function changePassword() {
   if (!passwordForm.value.current) {
     toast.error('Joriy parolni kiriting')
     return
@@ -302,17 +307,51 @@ function changePassword() {
     return
   }
   
-  toast.success('Parol muvaffaqiyatli o\'zgartirildi')
-  showChangePassword.value = false
-  passwordForm.value = { current: '', new: '', confirm: '' }
+  isChangingPassword.value = true
+  
+  try {
+    await api.changePassword(passwordForm.value.current, passwordForm.value.new)
+    toast.success('Parol muvaffaqiyatli o\'zgartirildi')
+    showChangePassword.value = false
+    passwordForm.value = { current: '', new: '', confirm: '' }
+  } catch (e) {
+    console.error('Error changing password:', e)
+    const errorMsg = e.response?.data?.detail || 'Parolni o\'zgartirishda xatolik'
+    toast.error(errorMsg)
+  } finally {
+    isChangingPassword.value = false
+  }
 }
 
 // ============ MA'LUMOTLAR ============
-function downloadData() {
+async function downloadData() {
   toast.info('Ma\'lumotlar yuklab olinmoqda...')
+  
+  try {
+    // Try to export user's data
+    const response = await api.exportToExcel('students', { my_data: true })
+    
+    // Create download link
+    const url = window.URL.createObjectURL(new Blob([response]))
+    const link = document.createElement('a')
+    link.href = url
+    link.setAttribute('download', 'my_data.xlsx')
+    document.body.appendChild(link)
+    link.click()
+    link.remove()
+    window.URL.revokeObjectURL(url)
+    
+    toast.success('Ma\'lumotlar yuklandi')
+  } catch (e) {
+    console.error('Error downloading data:', e)
+    toast.info('Ma\'lumotlar yuklab olish hozirda mavjud emas')
+  }
 }
 
 function clearCache() {
+  // Clear local storage cache
+  localStorage.removeItem('unicontrol_cache')
+  localStorage.removeItem('unicontrol_data_cache')
   toast.success('Kesh tozalandi')
 }
 

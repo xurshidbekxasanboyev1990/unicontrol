@@ -315,12 +315,13 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import {
   FileText, FilePlus, Plus, ChevronLeft, ChevronRight, Eye, Heart, MessageCircle,
-  Edit2, ExternalLink, FileX, ArrowRight, X, Upload
+  Edit2, ExternalLink, FileX, ArrowRight, X, Upload, Loader2
 } from 'lucide-vue-next'
 import { useToastStore } from '@/stores/toast'
+import api from '@/services/api'
 
 const toast = useToastStore()
 
@@ -336,6 +337,8 @@ const filter = ref('all')
 const sortBy = ref('recent')
 const showReportModal = ref(false)
 const editingReport = ref(null)
+const loading = ref(false)
+const saving = ref(false)
 
 const reportForm = ref({
   title: '',
@@ -354,79 +357,89 @@ const isCurrentMonth = computed(() => {
   return currentMonth.value === now.getMonth() && currentYear.value === now.getFullYear()
 })
 
-// Demo data - my reports
-const myReports = ref([
-  {
-    id: 1,
-    title: 'Yanvar oyi faoliyati haqida hisobot',
-    content: 'Yanvar oyida guruhimiz faoliyati yuqori darajada bo\'ldi. Davomat 85% ni tashkil etdi. 3 ta tadbirda ishtirok etdik...',
-    month: 0,
-    year: 2024,
-    status: 'approved',
-    views: 45,
-    likes: 12,
-    comments: 3,
-    isLiked: false,
-    createdAt: new Date(2024, 0, 28)
-  },
-  {
-    id: 2,
-    title: 'Dekabr oyi yakuni',
-    content: 'Dekabr oyida guruhimiz 4 ta imtihondan muvaffaqiyatli o\'tdi. O\'rtacha baho 4.2 ni tashkil etdi...',
-    month: 11,
-    year: 2023,
-    status: 'approved',
-    views: 67,
-    likes: 18,
-    comments: 5,
-    isLiked: true,
-    createdAt: new Date(2023, 11, 25)
-  }
-])
+// My reports (loaded from API)
+const myReports = ref([])
 
-// Demo data - all reports from other leaders
-const allReports = ref([
-  {
-    id: 101,
-    title: 'Qishki sessiya natijalari',
-    content: 'Bizning guruhimiz qishki sessiyani muvaffaqiyatli yakunladi. 95% talabalar barcha fanlardan o\'tdi...',
-    author: { name: 'Karimova Nodira', group: '21-06' },
-    views: 234,
-    likes: 45,
-    isLiked: true,
-    createdAt: new Date(2024, 0, 20)
-  },
-  {
-    id: 102,
-    title: 'Sport musobaqalari g\'oliblari',
-    content: 'Universitet sport musobaqalarida bizning guruh futbol bo\'yicha 1-o\'rinni egalladi...',
-    author: { name: 'Rahimov Jasur', group: '22-03' },
-    views: 189,
-    likes: 67,
-    isLiked: false,
-    createdAt: new Date(2024, 0, 18)
-  },
-  {
-    id: 103,
-    title: 'Xayriya aksiyasi',
-    content: 'Guruhimiz tashabbusi bilan xayriya aksiyasi o\'tkazildi. 50 ta oilaga yordam ko\'rsatildi...',
-    author: { name: 'Tursunova Malika', group: '20-12' },
-    views: 312,
-    likes: 89,
-    isLiked: false,
-    createdAt: new Date(2024, 0, 15)
-  },
-  {
-    id: 104,
-    title: 'Ilmiy konferensiya',
-    content: 'Talabalarimiz respublika ilmiy konferensiyasida 3 ta maqola bilan ishtirok etishdi...',
-    author: { name: 'Ergashev Bobur', group: '21-08' },
-    views: 156,
-    likes: 34,
-    isLiked: true,
-    createdAt: new Date(2024, 0, 10)
+// Load my reports from API
+const loadMyReports = async () => {
+  loading.value = true
+  try {
+    const response = await api.getReports({ my: true })
+    if (response?.items) {
+      myReports.value = response.items.map(r => ({
+        id: r.id,
+        title: r.title,
+        content: r.content?.text || r.content || '',
+        month: r.month,
+        year: r.year,
+        status: r.status || 'pending',
+        views: r.views || 0,
+        likes: r.likes || 0,
+        comments: r.comments || 0,
+        isLiked: r.is_liked || false,
+        createdAt: new Date(r.created_at)
+      }))
+    } else if (Array.isArray(response)) {
+      myReports.value = response.map(r => ({
+        id: r.id,
+        title: r.title,
+        content: r.content?.text || r.content || '',
+        month: r.month,
+        year: r.year,
+        status: r.status || 'pending',
+        views: r.views || 0,
+        likes: r.likes || 0,
+        comments: r.comments || 0,
+        isLiked: r.is_liked || false,
+        createdAt: new Date(r.created_at)
+      }))
+    }
+  } catch (err) {
+    console.error('Error loading my reports:', err)
+  } finally {
+    loading.value = false
   }
-])
+}
+
+// All reports from other leaders (loaded from API)
+const allReports = ref([])
+
+// Load all reports from API
+const loadAllReports = async () => {
+  try {
+    const response = await api.getReports({ all: true })
+    if (response?.items) {
+      allReports.value = response.items.map(r => ({
+        id: r.id,
+        title: r.title,
+        content: r.content?.text || r.content || '',
+        author: { name: r.author_name || 'Noma\'lum', group: r.group_name || '' },
+        views: r.views || 0,
+        likes: r.likes || 0,
+        isLiked: r.is_liked || false,
+        createdAt: new Date(r.created_at)
+      }))
+    } else if (Array.isArray(response)) {
+      allReports.value = response.map(r => ({
+        id: r.id,
+        title: r.title,
+        content: r.content?.text || r.content || '',
+        author: { name: r.author_name || 'Noma\'lum', group: r.group_name || '' },
+        views: r.views || 0,
+        likes: r.likes || 0,
+        isLiked: r.is_liked || false,
+        createdAt: new Date(r.created_at)
+      }))
+    }
+  } catch (err) {
+    console.error('Error loading all reports:', err)
+  }
+}
+
+// Load on mount
+onMounted(async () => {
+  await Promise.all([loadMyReports(), loadAllReports()])
+})
 
 const hasCurrentMonthReport = computed(() => {
   const now = new Date()
@@ -498,37 +511,59 @@ function closeModal() {
   reportForm.value = { title: '', content: '' }
 }
 
-function saveReport() {
+async function saveReport() {
   if (!reportForm.value.title || !reportForm.value.content) {
     toast.warning('Iltimos, barcha maydonlarni to\'ldiring')
     return
   }
 
-  if (editingReport.value) {
-    // Update existing report
-    const index = myReports.value.findIndex(r => r.id === editingReport.value.id)
-    if (index !== -1) {
-      myReports.value[index].title = reportForm.value.title
-      myReports.value[index].content = reportForm.value.content
+  saving.value = true
+  try {
+    if (editingReport.value) {
+      // Update existing report via API
+      await api.updateReport(editingReport.value.id, {
+        title: reportForm.value.title,
+        content: reportForm.value.content
+      })
+      
+      const index = myReports.value.findIndex(r => r.id === editingReport.value.id)
+      if (index !== -1) {
+        myReports.value[index].title = reportForm.value.title
+        myReports.value[index].content = reportForm.value.content
+      }
+      toast.success('Hisobot yangilandi')
+    } else {
+      // Create new report via API
+      const now = new Date()
+      const reportData = {
+        title: reportForm.value.title,
+        content: reportForm.value.content,
+        month: now.getMonth(),
+        year: now.getFullYear()
+      }
+      
+      const response = await api.createReport(reportData)
+      
+      myReports.value.unshift({
+        id: response?.id || Date.now(),
+        title: reportForm.value.title,
+        content: reportForm.value.content,
+        month: now.getMonth(),
+        year: now.getFullYear(),
+        status: 'pending',
+        views: 0,
+        likes: 0,
+        comments: 0,
+        isLiked: false,
+        createdAt: now
+      })
+      toast.success('Hisobot qo\'shildi')
     }
-    toast.success('Hisobot yangilandi')
-  } else {
-    // Create new report
-    const now = new Date()
-    myReports.value.unshift({
-      id: Date.now(),
-      title: reportForm.value.title,
-      content: reportForm.value.content,
-      month: now.getMonth(),
-      year: now.getFullYear(),
-      status: 'pending',
-      views: 0,
-      likes: 0,
-      comments: 0,
-      isLiked: false,
-      createdAt: now
-    })
-    toast.success('Hisobot qo\'shildi')
+  } catch (err) {
+    console.error('Error saving report:', err)
+    toast.error('Hisobotni saqlashda xatolik yuz berdi')
+  } finally {
+    saving.value = false
   }
 
   closeModal()

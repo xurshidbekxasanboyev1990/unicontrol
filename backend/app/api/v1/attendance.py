@@ -100,12 +100,13 @@ async def create_batch_attendance(
 @router.get("/daily-summary", response_model=DailyAttendanceSummary)
 async def get_daily_summary(
     target_date: date = Query(default=None),
-    group_id: Optional[int] = None,
+    group_id: Optional[str] = None,
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_active_user)
 ):
     """
     Get attendance summary for a day.
+    group_id can be either numeric ID or group name string.
     """
     if target_date is None:
         target_date = date.today()
