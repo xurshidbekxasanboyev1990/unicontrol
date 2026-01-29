@@ -1,13 +1,13 @@
 <template>
   <div class="space-y-6">
     <!-- Header -->
-    <div class="flex items-center justify-between">
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
       <div>
-        <h1 class="text-2xl font-bold text-slate-800">Hisobotlar</h1>
-        <p class="text-slate-500">Fakultet statistikasi va tahlillari</p>
+        <h1 class="text-xl sm:text-2xl font-bold text-slate-800">Hisobotlar</h1>
+        <p class="text-sm text-slate-500">Fakultet statistikasi va tahlillari</p>
       </div>
       <div class="flex items-center gap-3">
-        <select v-model="selectedPeriod" class="px-4 py-2 rounded-xl border border-slate-200 focus:border-violet-500 outline-none">
+        <select v-model="selectedPeriod" class="flex-1 sm:flex-none px-4 py-2 rounded-xl border border-slate-200 focus:border-violet-500 outline-none">
           <option value="week">Bu hafta</option>
           <option value="month">Bu oy</option>
           <option value="semester">Semestr</option>
@@ -18,7 +18,7 @@
           class="px-4 py-2 bg-violet-500 text-white rounded-xl font-medium hover:bg-violet-600 transition-colors flex items-center gap-2"
         >
           <Download class="w-4 h-4" />
-          Eksport
+          <span class="hidden sm:inline">Eksport</span>
         </button>
       </div>
     </div>

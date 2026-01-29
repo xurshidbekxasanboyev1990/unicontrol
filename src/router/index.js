@@ -78,6 +78,7 @@ import SuperDashboard from '../views/super/DashboardView.vue'
 import SuperAdmins from '../views/super/AdminsView.vue'
 import SuperSettings from '../views/super/SettingsView.vue'
 import SuperLogs from '../views/super/LogsView.vue'
+import SuperLandingSettings from '../views/super/LandingSettingsView.vue'
 
 const routes = [
   {
@@ -169,6 +170,7 @@ const routes = [
       { path: 'admins', name: 'super-admins', component: SuperAdmins },
       { path: 'settings', name: 'super-settings', component: SuperSettings },
       { path: 'logs', name: 'super-logs', component: SuperLogs },
+      { path: 'landing', name: 'super-landing', component: SuperLandingSettings },
       { path: 'students', name: 'super-students', component: AdminStudents },
       { path: 'groups', name: 'super-groups', component: AdminGroups },
       { path: 'reports', name: 'super-reports', component: AdminReports },

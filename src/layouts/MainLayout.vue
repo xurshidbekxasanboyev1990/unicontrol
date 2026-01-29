@@ -337,6 +337,7 @@ const currentPageTitle = computed(() => {
     'super-admins': 'Adminlar',
     'super-settings': 'Sozlamalar',
     'super-logs': 'Tizim loglari',
+    'super-landing': 'Asosiy sahifa sozlamalari',
     'super-students': 'Talabalar',
     'super-groups': 'Guruhlar',
     'super-reports': 'Hisobotlar',
@@ -445,6 +446,7 @@ const menuSections = computed(() => {
       items: [
         { path: '/super/dashboard', label: 'Dashboard', icon: markRaw(LayoutDashboard) },
         { path: '/super/admins', label: 'Adminlar', icon: markRaw(ShieldCheck) },
+        { path: '/super/landing', label: 'Asosiy sahifa', icon: markRaw(Home) },
         { path: '/super/settings', label: 'Sozlamalar', icon: markRaw(Settings) },
         { path: '/super/logs', label: 'Loglar', icon: markRaw(FileText) }
       ]
