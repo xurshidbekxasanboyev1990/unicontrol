@@ -10,6 +10,7 @@ Version: 1.0.0
 import os
 import io
 from datetime import datetime, date
+from app.config import now_tashkent
 from decimal import Decimal
 from typing import Optional, List, Tuple, Dict, Any
 import pandas as pd
@@ -199,7 +200,7 @@ class ExcelService:
         
         # Add date
         ws.merge_cells(start_row=2, start_column=1, end_row=2, end_column=len(df.columns))
-        ws.cell(2, 1, f"Sana: {datetime.now().strftime('%d.%m.%Y %H:%M')}")
+        ws.cell(2, 1, f"Sana: {now_tashkent().strftime('%d.%m.%Y %H:%M')}")
         ws.cell(2, 1).alignment = Alignment(horizontal="right")
         
         # Write headers
@@ -354,7 +355,7 @@ class ExcelService:
                 elif not existing:
                     # Create new
                     # Generate student_id
-                    year = datetime.now().year
+                    year = now_tashkent().year
                     prefix = f"ST-{year}-"
                     max_result = await self.db.execute(
                         select(Student.student_id)
@@ -395,6 +396,113 @@ class ExcelService:
             errors=errors
         )
     
+    async def import_groups(
+        self,
+        file_data: bytes,
+        update_existing: bool = False
+    ) -> dict:
+        """Import groups from Excel file."""
+        try:
+            df = pd.read_excel(io.BytesIO(file_data), engine='openpyxl')
+        except Exception as e:
+            raise BadRequestException(f"Excel faylni o'qib bo'lmadi: {str(e)}")
+        
+        # Column mapping
+        column_map = {
+            "Guruh kodi": "name",
+            "Guruh nomi": "name",
+            "Guruh": "name",
+            "Kod": "name",
+            "Name": "name",
+            "Fakultet": "faculty",
+            "Faculty": "faculty",
+            "Yo'nalish": "faculty",
+            "Kurs": "course_year",
+            "Course": "course_year",
+            "Bosqich": "course_year",
+            "Kontrakt": "contract_amount",
+            "Shartnoma summasi": "contract_amount",
+            "Contract": "contract_amount",
+        }
+        
+        # Rename columns
+        df = df.rename(columns={k: v for k, v in column_map.items() if k in df.columns})
+        
+        total = len(df)
+        imported = 0
+        updated = 0
+        skipped = 0
+        failed = 0
+        errors = []
+        
+        for idx, row in df.iterrows():
+            try:
+                name = str(row.get("name", "")).strip()
+                if not name:
+                    skipped += 1
+                    continue
+                
+                faculty = str(row.get("faculty", "")).strip() or "Noma'lum"
+                
+                # Parse course_year
+                course_year = row.get("course_year", 1)
+                if pd.isna(course_year):
+                    course_year = 1
+                else:
+                    course_year = int(course_year)
+                
+                # Parse contract_amount
+                contract_amount = row.get("contract_amount", 0)
+                if pd.isna(contract_amount):
+                    contract_amount = 0
+                else:
+                    contract_amount = Decimal(str(contract_amount))
+                
+                # Check existing
+                result = await self.db.execute(
+                    select(Group).where(Group.name == name)
+                )
+                existing = result.scalar_one_or_none()
+                
+                if existing:
+                    if update_existing:
+                        existing.faculty = faculty
+                        existing.course_year = course_year
+                        existing.contract_amount = contract_amount
+                        updated += 1
+                    else:
+                        skipped += 1
+                else:
+                    group = Group(
+                        name=name,
+                        faculty=faculty,
+                        course_year=course_year,
+                        contract_amount=contract_amount,
+                        is_active=True
+                    )
+                    self.db.add(group)
+                    imported += 1
+                    
+            except Exception as e:
+                failed += 1
+                errors.append({
+                    "row": idx + 2,
+                    "name": str(row.get("name", "")),
+                    "error": str(e)
+                })
+        
+        await self.db.commit()
+        
+        return {
+            "success": True,
+            "total": total,
+            "imported": imported,
+            "updated": updated,
+            "skipped": skipped,
+            "failed": failed,
+            "errors": errors
+        }
+
     async def get_import_template(self, template_type: str) -> io.BytesIO:
         """Get import template Excel file."""
         if template_type == "students":
@@ -419,7 +527,7 @@ class ExcelService:
             columns = ["Talaba ID", "Sana", "Holat", "Kechikish", "Fan", "Izoh"]
             sample_data = [{
                 "Talaba ID": "ST-2024-0001",
-                "Sana": datetime.now().strftime("%d.%m.%Y"),
+                "Sana": now_tashkent().strftime("%d.%m.%Y"),
                 "Holat": "Keldi",
                 "Kechikish": 0,
                 "Fan": "Matematika",
@@ -533,8 +641,8 @@ class ExcelService:
                             try:
                                 parsed_birth_date = datetime.strptime(birth_date, fmt).date()
                                 break
-                            except:
-                                pass
+                            except Exception:
+                                pass  # Expected: trying multiple date formats
                 
                 # Parse course
                 course_num = 1

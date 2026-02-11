@@ -1,6 +1,7 @@
 from datetime import datetime
 from sqlalchemy import Column, Integer, BigInteger, String, DateTime, Boolean, Text, Index, JSON
 
+from bot.config import now_tashkent
 from .base import Base
 
 
@@ -31,8 +32,8 @@ class Subscription(Base):
     
     # Metadata
     subscribed_by = Column(BigInteger, nullable=False)  # Telegram user ID
-    subscribed_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    subscribed_at = Column(DateTime, default=now_tashkent)
+    updated_at = Column(DateTime, default=now_tashkent, onupdate=now_tashkent)
     
     __table_args__ = (
         Index("ix_subscription_group_active", "group_code", "is_active"),
@@ -63,8 +64,8 @@ class UserRegistration(Base):
     verification_code = Column(String(10), nullable=True)
     
     # Metadata
-    registered_at = Column(DateTime, default=datetime.utcnow)
-    last_active = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    registered_at = Column(DateTime, default=now_tashkent)
+    last_active = Column(DateTime, default=now_tashkent, onupdate=now_tashkent)
 
 
 class SentNotification(Base):
@@ -84,7 +85,7 @@ class SentNotification(Base):
     status = Column(String(50), nullable=True)  # present, late, absent
     
     # Metadata
-    sent_at = Column(DateTime, default=datetime.utcnow)
+    sent_at = Column(DateTime, default=now_tashkent)
     message_id = Column(Integer, nullable=True)  # Telegram message ID
     
     __table_args__ = (
@@ -110,11 +111,7 @@ class GroupCache(Base):
     student_count = Column(Integer, nullable=True)
     
     # Cache metadata
-    cached_at = Column(DateTime, default=datetime.utcnow)
-    
-    __table_args__ = (
-        Index("ix_group_cache_code", "code"),
-    )
+    cached_at = Column(DateTime, default=now_tashkent)
 
 
 # ==================== ADMIN PANEL MODELS ====================
@@ -140,8 +137,8 @@ class BotUser(Base):
     ban_reason = Column(String(500), nullable=True)
     
     # Metadata
-    first_seen = Column(DateTime, default=datetime.utcnow)
-    last_active = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    first_seen = Column(DateTime, default=now_tashkent)
+    last_active = Column(DateTime, default=now_tashkent, onupdate=now_tashkent)
 
 
 class MandatoryChannel(Base):
@@ -165,7 +162,7 @@ class MandatoryChannel(Base):
     
     # Metadata
     added_by = Column(BigInteger, nullable=False)  # Admin who added
-    added_at = Column(DateTime, default=datetime.utcnow)
+    added_at = Column(DateTime, default=now_tashkent)
 
 
 class BotSettings(Base):
@@ -200,7 +197,7 @@ class BotSettings(Base):
     extra_settings = Column(JSON, nullable=True)
     
     # Metadata
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    updated_at = Column(DateTime, default=now_tashkent, onupdate=now_tashkent)
     updated_by = Column(BigInteger, nullable=True)
 
 
@@ -231,7 +228,7 @@ class Broadcast(Base):
     
     # Metadata
     created_by = Column(BigInteger, nullable=False)
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime, default=now_tashkent)
     started_at = Column(DateTime, nullable=True)
     completed_at = Column(DateTime, nullable=True)
 
@@ -257,5 +254,5 @@ class AdminLog(Base):
     target_id = Column(BigInteger, nullable=True)
     
     # Metadata
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime, default=now_tashkent)
 

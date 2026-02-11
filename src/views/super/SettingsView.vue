@@ -2,14 +2,14 @@
   <div class="space-y-6">
     <!-- Header -->
     <div>
-      <h1 class="text-2xl font-bold text-slate-800">Tizim sozlamalari</h1>
-      <p class="text-slate-500">Asosiy konfiguratsiya va sozlamalar</p>
+      <h1 class="text-2xl font-bold text-slate-800">{{ $t('settings.title') }}</h1>
+      <p class="text-slate-500">{{ $t('settings.appSettings') }}</p>
     </div>
 
     <!-- Loading State -->
     <div v-if="loading" class="flex items-center justify-center py-20">
       <Loader2 class="w-8 h-8 text-amber-500 animate-spin" />
-      <span class="ml-3 text-slate-600">Sozlamalar yuklanmoqda...</span>
+      <span class="ml-3 text-slate-600">{{ $t('common.loading') }}</span>
     </div>
 
     <!-- Error State -->
@@ -18,7 +18,7 @@
       <p class="text-red-600 mb-4">{{ error }}</p>
       <button @click="loadSettings" class="px-4 py-2 bg-red-500 text-white rounded-xl hover:bg-red-600 transition-colors flex items-center gap-2 mx-auto">
         <RefreshCw class="w-4 h-4" />
-        Qayta urinish
+        {{ $t('common.retry') }}
       </button>
     </div>
 
@@ -253,7 +253,7 @@
       >
         <Loader2 v-if="saving" class="w-5 h-5 animate-spin" />
         <Save v-else class="w-5 h-5" />
-        {{ saving ? 'Saqlanmoqda...' : 'Sozlamalarni saqlash' }}
+        {{ saving ? $t('settings.saving') : $t('common.save') }}
       </button>
     </div>
     </template>
@@ -272,29 +272,32 @@
         class="fixed bottom-6 right-6 bg-emerald-500 text-white px-6 py-4 rounded-2xl shadow-lg flex items-center gap-3"
       >
         <CheckCircle class="w-5 h-5" />
-        <span class="font-medium">Sozlamalar saqlandi!</span>
+        <span class="font-medium">{{ $t('common.success') }}</span>
       </div>
     </Transition>
   </div>
 </template>
 
 <script setup>
-import { ref, reactive, onMounted } from 'vue'
-import {
-  Settings,
-  ClipboardCheck,
-  Bell,
-  Shield,
-  Save,
-  CheckCircle,
-  Loader2,
-  AlertCircle,
-  RefreshCw
-} from 'lucide-vue-next'
 import api from '@/services/api'
+import { useLanguageStore } from '@/stores/language'
 import { useToastStore } from '@/stores/toast'
+import {
+    AlertCircle,
+    Bell,
+    CheckCircle,
+    ClipboardCheck,
+    Loader2,
+    RefreshCw,
+    Save,
+    Settings,
+    Shield
+} from 'lucide-vue-next'
+import { onMounted, reactive, ref } from 'vue'
 
 const toast = useToastStore()
+const langStore = useLanguageStore()
+const { t } = langStore
 const loading = ref(true)
 const saving = ref(false)
 const error = ref(null)
@@ -322,12 +325,13 @@ const loadSettings = async () => {
   error.value = null
   try {
     const response = await api.getSettings()
-    if (response && response.data) {
-      Object.assign(settings, response.data)
+    if (response) {
+      // response.data emas, to'g'ridan-to'g'ri response
+      Object.assign(settings, response)
     }
   } catch (err) {
     console.error('Error loading settings:', err)
-    error.value = 'Sozlamalarni yuklashda xatolik yuz berdi'
+    error.value = t('common.error')
     // Keep defaults if API fails
   } finally {
     loading.value = false
@@ -339,13 +343,13 @@ const saveSettings = async () => {
   try {
     await api.updateSettings({ ...settings })
     showSuccess.value = true
-    toast.success('Sozlamalar saqlandi!')
+    toast.success(t('common.success'))
     setTimeout(() => {
       showSuccess.value = false
     }, 3000)
   } catch (err) {
     console.error('Error saving settings:', err)
-    toast.error('Sozlamalarni saqlashda xatolik yuz berdi')
+    toast.error(t('common.error'))
   } finally {
     saving.value = false
   }

@@ -18,6 +18,7 @@ from typing import Optional, List
 from pydantic import BaseModel, Field, ConfigDict, field_validator
 
 from app.models.library import BookCategory, BookLanguage, BookStatus, BorrowStatus
+from app.config import today_tashkent
 
 
 # ==================== BOOK SCHEMAS ====================
@@ -136,7 +137,7 @@ class BookBorrowCreate(BaseModel):
     @field_validator('due_date')
     @classmethod
     def validate_due_date(cls, v):
-        if v < date.today():
+        if v < today_tashkent():
             raise ValueError("Qaytarish sanasi bugungi kundan oldin bo'lishi mumkin emas")
         return v
     

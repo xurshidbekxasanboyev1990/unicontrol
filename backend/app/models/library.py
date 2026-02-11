@@ -21,6 +21,7 @@ from sqlalchemy import (
 )
 from sqlalchemy.orm import relationship
 
+from app.config import TASHKENT_TZ, today_tashkent
 from app.database import Base
 
 
@@ -165,8 +166,8 @@ class Book(Base):
     view_count = Column(Integer, default=0, comment="View count")
     
     # Timestamps
-    created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = Column(DateTime, default=lambda: datetime.now(TASHKENT_TZ))
+    updated_at = Column(DateTime, default=lambda: datetime.now(TASHKENT_TZ), onupdate=lambda: datetime.now(TASHKENT_TZ))
     
     # Relationships
     digital_file = relationship("File", backref="book")
@@ -245,8 +246,8 @@ class BookBorrow(Base):
     late_fee = Column(Float, default=0.0, comment="Late return fee")
     
     # Timestamps
-    created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = Column(DateTime, default=lambda: datetime.now(TASHKENT_TZ))
+    updated_at = Column(DateTime, default=lambda: datetime.now(TASHKENT_TZ), onupdate=lambda: datetime.now(TASHKENT_TZ))
     
     # Relationships
     book = relationship("Book", back_populates="borrows")
@@ -261,14 +262,14 @@ class BookBorrow(Base):
         """Check if borrow is overdue."""
         if self.return_date:
             return False
-        return date.today() > self.due_date
+        return today_tashkent() > self.due_date
     
     @property
     def days_overdue(self) -> int:
         """Calculate days overdue."""
         if not self.is_overdue:
             return 0
-        return (date.today() - self.due_date).days
+        return (today_tashkent() - self.due_date).days
 
 
 class BookReview(Base):
@@ -307,8 +308,8 @@ class BookReview(Base):
     review = Column(Text, nullable=True, comment="Review text")
     
     # Timestamps
-    created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = Column(DateTime, default=lambda: datetime.now(TASHKENT_TZ))
+    updated_at = Column(DateTime, default=lambda: datetime.now(TASHKENT_TZ), onupdate=lambda: datetime.now(TASHKENT_TZ))
     
     # Relationships
     book = relationship("Book", back_populates="reviews")

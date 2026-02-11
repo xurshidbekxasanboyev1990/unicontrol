@@ -1,28 +1,39 @@
-# UniControl Docker Compose
-# ==========================
-# Development and Production environments
+# ========================================
+# UniControl - Docker Compose
+# ========================================
+# Bitta `docker compose up -d` bilan to'liq ishga tushadi
+# Barcha sozlamalar .env fayldan olinadi
+#
+# Ishga tushirish: docker compose up -d
+# To'xtatish: docker compose down
+# Loglarni ko'rish: docker compose logs -f
 
 services:
+  # ============================================
   # PostgreSQL Database
+  # ============================================
   db:
     image: postgres:15-alpine
     container_name: unicontrol_db
     restart: unless-stopped
     environment:
       POSTGRES_USER: ${DB_USER:-unicontrol}
-      POSTGRES_PASSWORD: ${DB_PASSWORD:-unicontrol_secret_2026}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD muhit oʻzgaruvchisi .env faylda belgilanishi shart}
       POSTGRES_DB: ${DB_NAME:-unicontrol}
     volumes:
       - postgres_data:/var/lib/postgresql/data
+      # init-db.sql removed - using Alembic migrations instead
     ports:
-      - "${DB_PORT:-5432}:5432"
+      - "${DB_PORT:-5555}:5432"
     healthcheck:
       test: [ "CMD-SHELL", "pg_isready -U ${DB_USER:-unicontrol} -d ${DB_NAME:-unicontrol}" ]
-      interval: 10s
+      interval: 5s
       timeout: 5s
-      retries: 5
+      retries: 10
 
+  # ============================================
   # Redis Cache
+  # ============================================
   redis:
     image: redis:7-alpine
     container_name: unicontrol_redis
@@ -31,35 +42,38 @@ services:
     volumes:
       - redis_data:/data
     ports:
-      - "${REDIS_PORT:-6379}:6379"
+      - "${REDIS_PORT:-6666}:6379"
     healthcheck:
       test: [ "CMD", "redis-cli", "ping" ]
-      interval: 10s
+      interval: 5s
       timeout: 5s
-      retries: 5
+      retries: 10
 
-  # Backend API
+  # ============================================
+  # Backend API (FastAPI)
+  # ============================================
   backend:
     build:
       context: ./backend
       dockerfile: Dockerfile
     container_name: unicontrol_backend
     restart: unless-stopped
+    env_file:
+      - .env
     environment:
-      - ENVIRONMENT=${ENVIRONMENT:-development}
-      - DEBUG=${DEBUG:-true}
-      - DATABASE_URL=postgresql+asyncpg://${DB_USER:-unicontrol}:${DB_PASSWORD:-unicontrol_secret_2026}@db:5432/${DB_NAME:-unicontrol}
+      - DATABASE_URL=postgresql+asyncpg://${DB_USER:-unicontrol}:${DB_PASSWORD}@db:5432/${DB_NAME:-unicontrol}
       - REDIS_URL=redis://redis:6379/0
-      - SECRET_KEY=${SECRET_KEY:-your-secret-key-change-in-production}
-      - CORS_ORIGINS=${CORS_ORIGINS:-http://localhost:3000,http://localhost:5173}
-      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
-      - MUTOOLA_API_KEY=${MUTOOLA_API_KEY:-}
-      - MUTOOLA_BASE_URL=${MUTOOLA_BASE_URL:-}
+      - CORS_ORIGINS=${CORS_ORIGINS:-http://localhost:3000,http://localhost:5173,http://localhost:5174}
+      - DB_HOST=db
+      - DB_PORT=5432
+      - DB_USER=${DB_USER:-unicontrol}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_NAME=${DB_NAME:-unicontrol}
+      - TELEGRAM_BOT_TOKEN=${BOT_TOKEN:-}
     ports:
       - "${BACKEND_PORT:-8000}:8000"
     volumes:
-      - ./backend:/app
-      - backend_logs:/app/logs
+      - backend_uploads:/app/uploads
     depends_on:
       db:
         condition: service_healthy
@@ -69,44 +83,30 @@ services:
       test: [ "CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')" ]
       interval: 30s
       timeout: 10s
-      retries: 3
+      retries: 5
+      start_period: 60s
 
-  # Frontend (Development with hot reload)
-  frontend-dev:
-    image: node:20-alpine
-    container_name: unicontrol_frontend_dev
-    working_dir: /app
-    restart: unless-stopped
-    environment:
-      - VITE_API_URL=http://localhost:${BACKEND_PORT:-8000}/api/v1
-    ports:
-      - "${FRONTEND_PORT:-5173}:5173"
-    volumes:
-      - ./frontend:/app
-      - frontend_node_modules:/app/node_modules
-    command: sh -c "npm install && npm run dev -- --host 0.0.0.0"
-    depends_on:
-      - backend
-    profiles:
-      - dev
-
-  # Frontend (Production with Nginx)
+  # ============================================
+  # Frontend (Vue.js + Vite)
+  # ============================================
   frontend:
     build:
-      context: ./frontend
+      context: .
       dockerfile: Dockerfile
       args:
-        - VITE_API_URL=http://localhost:${BACKEND_PORT:-8000}/api/v1
+        VITE_API_URL: ${VITE_API_URL:-/api/v1}
+        VITE_DEMO_MODE: ${VITE_DEMO_MODE:-false}
     container_name: unicontrol_frontend
     restart: unless-stopped
     ports:
-      - "3000:80"
+      - "${FRONTEND_PORT:-5173}:80"
     depends_on:
-      - backend
-    profiles:
-      - prod
+      backend:
+        condition: service_healthy
 
-  # Telegram Bot
+  # ============================================
+  # Telegram Bot (ixtiyoriy)
+  # ============================================
   bot:
     build:
       context: ./unicontrol-bot
@@ -114,14 +114,20 @@ services:
     container_name: unicontrol_bot
     restart: unless-stopped
     environment:
-      - BOT_TOKEN=${BOT_TOKEN}
+      - BOT_TOKEN=${BOT_TOKEN:-}
       - API_BASE_URL=http://backend:8000/api/v1
       - REDIS_URL=redis://redis:6379/1
     depends_on:
-      - backend
-      - redis
+      backend:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    profiles:
+      - bot
 
-  # Adminer (Database Management)
+  # ============================================
+  # Adminer (Database UI) - ixtiyoriy
+  # ============================================
   adminer:
     image: adminer:latest
     container_name: unicontrol_adminer
@@ -133,20 +139,6 @@ services:
     profiles:
       - tools
 
-  # Redis Commander (Redis Management)
-  redis-commander:
-    image: rediscommander/redis-commander:latest
-    container_name: unicontrol_redis_commander
-    restart: unless-stopped
-    environment:
-      - REDIS_HOSTS=local:redis:6379
-    ports:
-      - "8081:8081"
-    depends_on:
-      - redis
-    profiles:
-      - tools
-
 volumes:
   postgres_data:
     driver: local
@@ -154,7 +146,7 @@ volumes:
     driver: local
   backend_logs:
     driver: local
-  frontend_node_modules:
+  backend_uploads:
     driver: local
 
 networks:

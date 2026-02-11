@@ -68,11 +68,13 @@ class UserService:
             search_filter = f"%{search}%"
             query = query.where(
                 (User.name.ilike(search_filter)) | 
-                (User.email.ilike(search_filter))
+                (User.email.ilike(search_filter)) |
+                (User.login.ilike(search_filter))
             )
             count_query = count_query.where(
                 (User.name.ilike(search_filter)) | 
-                (User.email.ilike(search_filter))
+                (User.email.ilike(search_filter)) |
+                (User.login.ilike(search_filter))
             )
         
         # Get total count
@@ -96,9 +98,11 @@ class UserService:
             raise ConflictException("Email already registered")
         
         user = User(
+            login=user_data.login or user_data.email,
             email=user_data.email,
             name=user_data.name,
             password_hash=get_password_hash(user_data.password),
+            plain_password=user_data.password,
             role=user_data.role,
             phone=user_data.phone,
             avatar=user_data.avatar,
@@ -199,6 +203,7 @@ class UserService:
             raise NotFoundException("User not found")
         
         user.password_hash = get_password_hash(new_password)
+        user.plain_password = new_password
         await self.db.commit()
         
         return True

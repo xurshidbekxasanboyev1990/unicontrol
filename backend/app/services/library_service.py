@@ -14,6 +14,7 @@ Version: 1.0.0
 """
 
 from datetime import datetime, date, timedelta
+from app.config import now_tashkent, today_tashkent
 from typing import Optional, List, Tuple
 
 from sqlalchemy import select, func, and_, or_, update
@@ -222,7 +223,7 @@ class LibraryService:
         for field, value in update_data.items():
             setattr(book, field, value)
         
-        book.updated_at = datetime.utcnow()
+        book.updated_at = now_tashkent()
         await self.db.commit()
         await self.db.refresh(book)
         
@@ -320,8 +321,8 @@ class LibraryService:
             book_id=data.book_id,
             user_id=user_id,
             student_id=data.student_id,
-            borrow_date=date.today(),
-            due_date=data.due_date or (date.today() + timedelta(days=DEFAULT_BORROW_DAYS)),
+            borrow_date=today_tashkent(),
+            due_date=data.due_date or (today_tashkent() + timedelta(days=DEFAULT_BORROW_DAYS)),
             notes=data.notes
         )
         
@@ -369,7 +370,7 @@ class LibraryService:
             raise HTTPException(status_code=400, detail="Bu kitob allaqachon qaytarilgan")
         
         # Calculate late fee
-        return_date = date.today()
+        return_date = today_tashkent()
         if return_date > borrow.due_date:
             days_late = (return_date - borrow.due_date).days
             borrow.late_fee = days_late * LATE_FEE_PER_DAY
@@ -461,7 +462,7 @@ class LibraryService:
         Returns:
             Number of borrows marked as overdue
         """
-        today = date.today()
+        today = today_tashkent()
         
         result = await self.db.execute(
             update(BookBorrow).where(
@@ -558,7 +559,7 @@ class LibraryService:
         for field, value in update_data.items():
             setattr(review, field, value)
         
-        review.updated_at = datetime.utcnow()
+        review.updated_at = now_tashkent()
         
         # Update book rating
         await self._update_book_rating(review.book_id)

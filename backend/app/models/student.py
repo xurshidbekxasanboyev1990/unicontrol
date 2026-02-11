@@ -13,6 +13,7 @@ from typing import Optional, List, TYPE_CHECKING
 from sqlalchemy import String, Integer, DateTime, Date, ForeignKey, Numeric, Text, Boolean
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
+from app.config import TASHKENT_TZ
 from app.database import Base
 
 if TYPE_CHECKING:
@@ -203,13 +204,13 @@ class Student(Base):
     # Timestamps
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
-        default=datetime.utcnow,
+        default=lambda: datetime.now(TASHKENT_TZ),
         nullable=False
     )
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
-        default=datetime.utcnow,
-        onupdate=datetime.utcnow,
+        default=lambda: datetime.now(TASHKENT_TZ),
+        onupdate=lambda: datetime.now(TASHKENT_TZ),
         nullable=False
     )
     
@@ -235,6 +236,11 @@ class Student(Base):
     
     def __repr__(self) -> str:
         return f"<Student(id={self.id}, student_id='{self.student_id}', name='{self.name}')>"
+    
+    @property
+    def full_name(self) -> str:
+        """Alias for name - backward compatibility."""
+        return self.name
     
     @property
     def group_name(self) -> Optional[str]:

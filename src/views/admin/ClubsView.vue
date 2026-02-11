@@ -3,22 +3,22 @@
     <!-- Header -->
     <div class="flex items-center justify-between flex-wrap gap-4">
       <div>
-        <h1 class="text-2xl font-bold text-slate-800">To'garaklar boshqaruvi</h1>
-        <p class="text-slate-500">{{ dataStore.clubs.length }} ta to'garak</p>
+        <h1 class="text-2xl font-bold text-slate-800">{{ $t('clubs.title') }}</h1>
+        <p class="text-slate-500">{{ dataStore.clubs.length }} {{ $t('clubs.title') }}</p>
       </div>
       <button 
         @click="openModal()"
         class="px-4 py-2.5 bg-violet-500 text-white rounded-xl font-medium hover:bg-violet-600 transition-colors flex items-center gap-2"
       >
         <Plus class="w-5 h-5" />
-        Yangi to'garak
+        {{ $t('clubs.addClub') }}
       </button>
     </div>
 
     <!-- Loading State -->
     <div v-if="loading" class="flex items-center justify-center py-20">
       <Loader2 class="w-8 h-8 text-violet-500 animate-spin" />
-      <span class="ml-3 text-slate-600">To'garaklar yuklanmoqda...</span>
+      <span class="ml-3 text-slate-600">{{ $t('common.loading') }}</span>
     </div>
 
     <template v-else>
@@ -118,12 +118,12 @@
     <!-- Empty State -->
     <div v-if="filteredClubs.length === 0" class="bg-white rounded-2xl border border-slate-200 p-12 text-center">
       <BookOpen class="w-12 h-12 text-slate-300 mx-auto mb-4" />
-      <p class="text-slate-500">To'garak topilmadi</p>
+      <p class="text-slate-500">{{ $t('clubs.noClubs') }}</p>
       <button 
         @click="openModal()"
         class="mt-4 px-4 py-2 bg-violet-500 text-white rounded-xl font-medium hover:bg-violet-600 transition-colors"
       >
-        Yangi to'garak qo'shish
+        {{ $t('clubs.addClub') }}
       </button>
     </div>
     </template>
@@ -145,7 +145,7 @@
         <div class="bg-white rounded-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto">
           <div class="p-6 border-b border-slate-100 flex items-center justify-between sticky top-0 bg-white">
             <h2 class="text-lg font-semibold text-slate-800">
-              {{ editingClub ? 'To\'garakni tahrirlash' : 'Yangi to\'garak qo\'shish' }}
+              {{ editingClub ? $t('clubs.editClub') : $t('clubs.addClub') }}
             </h2>
             <button @click="showModal = false" class="p-2 hover:bg-slate-100 rounded-lg transition-colors">
               <X class="w-5 h-5 text-slate-500" />
@@ -154,7 +154,7 @@
 
           <form @submit.prevent="saveClub" class="p-6 space-y-4">
             <div>
-              <label class="block text-sm font-medium text-slate-700 mb-2">To'garak nomi</label>
+              <label class="block text-sm font-medium text-slate-700 mb-2">{{ $t('clubs.clubName') }}</label>
               <input 
                 v-model="form.name"
                 type="text"
@@ -165,7 +165,7 @@
             </div>
 
             <div>
-              <label class="block text-sm font-medium text-slate-700 mb-2">O'qituvchi</label>
+              <label class="block text-sm font-medium text-slate-700 mb-2">{{ $t('clubs.teacher') }}</label>
               <input 
                 v-model="form.teacher"
                 type="text"
@@ -177,7 +177,7 @@
 
             <div class="grid grid-cols-2 gap-4">
               <div>
-                <label class="block text-sm font-medium text-slate-700 mb-2">Telefon</label>
+                <label class="block text-sm font-medium text-slate-700 mb-2">{{ $t('common.phone') }}</label>
                 <input 
                   v-model="form.phone"
                   type="tel"
@@ -187,7 +187,7 @@
                 />
               </div>
               <div>
-                <label class="block text-sm font-medium text-slate-700 mb-2">Xona</label>
+                <label class="block text-sm font-medium text-slate-700 mb-2">{{ $t('clubs.room') }}</label>
                 <input 
                   v-model="form.room"
                   type="text"
@@ -199,7 +199,7 @@
 
             <div class="grid grid-cols-2 gap-4">
               <div>
-                <label class="block text-sm font-medium text-slate-700 mb-2">Kategoriya</label>
+                <label class="block text-sm font-medium text-slate-700 mb-2">{{ $t('clubs.category') }}</label>
                 <select 
                   v-model="form.category"
                   class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-violet-500 focus:ring-2 focus:ring-violet-500/20 outline-none"
@@ -212,7 +212,7 @@
                 </select>
               </div>
               <div>
-                <label class="block text-sm font-medium text-slate-700 mb-2">Narxi (oylik)</label>
+                <label class="block text-sm font-medium text-slate-700 mb-2">{{ $t('clubs.price') }}</label>
                 <input 
                   v-model.number="form.price"
                   type="number"
@@ -223,7 +223,7 @@
             </div>
 
             <div>
-              <label class="block text-sm font-medium text-slate-700 mb-2">Dars jadvali</label>
+              <label class="block text-sm font-medium text-slate-700 mb-2">{{ $t('clubs.schedule') }}</label>
               <input 
                 v-model="form.schedule"
                 type="text"
@@ -233,7 +233,7 @@
             </div>
 
             <div>
-              <label class="block text-sm font-medium text-slate-700 mb-2">Tavsif</label>
+              <label class="block text-sm font-medium text-slate-700 mb-2">{{ $t('common.description') }}</label>
               <textarea 
                 v-model="form.description"
                 rows="3"
@@ -248,13 +248,13 @@
                 @click="showModal = false"
                 class="flex-1 px-4 py-3 border border-slate-200 text-slate-700 rounded-xl font-medium hover:bg-slate-50 transition-colors"
               >
-                Bekor qilish
+                {{ $t('common.cancel') }}
               </button>
               <button 
                 type="submit"
                 class="flex-1 px-4 py-3 bg-violet-500 text-white rounded-xl font-medium hover:bg-violet-600 transition-colors"
               >
-                Saqlash
+                {{ $t('common.save') }}
               </button>
             </div>
           </form>
@@ -280,22 +280,22 @@
           <div class="w-16 h-16 bg-rose-100 rounded-full flex items-center justify-center mx-auto mb-4">
             <AlertTriangle class="w-8 h-8 text-rose-500" />
           </div>
-          <h3 class="text-lg font-semibold text-slate-800 mb-2">O'chirishni tasdiqlang</h3>
+          <h3 class="text-lg font-semibold text-slate-800 mb-2">{{ $t('clubs.confirmDelete') }}</h3>
           <p class="text-slate-500 mb-6">
-            "{{ deletingClub?.name }}" to'garagini o'chirmoqchimisiz?
+            "{{ deletingClub?.name }}" {{ $t('clubs.confirmDeleteMsg') }}
           </p>
           <div class="flex gap-3">
             <button 
               @click="showDeleteConfirm = false"
               class="flex-1 px-4 py-3 border border-slate-200 text-slate-700 rounded-xl font-medium hover:bg-slate-50 transition-colors"
             >
-              Bekor qilish
+              {{ $t('common.cancel') }}
             </button>
             <button 
               @click="deleteClub"
               class="flex-1 px-4 py-3 bg-rose-500 text-white rounded-xl font-medium hover:bg-rose-600 transition-colors"
             >
-              O'chirish
+              {{ $t('common.delete') }}
             </button>
           </div>
         </div>
@@ -305,31 +305,34 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed, markRaw, onMounted } from 'vue'
-import { useDataStore } from '../../stores/data'
-import { useToastStore } from '../../stores/toast'
 import {
-  Plus,
-  Pencil,
-  Trash2,
-  X,
-  Power,
-  Clock,
-  MapPin,
-  Phone,
+  AlertTriangle,
   Banknote,
   BookOpen,
-  AlertTriangle,
   Calculator,
-  Globe,
+  Clock,
   Code,
   Dumbbell,
+  Globe,
+  Loader2,
+  MapPin,
   Palette,
-  Loader2
+  Pencil,
+  Phone,
+  Plus,
+  Power,
+  Trash2,
+  X
 } from 'lucide-vue-next'
+import { computed, markRaw, onMounted, reactive, ref } from 'vue'
+import { useDataStore } from '../../stores/data'
+import { useLanguageStore } from '../../stores/language'
+import { useToastStore } from '../../stores/toast'
 
 const dataStore = useDataStore()
 const toast = useToastStore()
+const langStore = useLanguageStore()
+const { t } = langStore
 
 const showModal = ref(false)
 const showDeleteConfirm = ref(false)
@@ -346,7 +349,7 @@ onMounted(async () => {
     await dataStore.fetchClubs()
   } catch (err) {
     console.error('Error loading clubs:', err)
-    toast.error('To\'garaklarni yuklashda xatolik')
+    toast.error(t('common.error'))
   } finally {
     loading.value = false
   }
@@ -455,15 +458,15 @@ const saveClub = async () => {
   try {
     if (editingClub.value) {
       await dataStore.updateClub(editingClub.value.id, { ...form })
-      toast.success('To\'garak yangilandi')
+      toast.success(t('common.success'))
     } else {
       await dataStore.addClub({ ...form })
-      toast.success('Yangi to\'garak qo\'shildi')
+      toast.success(t('common.success'))
     }
     showModal.value = false
   } catch (err) {
     console.error('Error saving club:', err)
-    toast.error('To\'garakni saqlashda xatolik')
+    toast.error(t('common.error'))
   } finally {
     saving.value = false
   }

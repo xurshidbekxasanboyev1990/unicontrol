@@ -1,15 +1,34 @@
 // API Service - Backend bilan aloqa
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1'
+// Use relative /api/v1 so requests go through nginx proxy (same-origin, no CORS)
+const API_BASE_URL = import.meta.env.VITE_API_URL || '/api/v1'
 
 // Inactivity timeout - 30 daqiqa (production)
 const INACTIVITY_TIMEOUT = 30 * 60 * 1000 // 30 daqiqa
 const ACTIVITY_CHECK_INTERVAL = 60 * 1000 // Har 1 daqiqada tekshirish
 
+// URLSearchParams uchun undefined/null qiymatlarni tozalash
+function cleanParams(params) {
+    const cleaned = {}
+    for (const [key, value] of Object.entries(params)) {
+        if (value !== undefined && value !== null && value !== '' && value !== 'undefined') {
+            cleaned[key] = value
+        }
+    }
+    return cleaned
+}
+
+// Query string yaratish
+function buildQuery(params) {
+    const cleaned = cleanParams(params)
+    if (Object.keys(cleaned).length === 0) return ''
+    return '?' + new URLSearchParams(cleaned).toString()
+}
+
 class ApiService {
     constructor() {
         this.baseUrl = API_BASE_URL
         this.refreshPromise = null // Refresh qilish jarayonida bo'lsa, bir xil promiseni qaytarish
-        this.tokenRefreshThreshold = 5 * 60 * 1000 // 5 daqiqa oldin refresh qilish
+        this.tokenRefreshThreshold = 3 * 60 * 1000 // 3 daqiqa oldin refresh qilish
 
         // Har 30 daqiqada token holatini tekshirish
         this.startTokenRefreshTimer()
@@ -118,7 +137,7 @@ class ApiService {
         if (!timestamp) return true
 
         const tokenAge = Date.now() - parseInt(timestamp)
-        const tokenLifetime = 8 * 60 * 60 * 1000 // 8 soat (backend bilan mos)
+        const tokenLifetime = 30 * 60 * 1000 // 30 daqiqa (backend bilan mos)
 
         return tokenAge > (tokenLifetime - this.tokenRefreshThreshold)
     }
@@ -130,7 +149,7 @@ class ApiService {
             if (token && this.isTokenExpiringSoon()) {
                 await this.refreshToken()
             }
-        }, 5 * 60 * 1000)
+        }, 60 * 1000) // Har 1 daqiqada tekshirish
     }
 
     // Headers
@@ -155,10 +174,15 @@ class ApiService {
         }
 
         const url = `${this.baseUrl}${endpoint}`
+        const isBlob = options.responseType === 'blob'
         const config = {
             headers: this.getHeaders(options.auth !== false),
             ...options
         }
+
+        // Remove custom options so fetch doesn't complain
+        delete config.responseType
+        delete config.auth
 
         if (config.body && typeof config.body === 'object') {
             config.body = JSON.stringify(config.body)
@@ -173,7 +197,7 @@ class ApiService {
                 if (refreshed) {
                     config.headers = this.getHeaders(true)
                     const retryResponse = await fetch(url, config)
-                    return this.handleResponse(retryResponse)
+                    return isBlob ? this.handleBlobResponse(retryResponse) : this.handleResponse(retryResponse)
                 } else {
                     this.clearTokens()
                     window.location.href = '/login'
@@ -181,11 +205,22 @@ class ApiService {
                 }
             }
 
-            return this.handleResponse(response)
+            return isBlob ? this.handleBlobResponse(response) : this.handleResponse(response)
         } catch (error) {
             console.error('API Error:', error)
             throw error
         }
+    }
+
+    async handleBlobResponse(response) {
+        if (!response.ok) {
+            const data = await response.json().catch(() => null)
+            const error = new Error(data?.detail || data?.message || 'Download failed')
+            error.status = response.status
+            error.data = data
+            throw error
+        }
+        return response.blob()
     }
 
     async handleResponse(response) {
@@ -264,16 +299,15 @@ class ApiService {
     }
 
     async changePassword(currentPassword, newPassword) {
-        return this.request('/auth/change-password', {
-            method: 'POST',
+        return this.request('/auth/me/password', {
+            method: 'PUT',
             body: { current_password: currentPassword, new_password: newPassword }
         })
     }
 
     // ===== GROUPS =====
     async getGroups(params = {}) {
-        const query = new URLSearchParams(params).toString()
-        return this.request(`/groups${query ? '?' + query : ''}`)
+        return this.request(`/groups${buildQuery(params)}`)
     }
 
     async getGroup(id) {
@@ -326,8 +360,7 @@ class ApiService {
 
     // ===== STUDENTS =====
     async getStudents(params = {}) {
-        const query = new URLSearchParams(params).toString()
-        return this.request(`/students${query ? '?' + query : ''}`)
+        return this.request(`/students${buildQuery(params)}`)
     }
 
     async getStudent(id) {
@@ -353,9 +386,9 @@ class ApiService {
     }
 
     async resetStudentPassword(id, newPassword) {
-        return this.request(`/students/${id}/reset-password`, {
-            method: 'PATCH',
-            body: { new_password: newPassword }
+        // Backend uses /users/{user_id}/reset-password with query param
+        return this.request(`/users/${id}/reset-password?new_password=${encodeURIComponent(newPassword)}`, {
+            method: 'POST'
         })
     }
 
@@ -373,14 +406,16 @@ class ApiService {
         })
     }
 
-    async getStudentAttendance(id) {
-        return this.request(`/students/${id}/attendance`)
+    async getStudentAttendance(studentId, dateFrom = null, dateTo = null) {
+        const params = {}
+        if (dateFrom) params.date_from = dateFrom
+        if (dateTo) params.date_to = dateTo
+        return this.request(`/attendance/student/${studentId}${buildQuery(params)}`)
     }
 
     // ===== SCHEDULE =====
     async getSchedules(params = {}) {
-        const query = new URLSearchParams(params).toString()
-        return this.request(`/schedule${query ? '?' + query : ''}`)
+        return this.request(`/schedule${buildQuery(params)}`)
     }
 
     async getSchedule(id) {
@@ -406,17 +441,21 @@ class ApiService {
     }
 
     async getScheduleByGroup(groupId) {
-        return this.request(`/schedule/group/${groupId}`)
+        return this.request(`/schedule/group/${groupId}/week`)
     }
 
     async getTodaySchedule(groupId) {
-        return this.request(`/schedule/today/${groupId}`)
+        return this.request(`/schedule/today${groupId ? '?group_id=' + groupId : ''}`)
+    }
+
+    async getGroupDaySchedule(groupId, targetDate = null) {
+        const params = targetDate ? `?target_date=${targetDate}` : ''
+        return this.request(`/schedule/group/${groupId}/day${params}`)
     }
 
     // ===== ATTENDANCE =====
     async getAttendance(params = {}) {
-        const query = new URLSearchParams(params).toString()
-        return this.request(`/attendance${query ? '?' + query : ''}`)
+        return this.request(`/attendance${buildQuery(params)}`)
     }
 
     async createAttendance(data) {
@@ -434,9 +473,9 @@ class ApiService {
     }
 
     async bulkCreateAttendance(records) {
-        return this.request('/attendance/bulk', {
+        return this.request('/attendance/batch', {
             method: 'POST',
-            body: { records }
+            body: records
         })
     }
 
@@ -461,8 +500,7 @@ class ApiService {
 
     // ===== REPORTS =====
     async getReports(params = {}) {
-        const query = new URLSearchParams(params).toString()
-        return this.request(`/reports${query ? '?' + query : ''}`)
+        return this.request(`/reports${buildQuery(params)}`)
     }
 
     async createReport(data) {
@@ -496,8 +534,7 @@ class ApiService {
 
     // ===== NOTIFICATIONS =====
     async getNotifications(params = {}) {
-        const query = new URLSearchParams(params).toString()
-        return this.request(`/notifications${query ? '?' + query : ''}`)
+        return this.request(`/notifications${buildQuery(params)}`)
     }
 
     async createNotification(data) {
@@ -508,11 +545,11 @@ class ApiService {
     }
 
     async markNotificationRead(id) {
-        return this.request(`/notifications/${id}/read`, { method: 'PATCH' })
+        return this.request(`/notifications/${id}/read`, { method: 'POST' })
     }
 
     async markAllNotificationsRead() {
-        return this.request('/notifications/read-all', { method: 'PATCH' })
+        return this.request('/notifications/read-all', { method: 'POST' })
     }
 
     async deleteNotification(id) {
@@ -524,6 +561,17 @@ class ApiService {
             method: 'POST',
             body: data
         })
+    }
+
+    async broadcastNotification(data) {
+        return this.request('/notifications/broadcast', {
+            method: 'POST',
+            body: data
+        })
+    }
+
+    async getUnreadNotificationCount() {
+        return this.request('/notifications/unread-count')
     }
 
     // ===== EXCEL =====
@@ -542,10 +590,9 @@ class ApiService {
     }
 
     async exportToExcel(type, params = {}) {
-        const query = new URLSearchParams(params).toString()
         const token = this.getToken()
 
-        const response = await fetch(`${this.baseUrl}/excel/export/${type}${query ? '?' + query : ''}`, {
+        const response = await fetch(`${this.baseUrl}/excel/export/${type}${buildQuery(params)}`, {
             headers: token ? { 'Authorization': `Bearer ${token}` } : {}
         })
 
@@ -556,48 +603,157 @@ class ApiService {
         return response.blob()
     }
 
+    // ===== LIBRARY =====
+    async getBooks(params = {}) {
+        return this.request(`/library/books${buildQuery(params)}`)
+    }
+
+    async getBook(bookId) {
+        return this.request(`/library/books/${bookId}`)
+    }
+
+    async createBook(data) {
+        return this.request('/library/books', {
+            method: 'POST',
+            body: data
+        })
+    }
+
+    async updateBook(bookId, data) {
+        return this.request(`/library/books/${bookId}`, {
+            method: 'PUT',
+            body: data
+        })
+    }
+
+    async deleteBook(bookId) {
+        return this.request(`/library/books/${bookId}`, { method: 'DELETE' })
+    }
+
+    async borrowBook(data) {
+        return this.request('/library/borrow', {
+            method: 'POST',
+            body: data
+        })
+    }
+
+    async returnBook(data) {
+        return this.request('/library/return', {
+            method: 'POST',
+            body: data
+        })
+    }
+
+    async getMyBorrows(params = {}) {
+        return this.request(`/library/borrows${buildQuery(params)}`)
+    }
+
+    async getAllBorrows(params = {}) {
+        return this.request(`/library/borrows/all${buildQuery(params)}`)
+    }
+
+    async getBookReviews(bookId) {
+        return this.request(`/library/books/${bookId}/reviews`)
+    }
+
+    async createBookReview(bookId, data) {
+        return this.request(`/library/books/${bookId}/reviews`, {
+            method: 'POST',
+            body: data
+        })
+    }
+
+    async getStudentAttendanceStats(studentId, dateFrom = null, dateTo = null) {
+        const params = {}
+        if (dateFrom) params.date_from = dateFrom
+        if (dateTo) params.date_to = dateTo
+        return this.request(`/attendance/student/${studentId}/stats${buildQuery(params)}`)
+    }
+
     // ===== STATISTICS =====
     async getDashboardStats() {
         return this.request('/statistics/dashboard')
     }
 
     async getAttendanceStats(params = {}) {
-        const query = new URLSearchParams(params).toString()
-        return this.request(`/statistics/attendance${query ? '?' + query : ''}`)
+        return this.request(`/statistics/attendance${buildQuery(params)}`)
     }
 
     async getContractStats(params = {}) {
-        const query = new URLSearchParams(params).toString()
-        return this.request(`/statistics/contracts${query ? '?' + query : ''}`)
+        return this.request(`/statistics/contracts${buildQuery(params)}`)
     }
 
-    // ===== ADMINS (SuperAdmin only) =====
-    async getAdmins() {
-        return this.request('/admins')
+    // ===== USERS =====
+    async getUsers(params = {}) {
+        return this.request(`/users${buildQuery(params)}`)
     }
 
-    async createAdmin(data) {
-        return this.request('/admins', {
+    async getUser(id) {
+        return this.request(`/users/${id}`)
+    }
+
+    async createUser(data) {
+        return this.request('/users', {
             method: 'POST',
             body: data
         })
     }
 
+    async updateUser(id, data) {
+        return this.request(`/users/${id}`, {
+            method: 'PUT',
+            body: data
+        })
+    }
+
+    async deleteUser(id) {
+        return this.request(`/users/${id}`, { method: 'DELETE' })
+    }
+
+    async resetUserPassword(userId, newPassword) {
+        return this.request(`/users/${userId}/reset-password?new_password=${encodeURIComponent(newPassword)}`, {
+            method: 'POST'
+        })
+    }
+
+    // ===== ADMINS (SuperAdmin only) =====
+    async getAdmins() {
+        // Backend endpoint: GET /users/roles/admins
+        return this.request('/users/roles/admins')
+    }
+
+    async createAdmin(data) {
+        // Create user with admin role via /users
+        return this.request('/users', {
+            method: 'POST',
+            body: { ...data, role: data.role || 'admin' }
+        })
+    }
+
     async updateAdmin(id, data) {
-        return this.request(`/admins/${id}`, {
+        // Update user via /users/{id}
+        return this.request(`/users/${id}`, {
             method: 'PUT',
             body: data
         })
     }
 
     async deleteAdmin(id) {
-        return this.request(`/admins/${id}`, { method: 'DELETE' })
+        // Delete user via /users/{id} (superadmin only)
+        return this.request(`/users/${id}`, { method: 'DELETE' })
+    }
+
+    async activateUser(id) {
+        return this.request(`/users/${id}/activate`, { method: 'POST' })
+    }
+
+    async deactivateUser(id) {
+        return this.request(`/users/${id}/deactivate`, { method: 'POST' })
     }
 
     // ===== LOGS (SuperAdmin only) =====
     async getLogs(params = {}) {
-        const query = new URLSearchParams(params).toString()
-        return this.request(`/logs${query ? '?' + query : ''}`)
+        return this.request(`/logs${buildQuery(params)}`)
     }
 
     // ===== SETTINGS =====
@@ -612,10 +768,67 @@ class ApiService {
         })
     }
 
+    // ===== LANDING PAGE SETTINGS =====
+    async getLandingPublic() {
+        return this.request('/landing/public', { auth: false })
+    }
+
+    async getLandingSettings() {
+        return this.request('/landing')
+    }
+
+    async updateLandingSettings(data) {
+        return this.request('/landing', {
+            method: 'PUT',
+            body: data
+        })
+    }
+
+    async updateLandingSocialLinks(data) {
+        return this.request('/landing/social-links', {
+            method: 'PUT',
+            body: data
+        })
+    }
+
+    async updateLandingTeamMembers(data) {
+        return this.request('/landing/team-members', {
+            method: 'PUT',
+            body: data
+        })
+    }
+
+    async updateLandingFeatureCards(data) {
+        return this.request('/landing/feature-cards', {
+            method: 'PUT',
+            body: data
+        })
+    }
+
+    async updateLandingContactInfo(data) {
+        return this.request('/landing/contact-info', {
+            method: 'PUT',
+            body: data
+        })
+    }
+
+    async updateLandingHeroStats(data) {
+        return this.request('/landing/hero-stats', {
+            method: 'PUT',
+            body: data
+        })
+    }
+
+    async updateLandingAboutStats(data) {
+        return this.request('/landing/about-stats', {
+            method: 'PUT',
+            body: data
+        })
+    }
+
     // ===== CLUBS =====
     async getClubs(params = {}) {
-        const query = new URLSearchParams(params).toString()
-        return this.request(`/clubs${query ? '?' + query : ''}`)
+        return this.request(`/clubs${buildQuery(params)}`)
     }
 
     async createClub(data) {
@@ -642,8 +855,7 @@ class ApiService {
 
     // ===== SUBJECTS =====
     async getSubjects(params = {}) {
-        const query = new URLSearchParams(params).toString()
-        return this.request(`/subjects${query ? '?' + query : ''}`)
+        return this.request(`/subjects${buildQuery(params)}`)
     }
 
     async createSubject(data) {
@@ -666,8 +878,7 @@ class ApiService {
 
     // ===== DIRECTIONS =====
     async getDirections(params = {}) {
-        const query = new URLSearchParams(params).toString()
-        return this.request(`/directions${query ? '?' + query : ''}`)
+        return this.request(`/directions${buildQuery(params)}`)
     }
 
     async createDirection(data) {
@@ -701,8 +912,7 @@ class ApiService {
 
     // ===== TOURNAMENTS =====
     async getTournaments(params = {}) {
-        const query = new URLSearchParams(params).toString()
-        return this.request(`/tournaments${query ? '?' + query : ''}`)
+        return this.request(`/tournaments${buildQuery(params)}`)
     }
 
     async createTournament(data) {
@@ -727,6 +937,14 @@ class ApiService {
         return this.request(`/tournaments/${id}/toggle-status`, { method: 'PATCH' })
     }
 
+    async getTournamentParticipants(tournamentId) {
+        return this.request(`/tournaments/${tournamentId}/participants`)
+    }
+
+    async getMyTournamentRegistrations() {
+        return this.request('/tournaments/my-registrations')
+    }
+
     async registerForTournament(tournamentId, studentId) {
         return this.request(`/tournaments/${tournamentId}/register`, {
             method: 'POST',
@@ -741,10 +959,15 @@ class ApiService {
         })
     }
 
+    async updateRegistrationStatus(tournamentId, registrationId, status) {
+        return this.request(`/tournaments/${tournamentId}/registrations/${registrationId}/status?status=${status}`, {
+            method: 'PATCH'
+        })
+    }
+
     // ===== HELP/FAQ =====
     async getFaqs(params = {}) {
-        const query = new URLSearchParams(params).toString()
-        return this.request(`/faqs${query ? '?' + query : ''}`)
+        return this.request(`/faqs${buildQuery(params)}`)
     }
 
     async createFaq(data) {
@@ -777,8 +1000,7 @@ class ApiService {
     }
 
     async getSupportMessages(params = {}) {
-        const query = new URLSearchParams(params).toString()
-        return this.request(`/support-messages${query ? '?' + query : ''}`)
+        return this.request(`/support-messages${buildQuery(params)}`)
     }
 
     async replySupportMessage(id, reply) {
@@ -957,14 +1179,12 @@ class ApiService {
 
     // O'z buyurtmalarim
     async getMyCanteenOrders(params = {}) {
-        const query = new URLSearchParams(params).toString()
-        return this.request(`/canteen/orders/my${query ? '?' + query : ''}`)
+        return this.request(`/canteen/orders/my${buildQuery(params)}`)
     }
 
     // Barcha buyurtmalar (admin)
     async getAllCanteenOrders(params = {}) {
-        const query = new URLSearchParams(params).toString()
-        return this.request(`/canteen/orders${query ? '?' + query : ''}`)
+        return this.request(`/canteen/orders${buildQuery(params)}`)
     }
 
     // Buyurtma holatini yangilash (admin)
@@ -978,6 +1198,104 @@ class ApiService {
     // Kunlik statistika (admin)
     async getCanteenStats() {
         return this.request('/canteen/stats')
+    }
+
+    // ===== SUBSCRIPTIONS (Obuna) =====
+    async getSubscriptionPlans() {
+        return this.request('/subscriptions/plans')
+    }
+
+    async createSubscriptionPlan(data) {
+        return this.request('/subscriptions/plans', {
+            method: 'POST',
+            body: data
+        })
+    }
+
+    async updateSubscriptionPlan(planId, data) {
+        return this.request(`/subscriptions/plans/${planId}`, {
+            method: 'PUT',
+            body: data
+        })
+    }
+
+    async deleteSubscriptionPlan(planId) {
+        return this.request(`/subscriptions/plans/${planId}`, {
+            method: 'DELETE'
+        })
+    }
+
+    async getMyGroupSubscription() {
+        return this.request('/subscriptions/my-group')
+    }
+
+    async checkGroupSubscription(groupId) {
+        return this.request(`/subscriptions/check/${groupId}`)
+    }
+
+    async purchaseSubscription(formData) {
+        // FormData: group_id, plan_type, receipt (file)
+        const token = this.getToken()
+        const response = await fetch(`${this.baseUrl}/subscriptions/purchase`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${token}`
+            },
+            body: formData
+        })
+        const data = await response.json()
+        if (!response.ok) {
+            throw new Error(data?.detail || 'To\'lov xatolik')
+        }
+        return data
+    }
+
+    async getSubscriptionPayments(params = {}) {
+        return this.request(`/subscriptions/payments${buildQuery(params)}`)
+    }
+
+    async actionPayment(paymentId, data) {
+        return this.request(`/subscriptions/payments/${paymentId}`, {
+            method: 'PATCH',
+            body: data
+        })
+    }
+
+    async getSubscriptionSettings() {
+        return this.request('/subscriptions/settings')
+    }
+
+    async updateSubscriptionSettings(data) {
+        return this.request('/subscriptions/settings', {
+            method: 'PUT',
+            body: data
+        })
+    }
+
+    async activateTrial() {
+        return this.request('/subscriptions/activate-trial', { method: 'POST' })
+    }
+
+    async getAllSubscriptions(params = {}) {
+        return this.request(`/subscriptions/all${buildQuery(params)}`)
+    }
+
+    async updateSubscriptionStatus(subId, data) {
+        return this.request(`/subscriptions/subscriptions/${subId}/status`, {
+            method: 'PATCH',
+            body: data
+        })
+    }
+
+    async adminAssignSubscription(groupId, planId) {
+        return this.request('/subscriptions/admin-assign', {
+            method: 'POST',
+            body: { group_id: groupId, plan_id: planId }
+        })
+    }
+
+    async getReceiptUrl(paymentId) {
+        return `${this.baseUrl}/subscriptions/receipt/${paymentId}`
     }
 }
 

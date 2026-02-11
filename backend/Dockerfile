@@ -38,8 +38,12 @@ RUN pip install --no-cache /wheels/*
 # Copy application code
 COPY --chown=unicontrol:unicontrol . .
 
-# Create logs directory
-RUN mkdir -p /app/logs && chown unicontrol:unicontrol /app/logs
+# Create logs and uploads directories
+RUN mkdir -p /app/logs /app/uploads/receipts && chown -R unicontrol:unicontrol /app/logs /app/uploads
+
+# Make entrypoint executable
+COPY --chown=unicontrol:unicontrol docker-entrypoint.sh /app/docker-entrypoint.sh
+RUN chmod +x /app/docker-entrypoint.sh
 
 # Switch to non-root user
 USER unicontrol
@@ -51,5 +55,5 @@ EXPOSE 8000
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
     CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')" || exit 1
 
-# Run application
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+# Run entrypoint script (migrations + uvicorn)
+ENTRYPOINT ["/app/docker-entrypoint.sh"]

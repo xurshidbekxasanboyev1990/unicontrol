@@ -1,5 +1,6 @@
 from typing import List, Dict, Any, Optional
 from datetime import datetime
+from bot.config import now_tashkent
 
 
 class AttendanceFormatter:
@@ -58,7 +59,7 @@ class AttendanceFormatter:
             except:
                 date_formatted = date_str
         else:
-            date_formatted = datetime.now().strftime("%d.%m.%Y")
+            date_formatted = now_tashkent().strftime("%d.%m.%Y")
         
         # Build message
         lines = [
@@ -66,6 +67,11 @@ class AttendanceFormatter:
             f"📅 {date_formatted}" + (f" | {lesson}-para" if lesson else ""),
             f"⏰ Holat: {emoji} <b>{status_text}</b>"
         ]
+        
+        # Show late minutes
+        late_minutes = attendance.get("late_minutes", 0)
+        if status == "late" and late_minutes and int(late_minutes) > 0:
+            lines.append(f"🕐 Kechikish: {late_minutes} daqiqa")
         
         if reason:
             lines.append(f"📝 Sabab: {reason}")
@@ -132,7 +138,7 @@ class AttendanceFormatter:
                 stats[status] += 1
         
         total = len(attendances)
-        date_formatted = date_str or datetime.now().strftime("%d.%m.%Y")
+        date_formatted = date_str or now_tashkent().strftime("%d.%m.%Y")
         
         # Header
         lines = [
@@ -160,7 +166,10 @@ class AttendanceFormatter:
             for att in late_students[:10]:  # Limit to 10
                 name = att.get("student_name", "")
                 reason = att.get("reason", "")
+                late_mins = att.get("late_minutes", 0)
                 line = f"  • {name}"
+                if late_mins and int(late_mins) > 0:
+                    line += f" ({late_mins} daq.)"
                 if reason:
                     line += f" - <i>{reason}</i>"
                 lines.append(line)

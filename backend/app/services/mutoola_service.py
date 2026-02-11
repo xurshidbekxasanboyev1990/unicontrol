@@ -15,7 +15,7 @@ import httpx
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, update
 
-from app.config import settings
+from app.config import settings, now_tashkent
 from app.models.student import Student
 from app.models.group import Group
 from app.models.mutoola import (
@@ -110,7 +110,7 @@ class MutoolaService:
             status=SyncStatus.RUNNING,
             triggered_by=user_id,
             is_automatic=user_id is None,
-            started_at=datetime.utcnow(),
+            started_at=now_tashkent(),
         )
         self.db.add(sync)
         await self.db.flush()
@@ -146,7 +146,7 @@ class MutoolaService:
             sync.status = SyncStatus.FAILED
             sync.error_message = str(e)
         
-        sync.completed_at = datetime.utcnow()
+        sync.completed_at = now_tashkent()
         await self.db.commit()
         await self.db.refresh(sync)
         
@@ -220,12 +220,12 @@ class MutoolaService:
             
             # Update mapping
             mapping.sync_hash = data_hash
-            mapping.last_synced_at = datetime.utcnow()
+            mapping.last_synced_at = now_tashkent()
             mapping.mutoola_data = json.dumps(data)
         else:
             # Create new student
             # Generate student_id
-            year = datetime.now().year
+            year = now_tashkent().year
             prefix = f"ST-{year}-"
             max_result = await self.db.execute(
                 select(Student.student_id)
@@ -248,7 +248,7 @@ class MutoolaService:
                 mutoola_id=mutoola_id,
                 mutoola_data=json.dumps(data),
                 sync_hash=data_hash,
-                last_synced_at=datetime.utcnow(),
+                last_synced_at=now_tashkent(),
             )
             self.db.add(new_mapping)
             
@@ -267,7 +267,7 @@ class MutoolaService:
             status=SyncStatus.RUNNING,
             triggered_by=user_id,
             is_automatic=user_id is None,
-            started_at=datetime.utcnow(),
+            started_at=now_tashkent(),
         )
         self.db.add(sync)
         await self.db.flush()
@@ -289,7 +289,7 @@ class MutoolaService:
             sync.status = SyncStatus.FAILED
             sync.error_message = str(e)
         
-        sync.completed_at = datetime.utcnow()
+        sync.completed_at = now_tashkent()
         await self.db.commit()
         
         return sync
@@ -325,7 +325,7 @@ class MutoolaService:
                 .values(**group_data)
             )
             sync.updated_records += 1
-            mapping.last_synced_at = datetime.utcnow()
+            mapping.last_synced_at = now_tashkent()
         else:
             group = Group(**group_data)
             self.db.add(group)
@@ -335,7 +335,7 @@ class MutoolaService:
                 entity_type="group",
                 local_id=group.id,
                 mutoola_id=mutoola_id,
-                last_synced_at=datetime.utcnow(),
+                last_synced_at=now_tashkent(),
             )
             self.db.add(new_mapping)
             sync.created_records += 1

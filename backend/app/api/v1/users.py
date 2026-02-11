@@ -23,7 +23,7 @@ router = APIRouter()
 @router.get("", response_model=dict)
 async def list_users(
     page: int = Query(1, ge=1),
-    page_size: int = Query(20, ge=1, le=100),
+    page_size: int = Query(20, ge=1, le=500),
     role: Optional[UserRole] = None,
     is_active: Optional[bool] = None,
     search: Optional[str] = None,
@@ -44,8 +44,16 @@ async def list_users(
         search=search
     )
     
+    items = []
+    for u in users:
+        user_resp = UserResponse.model_validate(u)
+        # Only show plain_password for users below admin role
+        if u.role in [UserRole.ADMIN, UserRole.SUPERADMIN]:
+            user_resp.plain_password = None
+        items.append(user_resp)
+    
     return {
-        "items": [UserResponse.model_validate(u) for u in users],
+        "items": items,
         "total": total,
         "page": page,
         "page_size": page_size,

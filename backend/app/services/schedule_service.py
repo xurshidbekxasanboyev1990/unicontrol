@@ -23,6 +23,7 @@ from app.schemas.schedule import (
     ScheduleResponse,
 )
 from app.core.exceptions import NotFoundException, ConflictException
+from app.config import today_tashkent
 
 
 class ScheduleService:
@@ -289,7 +290,7 @@ class ScheduleService:
         group_id: Optional[int] = None
     ) -> List[Schedule]:
         """Get today's schedules."""
-        today = date.today()
+        today = today_tashkent()
         day_of_week = WeekDay(today.strftime("%A").lower())
         
         query = select(Schedule).where(

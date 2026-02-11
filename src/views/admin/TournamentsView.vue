@@ -3,7 +3,7 @@
     <!-- Header -->
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
       <div>
-        <h1 class="text-2xl font-bold text-slate-800">Turnirlar va Musobaqalar</h1>
+        <h1 class="text-2xl font-bold text-slate-800">{{ $t('tournaments.title') }}</h1>
         <p class="text-slate-500 mt-1">Bellashuvlarni e'lon qiling va ro'yxatdan o'tishlarni boshqaring</p>
       </div>
       <button
@@ -137,18 +137,18 @@
             <div class="flex items-center gap-2">
               <Users class="w-4 h-4 text-slate-400" />
               <span class="text-sm text-slate-600">
-                {{ tournament.registrations.length }} / {{ tournament.maxParticipants }}
+                {{ tournament.registrationsCount || 0 }} / {{ tournament.maxParticipants }}
               </span>
             </div>
             <div class="flex items-center gap-1">
               <div class="w-24 h-2 bg-slate-100 rounded-full overflow-hidden">
                 <div 
                   class="h-full bg-gradient-to-r from-emerald-500 to-teal-500 rounded-full"
-                  :style="{ width: `${(tournament.registrations.length / tournament.maxParticipants) * 100}%` }"
+                  :style="{ width: `${((tournament.registrationsCount || 0) / tournament.maxParticipants) * 100}%` }"
                 ></div>
               </div>
               <span class="text-xs text-slate-500">
-                {{ Math.round((tournament.registrations.length / tournament.maxParticipants) * 100) }}%
+                {{ Math.round(((tournament.registrationsCount || 0) / tournament.maxParticipants) * 100) }}%
               </span>
             </div>
           </div>
@@ -161,7 +161,7 @@
             class="flex items-center gap-1.5 px-3 py-1.5 text-sm text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors"
           >
             <ClipboardList class="w-4 h-4" />
-            Ro'yxatlar ({{ tournament.registrations.length }})
+            Ro'yxatlar ({{ tournament.registrationsCount || 0 }})
           </button>
           <div class="flex items-center gap-1">
             <button
@@ -651,14 +651,29 @@
                 <h3 class="text-xl font-bold text-slate-800">Ro'yxatdan o'tganlar</h3>
                 <p class="text-sm text-slate-500 mt-1">{{ selectedTournament?.title }}</p>
               </div>
-              <button @click="showRegistrationsModal = false" class="p-2 hover:bg-slate-100 rounded-xl transition-colors">
-                <X class="w-5 h-5 text-slate-400" />
-              </button>
+              <div class="flex items-center gap-2">
+                <button
+                  v-if="participants.length > 0"
+                  @click="downloadExcel"
+                  class="inline-flex items-center gap-1.5 px-4 py-2 bg-emerald-500 text-white text-sm rounded-xl font-medium hover:bg-emerald-600 transition-colors"
+                >
+                  <Download class="w-4 h-4" />
+                  Excel yuklab olish
+                </button>
+                <button @click="showRegistrationsModal = false" class="p-2 hover:bg-slate-100 rounded-xl transition-colors">
+                  <X class="w-5 h-5 text-slate-400" />
+                </button>
+              </div>
             </div>
 
             <!-- Modal body -->
             <div class="p-6 overflow-y-auto max-h-[calc(90vh-140px)]">
-              <div v-if="selectedTournament?.registrations.length === 0" class="text-center py-12">
+              <div v-if="participantsLoading" class="text-center py-12">
+                <div class="w-10 h-10 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+                <p class="text-slate-500">Yuklanmoqda...</p>
+              </div>
+
+              <div v-else-if="participants.length === 0" class="text-center py-12">
                 <Users class="w-16 h-16 mx-auto text-slate-300 mb-4" />
                 <p class="text-slate-500">Hali hech kim ro'yxatdan o'tmagan</p>
               </div>
@@ -668,19 +683,19 @@
                 <div class="grid grid-cols-3 gap-4 mb-6">
                   <div class="bg-amber-50 rounded-xl p-4 text-center">
                     <p class="text-2xl font-bold text-amber-600">
-                      {{ selectedTournament?.registrations.filter(r => r.status === 'pending').length }}
+                      {{ participants.filter(r => r.status === 'registered' || r.status === 'pending').length }}
                     </p>
                     <p class="text-sm text-amber-700">Kutilmoqda</p>
                   </div>
                   <div class="bg-emerald-50 rounded-xl p-4 text-center">
                     <p class="text-2xl font-bold text-emerald-600">
-                      {{ selectedTournament?.registrations.filter(r => r.status === 'approved').length }}
+                      {{ participants.filter(r => r.status === 'confirmed' || r.status === 'approved').length }}
                     </p>
                     <p class="text-sm text-emerald-700">Tasdiqlangan</p>
                   </div>
                   <div class="bg-rose-50 rounded-xl p-4 text-center">
                     <p class="text-2xl font-bold text-rose-600">
-                      {{ selectedTournament?.registrations.filter(r => r.status === 'rejected').length }}
+                      {{ participants.filter(r => r.status === 'cancelled' || r.status === 'rejected').length }}
                     </p>
                     <p class="text-sm text-rose-700">Rad etilgan</p>
                   </div>
@@ -702,67 +717,46 @@
                     </thead>
                     <tbody>
                       <tr
-                        v-for="(reg, index) in selectedTournament?.registrations"
+                        v-for="(reg, index) in participants"
                         :key="reg.id"
                         class="border-b border-slate-100 hover:bg-slate-50"
                       >
                         <td class="py-3 text-sm text-slate-600">{{ index + 1 }}</td>
                         <td class="py-3">
-                          <p class="font-medium text-slate-800">{{ reg.firstName }} {{ reg.lastName }}</p>
-                          <button
-                            v-if="reg.customFieldValues && Object.keys(reg.customFieldValues).length > 0"
-                            @click="toggleRegDetails(reg.id)"
-                            class="text-xs text-emerald-600 hover:underline"
-                          >
-                            {{ expandedReg === reg.id ? 'Yopish' : 'Batafsil' }}
-                          </button>
+                          <p class="font-medium text-slate-800">{{ reg.student_name }}</p>
+                          <p class="text-xs text-slate-400">{{ reg.student_code }}</p>
                         </td>
-                        <td class="py-3 text-sm text-slate-600">{{ reg.phone }}</td>
-                        <td class="py-3 text-sm text-slate-600">{{ reg.group }}</td>
+                        <td class="py-3 text-sm text-slate-600">{{ reg.student_phone }}</td>
+                        <td class="py-3 text-sm text-slate-600">{{ reg.group_name }}</td>
                         <td class="py-3">
                           <span :class="[
                             'px-2.5 py-1 text-xs font-medium rounded-lg',
-                            reg.status === 'pending' && 'bg-amber-100 text-amber-700',
-                            reg.status === 'approved' && 'bg-emerald-100 text-emerald-700',
-                            reg.status === 'rejected' && 'bg-rose-100 text-rose-700'
+                            (reg.status === 'registered' || reg.status === 'pending') && 'bg-amber-100 text-amber-700',
+                            (reg.status === 'confirmed' || reg.status === 'approved') && 'bg-emerald-100 text-emerald-700',
+                            (reg.status === 'cancelled' || reg.status === 'rejected') && 'bg-rose-100 text-rose-700'
                           ]">
-                            {{ reg.status === 'pending' ? 'Kutilmoqda' : reg.status === 'approved' ? 'Tasdiqlangan' : 'Rad etilgan' }}
+                            {{ getStatusLabel(reg.status) }}
                           </span>
                         </td>
-                        <td class="py-3 text-sm text-slate-500">{{ formatDateTime(reg.registeredAt) }}</td>
+                        <td class="py-3 text-sm text-slate-500">{{ formatDateTime(reg.registered_at) }}</td>
                         <td class="py-3">
                           <div class="flex items-center gap-1">
                             <button
-                              v-if="reg.status !== 'approved'"
-                              @click="updateStatus(selectedTournament.id, reg.id, 'approved')"
+                              v-if="reg.status !== 'confirmed' && reg.status !== 'approved'"
+                              @click="updateStatus(selectedTournament.id, reg.id, 'confirmed')"
                               class="p-1.5 text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors"
                               title="Tasdiqlash"
                             >
                               <Check class="w-4 h-4" />
                             </button>
                             <button
-                              v-if="reg.status !== 'rejected'"
-                              @click="updateStatus(selectedTournament.id, reg.id, 'rejected')"
+                              v-if="reg.status !== 'cancelled' && reg.status !== 'rejected'"
+                              @click="updateStatus(selectedTournament.id, reg.id, 'cancelled')"
                               class="p-1.5 text-rose-600 hover:bg-rose-50 rounded-lg transition-colors"
                               title="Rad etish"
                             >
                               <X class="w-4 h-4" />
                             </button>
-                          </div>
-                        </td>
-                      </tr>
-                      <!-- Expanded details row -->
-                      <tr v-if="expandedReg" v-for="reg in selectedTournament?.registrations.filter(r => r.id === expandedReg)" :key="'detail-' + reg.id">
-                        <td colspan="7" class="py-3 bg-slate-50">
-                          <div class="px-4 space-y-2">
-                            <div v-for="(value, key) in reg.customFieldValues" :key="key" class="flex gap-2 text-sm">
-                              <span class="text-slate-500">{{ key }}:</span>
-                              <span class="text-slate-800 font-medium">{{ value }}</span>
-                            </div>
-                            <div v-if="reg.comment" class="flex gap-2 text-sm">
-                              <span class="text-slate-500">Izoh:</span>
-                              <span class="text-slate-800">{{ reg.comment }}</span>
-                            </div>
                           </div>
                         </td>
                       </tr>
@@ -814,17 +808,45 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import {
+    AlertTriangle,
+    AlignLeft,
+    Award,
+    BookOpen,
+    Brain,
+    Calendar,
+    Check,
+    ClipboardList,
+    Clock,
+    Download,
+    Dumbbell,
+    FileQuestion,
+    FileText,
+    FlaskConical,
+    Gift,
+    GraduationCap,
+    Hash, List,
+    ListPlus,
+    Lock,
+    MapPin,
+    MousePointer,
+    Palette,
+    PartyPopper,
+    Pencil,
+    Plus,
+    Power,
+    Star,
+    Trash2,
+    Trophy,
+    Type,
+    Users,
+    X,
+    Zap
+} from 'lucide-vue-next'
+import { computed, onMounted, ref } from 'vue'
+import CustomSelect from '../../components/ui/CustomSelect.vue'
 import { useDataStore } from '../../stores/data'
 import { useToastStore } from '../../stores/toast'
-import {
-  Plus, Trophy, Users, Calendar, MapPin, Clock, Pencil, Trash2, Power, X,
-  FileText, Gift, ListPlus, ClipboardList, Check, AlertTriangle, Zap,
-  Brain, Dumbbell, Palette, FlaskConical, BookOpen, ChevronDown,
-  Award, Star, PartyPopper, FileQuestion, Type, Hash, List, AlignLeft,
-  Lock, MousePointer, Pointer, GraduationCap
-} from 'lucide-vue-next'
-import CustomSelect from '../../components/ui/CustomSelect.vue'
 
 const dataStore = useDataStore()
 const toast = useToastStore()
@@ -859,6 +881,8 @@ const selectedTournament = ref(null)
 const tournamentToDelete = ref(null)
 const expandedReg = ref(null)
 const activeSubjectDropdown = ref(null) // Fan dropdown uchun
+const participants = ref([])
+const participantsLoading = ref(false)
 
 const categories = [
   { value: 'all', label: 'Barchasi', icon: Trophy },
@@ -1007,7 +1031,7 @@ const activeTournaments = computed(() => {
 })
 
 const totalRegistrations = computed(() => {
-  return dataStore.tournaments.reduce((sum, t) => sum + t.registrations.length, 0)
+  return dataStore.tournaments.reduce((sum, t) => sum + (t.registrationsCount || 0), 0)
 })
 
 const upcomingCount = computed(() => {
@@ -1142,23 +1166,16 @@ const saveTournament = async () => {
   }
 
   const data = {
-    ...form.value,
-    // YANGI MODEL
-    participationRules: form.value.participationRules.map(r => ({
-      id: r.id,
-      directionId: r.directionId,
-      allowedSubjectIds: r.allowedSubjectIds,
-      selectionMode: r.selectionMode,
-      minSelect: r.selectionMode === 'multiple' ? r.minSelect : 1,
-      maxSelect: r.selectionMode === 'multiple' ? r.maxSelect : 1
-    })),
-    customFields: form.value.customFields.map(f => ({
-      id: f.id,
-      name: f.name,
-      type: f.type,
-      required: f.required,
-      options: f.type === 'select' ? f.options : []
-    }))
+    name: form.value.title,
+    description: form.value.description,
+    category: form.value.category,
+    start_date: form.value.startDate,
+    end_date: form.value.endDate,
+    registration_deadline: form.value.registrationDeadline,
+    location: form.value.location,
+    max_participants: form.value.maxParticipants,
+    prize: form.value.prize,
+    rules: form.value.rules || '',
   }
 
   saving.value = true
@@ -1206,19 +1223,86 @@ const toggleStatus = async (id) => {
   }
 }
 
-const viewRegistrations = (tournament) => {
+const viewRegistrations = async (tournament) => {
   selectedTournament.value = tournament
   expandedReg.value = null
+  participants.value = []
+  participantsLoading.value = true
   showRegistrationsModal.value = true
+  
+  try {
+    participants.value = await dataStore.fetchTournamentParticipants(tournament.id)
+  } catch (err) {
+    toast.error('Ishtirokchilarni yuklashda xatolik')
+    console.error(err)
+  } finally {
+    participantsLoading.value = false
+  }
+}
+
+const getStatusLabel = (status) => {
+  const labels = {
+    registered: 'Ro\'yxatdan o\'tgan',
+    pending: 'Kutilmoqda',
+    confirmed: 'Tasdiqlangan',
+    approved: 'Tasdiqlangan',
+    cancelled: 'Bekor qilingan',
+    rejected: 'Rad etilgan'
+  }
+  return labels[status] || status
+}
+
+const downloadExcel = () => {
+  if (!participants.value.length || !selectedTournament.value) return
+  
+  const tournamentTitle = selectedTournament.value.title || 'Turnir'
+  
+  // CSV formatda tayyorlash (Excel uchun BOM bilan UTF-8)
+  const headers = ['#', 'FIO', 'Talaba ID', 'Telefon', 'Guruh', 'Turnir', 'Holat', 'Ro\'yxatdan o\'tgan sana']
+  const rows = participants.value.map((reg, i) => [
+    i + 1,
+    reg.student_name || '',
+    reg.student_code || '',
+    reg.student_phone || '',
+    reg.group_name || '',
+    tournamentTitle,
+    getStatusLabel(reg.status),
+    reg.registered_at ? new Date(reg.registered_at).toLocaleString('uz-UZ') : ''
+  ])
+  
+  // UTF-8 BOM + CSV content
+  const csvContent = '\uFEFF' + [headers.join(','), ...rows.map(row => 
+    row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(',')
+  )].join('\n')
+  
+  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
+  const url = URL.createObjectURL(blob)
+  const link = document.createElement('a')
+  link.href = url
+  link.download = `${tournamentTitle.replace(/\s+/g, '_')}_royxat.csv`
+  link.click()
+  URL.revokeObjectURL(url)
+  
+  toast.success('Ro\'yxat yuklab olindi')
 }
 
 const toggleRegDetails = (regId) => {
   expandedReg.value = expandedReg.value === regId ? null : regId
 }
 
-const updateStatus = (tournamentId, regId, status) => {
-  dataStore.updateRegistrationStatus(tournamentId, regId, status)
-  toast.success(status === 'approved' ? 'Tasdiqlandi' : 'Rad etildi')
+const updateStatus = async (tournamentId, regId, status) => {
+  try {
+    await api.updateRegistrationStatus(tournamentId, regId, status)
+    // Update locally in participants array
+    const reg = participants.value.find(r => r.id === regId)
+    if (reg) {
+      reg.status = status
+    }
+    toast.success(status === 'confirmed' || status === 'approved' ? 'Tasdiqlandi' : 'Rad etildi')
+  } catch (e) {
+    console.error('Status update error:', e)
+    toast.error('Statusni yangilashda xatolik')
+  }
 }
 </script>
 

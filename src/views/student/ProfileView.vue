@@ -13,13 +13,13 @@
         </div>
         <div class="text-center sm:text-left">
           <h1 class="text-2xl font-bold">{{ student?.name }}</h1>
-          <p class="text-emerald-100 mt-1">{{ student?.studentId }}</p>
+          <p class="text-emerald-100 mt-1">{{ student?.student_id || student?.login || '' }}</p>
           <div class="flex items-center justify-center sm:justify-start gap-2 mt-3">
             <span class="px-3 py-1 bg-white/20 backdrop-blur rounded-lg text-sm">
-              {{ student?.group || 'KI_25-04' }}
+              {{ student?.group_name || group?.name || 'Guruh' }}
             </span>
             <span class="px-3 py-1 bg-white/20 backdrop-blur rounded-lg text-sm">
-              Talaba
+              {{ $t('roles.student') }}
             </span>
           </div>
         </div>
@@ -29,27 +29,27 @@
     <!-- Contract Status -->
     <div class="bg-white rounded-2xl border border-slate-200 p-6">
       <div class="flex items-center justify-between mb-4">
-        <h2 class="text-lg font-semibold text-slate-800">Kontrakt holati</h2>
+        <h2 class="text-lg font-semibold text-slate-800">{{ $t('subscription.title') }}</h2>
         <span 
           class="px-3 py-1 rounded-lg text-sm font-medium"
           :class="contractPercent >= 100 ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'"
         >
-          {{ contractPercent >= 100 ? 'To\'liq to\'langan' : 'Qisman to\'langan' }}
+          {{ contractPercent >= 100 ? $t('profile.fullyPaid') : $t('profile.partiallyPaid') }}
         </span>
       </div>
       
-      <div class="grid grid-cols-3 gap-4 mb-4">
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
         <div class="text-center p-4 bg-slate-50 rounded-xl">
           <p class="text-2xl font-bold text-slate-800">{{ formatMoney(contractAmount) }}</p>
-          <p class="text-sm text-slate-500 mt-1">Kontrakt</p>
+          <p class="text-sm text-slate-500 mt-1">{{ $t('profile.contractLabel') }}</p>
         </div>
         <div class="text-center p-4 bg-emerald-50 rounded-xl">
           <p class="text-2xl font-bold text-emerald-600">{{ formatMoney(student?.contractPaid || 0) }}</p>
-          <p class="text-sm text-slate-500 mt-1">To'langan</p>
+          <p class="text-sm text-slate-500 mt-1">{{ $t('profile.paidAmount') }}</p>
         </div>
         <div class="text-center p-4 bg-rose-50 rounded-xl">
           <p class="text-2xl font-bold text-rose-600">{{ formatMoney(debt) }}</p>
-          <p class="text-sm text-slate-500 mt-1">Qoldiq</p>
+          <p class="text-sm text-slate-500 mt-1">{{ $t('profile.remainingAmount') }}</p>
         </div>
       </div>
 
@@ -74,32 +74,32 @@
       <div class="bg-white rounded-2xl border border-slate-200 p-6">
         <div class="flex items-center gap-2 mb-6">
           <UserCircle class="w-5 h-5 text-emerald-500" />
-          <h2 class="text-lg font-semibold text-slate-800">Shaxsiy ma'lumotlar</h2>
+          <h2 class="text-lg font-semibold text-slate-800">{{ $t('profile.personalInfo') }}</h2>
           <Lock class="w-4 h-4 text-slate-400 ml-auto" />
         </div>
         
         <div class="space-y-4">
           <div>
-            <label class="text-xs font-medium text-slate-400 uppercase tracking-wider">F.I.O</label>
+            <label class="text-xs font-medium text-slate-400 uppercase tracking-wider">{{ $t('profile.fullName') }}</label>
             <p class="text-slate-800 font-medium mt-1">{{ student?.name }}</p>
           </div>
           <div>
-            <label class="text-xs font-medium text-slate-400 uppercase tracking-wider">Talaba ID</label>
-            <p class="text-slate-800 font-medium mt-1">{{ student?.studentId }}</p>
+            <label class="text-xs font-medium text-slate-400 uppercase tracking-wider">{{ $t('students.studentIdLabel') }}</label>
+            <p class="text-slate-800 font-medium mt-1">{{ student?.student_id || student?.login || '-' }}</p>
           </div>
           <div>
-            <label class="text-xs font-medium text-slate-400 uppercase tracking-wider">Pasport</label>
+            <label class="text-xs font-medium text-slate-400 uppercase tracking-wider">{{ $t('profile.passport') }}</label>
             <p class="text-slate-800 font-medium mt-1">{{ student?.passport || 'AA 1234567' }}</p>
           </div>
           <div>
-            <label class="text-xs font-medium text-slate-400 uppercase tracking-wider">JSHSHIR</label>
+            <label class="text-xs font-medium text-slate-400 uppercase tracking-wider">{{ $t('profile.jshshir') }}</label>
             <p class="text-slate-800 font-medium mt-1">{{ student?.jshshir || '12345678901234' }}</p>
           </div>
         </div>
 
         <div class="mt-4 p-3 bg-amber-50 rounded-xl flex items-start gap-2">
           <AlertCircle class="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" />
-          <p class="text-sm text-amber-700">Bu ma'lumotlarni faqat admin o'zgartira oladi</p>
+          <p class="text-sm text-amber-700">{{ $t('profile.adminOnlyNote') }}</p>
         </div>
       </div>
 
@@ -107,12 +107,12 @@
       <div class="bg-white rounded-2xl border border-slate-200 p-6">
         <div class="flex items-center gap-2 mb-6">
           <Settings class="w-5 h-5 text-emerald-500" />
-          <h2 class="text-lg font-semibold text-slate-800">Tahrirlash mumkin</h2>
+          <h2 class="text-lg font-semibold text-slate-800">{{ $t('profile.editProfile') }}</h2>
         </div>
         
         <form @submit.prevent="saveProfile" class="space-y-4">
           <div>
-            <label class="text-xs font-medium text-slate-400 uppercase tracking-wider">Telefon</label>
+            <label class="text-xs font-medium text-slate-400 uppercase tracking-wider">{{ $t('students.phone') }}</label>
             <div class="relative mt-1">
               <Phone class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
               <input
@@ -125,7 +125,7 @@
           </div>
 
           <div>
-            <label class="text-xs font-medium text-slate-400 uppercase tracking-wider">Manzil</label>
+            <label class="text-xs font-medium text-slate-400 uppercase tracking-wider">{{ $t('students.address') }}</label>
             <div class="relative mt-1">
               <MapPin class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
               <input
@@ -138,14 +138,15 @@
           </div>
 
           <div>
-            <label class="text-xs font-medium text-slate-400 uppercase tracking-wider">Transport</label>
+            <label class="text-xs font-medium text-slate-400 uppercase tracking-wider">{{ $t('students.faculty') }}</label>
             <div class="relative mt-1">
-              <Bus class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+              <GraduationCap class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
               <input
                 v-model="form.commute"
                 type="text"
-                class="w-full pl-11 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500"
-                placeholder="Metro, Avtobus, ..."
+                readonly
+                class="w-full pl-11 pr-4 py-2.5 bg-slate-100 border border-slate-200 rounded-xl text-slate-600 cursor-not-allowed"
+                :placeholder="$t('students.faculty')"
               />
             </div>
           </div>
@@ -157,7 +158,7 @@
           >
             <Loader2 v-if="isSaving" class="w-5 h-5 animate-spin" />
             <Save v-else class="w-5 h-5" />
-            <span>{{ isSaving ? 'Saqlanmoqda...' : 'Saqlash' }}</span>
+            <span>{{ isSaving ? $t('profile.saving') : $t('profile.save') }}</span>
           </button>
         </form>
       </div>
@@ -167,12 +168,12 @@
     <div class="bg-white rounded-2xl border border-slate-200 p-6">
       <div class="flex items-center gap-2 mb-6">
         <KeyRound class="w-5 h-5 text-emerald-500" />
-        <h2 class="text-lg font-semibold text-slate-800">Parolni o'zgartirish</h2>
+        <h2 class="text-lg font-semibold text-slate-800">{{ $t('profile.changePassword') }}</h2>
       </div>
 
       <form @submit.prevent="changePassword" class="grid md:grid-cols-3 gap-4">
         <div>
-          <label class="text-xs font-medium text-slate-400 uppercase tracking-wider">Joriy parol</label>
+          <label class="text-xs font-medium text-slate-400 uppercase tracking-wider">{{ $t('profile.currentPassword') }}</label>
           <div class="relative mt-1">
             <input
               v-model="passwordForm.current"
@@ -192,7 +193,7 @@
         </div>
 
         <div>
-          <label class="text-xs font-medium text-slate-400 uppercase tracking-wider">Yangi parol</label>
+          <label class="text-xs font-medium text-slate-400 uppercase tracking-wider">{{ $t('profile.newPassword') }}</label>
           <div class="relative mt-1">
             <input
               v-model="passwordForm.new"
@@ -218,7 +219,7 @@
             class="w-full mt-1 bg-slate-800 hover:bg-slate-900 text-white font-semibold py-2.5 rounded-xl transition-colors flex items-center justify-center gap-2"
           >
             <KeyRound class="w-5 h-5" />
-            <span>O'zgartirish</span>
+            <span>{{ $t('profile.change') }}</span>
           </button>
         </div>
       </form>
@@ -238,29 +239,31 @@
 </template>
 
 <script setup>
-import { ref, reactive, watch, computed, onMounted } from 'vue'
+import { useLanguageStore } from '@/stores/language'
+import {
+    AlertCircle,
+    Camera,
+    CheckCircle,
+    Eye,
+    EyeOff,
+    GraduationCap,
+    KeyRound,
+    Loader2,
+    Lock,
+    MapPin,
+    Phone,
+    Save,
+    Settings,
+    UserCircle
+} from 'lucide-vue-next'
+import { computed, onMounted, reactive, ref, watch } from 'vue'
+import api from '../../services/api'
 import { useAuthStore } from '../../stores/auth'
 import { useToastStore } from '../../stores/toast'
-import api from '../../services/api'
-import {
-  Camera,
-  UserCircle,
-  Lock,
-  Settings,
-  Phone,
-  MapPin,
-  Bus,
-  Save,
-  Loader2,
-  KeyRound,
-  Eye,
-  EyeOff,
-  AlertCircle,
-  CheckCircle
-} from 'lucide-vue-next'
 
 const authStore = useAuthStore()
 const toast = useToastStore()
+const { t } = useLanguageStore()
 
 // State
 const loading = ref(true)
@@ -274,44 +277,42 @@ const loadProfile = async () => {
   error.value = null
   
   try {
-    // Get current user profile from API
+    // Get current user profile from API - returns full student data for students
     const response = await api.getMe()
-    student.value = response
-    
-    // Get group info if student has a group
-    if (response.group_id) {
-      try {
-        const groupResponse = await api.getGroup(response.group_id)
-        group.value = groupResponse
-      } catch (e) {
-        console.warn('Could not load group info:', e)
-      }
+    student.value = {
+      ...response,
+      name: response.full_name || response.name,
+      contractPaid: response.contract_paid || 0
     }
     
     // Initialize form with current data
-    if (student.value) {
-      form.phone = student.value.phone || ''
-      form.address = student.value.address || ''
-      form.commute = student.value.commute || ''
-    }
+    form.phone = response.phone || response.student_phone || ''
+    form.address = response.address || ''
+    form.commute = response.faculty || response.commute || ''
+    
   } catch (e) {
     console.error('Error loading profile:', e)
-    error.value = 'Profil ma\'lumotlarini yuklashda xatolik'
+    error.value = t('profile.loadError')
     
     // Fallback to auth store user data
     if (authStore.user) {
       student.value = {
-        id: authStore.user.student_id || authStore.user.id,
+        id: authStore.user.studentId || authStore.user.id,
         name: authStore.user.name || authStore.user.full_name,
-        student_id: authStore.user.email,
+        student_id: authStore.user.student_id || authStore.user.email,
         phone: authStore.user.phone || '',
         address: authStore.user.address || '',
         commute: authStore.user.commute || '',
         passport: authStore.user.passport || '-',
         jshshir: authStore.user.jshshir || '-',
-        group_id: authStore.user.group_id,
-        contract_paid: authStore.user.contract_paid || 0
+        group_id: authStore.user.group_id || authStore.user.groupId,
+        group_name: authStore.user.group || authStore.user.group_name,
+        contract_amount: 0,
+        contract_paid: 0
       }
+      form.phone = student.value.phone
+      form.address = student.value.address
+      form.commute = student.value.commute
     }
   } finally {
     loading.value = false
@@ -319,13 +320,12 @@ const loadProfile = async () => {
 }
 
 // Contract calculations
-const contractAmount = computed(() => group.value?.contract_amount || 18411000)
+const contractAmount = computed(() => student.value?.contract_amount || 0)
 const debt = computed(() => {
-  if (!group.value) return 0
   return Math.max(0, contractAmount.value - (student.value?.contract_paid || 0))
 })
 const contractPercent = computed(() => {
-  if (!group.value) return 100
+  if (!contractAmount.value || contractAmount.value === 0) return 100
   return Math.round((student.value?.contract_paid || 0) / contractAmount.value * 100)
 })
 
@@ -365,7 +365,7 @@ const formatMoney = (amount) => {
 
 const saveProfile = async () => {
   if (!student.value?.id) {
-    toast.error('Talaba topilmadi')
+    toast.error(t('profile.studentNotFound'))
     return
   }
   
@@ -386,12 +386,12 @@ const saveProfile = async () => {
       commute: form.commute
     }
     
-    toast.success('Ma\'lumotlar saqlandi')
-    showToastMessage('Ma\'lumotlar saqlandi')
+    toast.success(t('profile.dataSaved'))
+    showToastMessage(t('profile.dataSaved'))
   } catch (e) {
     console.error('Error saving profile:', e)
-    toast.error('Saqlashda xatolik yuz berdi')
-    showToastMessage('Xatolik yuz berdi')
+    toast.error(t('profile.saveError'))
+    showToastMessage(t('profile.errorOccurred'))
   } finally {
     isSaving.value = false
   }
@@ -399,13 +399,13 @@ const saveProfile = async () => {
 
 const changePassword = async () => {
   if (!passwordForm.current || !passwordForm.new) {
-    toast.error('Parollarni kiriting')
-    showToastMessage('Parollarni kiriting')
+    toast.error(t('profile.enterPasswords'))
+    showToastMessage(t('profile.enterPasswords'))
     return
   }
   
   if (passwordForm.new.length < 6) {
-    toast.error('Yangi parol kamida 6 ta belgidan iborat bo\'lishi kerak')
+    toast.error(t('profile.passwordMinLength'))
     return
   }
   
@@ -417,11 +417,11 @@ const changePassword = async () => {
     passwordForm.current = ''
     passwordForm.new = ''
     
-    toast.success('Parol muvaffaqiyatli o\'zgartirildi')
-    showToastMessage('Parol o\'zgartirildi')
+    toast.success(t('profile.passwordChanged'))
+    showToastMessage(t('profile.passwordChangeShort'))
   } catch (e) {
     console.error('Error changing password:', e)
-    const errorMsg = e.response?.data?.detail || 'Parolni o\'zgartirishda xatolik'
+    const errorMsg = e.response?.data?.detail || t('profile.passwordChangeError')
     toast.error(errorMsg)
     showToastMessage(errorMsg)
   } finally {

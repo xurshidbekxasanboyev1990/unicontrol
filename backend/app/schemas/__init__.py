@@ -60,6 +60,37 @@ from app.schemas.report import (
     AIAnalysisRequest,
     AIAnalysisResponse,
 )
+from app.schemas.club import (
+    ClubBase,
+    ClubCreate,
+    ClubUpdate,
+    ClubResponse,
+    ClubListResponse,
+    ClubMemberCreate,
+    ClubMemberResponse,
+)
+from app.schemas.subject import (
+    SubjectBase,
+    SubjectCreate,
+    SubjectUpdate,
+    SubjectResponse,
+    SubjectListResponse,
+    DirectionBase,
+    DirectionCreate,
+    DirectionUpdate,
+    DirectionResponse,
+    DirectionListResponse,
+    DirectionSubjectUpdate,
+)
+from app.schemas.tournament import (
+    TournamentBase,
+    TournamentCreate,
+    TournamentUpdate,
+    TournamentResponse,
+    TournamentListResponse,
+    TournamentRegister,
+    TournamentRegistrationResponse,
+)
 
 __all__ = [
     # User
@@ -108,4 +139,33 @@ __all__ = [
     "ReportResponse",
     "AIAnalysisRequest",
     "AIAnalysisResponse",
+    # Club
+    "ClubBase",
+    "ClubCreate",
+    "ClubUpdate",
+    "ClubResponse",
+    "ClubListResponse",
+    "ClubMemberCreate",
+    "ClubMemberResponse",
+    # Subject
+    "SubjectBase",
+    "SubjectCreate",
+    "SubjectUpdate",
+    "SubjectResponse",
+    "SubjectListResponse",
+    # Direction
+    "DirectionBase",
+    "DirectionCreate",
+    "DirectionUpdate",
+    "DirectionResponse",
+    "DirectionListResponse",
+    "DirectionSubjectUpdate",
+    # Tournament
+    "TournamentBase",
+    "TournamentCreate",
+    "TournamentUpdate",
+    "TournamentResponse",
+    "TournamentListResponse",
+    "TournamentRegister",
+    "TournamentRegistrationResponse",
 ]

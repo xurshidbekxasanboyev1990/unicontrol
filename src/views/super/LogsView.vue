@@ -3,7 +3,7 @@
     <!-- Loading State -->
     <div v-if="loading" class="flex items-center justify-center py-12">
       <Loader2 class="w-8 h-8 animate-spin text-amber-600" />
-      <span class="ml-3 text-slate-600">Yuklanmoqda...</span>
+      <span class="ml-3 text-slate-600">{{ $t('common.loading') }}</span>
     </div>
 
     <!-- Error State -->
@@ -16,7 +16,7 @@
         @click="loadLogs" 
         class="mt-4 px-4 py-2 bg-red-100 hover:bg-red-200 text-red-700 rounded-lg transition-colors"
       >
-        Qayta urinish
+        {{ $t('common.retry') }}
       </button>
     </div>
 
@@ -24,7 +24,7 @@
       <!-- Header -->
       <div class="flex items-center justify-between">
         <div>
-          <h1 class="text-2xl font-bold text-slate-800">Tizim jurnali</h1>
+          <h1 class="text-2xl font-bold text-slate-800">{{ $t('logs.title') }}</h1>
           <p class="text-slate-500">Barcha faoliyatlar tarixi</p>
         </div>
         <div class="flex items-center gap-3">
@@ -46,7 +46,7 @@
       </div>
 
     <!-- Stats -->
-    <div class="grid grid-cols-4 gap-4">
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
       <div class="bg-white rounded-2xl border border-slate-200 p-4">
         <div class="flex items-center gap-3">
           <div class="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center">
@@ -168,23 +168,26 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { useLanguageStore } from '@/stores/language'
 import { useToastStore } from '@/stores/toast'
-import api from '../../services/api'
 import {
-  Download,
-  ScrollText,
-  LogIn,
-  FileEdit,
-  AlertCircle,
-  CheckCircle,
-  XCircle,
-  ChevronLeft,
-  ChevronRight,
-  Loader2
+    AlertCircle,
+    CheckCircle,
+    ChevronLeft,
+    ChevronRight,
+    Download,
+    FileEdit,
+    Loader2,
+    LogIn,
+    ScrollText,
+    XCircle
 } from 'lucide-vue-next'
+import { computed, onMounted, ref } from 'vue'
+import api from '../../services/api'
 
 const toast = useToastStore()
+const langStore = useLanguageStore()
+const { t } = langStore
 
 // State
 const loading = ref(true)
@@ -210,11 +213,11 @@ const loadLogs = async () => {
     logs.value = (response.items || response || []).map(l => ({
       id: l.id,
       timestamp: l.created_at || l.timestamp,
-      type: l.type || 'system',
-      user: l.user_name || l.user || 'Unknown',
-      action: l.action || l.message,
+      type: l.level?.toLowerCase() || l.type || 'info',
+      user: l.user_name || l.user || 'System',
+      action: l.action || l.message || l.details,
       ip: l.ip_address || l.ip || '-',
-      status: l.status || 'success'
+      status: l.level === 'ERROR' ? 'error' : 'success'
     }))
     
     totalPages.value = response.pages || Math.ceil((response.total || logs.value.length) / 50)
@@ -269,7 +272,7 @@ const getTypeLabel = (type) => {
 
 const exportLogs = async () => {
   try {
-    toast.info('Loglar yuklanmoqda...')
+    toast.info(t('common.loading'))
     const response = await api.exportToExcel('logs')
     
     const url = window.URL.createObjectURL(new Blob([response]))
@@ -281,7 +284,7 @@ const exportLogs = async () => {
     link.remove()
     window.URL.revokeObjectURL(url)
     
-    toast.success('Loglar yuklandi')
+    toast.success(t('common.success'))
   } catch (e) {
     console.error('Error exporting logs:', e)
     toast.error('Eksport qilishda xatolik')

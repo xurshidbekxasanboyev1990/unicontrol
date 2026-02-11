@@ -13,6 +13,7 @@ from typing import Optional, List, TYPE_CHECKING
 from sqlalchemy import String, Integer, DateTime, ForeignKey, Numeric, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
+from app.config import TASHKENT_TZ
 from app.database import Base
 
 if TYPE_CHECKING:
@@ -102,35 +103,35 @@ class Group(Base):
     # Timestamps
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
-        default=datetime.utcnow,
+        default=lambda: datetime.now(TASHKENT_TZ),
         nullable=False
     )
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
-        default=datetime.utcnow,
-        onupdate=datetime.utcnow,
+        default=lambda: datetime.now(TASHKENT_TZ),
+        onupdate=lambda: datetime.now(TASHKENT_TZ),
         nullable=False
     )
     
-    # Relationships
+    # Relationships - use lazy="select" (default) to avoid auto-loading
     students: Mapped[List["Student"]] = relationship(
         "Student",
         back_populates="group",
         foreign_keys="Student.group_id",
-        lazy="selectin"
+        lazy="select"  # Changed from selectin - don't auto-load
     )
     
     leader: Mapped[Optional["Student"]] = relationship(
         "Student",
         foreign_keys=[leader_id],
-        lazy="joined",
+        lazy="select",  # Changed from joined
         post_update=True
     )
     
     schedules: Mapped[List["Schedule"]] = relationship(
         "Schedule",
         back_populates="group",
-        lazy="selectin"
+        lazy="select"  # Changed from selectin
     )
     
     def __repr__(self) -> str:

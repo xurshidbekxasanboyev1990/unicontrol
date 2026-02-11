@@ -26,6 +26,7 @@ from app.schemas.schedule import (
 from app.models.schedule import WeekDay
 from app.core.dependencies import get_current_active_user, require_admin
 from app.models.user import User
+from app.config import today_tashkent
 
 router = APIRouter()
 
@@ -120,7 +121,7 @@ async def get_group_day_schedule(
     Get schedule for a specific day.
     """
     if target_date is None:
-        target_date = date.today()
+        target_date = today_tashkent()
     
     service = ScheduleService(db)
     return await service.get_day_schedule(group_id, target_date)

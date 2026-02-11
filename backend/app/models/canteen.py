@@ -23,6 +23,7 @@ from sqlalchemy import (
 )
 from sqlalchemy.orm import relationship
 
+from app.config import TASHKENT_TZ
 from app.database import Base
 
 
@@ -63,7 +64,7 @@ class MenuCategory(Base):
     color = Column(String(20), nullable=True, default="#10b981", comment="Rang kodi")
     sort_order = Column(Integer, default=0, comment="Tartib raqami")
     is_active = Column(Boolean, default=True, comment="Faollik holati")
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime, default=lambda: datetime.now(TASHKENT_TZ))
     
     # Relationships
     items = relationship("MenuItem", back_populates="category", cascade="all, delete-orphan")
@@ -121,8 +122,8 @@ class MenuItem(Base):
     preparation_time = Column(Integer, nullable=True, comment="Tayyorlanish vaqti (daqiqa)")
     
     # Timestamps
-    created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = Column(DateTime, default=lambda: datetime.now(TASHKENT_TZ))
+    updated_at = Column(DateTime, default=lambda: datetime.now(TASHKENT_TZ), onupdate=lambda: datetime.now(TASHKENT_TZ))
     
     # Relationships
     category = relationship("MenuCategory", back_populates="items")
@@ -183,7 +184,7 @@ class Order(Base):
     notes = Column(Text, nullable=True, comment="Izohlar")
     
     # Timestamps
-    created_at = Column(DateTime, default=datetime.utcnow, comment="Yaratilgan vaqt")
+    created_at = Column(DateTime, default=lambda: datetime.now(TASHKENT_TZ), comment="Yaratilgan vaqt")
     completed_at = Column(DateTime, nullable=True, comment="Bajarilgan vaqt")
     
     # Relationships

@@ -13,6 +13,7 @@ from typing import Optional, TYPE_CHECKING
 from sqlalchemy import String, Integer, DateTime, ForeignKey, Text, Boolean, Enum as SAEnum
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
+from app.config import TASHKENT_TZ
 from app.database import Base
 
 if TYPE_CHECKING:
@@ -164,7 +165,7 @@ class Notification(Base):
     # Timestamps
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
-        default=datetime.utcnow,
+        default=lambda: datetime.now(TASHKENT_TZ),
         nullable=False
     )
     
@@ -187,14 +188,14 @@ class Notification(Base):
     def mark_as_read(self) -> None:
         """Mark notification as read."""
         self.is_read = True
-        self.read_at = datetime.utcnow()
+        self.read_at = datetime.now(TASHKENT_TZ)
     
     @property
     def is_expired(self) -> bool:
         """Check if notification is expired."""
         if self.expires_at is None:
             return False
-        return datetime.utcnow() > self.expires_at
+        return datetime.now(TASHKENT_TZ) > self.expires_at
     
     @property
     def is_urgent(self) -> bool:
@@ -302,7 +303,7 @@ class BroadcastNotification(Base):
     # Timestamps
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
-        default=datetime.utcnow,
+        default=lambda: datetime.now(TASHKENT_TZ),
         nullable=False
     )
     

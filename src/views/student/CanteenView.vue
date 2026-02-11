@@ -3,8 +3,8 @@
     <!-- Header -->
     <div class="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
       <div>
-        <h1 class="text-2xl font-bold text-slate-800 md:text-3xl">🍽️ Oshxona menyusi</h1>
-        <p class="text-slate-500">Bugun nimani tanovul qilmoqchisiz?</p>
+        <h1 class="text-2xl font-bold text-slate-800 md:text-3xl">🍽️ {{ $t('canteen.title') }}</h1>
+        <p class="text-slate-500">{{ $t('canteen.todayMenu') }}</p>
       </div>
       
       <div class="flex items-center gap-3">
@@ -14,7 +14,7 @@
           class="relative flex items-center gap-2 rounded-xl bg-emerald-500 px-4 py-2.5 text-white hover:bg-emerald-600 transition-all"
         >
           <ShoppingCart :size="20" />
-          <span>Savatcha</span>
+          <span>{{ $t('canteen.order') }}</span>
           <span 
             v-if="cartItemsCount > 0" 
             class="absolute -top-2 -right-2 flex h-6 w-6 items-center justify-center rounded-full bg-red-500 text-xs font-bold"
@@ -35,7 +35,7 @@
           : 'bg-white text-slate-600 hover:bg-slate-50 border border-slate-200'"
       >
         <Utensils :size="18" />
-        Barchasi
+        {{ $t('common.all') }}
       </button>
       <button
         v-for="cat in categories"
@@ -57,7 +57,7 @@
       <input
         v-model="searchQuery"
         type="text"
-        placeholder="Taomlarni qidirish..."
+        placeholder="..."
         class="w-full rounded-xl border border-slate-200 bg-white py-3 pl-12 pr-4 text-slate-700 placeholder-slate-400 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
       />
     </div>
@@ -89,10 +89,10 @@
           <!-- Badges -->
           <div class="absolute top-2 left-2 flex flex-col gap-1">
             <span v-if="item.is_vegetarian" class="rounded-lg bg-green-500 px-2 py-1 text-xs font-medium text-white">
-              🥬 Vegetarian
+              🥬 {{ $t('canteen.vegetarian') }}
             </span>
             <span v-if="!item.is_available" class="rounded-lg bg-red-500 px-2 py-1 text-xs font-medium text-white">
-              Mavjud emas
+              {{ $t('common.inactive') }}
             </span>
           </div>
         </div>
@@ -105,19 +105,19 @@
           <div class="flex items-center justify-between">
             <div>
               <span class="text-lg font-bold text-emerald-600">{{ formatPrice(item.price) }}</span>
-              <span class="text-sm text-slate-400"> so'm</span>
+              <span class="text-sm text-slate-400"> {{ t('canteen.sum') }}</span>
             </div>
             
             <div v-if="item.calories" class="flex items-center gap-1 text-xs text-slate-400">
               <Flame :size="14" />
-              {{ item.calories }} kkal
+              {{ item.calories }} {{ $t('canteen.calories') }}
             </div>
           </div>
           
           <!-- Preparation time -->
           <div v-if="item.preparation_time" class="flex items-center gap-1 text-xs text-slate-400">
             <Clock :size="14" />
-            {{ item.preparation_time }} daqiqa
+            {{ item.preparation_time }} min
           </div>
         </div>
 
@@ -131,7 +131,7 @@
             : 'bg-slate-100 text-slate-400 cursor-not-allowed'"
         >
           <Plus :size="18" />
-          Savatchaga qo'shish
+          {{ $t('canteen.order') }}
         </button>
       </div>
     </div>
@@ -139,7 +139,7 @@
     <!-- Empty state -->
     <div v-if="!loading && filteredItems.length === 0" class="text-center py-12">
       <UtensilsCrossed :size="48" class="mx-auto text-slate-300 mb-4" />
-      <p class="text-slate-500">Hech narsa topilmadi</p>
+      <p class="text-slate-500">{{ $t('common.noResults') }}</p>
     </div>
 
     <!-- Cart Modal -->
@@ -153,8 +153,8 @@
           <!-- Header -->
           <div class="flex items-center justify-between border-b border-slate-200 p-4">
             <div>
-              <h2 class="text-lg font-bold text-slate-800">Savatcha</h2>
-              <p class="text-sm text-slate-500">{{ cartItemsCount }} ta mahsulot</p>
+              <h2 class="text-lg font-bold text-slate-800">{{ t('canteen.cart') }}</h2>
+              <p class="text-sm text-slate-500">{{ cartItemsCount }} {{ t('common.items') }}</p>
             </div>
             <button @click="showCart = false" class="rounded-lg p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-600">
               <X :size="20" />
@@ -165,7 +165,7 @@
           <div class="flex-1 overflow-y-auto p-4 space-y-3">
             <div v-if="cart.length === 0" class="text-center py-8">
               <ShoppingCart :size="48" class="mx-auto text-slate-300 mb-4" />
-              <p class="text-slate-500">Savatcha bo'sh</p>
+              <p class="text-slate-500">{{ t('canteen.cartEmpty') }}</p>
             </div>
 
             <div
@@ -187,7 +187,7 @@
 
               <div class="flex-1 min-w-0">
                 <h4 class="font-medium text-slate-800 truncate">{{ item.name }}</h4>
-                <p class="text-sm text-emerald-600 font-semibold">{{ formatPrice(item.price) }} so'm</p>
+                <p class="text-sm text-emerald-600 font-semibold">{{ formatPrice(item.price) }} {{ t('canteen.sum') }}</p>
               </div>
 
               <div class="flex items-center gap-2">
@@ -212,7 +212,7 @@
           <div class="px-4 pb-4" v-if="cart.length > 0">
             <textarea
               v-model="orderNotes"
-              placeholder="Izoh qo'shish (ixtiyoriy)..."
+              placeholder="..."
               class="w-full rounded-xl border border-slate-200 p-3 text-sm resize-none focus:border-emerald-500 focus:outline-none"
               rows="2"
             ></textarea>
@@ -221,8 +221,8 @@
           <!-- Footer -->
           <div class="border-t border-slate-200 p-4 space-y-3">
             <div class="flex items-center justify-between">
-              <span class="text-slate-600">Jami summa:</span>
-              <span class="text-xl font-bold text-slate-800">{{ formatPrice(cartTotal) }} so'm</span>
+              <span class="text-slate-600">{{ t('canteen.totalAmount') }}:</span>
+              <span class="text-xl font-bold text-slate-800">{{ formatPrice(cartTotal) }} {{ t('canteen.sum') }}</span>
             </div>
             
             <button
@@ -232,7 +232,7 @@
             >
               <Loader2 v-if="submitting" :size="20" class="animate-spin" />
               <ShoppingBag v-else :size="20" />
-              {{ submitting ? 'Buyurtma berilmoqda...' : 'Buyurtma berish' }}
+              {{ submitting ? t('common.loading') : t('canteen.order') }}
             </button>
           </div>
         </div>
@@ -248,7 +248,7 @@
       >
         <div class="w-full max-w-2xl max-h-[90vh] rounded-2xl bg-white overflow-hidden flex flex-col">
           <div class="flex items-center justify-between border-b border-slate-200 p-4">
-            <h2 class="text-lg font-bold text-slate-800">Mening buyurtmalarim</h2>
+            <h2 class="text-lg font-bold text-slate-800">{{ t('canteen.myOrders') }}</h2>
             <button @click="showOrders = false" class="rounded-lg p-2 text-slate-400 hover:bg-slate-100">
               <X :size="20" />
             </button>
@@ -261,7 +261,7 @@
             
             <div v-else-if="myOrders.length === 0" class="text-center py-12">
               <Package :size="48" class="mx-auto text-slate-300 mb-4" />
-              <p class="text-slate-500">Buyurtmalar yo'q</p>
+              <p class="text-slate-500">{{ t('canteen.noOrders') }}</p>
             </div>
 
             <div
@@ -286,13 +286,13 @@
               <div class="space-y-2 mb-3">
                 <div v-for="item in order.items" :key="item.id" class="flex justify-between text-sm">
                   <span class="text-slate-600">{{ item.item_name }} x{{ item.quantity }}</span>
-                  <span class="text-slate-800">{{ formatPrice(item.total_price) }} so'm</span>
+                  <span class="text-slate-800">{{ formatPrice(item.total_price) }} {{ t('canteen.sum') }}</span>
                 </div>
               </div>
               
               <div class="flex justify-between items-center pt-3 border-t border-slate-100">
-                <span class="text-slate-600">Jami:</span>
-                <span class="font-bold text-emerald-600">{{ formatPrice(order.total_amount) }} so'm</span>
+                <span class="text-slate-600">{{ t('canteen.total') }}:</span>
+                <span class="font-bold text-emerald-600">{{ formatPrice(order.total_amount) }} {{ t('canteen.sum') }}</span>
               </div>
             </div>
           </div>
@@ -306,23 +306,42 @@
       class="fixed bottom-6 left-6 flex items-center gap-2 rounded-full bg-slate-800 px-4 py-3 text-white shadow-lg hover:bg-slate-700 transition-all"
     >
       <Package :size="20" />
-      <span>Buyurtmalarim</span>
+      <span>{{ t('canteen.myOrders') }}</span>
     </button>
   </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
-import { useToastStore } from '@/stores/toast'
 import api from '@/services/api'
+import { useLanguageStore } from '@/stores/language'
+import { useToastStore } from '@/stores/toast'
 import {
-  ShoppingCart, ShoppingBag, Search, Plus, Minus, X,
-  Utensils, UtensilsCrossed, Coffee, Pizza, Salad,
-  Sandwich, Soup, Beef, Fish, Cake, Cookie,
-  Clock, Flame, Package, Loader2, ChefHat
+    Beef,
+    Cake,
+    ChefHat,
+    Clock,
+    Coffee,
+    Cookie,
+    Fish,
+    Flame,
+    Loader2,
+    Minus,
+    Package,
+    Pizza,
+    Plus,
+    Salad,
+    Sandwich,
+    Search,
+    ShoppingBag,
+    ShoppingCart,
+    Soup,
+    Utensils, UtensilsCrossed,
+    X
 } from 'lucide-vue-next'
+import { computed, onMounted, ref } from 'vue'
 
 const toast = useToastStore()
+const { t } = useLanguageStore()
 
 // State
 const loading = ref(true)
@@ -397,7 +416,7 @@ async function loadData() {
     menuItems.value = menuRes.items || []
   } catch (error) {
     console.error('Error loading canteen data:', error)
-    toast.error('Ma\'lumotlarni yuklashda xatolik')
+    toast.error(t('common.error'))
   } finally {
     loading.value = false
   }
@@ -416,7 +435,7 @@ function addToCart(item) {
       quantity: 1
     })
   }
-  toast.success(`"${item.name}" savatchaga qo'shildi`)
+  toast.success(`"${item.name}" ✓`)
 }
 
 function updateQuantity(itemId, quantity) {
@@ -445,7 +464,7 @@ async function submitOrder() {
     
     const response = await api.createCanteenOrder(orderData)
     
-    toast.success(`Buyurtma ${response.order_number} muvaffaqiyatli berildi!`)
+    toast.success(`${t('canteen.order')} ${response.order_number} ✓`)
     
     // Clear cart
     cart.value = []
@@ -453,7 +472,7 @@ async function submitOrder() {
     showCart.value = false
   } catch (error) {
     console.error('Order error:', error)
-    toast.error(error.message || 'Buyurtma berishda xatolik')
+    toast.error(error.message || t('common.error'))
   } finally {
     submitting.value = false
   }
@@ -468,7 +487,7 @@ async function openMyOrders() {
     myOrders.value = response.items || []
   } catch (error) {
     console.error('Error loading orders:', error)
-    toast.error('Buyurtmalarni yuklashda xatolik')
+    toast.error(t('common.error'))
   } finally {
     ordersLoading.value = false
   }

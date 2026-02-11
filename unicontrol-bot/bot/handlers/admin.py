@@ -10,6 +10,7 @@ from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
 from sqlalchemy import select, func, update, delete
 from datetime import datetime, timedelta
+from bot.config import now_tashkent, today_tashkent
 import logging
 import asyncio
 
@@ -150,7 +151,7 @@ async def callback_admin_stats(callback: CallbackQuery):
         total_users = await session.scalar(select(func.count(BotUser.id)))
         
         # Active today
-        today = datetime.utcnow().date()
+        today = today_tashkent()
         active_today = await session.scalar(
             select(func.count(BotUser.id)).where(
                 func.date(BotUser.last_active) == today
@@ -197,7 +198,7 @@ async def callback_admin_stats_period(callback: CallbackQuery):
     period = callback.data.split(":")[-1]
     
     # Calculate date range
-    now = datetime.utcnow()
+    now = now_tashkent()
     if period == "today":
         start_date = now.replace(hour=0, minute=0, second=0, microsecond=0)
         period_name = "Bugun"
@@ -370,7 +371,7 @@ async def callback_broadcast_confirm(callback: CallbackQuery, bot: Bot):
         
         # Update status
         broadcast.status = "sending"
-        broadcast.started_at = datetime.utcnow()
+        broadcast.started_at = now_tashkent()
         await session.commit()
     
     await callback.message.edit_text(
@@ -480,7 +481,7 @@ async def send_broadcast(bot: Bot, broadcast_id: int, status_message: Message):
                 sent_count=sent,
                 failed_count=failed,
                 blocked_count=blocked,
-                completed_at=datetime.utcnow()
+                completed_at=now_tashkent()
             )
         )
         await session.commit()

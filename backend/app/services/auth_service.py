@@ -11,6 +11,7 @@ from datetime import datetime
 from typing import Optional, Tuple
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, update
+from loguru import logger
 
 from app.models.user import User, UserRole
 from app.schemas.user import UserCreate, UserLogin, Token, UserResponse
@@ -27,7 +28,7 @@ from app.core.exceptions import (
     NotFoundException,
     ConflictException,
 )
-from app.config import settings
+from app.config import settings, now_tashkent
 
 
 class AuthService:
@@ -52,7 +53,7 @@ class AuthService:
         """
         from sqlalchemy import or_
         
-        print(f"[AUTH] Authenticate called: login={login}")
+        logger.debug(f"Authenticate called: login={login}")
         
         # Find user by email or login
         result = await self.db.execute(
@@ -63,22 +64,22 @@ class AuthService:
         user = result.scalar_one_or_none()
         
         if user is None:
-            print(f"[AUTH] User not found: {login}")
+            logger.debug(f"User not found: {login}")
             raise UnauthorizedException("Login yoki parol noto'g'ri")
         
-        print(f"[AUTH] User found: id={user.id}, login={user.login}, role={user.role}")
+        logger.debug(f"User found: id={user.id}, login={user.login}, role={user.role}")
         
         if not verify_password(password, user.password_hash):
-            print(f"[AUTH] Wrong password for user: {login}")
+            logger.warning(f"Wrong password attempt for user: {login}")
             raise UnauthorizedException("Login yoki parol noto'g'ri")
         
-        print(f"[AUTH] Password verified OK")
+        logger.debug("Password verified OK")
         
         if not user.is_active:
             raise UnauthorizedException("Akkount faollashtirilmagan")
         
         # Update last login
-        user.last_login = datetime.utcnow()
+        user.last_login = now_tashkent()
         await self.db.commit()
         
         return user
@@ -98,6 +99,11 @@ class AuthService:
         # Create tokens
         access_token = create_access_token(user.id, user.role.value)
         refresh_token = create_refresh_token(user.id)
+        
+        # Save refresh token to DB for server-side validation
+        user.refresh_token = refresh_token
+        self.db.add(user)
+        await self.db.flush()
         
         return Token(
             access_token=access_token,
@@ -136,9 +142,18 @@ class AuthService:
         if user is None or not user.is_active:
             raise UnauthorizedException("User not found or inactive")
         
+        # Verify refresh token matches the one stored in DB (server-side invalidation)
+        if user.refresh_token != refresh_token:
+            raise UnauthorizedException("Refresh token has been revoked")
+        
         # Create new tokens
         access_token = create_access_token(user.id, user.role.value)
         new_refresh_token = create_refresh_token(user.id)
+        
+        # Update stored refresh token (token rotation)
+        user.refresh_token = new_refresh_token
+        self.db.add(user)
+        await self.db.flush()
         
         return Token(
             access_token=access_token,
@@ -159,8 +174,10 @@ class AuthService:
             Created user
             
         Raises:
-            ConflictException: If email already exists
+            ConflictException: If email or login already exists
         """
+        from sqlalchemy import or_
+        
         # Check if email exists
         result = await self.db.execute(
             select(User).where(User.email == user_data.email)
@@ -168,8 +185,17 @@ class AuthService:
         if result.scalar_one_or_none():
             raise ConflictException("Email already registered")
         
+        # Check if login exists
+        login_value = user_data.login or user_data.email
+        result = await self.db.execute(
+            select(User).where(User.login == login_value)
+        )
+        if result.scalar_one_or_none():
+            raise ConflictException("Login already registered")
+        
         # Create user
         user = User(
+            login=login_value,
             email=user_data.email,
             name=user_data.name,
             password_hash=get_password_hash(user_data.password),

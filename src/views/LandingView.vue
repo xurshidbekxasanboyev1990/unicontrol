@@ -32,14 +32,47 @@
 
         <!-- Nav Links - Desktop -->
         <div class="hidden lg:flex items-center gap-1 bg-white/5 backdrop-blur-sm rounded-2xl p-1.5 border border-white/5">
-          <a href="#features" class="px-5 py-2.5 text-sm font-medium text-slate-300 hover:text-white hover:bg-white/10 rounded-xl transition-all">Xususiyatlar</a>
-          <a href="#how-it-works" class="px-5 py-2.5 text-sm font-medium text-slate-300 hover:text-white hover:bg-white/10 rounded-xl transition-all">Qanday ishlaydi</a>
-          <a href="#about" class="px-5 py-2.5 text-sm font-medium text-slate-300 hover:text-white hover:bg-white/10 rounded-xl transition-all">Biz haqimizda</a>
-          <a href="#contact" class="px-5 py-2.5 text-sm font-medium text-slate-300 hover:text-white hover:bg-white/10 rounded-xl transition-all">Bog'lanish</a>
+          <a href="#features" class="px-5 py-2.5 text-sm font-medium text-slate-300 hover:text-white hover:bg-white/10 rounded-xl transition-all">{{ $t('landing.features') }}</a>
+          <a href="#how-it-works" class="px-5 py-2.5 text-sm font-medium text-slate-300 hover:text-white hover:bg-white/10 rounded-xl transition-all">{{ $t('landing.howItWorks') }}</a>
+          <a href="#about" class="px-5 py-2.5 text-sm font-medium text-slate-300 hover:text-white hover:bg-white/10 rounded-xl transition-all">{{ $t('landing.about') }}</a>
+          <a href="#contact" class="px-5 py-2.5 text-sm font-medium text-slate-300 hover:text-white hover:bg-white/10 rounded-xl transition-all">{{ $t('landing.contact') }}</a>
         </div>
 
-        <!-- Mobile Menu Button + CTA -->
+        <!-- Mobile Menu Button + Language + CTA -->
         <div class="flex items-center gap-2 sm:gap-3">
+          <!-- Language Switcher -->
+          <div class="relative" ref="langDropdownRef">
+            <button 
+              @click="langDropdownOpen = !langDropdownOpen"
+              class="flex items-center gap-1.5 px-3 py-2 text-slate-300 hover:text-white hover:bg-white/10 rounded-xl transition-colors text-sm font-medium"
+            >
+              <Globe class="w-4 h-4" />
+              <span class="hidden sm:inline">{{ currentLangLabel }}</span>
+            </button>
+            <Transition
+              enter-active-class="transition-all duration-200 ease-out"
+              enter-from-class="opacity-0 scale-95 -translate-y-2"
+              enter-to-class="opacity-100 scale-100 translate-y-0"
+              leave-active-class="transition-all duration-150 ease-in"
+              leave-from-class="opacity-100 scale-100 translate-y-0"
+              leave-to-class="opacity-0 scale-95 -translate-y-2"
+            >
+              <div v-if="langDropdownOpen" class="absolute right-0 mt-2 w-40 bg-slate-800/95 backdrop-blur-xl border border-white/10 rounded-xl py-1 shadow-xl z-50">
+                <button 
+                  v-for="lang in languages" :key="lang.code"
+                  @click="switchLang(lang.code)"
+                  :class="[
+                    'w-full flex items-center gap-2 px-4 py-2.5 text-sm transition-colors',
+                    langStore.locale === lang.code ? 'text-emerald-400 bg-emerald-500/10' : 'text-slate-300 hover:text-white hover:bg-white/10'
+                  ]"
+                >
+                  <span>{{ lang.flag }}</span>
+                  <span>{{ lang.name }}</span>
+                </button>
+              </div>
+            </Transition>
+          </div>
+
           <!-- Mobile Menu Button -->
           <button 
             @click="mobileMenuOpen = !mobileMenuOpen"
@@ -54,7 +87,7 @@
             <div class="absolute inset-0 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-xl blur-lg opacity-50 group-hover:opacity-75 transition-opacity"></div>
             <div class="relative flex items-center gap-2 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 px-4 sm:px-6 py-2.5 sm:py-3 rounded-xl font-semibold text-white text-sm transition-all">
               <LogIn class="w-4 h-4" />
-              <span class="hidden sm:inline">Kirish</span>
+              <span class="hidden sm:inline">{{ $t('landing.enterSystem') }}</span>
             </div>
           </router-link>
         </div>
@@ -71,10 +104,10 @@
       >
         <div v-if="mobileMenuOpen" class="lg:hidden absolute left-4 right-4 top-full mt-2 bg-slate-800/95 backdrop-blur-xl border border-white/10 rounded-2xl p-4 shadow-xl">
           <div class="space-y-1">
-            <a href="#features" @click="mobileMenuOpen = false" class="block px-4 py-3 text-slate-300 hover:text-white hover:bg-white/10 rounded-xl transition-all">Xususiyatlar</a>
-            <a href="#how-it-works" @click="mobileMenuOpen = false" class="block px-4 py-3 text-slate-300 hover:text-white hover:bg-white/10 rounded-xl transition-all">Qanday ishlaydi</a>
-            <a href="#about" @click="mobileMenuOpen = false" class="block px-4 py-3 text-slate-300 hover:text-white hover:bg-white/10 rounded-xl transition-all">Biz haqimizda</a>
-            <a href="#contact" @click="mobileMenuOpen = false" class="block px-4 py-3 text-slate-300 hover:text-white hover:bg-white/10 rounded-xl transition-all">Bog'lanish</a>
+            <a href="#features" @click="mobileMenuOpen = false" class="block px-4 py-3 text-slate-300 hover:text-white hover:bg-white/10 rounded-xl transition-all">{{ $t('landing.features') }}</a>
+            <a href="#how-it-works" @click="mobileMenuOpen = false" class="block px-4 py-3 text-slate-300 hover:text-white hover:bg-white/10 rounded-xl transition-all">{{ $t('landing.howItWorks') }}</a>
+            <a href="#about" @click="mobileMenuOpen = false" class="block px-4 py-3 text-slate-300 hover:text-white hover:bg-white/10 rounded-xl transition-all">{{ $t('landing.about') }}</a>
+            <a href="#contact" @click="mobileMenuOpen = false" class="block px-4 py-3 text-slate-300 hover:text-white hover:bg-white/10 rounded-xl transition-all">{{ $t('landing.contact') }}</a>
           </div>
         </div>
       </Transition>
@@ -91,23 +124,22 @@
               <span class="flex items-center justify-center w-5 h-5 sm:w-6 sm:h-6 bg-emerald-500 rounded-full">
                 <Zap class="w-3 h-3 sm:w-3.5 sm:h-3.5 text-white" />
               </span>
-              <span class="text-emerald-400 text-xs sm:text-sm font-medium">Yangi avlod ta'lim tizimi</span>
+              <span class="text-emerald-400 text-xs sm:text-sm font-medium">{{ $t('landing.heroBadge') }}</span>
             </div>
 
             <!-- Title -->
             <div class="space-y-4 animate-fade-in animation-delay-200">
               <h1 class="text-4xl sm:text-5xl lg:text-6xl font-bold text-white leading-[1.1] tracking-tight">
-                Zamonaviy usulda
+                {{ $t('landing.heroTitle1') }}
                 <br />
                 <span class="relative inline-block">
-                  <span class="relative z-10 text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 via-teal-400 to-cyan-400">Ta'limni</span>
+                  <span class="relative z-10 text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 via-teal-400 to-cyan-400">{{ $t('landing.heroTitle2') }}</span>
                   <span class="absolute bottom-2 left-0 w-full h-3 bg-emerald-500/20 -skew-x-6"></span>
                 </span>
-                boshqaring
+                {{ $t('landing.heroTitle3') }}
               </h1>
               <p class="text-lg text-slate-400 leading-relaxed max-w-lg">
-                Dars jadvali, davomat va o'quv jarayonini yagona platformada nazorat qiling. 
-                Vaqtni tejang, samaradorlikni oshiring.
+                {{ $t('landing.heroDesc') }}
               </p>
             </div>
 
@@ -119,7 +151,7 @@
                 <div class="absolute inset-0 translate-y-full group-hover:translate-y-0 bg-white/10 transition-transform duration-300"></div>
                 <div class="relative flex items-center gap-3 px-8 py-4 font-semibold text-white">
                   <Rocket class="w-5 h-5" />
-                  <span>Boshlash</span>
+                  <span>{{ $t('landing.getStarted') }}</span>
                   <ArrowRight class="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                 </div>
               </router-link>
@@ -128,7 +160,7 @@
                 <div class="w-12 h-12 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center group-hover:bg-white/10 group-hover:border-white/20 transition-all">
                   <Play class="w-5 h-5 text-emerald-400 ml-0.5" />
                 </div>
-                <span>Qanday ishlaydi?</span>
+                <span>{{ $t('landing.howItWorksQuestion') }}</span>
               </a>
             </div>
 
@@ -139,8 +171,8 @@
                   <Users class="w-5 h-5 sm:w-6 sm:h-6 text-emerald-400" />
                 </div>
                 <div>
-                  <div class="text-xl sm:text-2xl font-bold text-white">500+</div>
-                  <div class="text-[10px] sm:text-xs text-slate-500">Talabalar</div>
+                  <div class="text-xl sm:text-2xl font-bold text-white">{{ landing.hero_stats.students_count }}</div>
+                  <div class="text-[10px] sm:text-xs text-slate-500">{{ $t('landing.students') }}</div>
                 </div>
               </div>
               <div class="w-px h-10 sm:h-12 bg-white/10 hidden sm:block"></div>
@@ -149,8 +181,8 @@
                   <Layers class="w-5 h-5 sm:w-6 sm:h-6 text-teal-400" />
                 </div>
                 <div>
-                  <div class="text-xl sm:text-2xl font-bold text-white">50+</div>
-                  <div class="text-[10px] sm:text-xs text-slate-500">Guruhlar</div>
+                  <div class="text-xl sm:text-2xl font-bold text-white">{{ landing.hero_stats.groups_count }}</div>
+                  <div class="text-[10px] sm:text-xs text-slate-500">{{ $t('landing.groups') }}</div>
                 </div>
               </div>
               <div class="w-px h-10 sm:h-12 bg-white/10 hidden sm:block"></div>
@@ -159,8 +191,8 @@
                   <TrendingUp class="w-5 h-5 sm:w-6 sm:h-6 text-cyan-400" />
                 </div>
                 <div>
-                  <div class="text-xl sm:text-2xl font-bold text-white">99%</div>
-                  <div class="text-[10px] sm:text-xs text-slate-500">Natija</div>
+                  <div class="text-xl sm:text-2xl font-bold text-white">{{ landing.hero_stats.result_percent }}</div>
+                  <div class="text-[10px] sm:text-xs text-slate-500">{{ $t('landing.result') }}</div>
                 </div>
               </div>
             </div>
@@ -180,7 +212,7 @@
                   <div class="w-3 h-3 rounded-full bg-amber-500"></div>
                   <div class="w-3 h-3 rounded-full bg-emerald-500"></div>
                 </div>
-                <div class="text-xs text-slate-500 font-medium">Talaba Dashboard</div>
+                <div class="text-xs text-slate-500 font-medium">{{ $t('landing.studentDashboard') }}</div>
               </div>
 
               <!-- User Info -->
@@ -192,13 +224,13 @@
                 </div>
                 <div class="text-right">
                   <div class="text-2xl font-bold text-emerald-400">92%</div>
-                  <div class="text-xs text-slate-500">Davomat</div>
+                  <div class="text-xs text-slate-500">{{ $t('landing.attendance') }}</div>
                 </div>
               </div>
 
               <!-- Schedule -->
               <div class="space-y-3 mb-5">
-                <div class="text-xs text-slate-500 font-medium uppercase tracking-wider mb-3">Bugungi darslar</div>
+                <div class="text-xs text-slate-500 font-medium uppercase tracking-wider mb-3">{{ $t('landing.todayLessons') }}</div>
                 <div class="flex items-center gap-3 p-3 bg-emerald-500/10 border border-emerald-500/20 rounded-xl">
                   <div class="w-10 h-10 rounded-lg bg-emerald-500/20 flex items-center justify-center">
                     <BookOpen class="w-5 h-5 text-emerald-400" />
@@ -207,7 +239,7 @@
                     <div class="font-medium text-white text-sm truncate">Matematika</div>
                     <div class="text-xs text-slate-500">08:00 - 09:30 • 204-xona</div>
                   </div>
-                  <div class="text-xs font-medium text-emerald-400 bg-emerald-500/10 px-2 py-1 rounded-lg">Hozir</div>
+                  <div class="text-xs font-medium text-emerald-400 bg-emerald-500/10 px-2 py-1 rounded-lg">{{ $t('landing.now') }}</div>
                 </div>
                 <div class="flex items-center gap-3 p-3 bg-white/5 border border-white/5 rounded-xl">
                   <div class="w-10 h-10 rounded-lg bg-white/5 flex items-center justify-center">
@@ -223,7 +255,7 @@
               <!-- Progress -->
               <div class="p-4 bg-gradient-to-r from-emerald-500/10 to-teal-500/10 border border-emerald-500/10 rounded-xl">
                 <div class="flex items-center justify-between mb-3">
-                  <span class="text-sm font-medium text-white">Haftalik progress</span>
+                  <span class="text-sm font-medium text-white">{{ $t('landing.weeklyProgress') }}</span>
                   <span class="text-sm font-bold text-emerald-400">85%</span>
                 </div>
                 <div class="h-2 bg-slate-700 rounded-full overflow-hidden">
@@ -246,8 +278,8 @@
                   <CheckCircle class="w-5 h-5 text-emerald-400" />
                 </div>
                 <div>
-                  <div class="text-sm font-medium text-white">Davomat belgilandi</div>
-                  <div class="text-xs text-slate-500">Matematika • Hozirgina</div>
+                  <div class="text-sm font-medium text-white">{{ $t('landing.attendanceMarked') }}</div>
+                  <div class="text-xs text-slate-500">Matematika • {{ $t('landing.justNow') }}</div>
                 </div>
               </div>
             </div>
@@ -259,7 +291,7 @@
     <!-- ========== TRUSTED BY ========== -->
     <section class="relative z-10 px-6 lg:px-20 py-16 border-t border-white/5">
       <div class="max-w-7xl mx-auto reveal-on-scroll">
-        <p class="text-center text-slate-500 text-sm font-medium mb-10">Bizga ishonch bildirgan tashkilot</p>
+        <p class="text-center text-slate-500 text-sm font-medium mb-10">{{ $t('landing.trustedBy') }}</p>
         <div class="flex flex-wrap items-center justify-center gap-12">
           <div class="flex items-center gap-4 bg-white/5 border border-white/10 rounded-2xl px-8 py-5 hover-lift reveal-scale">
             <div class="w-14 h-14 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center">
@@ -267,7 +299,7 @@
             </div>
             <div>
               <span class="text-xl font-bold text-white">KUAF</span>
-              <p class="text-sm text-slate-400">Kokand universiteti Andijon filiali</p>
+              <p class="text-sm text-slate-400">{{ $t('landing.kuafFull') }}</p>
             </div>
           </div>
         </div>
@@ -281,10 +313,10 @@
         <div class="text-center mb-16 reveal-on-scroll">
           <div class="inline-flex items-center gap-2 bg-teal-500/10 border border-teal-500/20 rounded-full px-4 py-2 mb-6">
             <Settings class="w-4 h-4 text-teal-400" />
-            <span class="text-sm text-teal-400">Oddiy va tushunarli</span>
+            <span class="text-sm text-teal-400">{{ $t('landing.simpleAndClear') }}</span>
           </div>
-          <h2 class="text-3xl lg:text-5xl font-bold text-white mb-4">Qanday ishlaydi?</h2>
-          <p class="text-slate-400 max-w-2xl mx-auto text-lg">Atigi 3 oddiy qadamda tizimdan foydalanishni boshlang</p>
+          <h2 class="text-3xl lg:text-5xl font-bold text-white mb-4">{{ $t('landing.howItWorksTitle') }}</h2>
+          <p class="text-slate-400 max-w-2xl mx-auto text-lg">{{ $t('landing.howItWorksDesc') }}</p>
         </div>
 
         <!-- Steps - 3D Stacked Cards -->
@@ -300,8 +332,8 @@
               <div class="w-16 h-16 rounded-2xl bg-emerald-500/10 flex items-center justify-center mb-6">
                 <UserPlus class="w-8 h-8 text-emerald-400" />
               </div>
-              <h3 class="text-xl font-bold text-white mb-3">Ro'yxatdan o'ting</h3>
-              <p class="text-slate-400 leading-relaxed">Admin sizni tizimga qo'shadi va login ma'lumotlarini beradi. Shaxsiy kabinet yaratiladi.</p>
+              <h3 class="text-xl font-bold text-white mb-3">{{ $t('landing.step1Title') }}</h3>
+              <p class="text-slate-400 leading-relaxed">{{ $t('landing.step1Desc') }}</p>
             </div>
           </div>
 
@@ -316,8 +348,8 @@
               <div class="w-16 h-16 rounded-2xl bg-teal-500/10 flex items-center justify-center mb-6">
                 <Smartphone class="w-8 h-8 text-teal-400" />
               </div>
-              <h3 class="text-xl font-bold text-white mb-3">Tizimga kiring</h3>
-              <p class="text-slate-400 leading-relaxed">Telefon yoki kompyuter orqali tizimga kiring. Barcha ma'lumotlar real vaqtda yangilanadi.</p>
+              <h3 class="text-xl font-bold text-white mb-3">{{ $t('landing.step2Title') }}</h3>
+              <p class="text-slate-400 leading-relaxed">{{ $t('landing.step2Desc') }}</p>
             </div>
           </div>
 
@@ -332,8 +364,8 @@
               <div class="w-16 h-16 rounded-2xl bg-cyan-500/10 flex items-center justify-center mb-6">
                 <Sparkles class="w-8 h-8 text-cyan-400" />
               </div>
-              <h3 class="text-xl font-bold text-white mb-3">Foydalaning</h3>
-              <p class="text-slate-400 leading-relaxed">Dars jadvali, davomat, bildirishnomalar - hammasi bir joyda. O'qishni oson nazorat qiling.</p>
+              <h3 class="text-xl font-bold text-white mb-3">{{ $t('landing.step3Title') }}</h3>
+              <p class="text-slate-400 leading-relaxed">{{ $t('landing.step3Desc') }}</p>
             </div>
           </div>
         </div>
@@ -347,10 +379,10 @@
         <div class="text-center mb-16 reveal-on-scroll">
           <div class="inline-flex items-center gap-2 bg-white/5 border border-white/10 rounded-full px-4 py-2 mb-6">
             <Sparkles class="w-4 h-4 text-emerald-400" />
-            <span class="text-sm text-slate-400">Platformamiz imkoniyatlari</span>
+            <span class="text-sm text-slate-400">{{ $t('landing.platformCapabilities') }}</span>
           </div>
-          <h2 class="text-3xl lg:text-5xl font-bold text-white mb-4">Asosiy xususiyatlar</h2>
-          <p class="text-slate-400 max-w-2xl mx-auto text-lg">Talabalar va o'qituvchilar uchun barcha kerakli vositalar</p>
+          <h2 class="text-3xl lg:text-5xl font-bold text-white mb-4">{{ $t('landing.mainFeatures') }}</h2>
+          <p class="text-slate-400 max-w-2xl mx-auto text-lg">{{ $t('landing.featuresDesc') }}</p>
         </div>
 
         <!-- Features Grid - 3D Stacked Cards -->
@@ -361,8 +393,8 @@
               <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-emerald-500/20 to-emerald-500/5 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-500">
                 <Calendar class="w-8 h-8 text-emerald-400" />
               </div>
-              <h3 class="text-xl font-bold text-white mb-3">Dars jadvali</h3>
-              <p class="text-slate-400 leading-relaxed">Haftalik va oylik darslar tartibli ko'rinishda. Real-time yangilanishlar.</p>
+              <h3 class="text-xl font-bold text-white mb-3">{{ $t('landing.featureSchedule') }}</h3>
+              <p class="text-slate-400 leading-relaxed">{{ $t('landing.featureScheduleDesc') }}</p>
             </div>
           </div>
 
@@ -372,8 +404,8 @@
               <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-teal-500/20 to-teal-500/5 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-500">
                 <BarChart3 class="w-8 h-8 text-teal-400" />
               </div>
-              <h3 class="text-xl font-bold text-white mb-3">Davomat nazorati</h3>
-              <p class="text-slate-400 leading-relaxed">Qoldirilgan darslar avtomatik hisoblanadi. Statistika har doim qo'l ostida.</p>
+              <h3 class="text-xl font-bold text-white mb-3">{{ $t('landing.featureAttendance') }}</h3>
+              <p class="text-slate-400 leading-relaxed">{{ $t('landing.featureAttendanceDesc') }}</p>
             </div>
           </div>
 
@@ -383,8 +415,8 @@
               <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-cyan-500/20 to-cyan-500/5 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-500">
                 <Brain class="w-8 h-8 text-cyan-400" />
               </div>
-              <h3 class="text-xl font-bold text-white mb-3">AI tahlil</h3>
-              <p class="text-slate-400 leading-relaxed">Sun'iy intellekt yordamida o'quv natijalarini tahlil qiling.</p>
+              <h3 class="text-xl font-bold text-white mb-3">{{ $t('landing.featureAI') }}</h3>
+              <p class="text-slate-400 leading-relaxed">{{ $t('landing.featureAIDesc') }}</p>
             </div>
           </div>
 
@@ -394,8 +426,8 @@
               <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-violet-500/20 to-violet-500/5 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-500">
                 <Bell class="w-8 h-8 text-violet-400" />
               </div>
-              <h3 class="text-xl font-bold text-white mb-3">Bildirishnomalar</h3>
-              <p class="text-slate-400 leading-relaxed">Muhim yangiliklar va eslatmalar haqida xabar oling.</p>
+              <h3 class="text-xl font-bold text-white mb-3">{{ $t('landing.featureNotifications') }}</h3>
+              <p class="text-slate-400 leading-relaxed">{{ $t('landing.featureNotificationsDesc') }}</p>
             </div>
           </div>
 
@@ -405,8 +437,8 @@
               <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-amber-500/20 to-amber-500/5 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-500">
                 <Trophy class="w-8 h-8 text-amber-400" />
               </div>
-              <h3 class="text-xl font-bold text-white mb-3">Turnirlar</h3>
-              <p class="text-slate-400 leading-relaxed">Sport musobaqalari va intellektual o'yinlar uchun oson va qulay ro'yxatdan o'tish.</p>
+              <h3 class="text-xl font-bold text-white mb-3">{{ $t('landing.featureTournaments') }}</h3>
+              <p class="text-slate-400 leading-relaxed">{{ $t('landing.featureTournamentsDesc') }}</p>
             </div>
           </div>
 
@@ -416,8 +448,8 @@
               <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-rose-500/20 to-rose-500/5 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-500">
                 <Shield class="w-8 h-8 text-rose-400" />
               </div>
-              <h3 class="text-xl font-bold text-white mb-3">Xavfsizlik</h3>
-              <p class="text-slate-400 leading-relaxed">Ma'lumotlar himoyasi va shaxsiy kabinetga xavfsiz kirish.</p>
+              <h3 class="text-xl font-bold text-white mb-3">{{ $t('landing.featureSecurity') }}</h3>
+              <p class="text-slate-400 leading-relaxed">{{ $t('landing.featureSecurityDesc') }}</p>
             </div>
           </div>
         </div>
@@ -439,30 +471,30 @@
                     <Target class="w-7 h-7 text-white" />
                   </div>
                   <div>
-                    <h4 class="text-lg font-bold text-white">Bizning maqsadimiz</h4>
-                    <p class="text-sm text-slate-500">Ta'limni zamonaviylashtirish</p>
+                    <h4 class="text-lg font-bold text-white">{{ $t('landing.ourMission') }}</h4>
+                    <p class="text-sm text-slate-500">{{ $t('landing.modernizeEducation') }}</p>
                   </div>
                 </div>
-                <p class="text-slate-400 leading-relaxed">O'zbekiston ta'lim tizimini raqamlashtirish va jahon standartlariga yetkazish.</p>
+                <p class="text-slate-400 leading-relaxed">{{ $t('landing.missionDesc') }}</p>
               </div>
 
               <!-- Stats Grid -->
               <div class="grid grid-cols-2 gap-4">
                 <div class="bg-white/5 rounded-2xl p-5 text-center stagger-child">
-                  <div class="text-2xl font-bold text-emerald-400 mb-1">01.10.2025</div>
-                  <div class="text-sm text-slate-500">Tashkil etilgan</div>
+                  <div class="text-2xl font-bold text-emerald-400 mb-1">{{ landing.about_stats.founded }}</div>
+                  <div class="text-sm text-slate-500">{{ $t('landing.founded') }}</div>
                 </div>
                 <div class="bg-white/5 rounded-2xl p-5 text-center stagger-child">
-                  <div class="text-3xl font-bold text-teal-400 mb-1">1</div>
-                  <div class="text-sm text-slate-500">Universitet</div>
+                  <div class="text-3xl font-bold text-teal-400 mb-1">{{ landing.about_stats.universities }}</div>
+                  <div class="text-sm text-slate-500">{{ $t('landing.universities') }}</div>
                 </div>
                 <div class="bg-white/5 rounded-2xl p-5 text-center stagger-child">
-                  <div class="text-3xl font-bold text-cyan-400 mb-1">500+</div>
-                  <div class="text-sm text-slate-500">Foydalanuvchilar</div>
+                  <div class="text-3xl font-bold text-cyan-400 mb-1">{{ landing.about_stats.users }}</div>
+                  <div class="text-sm text-slate-500">{{ $t('landing.users') }}</div>
                 </div>
                 <div class="bg-white/5 rounded-2xl p-5 text-center stagger-child">
-                  <div class="text-3xl font-bold text-violet-400 mb-1">24/7</div>
-                  <div class="text-sm text-slate-500">Qo'llab-quvvatlash</div>
+                  <div class="text-3xl font-bold text-violet-400 mb-1">{{ landing.about_stats.support }}</div>
+                  <div class="text-sm text-slate-500">{{ $t('landing.support247') }}</div>
                 </div>
               </div>
             </div>
@@ -472,17 +504,16 @@
           <div class="space-y-8 reveal-right reveal-on-scroll">
             <div class="inline-flex items-center gap-2 bg-emerald-500/10 border border-emerald-500/20 rounded-full px-4 py-2">
               <Heart class="w-4 h-4 text-emerald-400" />
-              <span class="text-sm text-emerald-400">Biz haqimizda</span>
+              <span class="text-sm text-emerald-400">{{ $t('landing.aboutBadge') }}</span>
             </div>
 
             <h2 class="text-3xl lg:text-5xl font-bold text-white leading-tight">
-              Ta'limga yangicha 
-              <span class="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-teal-400">yondashuv</span>
+              {{ $t('landing.newApproach') }} 
+              <span class="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-teal-400">{{ $t('landing.approach') }}</span>
             </h2>
 
             <p class="text-lg text-slate-400 leading-relaxed">
-              Uni Control - KUAF StartUP loyihalar bilan ishlash bo'limi tomonidan yaratilgan zamonaviy ta'lim boshqaruv platformasi. 
-              Biz talabalar, o'qituvchilar va administratorlar uchun qulay va samarali vositalar yaratamiz.
+              {{ $t('landing.aboutDesc') }}
             </p>
 
             <div class="space-y-4">
@@ -491,8 +522,8 @@
                   <Check class="w-5 h-5 text-emerald-400" />
                 </div>
                 <div>
-                  <h4 class="font-semibold text-white mb-1">Mahalliy ishlab chiqarish</h4>
-                  <p class="text-slate-400 text-sm">O'zbek dasturchilari tomonidan yaratilgan, mahalliy ehtiyojlarga moslangan</p>
+                  <h4 class="font-semibold text-white mb-1">{{ $t('landing.localDevelopment') }}</h4>
+                  <p class="text-slate-400 text-sm">{{ $t('landing.localDevelopmentDesc') }}</p>
                 </div>
               </div>
 
@@ -501,8 +532,8 @@
                   <Check class="w-5 h-5 text-teal-400" />
                 </div>
                 <div>
-                  <h4 class="font-semibold text-white mb-1">Doimiy yangilanishlar</h4>
-                  <p class="text-slate-400 text-sm">Har oy yangi funksiyalar va yaxshilanishlar qo'shiladi</p>
+                  <h4 class="font-semibold text-white mb-1">{{ $t('landing.constantUpdates') }}</h4>
+                  <p class="text-slate-400 text-sm">{{ $t('landing.constantUpdatesDesc') }}</p>
                 </div>
               </div>
 
@@ -511,8 +542,8 @@
                   <Check class="w-5 h-5 text-cyan-400" />
                 </div>
                 <div>
-                  <h4 class="font-semibold text-white mb-1">Professional qo'llab-quvvatlash</h4>
-                  <p class="text-slate-400 text-sm">Texnik yordam jamoasi doimo aloqada</p>
+                  <h4 class="font-semibold text-white mb-1">{{ $t('landing.professionalSupport') }}</h4>
+                  <p class="text-slate-400 text-sm">{{ $t('landing.professionalSupportDesc') }}</p>
                 </div>
               </div>
             </div>
@@ -528,10 +559,10 @@
         <div class="text-center mb-16 reveal-on-scroll">
           <div class="inline-flex items-center gap-2 bg-amber-500/10 border border-amber-500/20 rounded-full px-4 py-2 mb-6">
             <Star class="w-4 h-4 text-amber-400" />
-            <span class="text-sm text-amber-400">Foydalanuvchilar fikri</span>
+            <span class="text-sm text-amber-400">{{ $t('landing.userReviews') }}</span>
           </div>
-          <h2 class="text-3xl lg:text-5xl font-bold text-white mb-4">Ular nima deyishadi?</h2>
-          <p class="text-slate-400 max-w-2xl mx-auto text-lg">Platformamiz foydalanuvchilarining fikrlari</p>
+          <h2 class="text-3xl lg:text-5xl font-bold text-white mb-4">{{ $t('landing.whatTheySay') }}</h2>
+          <p class="text-slate-400 max-w-2xl mx-auto text-lg">{{ $t('landing.testimonialsDesc') }}</p>
         </div>
 
         <!-- Testimonials Grid - 3D Cards -->
@@ -542,13 +573,13 @@
               <Star v-for="i in 5" :key="i" class="w-5 h-5 text-amber-400 fill-amber-400" />
             </div>
             <p class="text-slate-300 leading-relaxed mb-6">
-              "Dars jadvalini kuzatish juda oson bo'lib qoldi. Endi hech qachon darsni o'tkazib yubormayapman!"
+              {{ $t('landing.testimonial1') }}
             </p>
             <div class="flex items-center gap-4">
               <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center text-white font-bold">SA</div>
               <div>
-                <div class="font-semibold text-white">Sardor Aliyev</div>
-                <div class="text-sm text-slate-500">2-kurs talabasi, KUAF</div>
+                <div class="font-semibold text-white">{{ $t('landing.testimonial1Author') }}</div>
+                <div class="text-sm text-slate-500">{{ $t('landing.testimonial1Role') }}</div>
               </div>
             </div>
           </div>
@@ -559,13 +590,13 @@
               <Star v-for="i in 5" :key="i" class="w-5 h-5 text-amber-400 fill-amber-400" />
             </div>
             <p class="text-slate-300 leading-relaxed mb-6">
-              "Guruh sardori sifatida davomat yuritish ancha osonlashdi. Vaqt tejash katta foyda!"
+              {{ $t('landing.testimonial2') }}
             </p>
             <div class="flex items-center gap-4">
               <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-teal-500 to-cyan-600 flex items-center justify-center text-white font-bold">MK</div>
               <div>
-                <div class="font-semibold text-white">Madina Karimova</div>
-                <div class="text-sm text-slate-500">Guruh sardori, KUAF</div>
+                <div class="font-semibold text-white">{{ $t('landing.testimonial2Author') }}</div>
+                <div class="text-sm text-slate-500">{{ $t('landing.testimonial2Role') }}</div>
               </div>
             </div>
           </div>
@@ -576,13 +607,13 @@
               <Star v-for="i in 5" :key="i" class="w-5 h-5 text-amber-400 fill-amber-400" />
             </div>
             <p class="text-slate-300 leading-relaxed mb-6">
-              "Barcha guruhlarni boshqarish bir joydan mumkin. Juda qulay va zamonaviy tizim!"
+              {{ $t('landing.testimonial3') }}
             </p>
             <div class="flex items-center gap-4">
               <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-cyan-500 to-violet-600 flex items-center justify-center text-white font-bold">AJ</div>
               <div>
-                <div class="font-semibold text-white">Aziz Jabborov</div>
-                <div class="text-sm text-slate-500">Admin, KUAF</div>
+                <div class="font-semibold text-white">{{ $t('landing.testimonial3Author') }}</div>
+                <div class="text-sm text-slate-500">{{ $t('landing.testimonial3Role') }}</div>
               </div>
             </div>
           </div>
@@ -597,10 +628,10 @@
         <div class="text-center mb-16 reveal-on-scroll">
           <div class="inline-flex items-center gap-2 bg-violet-500/10 border border-violet-500/20 rounded-full px-4 py-2 mb-6">
             <HelpCircle class="w-4 h-4 text-violet-400" />
-            <span class="text-sm text-violet-400">Ko'p so'raladigan savollar</span>
+            <span class="text-sm text-violet-400">{{ $t('landing.faqLabel') }}</span>
           </div>
-          <h2 class="text-3xl lg:text-5xl font-bold text-white mb-4">FAQ</h2>
-          <p class="text-slate-400 max-w-2xl mx-auto text-lg">Eng ko'p beriladigan savollarga javoblar</p>
+          <h2 class="text-3xl lg:text-5xl font-bold text-white mb-4">{{ $t('landing.faqTitle') }}</h2>
+          <p class="text-slate-400 max-w-2xl mx-auto text-lg">{{ $t('landing.faqDesc') }}</p>
         </div>
 
         <!-- FAQ Items - 3D Stacked -->
@@ -608,41 +639,41 @@
           <div class="bg-slate-800/30 backdrop-blur border border-white/5 rounded-2xl p-6 hover:border-white/10 transition-colors card-stack stagger-child hover-lift" style="--index: 0">
             <h4 class="text-lg font-semibold text-white mb-3 flex items-center gap-3">
               <ChevronRight class="w-5 h-5 text-emerald-400" />
-              Tizimdan kim foydalanishi mumkin?
+              {{ $t('landing.faq1Q') }}
             </h4>
-            <p class="text-slate-400 pl-8">Tizimdan talabalar, guruh sardorlari va administratorlar foydalanishi mumkin. Universitet admini sizni tizimga qo'shadi.</p>
+            <p class="text-slate-400 pl-8">{{ $t('landing.faq1A') }}</p>
           </div>
 
           <div class="bg-slate-800/30 backdrop-blur border border-white/5 rounded-2xl p-6 hover:border-white/10 transition-colors card-stack stagger-child hover-lift" style="--index: 1">
             <h4 class="text-lg font-semibold text-white mb-3 flex items-center gap-3">
               <ChevronRight class="w-5 h-5 text-emerald-400" />
-              Tizimga qanday ro'yxatdan o'taman?
+              {{ $t('landing.faq2Q') }}
             </h4>
-            <p class="text-slate-400 pl-8">Sizning universitet admini tizimga qo'shadi va login ma'lumotlarini beradi. Keyin shaxsiy kabinet orqali kirish mumkin.</p>
+            <p class="text-slate-400 pl-8">{{ $t('landing.faq2A') }}</p>
           </div>
 
           <div class="bg-slate-800/30 backdrop-blur border border-white/5 rounded-2xl p-6 hover:border-white/10 transition-colors card-stack stagger-child hover-lift" style="--index: 2">
             <h4 class="text-lg font-semibold text-white mb-3 flex items-center gap-3">
               <ChevronRight class="w-5 h-5 text-emerald-400" />
-              Mobil ilova bormi?
+              {{ $t('landing.faq3Q') }}
             </h4>
-            <p class="text-slate-400 pl-8">Hozircha web versiya mavjud, lekin u to'liq mobil qurilmalarga moslangan. Mobil ilova tez orada chiqariladi.</p>
+            <p class="text-slate-400 pl-8">{{ $t('landing.faq3A') }}</p>
           </div>
 
           <div class="bg-slate-800/30 backdrop-blur border border-white/5 rounded-2xl p-6 hover:border-white/10 transition-colors card-stack stagger-child hover-lift" style="--index: 3">
             <h4 class="text-lg font-semibold text-white mb-3 flex items-center gap-3">
               <ChevronRight class="w-5 h-5 text-emerald-400" />
-              Ma'lumotlarim xavfsizmi?
+              {{ $t('landing.faq4Q') }}
             </h4>
-            <p class="text-slate-400 pl-8">Albatta! Barcha ma'lumotlar shifrlangan holda saqlanadi va faqat ruxsat berilgan foydalanuvchilar ko'ra oladi.</p>
+            <p class="text-slate-400 pl-8">{{ $t('landing.faq4A') }}</p>
           </div>
 
           <div class="bg-slate-800/30 backdrop-blur border border-white/5 rounded-2xl p-6 hover:border-white/10 transition-colors card-stack stagger-child hover-lift" style="--index: 4">
             <h4 class="text-lg font-semibold text-white mb-3 flex items-center gap-3">
               <ChevronRight class="w-5 h-5 text-emerald-400" />
-              Qo'llab-quvvatlash xizmati bormi?
+              {{ $t('landing.faq5Q') }}
             </h4>
-            <p class="text-slate-400 pl-8">Ha, bizning texnik yordam jamoamiz 24/7 aloqada. Telegram bot yoki email orqali murojaat qilishingiz mumkin.</p>
+            <p class="text-slate-400 pl-8">{{ $t('landing.faq5A') }}</p>
           </div>
         </div>
       </div>
@@ -659,21 +690,20 @@
           <!-- Content -->
           <div class="relative px-6 py-12 sm:px-8 sm:py-16 lg:px-16 lg:py-20 text-center">
             <h2 class="text-2xl sm:text-3xl lg:text-5xl font-bold text-white mb-4 sm:mb-6">
-              Hoziroq boshlang!
+              {{ $t('landing.startNow') }}
             </h2>
             <p class="text-xl text-white/80 mb-10 max-w-2xl mx-auto">
-              Minglab talabalar allaqachon Uni Control'dan foydalanmoqda. 
-              Siz ham qo'shiling!
+              {{ $t('landing.ctaDesc') }}
             </p>
             <div class="flex flex-wrap items-center justify-center gap-4">
               <router-link to="/login" class="group bg-white text-emerald-600 px-8 py-4 rounded-2xl font-bold text-lg hover:bg-white/90 transition-all flex items-center gap-3 hover-lift">
                 <Rocket class="w-6 h-6" />
-                <span>Boshlash</span>
+                <span>{{ $t('landing.getStarted') }}</span>
                 <ArrowRight class="w-5 h-5 group-hover:translate-x-1 transition-transform" />
               </router-link>
               <a href="#contact" class="text-white/90 hover:text-white px-6 py-4 font-semibold flex items-center gap-2 transition-colors">
                 <MessageCircle class="w-5 h-5" />
-                <span>Bog'lanish</span>
+                <span>{{ $t('landing.contactUs') }}</span>
               </a>
             </div>
           </div>
@@ -689,16 +719,16 @@
           <div class="space-y-8 reveal-left reveal-on-scroll">
             <div class="inline-flex items-center gap-2 bg-rose-500/10 border border-rose-500/20 rounded-full px-4 py-2">
               <MapPin class="w-4 h-4 text-rose-400" />
-              <span class="text-sm text-rose-400">Bog'lanish</span>
+              <span class="text-sm text-rose-400">{{ $t('landing.contactBadge') }}</span>
             </div>
 
             <h2 class="text-3xl lg:text-5xl font-bold text-white leading-tight">
-              Biz bilan 
-              <span class="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-teal-400">bog'laning</span>
+              {{ $t('landing.contactTitle') }} 
+              <span class="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-teal-400">{{ $t('landing.contactHighlight') }}</span>
             </h2>
 
             <p class="text-lg text-slate-400 leading-relaxed">
-              Savollaringiz bormi? Biz bilan bog'laning, tez orada javob beramiz!
+              {{ $t('landing.contactDesc') }}
             </p>
 
             <!-- Contact Info -->
@@ -708,8 +738,8 @@
                   <Mail class="w-6 h-6 text-emerald-400" />
                 </div>
                 <div>
-                  <div class="text-sm text-slate-500 mb-1">Email</div>
-                  <a href="mailto:info@unicontrol.uz" class="text-lg font-semibold text-white hover:text-emerald-400 transition-colors">info@unicontrol.uz</a>
+                  <div class="text-sm text-slate-500 mb-1">{{ $t('common.email') }}</div>
+                  <a :href="'mailto:' + landing.contact_info.email" class="text-lg font-semibold text-white hover:text-emerald-400 transition-colors">{{ landing.contact_info.email }}</a>
                 </div>
               </div>
 
@@ -718,8 +748,8 @@
                   <Phone class="w-6 h-6 text-teal-400" />
                 </div>
                 <div>
-                  <div class="text-sm text-slate-500 mb-1">Telefon</div>
-                  <a href="tel:+998901234567" class="text-lg font-semibold text-white hover:text-teal-400 transition-colors">+998 90 123 45 67</a>
+                  <div class="text-sm text-slate-500 mb-1">{{ $t('common.phone') }}</div>
+                  <a :href="'tel:' + landing.contact_info.phone.replace(/\\s/g, '')" class="text-lg font-semibold text-white hover:text-teal-400 transition-colors">{{ landing.contact_info.phone }}</a>
                 </div>
               </div>
 
@@ -728,8 +758,8 @@
                   <MessageCircle class="w-6 h-6 text-cyan-400" />
                 </div>
                 <div>
-                  <div class="text-sm text-slate-500 mb-1">Telegram</div>
-                  <a href="https://t.me/unicontrol_uz" target="_blank" class="text-lg font-semibold text-white hover:text-cyan-400 transition-colors">@unicontrol_uz</a>
+                  <div class="text-sm text-slate-500 mb-1">{{ $t('landing.telegram') }}</div>
+                  <a :href="'https://t.me/' + landing.contact_info.telegram.replace('@', '')" target="_blank" class="text-lg font-semibold text-white hover:text-cyan-400 transition-colors">{{ landing.contact_info.telegram }}</a>
                 </div>
               </div>
 
@@ -738,8 +768,8 @@
                   <MapPin class="w-6 h-6 text-violet-400" />
                 </div>
                 <div>
-                  <div class="text-sm text-slate-500 mb-1">Manzil</div>
-                  <p class="text-lg font-semibold text-white">Toshkent sh., Chilonzor t.</p>
+                  <div class="text-sm text-slate-500 mb-1">{{ $t('common.address') }}</div>
+                  <p class="text-lg font-semibold text-white">{{ landing.contact_info.address }}</p>
                 </div>
               </div>
             </div>
@@ -749,23 +779,23 @@
           <div class="relative reveal-right reveal-on-scroll">
             <div class="absolute -inset-4 bg-gradient-to-r from-emerald-500/10 to-teal-500/10 rounded-[40px] blur-3xl"></div>
             <div class="relative bg-slate-800/50 backdrop-blur-xl border border-white/10 rounded-3xl p-8 hover-scale">
-              <h3 class="text-2xl font-bold text-white mb-6">Xabar yuborish</h3>
+              <h3 class="text-2xl font-bold text-white mb-6">{{ $t('landing.sendMessage') }}</h3>
               <form class="space-y-5">
                 <div class="stagger-child">
-                  <label class="block text-sm font-medium text-slate-400 mb-2">Ismingiz</label>
-                  <input type="text" placeholder="Ismingizni kiriting" class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500/50 focus:ring-2 focus:ring-emerald-500/20 transition-all" />
+                  <label class="block text-sm font-medium text-slate-400 mb-2">{{ $t('landing.yourName') }}</label>
+                  <input type="text" :placeholder="$t('landing.namePlaceholder')" class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500/50 focus:ring-2 focus:ring-emerald-500/20 transition-all" />
                 </div>
                 <div class="stagger-child">
-                  <label class="block text-sm font-medium text-slate-400 mb-2">Email</label>
+                  <label class="block text-sm font-medium text-slate-400 mb-2">{{ $t('common.email') }}</label>
                   <input type="email" placeholder="email@example.com" class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500/50 focus:ring-2 focus:ring-emerald-500/20 transition-all" />
                 </div>
                 <div class="stagger-child">
-                  <label class="block text-sm font-medium text-slate-400 mb-2">Xabar</label>
-                  <textarea rows="4" placeholder="Xabaringizni yozing..." class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500/50 focus:ring-2 focus:ring-emerald-500/20 transition-all resize-none"></textarea>
+                  <label class="block text-sm font-medium text-slate-400 mb-2">{{ $t('landing.message') }}</label>
+                  <textarea rows="4" :placeholder="$t('landing.messagePlaceholder')" class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500/50 focus:ring-2 focus:ring-emerald-500/20 transition-all resize-none"></textarea>
                 </div>
                 <button type="submit" class="w-full bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-white font-semibold py-4 rounded-xl transition-all flex items-center justify-center gap-2 stagger-child hover-lift">
                   <Send class="w-5 h-5" />
-                  <span>Yuborish</span>
+                  <span>{{ $t('landing.submitBtn') }}</span>
                 </button>
               </form>
             </div>
@@ -788,84 +818,56 @@
               <span class="text-xl font-bold text-white">Uni Control</span>
             </div>
             <p class="text-slate-400 max-w-sm leading-relaxed">
-              KUAF (Kokand universiteti Andijon filiali) uchun zamonaviy ta'lim boshqaruv platformasi. 
-              Dars jadvali, davomat va o'quv jarayonini bir joydan boshqaring.
+              {{ $t('landing.footerDesc') }}
             </p>
             <div class="flex items-center gap-3">
-              <a href="#" class="w-10 h-10 rounded-xl bg-white/5 hover:bg-emerald-500/20 border border-white/5 hover:border-emerald-500/30 flex items-center justify-center transition-all group hover-lift">
-                <svg class="w-5 h-5 text-slate-400 group-hover:text-emerald-400 transition-colors" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1.01.22-1.59.15-.15 2.71-2.48 2.76-2.69a.2.2 0 00-.05-.18c-.06-.05-.14-.03-.21-.02-.09.02-1.49.95-4.22 2.79-.4.27-.76.41-1.08.4-.36-.01-1.04-.2-1.55-.37-.63-.2-1.12-.31-1.08-.66.02-.18.27-.36.74-.55 2.92-1.27 4.86-2.11 5.83-2.51 2.78-1.16 3.35-1.36 3.73-1.36.08 0 .27.02.39.12.1.08.13.19.14.27-.01.06.01.24 0 .38z"/></svg>
-              </a>
-              <a href="#" class="w-10 h-10 rounded-xl bg-white/5 hover:bg-emerald-500/20 border border-white/5 hover:border-emerald-500/30 flex items-center justify-center transition-all group hover-lift">
-                <svg class="w-5 h-5 text-slate-400 group-hover:text-emerald-400 transition-colors" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>
-              </a>
-              <a href="#" class="w-10 h-10 rounded-xl bg-white/5 hover:bg-emerald-500/20 border border-white/5 hover:border-emerald-500/30 flex items-center justify-center transition-all group hover-lift">
-                <svg class="w-5 h-5 text-slate-400 group-hover:text-emerald-400 transition-colors" fill="currentColor" viewBox="0 0 24 24"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
+              <a v-for="social in landing.social_links.slice(0, 3)" :key="social.name" :href="social.url" target="_blank" class="w-10 h-10 rounded-xl bg-white/5 hover:bg-emerald-500/20 border border-white/5 hover:border-emerald-500/30 flex items-center justify-center transition-all group hover-lift">
+                <span class="text-sm text-slate-400 group-hover:text-emerald-400 transition-colors">{{ social.name?.charAt(0) || '?' }}</span>
               </a>
             </div>
           </div>
 
           <!-- Links -->
           <div class="stagger-child">
-            <h4 class="font-semibold text-white mb-4">Sahifalar</h4>
+            <h4 class="font-semibold text-white mb-4">{{ $t('landing.pages') }}</h4>
             <ul class="space-y-3">
-              <li><a href="#features" class="text-slate-400 hover:text-emerald-400 transition-colors">Xususiyatlar</a></li>
-              <li><a href="#how-it-works" class="text-slate-400 hover:text-emerald-400 transition-colors">Qanday ishlaydi</a></li>
-              <li><a href="#about" class="text-slate-400 hover:text-emerald-400 transition-colors">Biz haqimizda</a></li>
-              <li><a href="#contact" class="text-slate-400 hover:text-emerald-400 transition-colors">Bog'lanish</a></li>
+              <li><a href="#features" class="text-slate-400 hover:text-emerald-400 transition-colors">{{ $t('landing.features') }}</a></li>
+              <li><a href="#how-it-works" class="text-slate-400 hover:text-emerald-400 transition-colors">{{ $t('landing.howItWorks') }}</a></li>
+              <li><a href="#about" class="text-slate-400 hover:text-emerald-400 transition-colors">{{ $t('landing.about') }}</a></li>
+              <li><a href="#contact" class="text-slate-400 hover:text-emerald-400 transition-colors">{{ $t('landing.contact') }}</a></li>
             </ul>
           </div>
 
           <!-- Legal -->
           <div class="stagger-child">
-            <h4 class="font-semibold text-white mb-4">Qo'shimcha</h4>
+            <h4 class="font-semibold text-white mb-4">{{ $t('landing.additional') }}</h4>
             <ul class="space-y-3">
-              <li><a href="#" class="text-slate-400 hover:text-emerald-400 transition-colors">Maxfiylik siyosati</a></li>
-              <li><a href="#" class="text-slate-400 hover:text-emerald-400 transition-colors">Foydalanish shartlari</a></li>
-              <li><a href="#" class="text-slate-400 hover:text-emerald-400 transition-colors">Yordam markazi</a></li>
-              <li><router-link to="/login" class="text-slate-400 hover:text-emerald-400 transition-colors">Kirish</router-link></li>
+              <li><a href="#" class="text-slate-400 hover:text-emerald-400 transition-colors">{{ $t('landing.privacyPolicy') }}</a></li>
+              <li><a href="#" class="text-slate-400 hover:text-emerald-400 transition-colors">{{ $t('landing.termsOfUse') }}</a></li>
+              <li><a href="#" class="text-slate-400 hover:text-emerald-400 transition-colors">{{ $t('landing.helpCenter') }}</a></li>
+              <li><router-link to="/login" class="text-slate-400 hover:text-emerald-400 transition-colors">{{ $t('landing.enterSystem') }}</router-link></li>
             </ul>
           </div>
         </div>
 
         <!-- Team Section -->
         <div class="pt-8 border-t border-white/5 mb-8">
-          <h4 class="font-semibold text-white mb-6 text-center">Loyiha jamoasi</h4>
+          <h4 class="font-semibold text-white mb-6 text-center">{{ $t('landing.projectTeam') }}</h4>
           <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
-            <div class="bg-white/5 rounded-2xl p-4 text-center stagger-child hover-lift">
-              <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center mx-auto mb-3">
-                <Crown class="w-6 h-6 text-white" />
-              </div>
-              <div class="font-semibold text-white text-sm">Javlonbek To'ychiyev</div>
-              <div class="text-xs text-slate-500">Bo'lim boshlig'i</div>
-            </div>
-            <div class="bg-white/5 rounded-2xl p-4 text-center stagger-child hover-lift">
-              <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center mx-auto mb-3">
-                <Palette class="w-6 h-6 text-white" />
-              </div>
-              <div class="font-semibold text-white text-sm">Obidjonov Behruzbek</div>
-              <div class="text-xs text-slate-500">UI Dizayner</div>
-            </div>
-            <div class="bg-white/5 rounded-2xl p-4 text-center stagger-child hover-lift">
+            <div v-for="member in landing.team_members" :key="member.id" class="bg-white/5 rounded-2xl p-4 text-center stagger-child hover-lift">
               <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center mx-auto mb-3">
-                <Code class="w-6 h-6 text-white" />
+                <span class="text-lg font-bold text-white">{{ member.name?.charAt(0) || '?' }}</span>
               </div>
-              <div class="font-semibold text-white text-sm">Mannobov Xojisaid</div>
-              <div class="text-xs text-slate-500">Frontend Dasturchi</div>
-            </div>
-            <div class="bg-white/5 rounded-2xl p-4 text-center stagger-child hover-lift">
-              <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center mx-auto mb-3">
-                <Server class="w-6 h-6 text-white" />
-              </div>
-              <div class="font-semibold text-white text-sm">Xasanboyev Xurshidbek</div>
-              <div class="text-xs text-slate-500">Backend Dasturchi</div>
+              <div class="font-semibold text-white text-sm">{{ member.name }}</div>
+              <div class="text-xs text-slate-500">{{ member.position }}</div>
             </div>
           </div>
         </div>
 
         <!-- Bottom -->
         <div class="pt-8 border-t border-white/5 flex flex-col md:flex-row items-center justify-between gap-4">
-          <p class="text-slate-500 text-sm">© 2026 Uni Control. Barcha huquqlar himoyalangan.</p>
-          <p class="text-slate-500 text-sm">KUAF StartUP loyihalar bilan ishlash bo'limi tomonidan ishlab chiqilgan</p>
+          <p class="text-slate-500 text-sm">{{ $t('landing.allRightsReserved') }}</p>
+          <p class="text-slate-500 text-sm">{{ $t('landing.developedBy') }}</p>
         </div>
       </div>
     </footer>
@@ -873,21 +875,112 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted } from 'vue'
-import { 
-  GraduationCap, LogIn, ArrowRight, Play, Zap, Rocket, Users, Layers, TrendingUp,
-  Calendar, BarChart3, Brain, Bell, Trophy, Shield, CheckCircle, Sparkles,
-  BookOpen, Code, Globe, MessageCircle, Phone, Mail, Building2, Settings,
-  UserPlus, Smartphone, Heart, Check, Target, Star, HelpCircle, ChevronRight,
-  MapPin, Send, Crown, Palette, Server, Menu, X
+import { useLanguageStore } from '@/stores/language'
+import {
+    ArrowRight,
+    BarChart3,
+    Bell,
+    BookOpen,
+    Brain,
+    Calendar,
+    Check,
+    CheckCircle,
+    ChevronRight,
+    Code,
+    Globe,
+    GraduationCap,
+    Heart,
+    HelpCircle,
+    Layers,
+    LogIn,
+    Mail,
+    MapPin,
+    Menu,
+    MessageCircle,
+    Phone,
+    Play,
+    Rocket,
+    Send,
+    Settings,
+    Shield,
+    Smartphone,
+    Sparkles,
+    Star,
+    Target,
+    TrendingUp,
+    Trophy,
+    UserPlus,
+    Users,
+    X,
+    Zap
 } from 'lucide-vue-next'
+import { computed, onMounted, onUnmounted, reactive, ref } from 'vue'
+import api from '../services/api'
+
+const langStore = useLanguageStore()
+const { t } = langStore
+
+// Landing data from API
+const landing = reactive({
+  hero_stats: { students_count: '500+', groups_count: '50+', result_percent: '99%' },
+  social_links: [],
+  team_members: [],
+  contact_info: { email: 'info@unicontrol.uz', phone: '+998 90 123 45 67', telegram: '@unicontrol_uz', address: 'Toshkent sh., Chilonzor t.' },
+  about_stats: { founded: '01.10.2025', universities: '1', users: '500+', support: '24/7' },
+  feature_cards: [],
+  trusted_by: []
+})
+
+const loadLandingData = async () => {
+  try {
+    const data = await api.getLandingPublic()
+    if (data.hero_stats) landing.hero_stats = data.hero_stats
+    if (data.social_links) landing.social_links = data.social_links
+    if (data.team_members) landing.team_members = data.team_members
+    if (data.contact_info) landing.contact_info = data.contact_info
+    if (data.about_stats) landing.about_stats = data.about_stats
+    if (data.feature_cards) landing.feature_cards = data.feature_cards
+    if (data.trusted_by) landing.trusted_by = data.trusted_by
+  } catch (e) {
+    console.error('Landing data load error:', e)
+  }
+}
 
 // Mobile menu state
 const mobileMenuOpen = ref(false)
 
+// Language switcher
+const langDropdownOpen = ref(false)
+const langDropdownRef = ref(null)
+
+const languages = [
+  { code: 'uz', name: "O'zbekcha", flag: '🇺🇿' },
+  { code: 'ru', name: 'Русский', flag: '🇷🇺' },
+  { code: 'en', name: 'English', flag: '🇬🇧' },
+]
+
+const currentLangLabel = computed(() => {
+  const lang = languages.find(l => l.code === langStore.locale)
+  return lang ? lang.flag + ' ' + lang.code.toUpperCase() : '🇺🇿 UZ'
+})
+
+function switchLang(code) {
+  langStore.setLocale(code)
+  langDropdownOpen.value = false
+}
+
+function handleClickOutside(e) {
+  if (langDropdownRef.value && !langDropdownRef.value.contains(e.target)) {
+    langDropdownOpen.value = false
+  }
+}
+
 let observer = null
 
 onMounted(() => {
+  // Load dynamic landing data from API
+  loadLandingData()
+
   // Optimal Intersection Observer - GPU optimized
   observer = new IntersectionObserver((entries) => {
     entries.forEach(entry => {
@@ -922,10 +1015,14 @@ onMounted(() => {
       observer.observe(el)
     })
   })
+
+  // Click outside listener for lang dropdown
+  document.addEventListener('click', handleClickOutside)
 })
 
 onUnmounted(() => {
   if (observer) observer.disconnect()
+  document.removeEventListener('click', handleClickOutside)
 })
 </script>
 

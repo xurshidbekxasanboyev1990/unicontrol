@@ -73,6 +73,10 @@ class ReportResponse(BaseModel):
     error_message: Optional[str] = None
     ai_result: Optional[str] = None
     download_count: int
+    approved_by: Optional[int] = None
+    approved_by_name: Optional[str] = None
+    approved_at: Optional[datetime] = None
+    rejection_reason: Optional[str] = None
     expires_at: Optional[datetime] = None
     created_at: datetime
     updated_at: datetime

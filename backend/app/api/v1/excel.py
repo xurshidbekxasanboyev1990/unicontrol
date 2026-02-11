@@ -9,6 +9,8 @@ Version: 1.0.0
 
 from typing import Optional
 from datetime import date
+import secrets
+import string
 from fastapi import APIRouter, Depends, Query, UploadFile, File, Form
 from fastapi.responses import StreamingResponse
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -20,6 +22,95 @@ from app.core.dependencies import get_current_active_user, require_admin, requir
 from app.models.user import User
 
 router = APIRouter()
+
+
+# General Import Endpoint
+@router.post("/import")
+async def import_excel(
+    file: UploadFile = File(...),
+    type: str = Form("auto"),
+    group_id: Optional[int] = Form(None),
+    update_existing: bool = Form(False),
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(require_admin)
+):
+    """
+    General Excel import endpoint.
+    
+    Args:
+        file: Excel file to import
+        type: Type of data to import (auto, kontingent, groups, students)
+        group_id: Group ID for student import
+        update_existing: Whether to update existing records
+    
+    Returns:
+        Import results with counts and errors
+    """
+    from app.core.exceptions import BadRequestException
+    
+    if not file.filename.endswith(('.xlsx', '.xls')):
+        raise BadRequestException("Invalid file type. Please upload an Excel file.")
+    
+    service = ExcelService(db)
+    contents = await file.read()
+    
+    # Auto-detect kontingent format
+    if type == "auto":
+        import pandas as pd
+        try:
+            df = pd.read_excel(io.BytesIO(contents), engine='openpyxl', nrows=5)
+            columns = [str(c).lower() for c in df.columns]
+            
+            # Check for kontingent format markers
+            if any('talaba id' in c or 'full name' in c or 'passport' in c for c in columns):
+                type = "kontingent"
+            elif any('guruh' in c or 'fakultet' in c for c in columns):
+                type = "groups"
+            else:
+                type = "kontingent"  # Default to kontingent
+        except:
+            type = "kontingent"
+    
+    if type == "kontingent":
+        # Generate secure default password if not provided
+        secure_default = ''.join(secrets.choice(string.ascii_letters + string.digits) for _ in range(12))
+        result = await service.import_kontingent(
+            file_data=contents,
+            update_existing=update_existing,
+            create_users=True,
+            default_password=secure_default
+        )
+        return {
+            "success": True,
+            "imported_count": result.get("imported", 0),
+            "updated_count": result.get("updated", 0),
+            "failed_count": result.get("failed", 0),
+            "skipped_count": result.get("skipped", 0),
+            "groups_created": result.get("groups_created", 0),
+            "users_created": result.get("users_created", 0),
+            "errors": result.get("errors", [])[:20]  # Limit errors
+        }
+    elif type == "students":
+        result = await service.import_students(
+            file_data=contents,
+            group_id=group_id,
+            update_existing=update_existing
+        )
+    elif type == "groups":
+        result = await service.import_groups(
+            file_data=contents,
+            update_existing=update_existing
+        )
+    else:
+        raise BadRequestException(f"Unknown import type: {type}")
+    
+    return {
+        "success": result.get("success", True),
+        "imported_count": result.get("imported", 0),
+        "updated_count": result.get("updated", 0),
+        "failed_count": result.get("failed", 0),
+        "errors": result.get("errors", [])
+    }
 
 
 # Import Endpoints
@@ -179,7 +270,7 @@ async def import_kontingent(
     file: UploadFile = File(...),
     update_existing: bool = Form(False),
     create_users: bool = Form(True),
-    default_password: str = Form("12345678"),
+    default_password: Optional[str] = Form(None),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(require_superadmin)
 ):
@@ -203,7 +294,7 @@ async def import_kontingent(
         file: Excel file (.xlsx)
         update_existing: If True, update existing students
         create_users: If True, create user accounts (default: True)
-        default_password: Default password for new accounts (default: 12345678)
+        default_password: Default password for new accounts (auto-generated if not set)
     
     Returns:
         Import statistics and errors
@@ -213,6 +304,10 @@ async def import_kontingent(
     if not file.filename.endswith(('.xlsx', '.xls')):
         from app.core.exceptions import BadRequestException
         raise BadRequestException("Faqat Excel fayl (.xlsx, .xls) yuklay olasiz.")
+    
+    # Generate secure password if not provided
+    if not default_password:
+        default_password = ''.join(secrets.choice(string.ascii_letters + string.digits) for _ in range(12))
     
     contents = await file.read()
     result = await service.import_kontingent(

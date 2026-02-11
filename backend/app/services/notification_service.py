@@ -8,6 +8,7 @@ Version: 1.0.0
 """
 
 from datetime import datetime
+from app.config import now_tashkent
 from typing import Optional, List, Tuple
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func, and_, update
@@ -171,7 +172,7 @@ class NotificationService:
             raise NotFoundException("Notification not found")
         
         notification.is_read = True
-        notification.read_at = datetime.utcnow()
+        notification.read_at = now_tashkent()
         
         await self.db.commit()
         await self.db.refresh(notification)
@@ -188,7 +189,7 @@ class NotificationService:
                     Notification.is_read == False
                 )
             )
-            .values(is_read=True, read_at=datetime.utcnow())
+            .values(is_read=True, read_at=now_tashkent())
         )
         
         await self.db.commit()
@@ -209,20 +210,17 @@ class NotificationService:
                     Notification.is_read == False
                 )
             )
-            .values(is_read=True, read_at=datetime.utcnow())
+            .values(is_read=True, read_at=now_tashkent())
         )
         
         await self.db.commit()
         return result.rowcount
     
-    async def delete(self, notification_id: int, user_id: int) -> bool:
-        """Delete a notification."""
+    async def delete(self, notification_id: int, user_id: int = None) -> bool:
+        """Delete a notification. If user_id provided, check ownership."""
         notification = await self.get_by_id(notification_id)
         
         if not notification:
-            raise NotFoundException("Notification not found")
-        
-        if notification.user_id != user_id:
             raise NotFoundException("Notification not found")
         
         await self.db.delete(notification)
@@ -249,6 +247,36 @@ class NotificationService:
         await self.db.commit()
         return count
     
+    async def send_bulk(
+        self,
+        user_ids: List[int],
+        title: str,
+        message: str,
+        notification_type = NotificationType.INFO,
+        priority = NotificationPriority.NORMAL,
+        sender_id: Optional[int] = None,
+        action_url: Optional[str] = None,
+        action_text: Optional[str] = None,
+    ) -> int:
+        """Send a notification to multiple users."""
+        count = 0
+        for user_id in user_ids:
+            notification = Notification(
+                user_id=user_id,
+                title=title,
+                message=message,
+                type=notification_type,
+                priority=priority,
+                sender_id=sender_id,
+                action_url=action_url,
+                action_text=action_text,
+            )
+            self.db.add(notification)
+            count += 1
+        
+        await self.db.commit()
+        return count
+
     async def create_broadcast(
         self,
         broadcast_data: BroadcastNotificationCreate,
@@ -300,7 +328,7 @@ class NotificationService:
             sent_count += 1
         
         broadcast.sent_count = sent_count
-        broadcast.sent_at = datetime.utcnow()
+        broadcast.sent_at = now_tashkent()
         
         await self.db.commit()
         await self.db.refresh(broadcast)
@@ -323,7 +351,7 @@ class NotificationService:
                 .where(Student.user_id.isnot(None))
             )
             user_ids.extend([row[0] for row in result.all()])
-        elif target_role:
+        elif target_role and target_role != "all":
             # Get users by role
             role_map = {
                 "student": UserRole.STUDENT,

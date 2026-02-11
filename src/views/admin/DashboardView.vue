@@ -4,7 +4,7 @@
     <div v-if="loading" class="flex items-center justify-center py-20">
       <div class="text-center">
         <RefreshCw class="w-12 h-12 text-violet-500 animate-spin mx-auto mb-4" />
-        <p class="text-slate-600">Ma'lumotlar yuklanmoqda...</p>
+        <p class="text-slate-600">{{ $t('dashboard.loadingData') }}</p>
       </div>
     </div>
 
@@ -13,11 +13,11 @@
       <div class="flex items-center gap-3">
         <AlertCircle class="w-6 h-6 text-rose-500" />
         <div>
-          <h3 class="font-semibold text-rose-700">Xatolik yuz berdi</h3>
+          <h3 class="font-semibold text-rose-700">{{ $t('dashboard.errorOccurred') }}</h3>
           <p class="text-rose-600 text-sm mt-1">{{ error }}</p>
         </div>
         <button @click="refresh" class="ml-auto px-4 py-2 bg-rose-500 text-white rounded-lg hover:bg-rose-600">
-          Qayta urinish
+          {{ $t('common.retry') }}
         </button>
       </div>
     </div>
@@ -28,8 +28,8 @@
       <div class="bg-gradient-to-br from-violet-500 to-purple-600 rounded-2xl p-6 text-white">
         <div class="flex items-center justify-between">
           <div>
-            <h1 class="text-2xl font-bold">Admin boshqaruv paneli</h1>
-            <p class="text-violet-100 mt-1">Fakultet boshqaruvi</p>
+            <h1 class="text-2xl font-bold">{{ $t('dashboard.adminPanel') }}</h1>
+            <p class="text-violet-100 mt-1">{{ $t('dashboard.facultyManagement') }}</p>
           </div>
           <div class="flex items-center gap-3">
             <button @click="refresh" class="w-10 h-10 bg-white/20 backdrop-blur rounded-xl flex items-center justify-center hover:bg-white/30 transition-colors">
@@ -47,8 +47,8 @@
         <div class="bg-white rounded-2xl border border-slate-200 p-5">
           <div class="flex items-center justify-between">
             <div>
-              <p class="text-3xl font-bold text-slate-800">{{ totalStudents.toLocaleString() }}</p>
-              <p class="text-sm text-slate-500 mt-1">Jami talabalar</p>
+              <p class="text-3xl font-bold text-slate-800">{{ (totalStudents || 0).toLocaleString() }}</p>
+              <p class="text-sm text-slate-500 mt-1">{{ $t('dashboard.totalStudents') }}</p>
             </div>
             <div class="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
               <Users class="w-6 h-6 text-blue-600" />
@@ -59,8 +59,8 @@
         <div class="bg-white rounded-2xl border border-slate-200 p-5">
           <div class="flex items-center justify-between">
             <div>
-              <p class="text-3xl font-bold text-violet-600">{{ totalGroups.toLocaleString() }}</p>
-              <p class="text-sm text-slate-500 mt-1">Guruhlar</p>
+              <p class="text-3xl font-bold text-violet-600">{{ (totalGroups || 0).toLocaleString() }}</p>
+              <p class="text-sm text-slate-500 mt-1">{{ $t('dashboard.totalGroups') }}</p>
             </div>
             <div class="w-12 h-12 bg-violet-100 rounded-xl flex items-center justify-center">
               <Layers class="w-6 h-6 text-violet-600" />
@@ -72,7 +72,7 @@
           <div class="flex items-center justify-between">
             <div>
               <p class="text-3xl font-bold text-emerald-600">{{ avgAttendance }}%</p>
-              <p class="text-sm text-slate-500 mt-1">O'rtacha davomat</p>
+              <p class="text-sm text-slate-500 mt-1">{{ $t('dashboard.avgAttendance') }}</p>
             </div>
             <div class="w-12 h-12 bg-emerald-100 rounded-xl flex items-center justify-center">
               <TrendingUp class="w-6 h-6 text-emerald-600" />
@@ -83,8 +83,8 @@
         <div class="bg-white rounded-2xl border border-slate-200 p-5">
           <div class="flex items-center justify-between">
             <div>
-              <p class="text-3xl font-bold text-rose-600">{{ pendingContracts.toLocaleString() }}</p>
-              <p class="text-sm text-slate-500 mt-1">To'lanmagan</p>
+              <p class="text-3xl font-bold text-rose-600">{{ (pendingContracts || 0).toLocaleString() }}</p>
+              <p class="text-sm text-slate-500 mt-1">{{ $t('dashboard.unpaid') }}</p>
             </div>
             <div class="w-12 h-12 bg-rose-100 rounded-xl flex items-center justify-center">
               <CreditCard class="w-6 h-6 text-rose-600" />
@@ -99,40 +99,40 @@
         <div class="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
           <UserPlus class="w-6 h-6 text-blue-600" />
         </div>
-        <h3 class="font-semibold text-slate-800">Talabalar</h3>
-        <p class="text-sm text-slate-500 mt-1">Qo'shish va boshqarish</p>
+        <h3 class="font-semibold text-slate-800">{{ $t('layout.students') }}</h3>
+        <p class="text-sm text-slate-500 mt-1">{{ $t('students.addStudent') }}</p>
       </router-link>
 
       <router-link to="/admin/groups" class="bg-white rounded-2xl border border-slate-200 p-5 hover:shadow-lg hover:border-violet-200 transition-all group">
         <div class="w-12 h-12 bg-violet-100 rounded-xl flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
           <FolderPlus class="w-6 h-6 text-violet-600" />
         </div>
-        <h3 class="font-semibold text-slate-800">Guruhlar</h3>
-        <p class="text-sm text-slate-500 mt-1">Guruhlarni boshqarish</p>
+        <h3 class="font-semibold text-slate-800">{{ $t('layout.groups') }}</h3>
+        <p class="text-sm text-slate-500 mt-1">{{ $t('groups.title') }}</p>
       </router-link>
 
       <router-link to="/admin/reports" class="bg-white rounded-2xl border border-slate-200 p-5 hover:shadow-lg hover:border-emerald-200 transition-all group">
         <div class="w-12 h-12 bg-emerald-100 rounded-xl flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
           <BarChart3 class="w-6 h-6 text-emerald-600" />
         </div>
-        <h3 class="font-semibold text-slate-800">Hisobotlar</h3>
-        <p class="text-sm text-slate-500 mt-1">Statistika va tahlil</p>
+        <h3 class="font-semibold text-slate-800">{{ $t('layout.reports') }}</h3>
+        <p class="text-sm text-slate-500 mt-1">{{ $t('analytics.title') }}</p>
       </router-link>
 
       <router-link to="/admin/notifications" class="bg-white rounded-2xl border border-slate-200 p-5 hover:shadow-lg hover:border-amber-200 transition-all group">
         <div class="w-12 h-12 bg-amber-100 rounded-xl flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
           <Bell class="w-6 h-6 text-amber-600" />
         </div>
-        <h3 class="font-semibold text-slate-800">Xabarlar</h3>
-        <p class="text-sm text-slate-500 mt-1">E'lonlar yuborish</p>
+        <h3 class="font-semibold text-slate-800">{{ $t('layout.notifications') }}</h3>
+        <p class="text-sm text-slate-500 mt-1">{{ $t('notifications.sendNotification') }}</p>
       </router-link>
 
       <router-link to="/admin/users" class="bg-white rounded-2xl border border-slate-200 p-5 hover:shadow-lg hover:border-rose-200 transition-all group">
         <div class="w-12 h-12 bg-rose-100 rounded-xl flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
           <Key class="w-6 h-6 text-rose-600" />
         </div>
-        <h3 class="font-semibold text-slate-800">Foydalanuvchilar</h3>
-        <p class="text-sm text-slate-500 mt-1">Parol va hisoblar</p>
+        <h3 class="font-semibold text-slate-800">{{ $t('layout.users') }}</h3>
+        <p class="text-sm text-slate-500 mt-1">{{ $t('users.title') }}</p>
       </router-link>
     </div>
 
@@ -140,7 +140,7 @@
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
       <!-- Attendance by Group -->
       <div class="bg-white rounded-2xl border border-slate-200 p-6">
-        <h2 class="text-lg font-semibold text-slate-800 mb-4">Guruhlar bo'yicha davomat</h2>
+        <h2 class="text-lg font-semibold text-slate-800 mb-4">{{ $t('groups.title') }}</h2>
         <div class="space-y-4">
           <div v-for="group in groupAttendance" :key="group.name">
             <div class="flex items-center justify-between mb-2">
@@ -165,7 +165,7 @@
 
       <!-- Contract Status -->
       <div class="bg-white rounded-2xl border border-slate-200 p-6">
-        <h2 class="text-lg font-semibold text-slate-800 mb-4">Kontrakt holati</h2>
+        <h2 class="text-lg font-semibold text-slate-800 mb-4">{{ $t('subscription.title') }}</h2>
         <div class="flex items-center justify-center h-48">
           <div class="relative w-40 h-40">
             <svg class="w-full h-full -rotate-90" viewBox="0 0 100 100">
@@ -224,7 +224,7 @@
       </div>
       <div v-if="recentActivities.length === 0" class="p-8 text-center text-slate-500">
         <Clock class="w-10 h-10 mx-auto mb-3 text-slate-300" />
-        <p>Hozircha faoliyat yo'q</p>
+        <p>{{ $t('common.noData') }}</p>
       </div>
     </div>
     </template>
@@ -236,28 +236,27 @@
  * Admin Dashboard - Real API Integration
  * Backend /dashboard/admin endpoint dan ma'lumot oladi
  */
-import { ref, computed, onMounted, markRaw } from 'vue'
-import { useDataStore } from '../../stores/data'
-import { useAuthStore } from '../../stores/auth'
-import api from '../../services/api'
 import {
-  Shield,
-  Users,
-  Layers,
-  TrendingUp,
-  CreditCard,
-  UserPlus,
-  FolderPlus,
-  BarChart3,
-  Bell,
-  Key,
-  UserCheck,
-  FileText,
-  AlertCircle,
-  RefreshCw,
-  Calendar,
-  Clock
+    AlertCircle,
+    BarChart3,
+    Bell,
+    Clock,
+    CreditCard,
+    FileText,
+    FolderPlus,
+    Key,
+    Layers,
+    RefreshCw,
+    Shield,
+    TrendingUp,
+    UserCheck,
+    UserPlus,
+    Users
 } from 'lucide-vue-next'
+import { computed, markRaw, onMounted, ref } from 'vue'
+import api from '../../services/api'
+import { useAuthStore } from '../../stores/auth'
+import { useDataStore } from '../../stores/data'
 
 const dataStore = useDataStore()
 const authStore = useAuthStore()
@@ -271,12 +270,12 @@ const recentActivities = ref([])
 // Computed values
 const totalStudents = computed(() => {
   if (dashboardData.value?.totalStudents) return dashboardData.value.totalStudents
-  return dataStore.totalStudents
+  return dataStore.studentsCount || dataStore.students?.length || 0
 })
 
 const totalGroups = computed(() => {
   if (dashboardData.value?.totalGroups) return dashboardData.value.totalGroups
-  return dataStore.totalGroups
+  return dataStore.groupsCount || dataStore.groups?.length || 0
 })
 
 const avgAttendance = computed(() => {
@@ -317,7 +316,20 @@ async function loadDashboard() {
     // Backend endpoint mavjud bo'lsa foydalanish
     try {
       const response = await api.request('/dashboard/admin')
-      dashboardData.value = response
+      // Map backend response to frontend format
+      // Backend: { stats: { groups, students, leaders }, today_attendance: { total, present, rate }, pending_reports, low_attendance_groups }
+      dashboardData.value = {
+        totalStudents: response.stats?.students || 0,
+        totalGroups: response.stats?.groups || 0,
+        totalLeaders: response.stats?.leaders || 0,
+        avgAttendance: response.today_attendance?.rate || 0,
+        pendingContracts: response.pending_reports || 0,
+        paidContracts: (response.stats?.students || 0) - (response.pending_reports || 0),
+        groupAttendance: (response.low_attendance_groups || []).map(g => ({
+          name: g.name || g.group_name,
+          rate: Math.round(g.rate || g.attendance_rate || 0)
+        }))
+      }
     } catch (e) {
       console.log('Admin dashboard endpoint not available, loading from stores')
       // Fallback: store'lardan yuklaymiz
@@ -327,14 +339,14 @@ async function loadDashboard() {
       ])
       
       dashboardData.value = {
-        totalStudents: dataStore.totalStudents,
-        totalGroups: dataStore.totalGroups,
+        totalStudents: dataStore.studentsCount || dataStore.students?.length || 0,
+        totalGroups: dataStore.groupsCount || dataStore.groups?.length || 0,
         avgAttendance: 0,
         pendingContracts: 0,
-        paidContracts: dataStore.totalStudents,
-        groupAttendance: dataStore.groups.slice(0, 6).map(g => ({
+        paidContracts: dataStore.studentsCount || 0,
+        groupAttendance: (dataStore.groups || []).slice(0, 6).map(g => ({
           name: g.name,
-          rate: Math.floor(Math.random() * 30) + 70 // Placeholder - backend implementation kerak
+          rate: g.attendance_rate || g.attendanceRate || 0
         }))
       }
     }

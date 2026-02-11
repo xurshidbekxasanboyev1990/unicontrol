@@ -13,6 +13,7 @@ from typing import Optional, List, Tuple
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func
 from sqlalchemy.orm import joinedload
+from loguru import logger
 
 from app.models.group import Group
 from app.models.student import Student
@@ -59,7 +60,8 @@ class GroupService:
         Returns:
             Tuple of (groups list, total count)
         """
-        query = select(Group).options(joinedload(Group.leader))
+        # Don't use joinedload for list - it's slow with many groups
+        query = select(Group)
         count_query = select(func.count(Group.id))
         
         # Apply filters
@@ -79,12 +81,10 @@ class GroupService:
             search_filter = f"%{search}%"
             query = query.where(
                 (Group.name.ilike(search_filter)) |
-                (Group.department.ilike(search_filter)) |
                 (Group.faculty.ilike(search_filter))
             )
             count_query = count_query.where(
                 (Group.name.ilike(search_filter)) |
-                (Group.department.ilike(search_filter)) |
                 (Group.faculty.ilike(search_filter))
             )
         
@@ -113,7 +113,6 @@ class GroupService:
             name=group_data.name,
             description=group_data.description,
             course_year=group_data.course_year,
-            department=group_data.department,
             faculty=group_data.faculty,
             leader_id=group_data.leader_id,
             contract_amount=group_data.contract_amount,
@@ -216,12 +215,15 @@ class GroupService:
                     is_active=True
                 )
                 self.db.add(new_user)
-                print(f"[GROUP SERVICE] Yangi sardor user yaratildi: login={login}")
+                await self.db.flush()  # Get new_user.id
+                student.user_id = new_user.id  # Link student to user
+                logger.debug(f"[GROUP SERVICE] Yangi sardor user yaratildi: login={login}, user_id={new_user.id}")
             else:
                 # User mavjud, leader role ga o'zgartiramiz
                 existing_user.role = UserRole.LEADER
                 existing_user.is_active = True
-                print(f"[GROUP SERVICE] Mavjud user sardor qilindi: login={login}")
+                student.user_id = existing_user.id  # Link student to user
+                logger.debug(f"[GROUP SERVICE] Mavjud user sardor qilindi: login={login}, user_id={existing_user.id}")
         
         group.leader_id = leader_id
         await self.db.commit()
@@ -237,6 +239,37 @@ class GroupService:
             .where(Student.is_active == True)
         )
         return result.scalar() or 0
+    
+    async def get_all_students_counts(self, group_ids: List[int] = None) -> dict:
+        """Get students count for all groups in one query."""
+        query = (
+            select(Student.group_id, func.count(Student.id).label('count'))
+            .where(Student.is_active == True)
+            .group_by(Student.group_id)
+        )
+        if group_ids:
+            query = query.where(Student.group_id.in_(group_ids))
+        
+        result = await self.db.execute(query)
+        rows = result.all()
+        return {row[0]: row[1] for row in rows}
+    
+    async def get_leader_names(self, leader_ids: List[int]) -> dict:
+        """Get leader names for multiple groups in one query."""
+        if not leader_ids:
+            return {}
+        
+        # Filter out None values
+        valid_ids = [lid for lid in leader_ids if lid is not None]
+        if not valid_ids:
+            return {}
+        
+        result = await self.db.execute(
+            select(Student.id, Student.name)
+            .where(Student.id.in_(valid_ids))
+        )
+        rows = result.all()
+        return {row[0]: row[1] for row in rows}
     
     async def get_statistics(self) -> GroupStats:
         """Get group statistics."""

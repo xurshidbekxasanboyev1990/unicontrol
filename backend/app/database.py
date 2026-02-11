@@ -8,6 +8,7 @@ Author: UniControl Team
 Version: 1.0.0
 """
 
+import logging
 from typing import AsyncGenerator
 from sqlalchemy.ext.asyncio import (
     AsyncSession,
@@ -17,8 +18,11 @@ from sqlalchemy.ext.asyncio import (
 )
 from sqlalchemy.orm import DeclarativeBase
 from sqlalchemy import MetaData
+import sqlalchemy as sa
 
 from app.config import settings
+
+logger = logging.getLogger(__name__)
 
 
 # Naming convention for constraints (helps with migrations)
@@ -105,9 +109,22 @@ async def init_db() -> None:
         # Import all models to ensure they are registered
         from app.models import (
             user, student, group, attendance, 
-            schedule, notification, report
+            schedule, notification, report,
+            mutoola, activity_log, file,
+            library, canteen, club, subject, tournament
         )
         await conn.run_sync(Base.metadata.create_all)
+    
+    # Add missing columns for existing tables (safe migration)
+    async with engine.begin() as conn:
+        # Add telegram_notified column if not exists
+        await conn.execute(
+            sa.text("""
+                ALTER TABLE attendances 
+                ADD COLUMN IF NOT EXISTS telegram_notified BOOLEAN NOT NULL DEFAULT FALSE
+            """)
+        )
+        logger.info("Database schema updated (telegram_notified column ensured)")
 
 
 async def close_db() -> None:
@@ -116,3 +133,26 @@ async def close_db() -> None:
     Should be called on application shutdown.
     """
     await engine.dispose()
+    # Close Redis
+    global _redis_client
+    if _redis_client:
+        await _redis_client.aclose()
+        _redis_client = None
+
+
+# ==================== Redis ====================
+
+import redis.asyncio as aioredis
+
+_redis_client: aioredis.Redis | None = None
+
+
+async def get_redis() -> aioredis.Redis:
+    """Get or create a shared async Redis client."""
+    global _redis_client
+    if _redis_client is None:
+        _redis_client = aioredis.from_url(
+            settings.REDIS_URL,
+            decode_responses=True
+        )
+    return _redis_client

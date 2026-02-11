@@ -34,51 +34,62 @@ import { createRouter, createWebHistory } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
 
 // Views
+import MainLayout from '../layouts/MainLayout.vue'
 import LandingView from '../views/LandingView.vue'
 import LoginView from '../views/LoginView.vue'
-import MainLayout from '../layouts/MainLayout.vue'
 
 // Student views
-import StudentDashboard from '../views/student/DashboardView.vue'
-import StudentSchedule from '../views/student/ScheduleView.vue'
-import StudentProfile from '../views/student/ProfileView.vue'
-import StudentAttendance from '../views/student/AttendanceView.vue'
-import StudentLibrary from '../views/student/LibraryView.vue'
 import StudentAIAnalysis from '../views/student/AIAnalysisView.vue'
-import StudentNotifications from '../views/student/NotificationsView.vue'
-import StudentSettings from '../views/student/SettingsView.vue'
-import StudentHelp from '../views/student/HelpView.vue'
-import StudentClubs from '../views/student/ClubsView.vue'
+import StudentAttendance from '../views/student/AttendanceView.vue'
 import StudentCanteen from '../views/student/CanteenView.vue'
+import StudentClubs from '../views/student/ClubsView.vue'
+import StudentDashboard from '../views/student/DashboardView.vue'
+import StudentHelp from '../views/student/HelpView.vue'
+import StudentLibrary from '../views/student/LibraryView.vue'
+import StudentNotifications from '../views/student/NotificationsView.vue'
+import StudentProfile from '../views/student/ProfileView.vue'
+import StudentSchedule from '../views/student/ScheduleView.vue'
+import StudentSettings from '../views/student/SettingsView.vue'
 import StudentTournaments from '../views/student/TournamentsView.vue'
 
 // Leader views
-import LeaderDashboard from '../views/leader/DashboardView.vue'
-import LeaderAttendance from '../views/leader/AttendanceView.vue'
-import LeaderStudents from '../views/leader/StudentsView.vue'
-import LeaderSchedule from '../views/leader/ScheduleView.vue'
-import LeaderReports from '../views/leader/ReportsView.vue'
-import LeaderNotifications from '../views/leader/NotificationsView.vue'
 import LeaderAnalytics from '../views/leader/AnalyticsView.vue'
+import LeaderAttendance from '../views/leader/AttendanceView.vue'
+import LeaderDashboard from '../views/leader/DashboardView.vue'
 import LeaderFileManager from '../views/leader/FileManagerView.vue'
+import LeaderNotifications from '../views/leader/NotificationsView.vue'
+import LeaderReports from '../views/leader/ReportsView.vue'
+import LeaderSchedule from '../views/leader/ScheduleView.vue'
+import LeaderStudents from '../views/leader/StudentsView.vue'
+import LeaderSubscription from '../views/leader/SubscriptionView.vue'
 
 // Admin views
-import AdminDashboard from '../views/admin/DashboardView.vue'
-import AdminStudents from '../views/admin/StudentsView.vue'
-import AdminGroups from '../views/admin/GroupsView.vue'
-import AdminUsers from '../views/admin/UsersView.vue'
-import AdminReports from '../views/admin/ReportsView.vue'
-import AdminNotifications from '../views/admin/NotificationsView.vue'
+import AdminAttendance from '../views/admin/AttendanceView.vue'
 import AdminClubs from '../views/admin/ClubsView.vue'
-import AdminTournaments from '../views/admin/TournamentsView.vue'
+import AdminDashboard from '../views/admin/DashboardView.vue'
+import AdminGroups from '../views/admin/GroupsView.vue'
+import AdminNotifications from '../views/admin/NotificationsView.vue'
+import AdminReports from '../views/admin/ReportsView.vue'
+import AdminStudents from '../views/admin/StudentsView.vue'
 import AdminSubjects from '../views/admin/SubjectsView.vue'
+import AdminTournaments from '../views/admin/TournamentsView.vue'
+import AdminUsers from '../views/admin/UsersView.vue'
 
 // Super Admin views
-import SuperDashboard from '../views/super/DashboardView.vue'
 import SuperAdmins from '../views/super/AdminsView.vue'
-import SuperSettings from '../views/super/SettingsView.vue'
-import SuperLogs from '../views/super/LogsView.vue'
+import SuperDashboard from '../views/super/DashboardView.vue'
 import SuperLandingSettings from '../views/super/LandingSettingsView.vue'
+import SuperLogs from '../views/super/LogsView.vue'
+import SuperReports from '../views/super/ReportsView.vue'
+import SuperSettings from '../views/super/SettingsView.vue'
+import SuperSheetsSchedule from '../views/super/SheetsScheduleView.vue'
+import SuperSubscriptions from '../views/super/SubscriptionsView.vue'
+import SuperTelegramBot from '../views/super/TelegramBotView.vue'
+import SuperUsers from '../views/super/UsersView.vue'
+
+// Market views
+import MarketAdminView from '../views/shared/MarketAdminView.vue'
+import MarketView from '../views/shared/MarketView.vue'
 
 const routes = [
   {
@@ -112,7 +123,9 @@ const routes = [
       { path: 'help', name: 'student-help', component: StudentHelp },
       { path: 'clubs', name: 'student-clubs', component: StudentClubs },
       { path: 'canteen', name: 'student-canteen', component: StudentCanteen },
-      { path: 'tournaments', name: 'student-tournaments', component: StudentTournaments }
+      { path: 'tournaments', name: 'student-tournaments', component: StudentTournaments },
+      { path: 'subscription', name: 'student-subscription', component: LeaderSubscription },
+      { path: 'market', name: 'student-market', component: MarketView }
     ]
   },
 
@@ -131,9 +144,11 @@ const routes = [
       { path: 'notifications', name: 'leader-notifications', component: LeaderNotifications },
       { path: 'analytics', name: 'leader-analytics', component: LeaderAnalytics },
       { path: 'files', name: 'leader-files', component: LeaderFileManager },
+      { path: 'subscription', name: 'leader-subscription', component: LeaderSubscription },
       { path: 'profile', name: 'leader-profile', component: StudentProfile },
       { path: 'settings', name: 'leader-settings', component: StudentSettings },
-      { path: 'help', name: 'leader-help', component: StudentHelp }
+      { path: 'help', name: 'leader-help', component: StudentHelp },
+      { path: 'market', name: 'leader-market', component: MarketView }
     ]
   },
 
@@ -145,6 +160,7 @@ const routes = [
     children: [
       { path: '', redirect: '/admin/dashboard' },
       { path: 'dashboard', name: 'admin-dashboard', component: AdminDashboard },
+      { path: 'attendance', name: 'admin-attendance', component: AdminAttendance },
       { path: 'students', name: 'admin-students', component: AdminStudents },
       { path: 'groups', name: 'admin-groups', component: AdminGroups },
       { path: 'users', name: 'admin-users', component: AdminUsers },
@@ -167,16 +183,23 @@ const routes = [
     children: [
       { path: '', redirect: '/super/dashboard' },
       { path: 'dashboard', name: 'super-dashboard', component: SuperDashboard },
+      { path: 'attendance', name: 'super-attendance', component: AdminAttendance },
       { path: 'admins', name: 'super-admins', component: SuperAdmins },
       { path: 'settings', name: 'super-settings', component: SuperSettings },
       { path: 'logs', name: 'super-logs', component: SuperLogs },
       { path: 'landing', name: 'super-landing', component: SuperLandingSettings },
       { path: 'students', name: 'super-students', component: AdminStudents },
       { path: 'groups', name: 'super-groups', component: AdminGroups },
-      { path: 'reports', name: 'super-reports', component: AdminReports },
+      { path: 'reports', name: 'super-reports', component: SuperReports },
       { path: 'notifications', name: 'super-notifications', component: AdminNotifications },
+      { path: 'tournaments', name: 'super-tournaments', component: AdminTournaments },
+      { path: 'subscriptions', name: 'super-subscriptions', component: SuperSubscriptions },
+      { path: 'telegram-bot', name: 'super-telegram-bot', component: SuperTelegramBot },
+      { path: 'sheets-schedule', name: 'super-sheets-schedule', component: SuperSheetsSchedule },
+      { path: 'users', name: 'super-users', component: SuperUsers },
       { path: 'profile', name: 'super-profile', component: StudentProfile },
-      { path: 'help', name: 'super-help', component: StudentHelp }
+      { path: 'help', name: 'super-help', component: StudentHelp },
+      { path: 'market', name: 'super-market', component: MarketAdminView }
     ]
   },
 

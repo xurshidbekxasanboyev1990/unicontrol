@@ -51,12 +51,33 @@ async def list_groups(
         search=search
     )
     
-    # Add students_count to each group
+    # Get all data in batch queries (optimized)
+    group_ids = [g.id for g in groups]
+    leader_ids = [g.leader_id for g in groups]
+    
+    students_counts = await service.get_all_students_counts(group_ids)
+    leader_names = await service.get_leader_names(leader_ids)
+    
+    # Build response directly without model_validate for speed
     items = []
     for g in groups:
-        response = GroupResponse.model_validate(g)
-        response.students_count = await service.get_students_count(g.id)
-        items.append(response)
+        items.append(GroupResponse(
+            id=g.id,
+            name=g.name,
+            code=g.name,
+            description=g.description if hasattr(g, 'description') else None,
+            course_year=g.course_year,
+            department=None,  # Column doesn't exist in DB
+            faculty=g.faculty,
+            leader_id=g.leader_id,
+            leader_name=leader_names.get(g.leader_id) if g.leader_id else None,
+            contract_amount=g.contract_amount or 0,
+            students_count=students_counts.get(g.id, 0),
+            is_active=g.is_active,
+            mutoola_group_id=g.mutoola_group_id if hasattr(g, 'mutoola_group_id') else None,
+            created_at=g.created_at,
+            updated_at=g.updated_at
+        ))
     
     return GroupListResponse(
         items=items,

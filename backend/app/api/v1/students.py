@@ -31,7 +31,7 @@ router = APIRouter()
 @router.get("", response_model=StudentListResponse)
 async def list_students(
     page: int = Query(1, ge=1),
-    page_size: int = Query(100, ge=1, le=20000),
+    page_size: int = Query(100, ge=1, le=50000),
     group_id: Optional[int] = None,
     is_active: Optional[bool] = None,
     is_graduated: Optional[bool] = None,

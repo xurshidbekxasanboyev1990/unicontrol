@@ -141,6 +141,7 @@ export const useAuthStore = defineStore('auth', () => {
         phone: userData.phone,
         avatar: userData.avatar,
         studentId: userData.student_id || userData.studentId,
+        studentDbId: userData.student_db_id || userData.studentDbId,
         groupId: userData.group_id || userData.groupId,
         group: userData.group_name || userData.group,
         managedGroup: userData.managed_group,
@@ -239,6 +240,25 @@ export const useAuthStore = defineStore('auth', () => {
       return false
     }
 
+    // JWT tokenning exp vaqtini tekshirish (client-side)
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1]))
+      const now = Math.floor(Date.now() / 1000)
+      if (payload.exp && payload.exp < now) {
+        // Access token expired — refresh orqali yangilashga harakat
+        const refreshed = await api.refreshToken()
+        if (!refreshed) {
+          user.value = null
+          isAuthenticated.value = false
+          localStorage.removeItem('user')
+          localStorage.removeItem('isAuthenticated')
+          return false
+        }
+      }
+    } catch (e) {
+      // Token decode xatosi — davom etamiz, backend tekshiradi
+    }
+
     // Oldingi user ma'lumotlarini yuklash (tez ko'rsatish uchun)
     if (storedUser) {
       try {
@@ -271,6 +291,7 @@ export const useAuthStore = defineStore('auth', () => {
         phone: userData.phone,
         avatar: userData.avatar,
         studentId: userData.student_id || userData.studentId,
+        studentDbId: userData.student_db_id || userData.studentDbId,
         groupId: userData.group_id || userData.groupId,
         group: userData.group_name || userData.group,
         managedGroup: userData.managed_group,

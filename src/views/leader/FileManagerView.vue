@@ -3,15 +3,15 @@
     <!-- Header -->
     <div class="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
       <div>
-        <h1 class="text-2xl font-bold text-slate-800 md:text-3xl">Fayl boshqaruvchisi</h1>
-        <p class="text-slate-500">Guruh hujjatlari va fayllarini boshqaring</p>
+        <h1 class="text-2xl font-bold text-slate-800 md:text-3xl">{{ $t('files.title') }}</h1>
+        <p class="text-slate-500">{{ $t('files.manageFiles') }}</p>
       </div>
       
       <div class="flex items-center gap-3">
         <button
           @click="loadFileManager"
           class="rounded-lg p-2 bg-slate-100 text-slate-600 hover:bg-slate-200 transition-colors"
-          title="Yangilash"
+          :title="$t('files.refresh')"
         >
           <RefreshCw :size="20" :class="{ 'animate-spin': loading }" />
         </button>
@@ -34,14 +34,14 @@
           class="flex items-center gap-2 rounded-lg bg-blue-500 px-4 py-2 text-white hover:bg-blue-600"
         >
           <Plus :size="18" />
-          <span>Papka</span>
+          <span>{{ $t('files.newFolder') }}</span>
         </button>
         <button
           @click="showUploadModal = true"
           class="flex items-center gap-2 rounded-lg bg-emerald-500 px-4 py-2 text-white hover:bg-emerald-600"
         >
           <Upload :size="18" />
-          <span>Yuklash</span>
+          <span>{{ $t('files.uploadBtn') }}</span>
         </button>
       </div>
     </div>
@@ -68,7 +68,7 @@
         <input
           v-model="searchQuery"
           type="text"
-          placeholder="Fayllarni qidirish..."
+          placeholder="..."
           class="w-full rounded-lg border border-slate-300 bg-white py-2 pl-10 pr-4 text-slate-700 placeholder-slate-400 focus:border-emerald-500 focus:outline-none"
         />
       </div>
@@ -76,20 +76,20 @@
         v-model="filterType"
         class="rounded-lg border border-slate-300 bg-white px-4 py-2 text-slate-700 focus:border-emerald-500 focus:outline-none"
       >
-        <option value="all">Barchasi</option>
-        <option value="document">Hujjatlar</option>
-        <option value="image">Rasmlar</option>
-        <option value="spreadsheet">Jadvallar</option>
-        <option value="archive">Arxivlar</option>
+        <option value="all">{{ $t('files.allTypes') }}</option>
+        <option value="document">{{ $t('files.documents') }}</option>
+        <option value="image">{{ $t('files.images') }}</option>
+        <option value="spreadsheet">{{ $t('files.spreadsheets') }}</option>
+        <option value="archive">{{ $t('files.archives') }}</option>
       </select>
       <select
         v-model="sortBy"
         class="rounded-lg border border-slate-300 bg-white px-4 py-2 text-slate-700 focus:border-emerald-500 focus:outline-none"
       >
-        <option value="name">Nom bo'yicha</option>
-        <option value="date">Sana bo'yicha</option>
-        <option value="size">O'lcham bo'yicha</option>
-        <option value="type">Tur bo'yicha</option>
+        <option value="name">{{ $t('files.sortByName') }}</option>
+        <option value="date">{{ $t('files.sortByDate') }}</option>
+        <option value="size">{{ $t('files.sortBySize') }}</option>
+        <option value="type">{{ $t('files.sortByType') }}</option>
       </select>
     </div>
 
@@ -103,8 +103,8 @@
     >
       <div class="rounded-2xl border-2 border-dashed border-emerald-400 bg-emerald-500/10 p-12 text-center">
         <Upload :size="64" class="mx-auto mb-4 text-emerald-500" />
-        <p class="text-xl font-medium text-white">Fayllarni shu yerga tashlang</p>
-        <p class="mt-2 text-slate-300">Bir nechta faylni yuklash mumkin</p>
+        <p class="text-xl font-medium text-white">{{ $t('files.dragDropFiles') }}</p>
+        <p class="mt-2 text-slate-300">{{ $t('files.canUploadMultiple') }}</p>
       </div>
     </div>
 
@@ -132,7 +132,7 @@
             <Folder :size="48" class="text-yellow-500" />
           </div>
           <p class="truncate text-center text-sm font-medium text-slate-800">{{ folder.name }}</p>
-          <p class="mt-1 text-center text-xs text-slate-500">{{ folder.item_count || 0 }} ta element</p>
+          <p class="mt-1 text-center text-xs text-slate-500">{{ $t('files.elementCount', { count: folder.item_count || 0 }) }}</p>
         </div>
 
         <!-- Files -->
@@ -166,11 +166,11 @@
                   class="rounded border-slate-300"
                 />
               </th>
-              <th class="px-4 py-3 text-left text-sm font-medium text-slate-500">Nom</th>
-              <th class="px-4 py-3 text-left text-sm font-medium text-slate-500">Tur</th>
-              <th class="px-4 py-3 text-left text-sm font-medium text-slate-500">O'lcham</th>
-              <th class="px-4 py-3 text-left text-sm font-medium text-slate-500">O'zgartirilgan</th>
-              <th class="px-4 py-3 text-left text-sm font-medium text-slate-500">Amallar</th>
+              <th class="px-4 py-3 text-left text-sm font-medium text-slate-500">{{ $t('files.nameColumn') }}</th>
+              <th class="px-4 py-3 text-left text-sm font-medium text-slate-500">{{ $t('files.typeColumn') }}</th>
+              <th class="px-4 py-3 text-left text-sm font-medium text-slate-500">{{ $t('files.sizeColumn') }}</th>
+              <th class="px-4 py-3 text-left text-sm font-medium text-slate-500">{{ $t('files.modifiedColumn') }}</th>
+              <th class="px-4 py-3 text-left text-sm font-medium text-slate-500">{{ $t('files.actionsColumn') }}</th>
             </tr>
           </thead>
           <tbody>
@@ -190,8 +190,8 @@
                   <span class="text-slate-800">{{ folder.name }}</span>
                 </div>
               </td>
-              <td class="px-4 py-3 text-slate-500">Papka</td>
-              <td class="px-4 py-3 text-slate-500">{{ folder.item_count || 0 }} element</td>
+              <td class="px-4 py-3 text-slate-500">{{ $t('files.folderType') }}</td>
+              <td class="px-4 py-3 text-slate-500">{{ folder.item_count || 0 }} {{ $t('files.elements') }}</td>
               <td class="px-4 py-3 text-slate-500">{{ formatDate(folder.created_at || folder.modified) }}</td>
               <td class="px-4 py-3">
                 <button @click.stop="showContextMenu($event, folder, 'folder')" class="text-slate-400 hover:text-slate-600">
@@ -246,8 +246,8 @@
       <!-- Empty State -->
       <div v-if="filteredFiles.length === 0 && filteredFolders.length === 0" class="flex flex-col items-center justify-center py-20">
         <FolderOpen :size="64" class="mb-4 text-slate-600" />
-        <h3 class="text-xl font-medium text-slate-400">Fayl topilmadi</h3>
-        <p class="mt-2 text-slate-500">Fayllarni yuklash uchun yuqoridagi tugmani bosing</p>
+        <h3 class="text-xl font-medium text-slate-400">{{ $t('files.noFilesFound') }}</h3>
+        <p class="mt-2 text-slate-500">{{ $t('files.uploadToStart') }}</p>
       </div>
     </div>
 
@@ -264,32 +264,32 @@
           @click="previewFile(contextMenu.item)"
           class="flex w-full items-center gap-3 px-4 py-2 text-left text-sm text-slate-300 hover:bg-slate-700"
         >
-          <Eye :size="16" /> Ko'rish
+          <Eye :size="16" /> {{ $t('files.viewFile') }}
         </button>
         <button
           @click="downloadFile(contextMenu.item)"
           class="flex w-full items-center gap-3 px-4 py-2 text-left text-sm text-slate-300 hover:bg-slate-700"
         >
-          <Download :size="16" /> Yuklab olish
+          <Download :size="16" /> {{ $t('files.downloadFile') }}
         </button>
         <button
           @click="renameItem(contextMenu.item)"
           class="flex w-full items-center gap-3 px-4 py-2 text-left text-sm text-slate-300 hover:bg-slate-700"
         >
-          <Edit :size="16" /> Nomini o'zgartirish
+          <Edit :size="16" /> {{ $t('files.rename') }}
         </button>
         <button
           @click="moveItem(contextMenu.item)"
           class="flex w-full items-center gap-3 px-4 py-2 text-left text-sm text-slate-300 hover:bg-slate-700"
         >
-          <Move :size="16" /> Ko'chirish
+          <Move :size="16" /> {{ $t('files.move') }}
         </button>
         <div class="my-2 border-t border-slate-700"></div>
         <button
           @click="deleteItem(contextMenu.item)"
           class="flex w-full items-center gap-3 px-4 py-2 text-left text-sm text-red-400 hover:bg-slate-700"
         >
-          <Trash2 :size="16" /> O'chirish
+          <Trash2 :size="16" /> {{ $t('common.delete') }}
         </button>
       </div>
     </Teleport>
@@ -303,7 +303,7 @@
       >
         <div class="w-full max-w-xl rounded-2xl border border-slate-700 bg-slate-800 p-6">
           <div class="mb-4 flex items-center justify-between">
-            <h2 class="text-xl font-bold text-white">Fayl yuklash</h2>
+            <h2 class="text-xl font-bold text-white">{{ $t('files.uploadFiles') }}</h2>
             <button @click="showUploadModal = false" class="text-slate-400 hover:text-white">
               <X :size="24" />
             </button>
@@ -319,8 +319,8 @@
             :class="uploadDragover ? 'border-blue-400 bg-blue-500/10' : 'border-slate-600 hover:border-slate-500'"
           >
             <Upload :size="48" class="mx-auto mb-4 text-slate-400" />
-            <p class="text-lg font-medium text-white">Fayllarni tanlang yoki tashlang</p>
-            <p class="mt-2 text-sm text-slate-400">PNG, JPG, PDF, DOC, XLS (max 50MB)</p>
+            <p class="text-lg font-medium text-white">{{ $t('files.selectOrDrop') }}</p>
+            <p class="mt-2 text-sm text-slate-400">{{ $t('files.maxFileSize') }}</p>
             <input
               ref="fileInput"
               type="file"
@@ -366,7 +366,7 @@
               @click="showUploadModal = false"
               class="rounded-lg border border-slate-600 px-4 py-2 text-slate-300 hover:bg-slate-700"
             >
-              Bekor qilish
+              {{ $t('common.cancel') }}
             </button>
             <button
               @click="startUpload"
@@ -375,7 +375,7 @@
             >
               <Loader2 v-if="uploading" :size="18" class="animate-spin" />
               <Upload v-else :size="18" />
-              {{ uploading ? 'Yuklanmoqda...' : 'Yuklash' }}
+              {{ uploading ? $t('common.loading') : $t('common.upload') }}
             </button>
           </div>
         </div>
@@ -416,7 +416,7 @@
                 @click="downloadFile(previewModal.file)"
                 class="mt-4 rounded-lg bg-blue-500 px-6 py-2 text-white hover:bg-blue-600"
               >
-                Yuklab olish
+                {{ $t('common.download') }}
               </button>
             </div>
           </div>
@@ -433,7 +433,7 @@
       >
         <div class="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-6 shadow-xl">
           <div class="flex items-center justify-between mb-4">
-            <h2 class="text-lg font-bold text-slate-800">Yangi papka</h2>
+            <h2 class="text-lg font-bold text-slate-800">{{ $t('files.newFolder') }}</h2>
             <button @click="showCreateFolderModal = false" class="text-slate-400 hover:text-slate-600">
               <X :size="20" />
             </button>
@@ -441,7 +441,7 @@
           <input
             v-model="newFolderName"
             type="text"
-            placeholder="Papka nomi"
+            :placeholder="$t('files.folderName')"
             class="w-full rounded-lg border border-slate-300 px-4 py-3 text-slate-700 placeholder-slate-400 focus:border-emerald-500 focus:outline-none"
             @keyup.enter="createFolder"
           />
@@ -450,13 +450,13 @@
               @click="showCreateFolderModal = false"
               class="rounded-lg border border-slate-300 px-4 py-2 text-slate-600 hover:bg-slate-100"
             >
-              Bekor qilish
+              {{ $t('common.cancel') }}
             </button>
             <button
               @click="createFolder"
               class="rounded-lg bg-blue-500 px-4 py-2 text-white hover:bg-blue-600"
             >
-              Yaratish
+              {{ $t('files.createFolder') }}
             </button>
           </div>
         </div>
@@ -466,17 +466,39 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch } from 'vue'
-import { useToastStore } from '@/stores/toast'
 import api from '@/services/api'
+import { useLanguageStore } from '@/stores/language'
+import { useToastStore } from '@/stores/toast'
 import {
-  Grid, List, Upload, Search, Folder, FolderOpen, Home, ChevronRight,
-  FileText, Image, File, FileSpreadsheet, FileArchive, Download, Eye,
-  MoreVertical, Edit, Move, Trash2, X, CheckCircle, XCircle, Loader2,
-  Plus, RefreshCw
+  CheckCircle,
+  ChevronRight,
+  Download,
+  Edit,
+  Eye,
+  File,
+  FileArchive,
+  FileSpreadsheet,
+  FileText,
+  Folder, FolderOpen,
+  Grid,
+  Home,
+  Image,
+  List,
+  Loader2,
+  MoreVertical,
+  Move,
+  Plus, RefreshCw,
+  Search,
+  Trash2,
+  Upload,
+  X,
+  XCircle
 } from 'lucide-vue-next'
+import { computed, onMounted, ref, watch } from 'vue'
 
 const toast = useToastStore()
+const langStore = useLanguageStore()
+const { t } = langStore
 
 // State
 const loading = ref(true)
@@ -497,7 +519,7 @@ const uploading = ref(false)
 // Data from API
 const folders = ref([])
 const files = ref([])
-const breadcrumbs = ref([{ id: null, name: 'Asosiy', path: '/' }])
+const breadcrumbs = ref([{ id: null, name: t('files.rootFolder'), path: '/' }])
 const storageStats = ref(null)
 
 const contextMenu = ref({
@@ -523,13 +545,13 @@ async function loadFileManager() {
     
     // Build breadcrumbs from response
     if (response.breadcrumbs) {
-      breadcrumbs.value = [{ id: null, name: 'Asosiy', path: '/' }, ...response.breadcrumbs]
+      breadcrumbs.value = [{ id: null, name: t('files.rootFolder'), path: '/' }, ...response.breadcrumbs]
     } else {
-      breadcrumbs.value = [{ id: null, name: 'Asosiy', path: '/' }]
+      breadcrumbs.value = [{ id: null, name: t('files.rootFolder'), path: '/' }]
     }
   } catch (error) {
     console.error('Error loading file manager:', error)
-    toast.error('Fayllarni yuklashda xatolik')
+    toast.error(t('files.loadError'))
   } finally {
     loading.value = false
   }
@@ -652,11 +674,11 @@ function downloadFile(file) {
   link.href = url
   link.download = file.name
   link.click()
-  toast.success(`"${file.name}" yuklab olinmoqda...`)
+  toast.success(t('files.downloading', { name: file.name }))
 }
 
 async function renameItem(item) {
-  const newName = prompt('Yangi nomni kiriting:', item.name)
+  const newName = prompt(t('files.enterNewName'), item.name)
   if (newName && newName !== item.name) {
     try {
       if (contextMenu.value.type === 'folder') {
@@ -664,20 +686,20 @@ async function renameItem(item) {
       } else {
         await api.updateFile(item.id, { name: newName })
       }
-      toast.success('Nom o\'zgartirildi')
+      toast.success(t('files.renamed'))
       loadFileManager()
     } catch (error) {
-      toast.error('Nomni o\'zgartirishda xatolik')
+      toast.error(t('files.renameError'))
     }
   }
 }
 
 function moveItem(item) {
-  toast.info('Ko\'chirish funksiyasi ishlab chiqilmoqda...')
+  toast.info(t('files.moveInProgress'))
 }
 
 async function deleteItem(item) {
-  if (confirm(`"${item.name}" ni o'chirmoqchimisiz?`)) {
+  if (confirm(t('files.confirmDeleteItem', { name: item.name }))) {
     try {
       if (contextMenu.value.type === 'folder') {
         await api.deleteFolder(item.id)
@@ -686,9 +708,9 @@ async function deleteItem(item) {
         await api.deleteFile(item.id)
         files.value = files.value.filter(f => f.id !== item.id)
       }
-      toast.success('O\'chirildi')
+      toast.success(t('files.deleted'))
     } catch (error) {
-      toast.error('O\'chirishda xatolik')
+      toast.error(t('files.deleteError'))
     }
   }
 }
@@ -764,7 +786,7 @@ async function startUpload() {
   
   const successCount = uploadQueue.value.filter(q => q.status === 'done').length
   if (successCount > 0) {
-    toast.success(`${successCount} ta fayl yuklandi!`)
+    toast.success(t('files.filesUploaded', { count: successCount }))
     setTimeout(() => {
       showUploadModal.value = false
       uploadQueue.value = []
@@ -775,10 +797,10 @@ async function startUpload() {
   loadStorageStats()
 }
 
-// Papka yaratish
+// Create folder
 async function createFolder() {
   if (!newFolderName.value.trim()) {
-    toast.error('Papka nomini kiriting')
+    toast.error(t('files.enterFolderName'))
     return
   }
   
@@ -789,11 +811,11 @@ async function createFolder() {
     })
     
     folders.value.push(response)
-    toast.success('Papka yaratildi')
+    toast.success(t('files.folderCreated'))
     showCreateFolderModal.value = false
     newFolderName.value = ''
   } catch (error) {
-    toast.error('Papka yaratishda xatolik')
+    toast.error(t('files.folderCreateError'))
   }
 }
 
@@ -828,12 +850,12 @@ function getFileIconColor(type) {
 
 function getFileTypeName(type) {
   const names = {
-    image: 'Rasm',
-    spreadsheet: 'Jadval',
-    archive: 'Arxiv',
-    document: 'Hujjat'
+    image: t('files.imageType'),
+    spreadsheet: t('files.spreadsheetType'),
+    archive: t('files.archiveType'),
+    document: t('files.documentType')
   }
-  return names[type] || 'Fayl'
+  return names[type] || t('files.fileType')
 }
 
 function formatFileSize(bytes) {

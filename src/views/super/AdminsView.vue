@@ -1,9 +1,16 @@
 <template>
   <div class="space-y-6">
+    <!-- Loading State -->
+    <div v-if="loading" class="flex items-center justify-center py-20">
+      <Loader2 class="w-8 h-8 text-amber-500 animate-spin" />
+      <span class="ml-3 text-slate-600">{{ $t('common.loading') }}</span>
+    </div>
+
+    <template v-else>
     <!-- Header -->
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
       <div>
-        <h1 class="text-xl sm:text-2xl font-bold text-slate-800">Adminlar boshqaruvi</h1>
+        <h1 class="text-xl sm:text-2xl font-bold text-slate-800">{{ $t('admins.title') }}</h1>
         <p class="text-sm text-slate-500">{{ admins.length }} ta admin</p>
       </div>
       <button 
@@ -90,6 +97,8 @@
         </div>
       </div>
     </div>
+
+    </template>
 
     <!-- Add/Edit Modal -->
     <Transition
@@ -336,83 +345,47 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed, markRaw } from 'vue'
 import {
-  UserPlus,
-  Shield,
-  Calendar,
-  Activity,
-  Pencil,
-  Trash2,
-  X,
-  AlertTriangle,
-  User,
-  ShieldCheck,
-  ChevronDown,
-  Crown,
-  Save,
-  Users,
-  Layers,
-  FileText,
-  BarChart3,
-  Bell,
-  Settings,
-  Globe,
-  BookOpen,
-  ClipboardCheck,
-  Palette,
-  Trophy,
-  Library,
-  UtensilsCrossed,
-  Wallet
+    Activity,
+    AlertTriangle,
+    BarChart3,
+    Bell,
+    BookOpen,
+    Calendar,
+    ChevronDown,
+    ClipboardCheck,
+    Crown,
+    Layers,
+    Library,
+    Loader2,
+    Palette,
+    Pencil,
+    Save,
+    Settings,
+    Shield,
+    ShieldCheck,
+    Trash2,
+    Trophy,
+    User,
+    UserPlus,
+    Users,
+    UtensilsCrossed,
+    Wallet,
+    X
 } from 'lucide-vue-next'
+import { computed, markRaw, onMounted, reactive, ref } from 'vue'
+import api from '../../services/api'
+import { useToastStore } from '../../stores/toast'
 
+const toast = useToastStore()
 const showModal = ref(false)
 const showDeleteConfirm = ref(false)
 const editingAdmin = ref(null)
 const deletingAdmin = ref(null)
+const loading = ref(true)
+const saving = ref(false)
 
-const admins = ref([
-  { 
-    id: 1, 
-    name: 'Super Admin', 
-    email: 'super@uni.uz', 
-    username: 'super', 
-    role: 'super', 
-    active: true, 
-    createdAt: '2024-01-15',
-    permissions: {} // Super admin barcha ruxsatlarga ega
-  },
-  { 
-    id: 2, 
-    name: 'Admin User', 
-    email: 'admin@uni.uz', 
-    username: 'admin', 
-    role: 'admin', 
-    active: true, 
-    createdAt: '2024-02-20',
-    permissions: {
-      students_view: true, students_create: true, students_edit: true, students_delete: false,
-      groups_view: true, groups_create: true, groups_edit: false, groups_delete: false,
-      reports_view: true, reports_create: true, reports_export: true,
-      notifications_view: true, notifications_send: true
-    }
-  },
-  { 
-    id: 3, 
-    name: 'Sardor Aliyev', 
-    email: 'sardor@uni.uz', 
-    username: 'sardor', 
-    role: 'admin', 
-    active: true, 
-    createdAt: '2024-03-10',
-    permissions: {
-      students_view: true, students_create: false, students_edit: false, students_delete: false,
-      groups_view: true, groups_create: false, groups_edit: false, groups_delete: false,
-      reports_view: true, reports_create: false, reports_export: false
-    }
-  }
-])
+const admins = ref([])
 
 // Permission Groups
 const permissionGroups = ref([
@@ -696,32 +669,41 @@ const openModal = (admin = null) => {
   showModal.value = true
 }
 
-const saveAdmin = () => {
-  const adminData = {
-    name: form.name,
-    email: form.email,
-    username: form.username,
-    role: form.isSuperAdmin ? 'super' : 'admin',
-    active: form.active,
-    permissions: form.isSuperAdmin ? {} : { ...form.permissions }
-  }
-
-  if (editingAdmin.value) {
-    const index = admins.value.findIndex(a => a.id === editingAdmin.value.id)
-    if (index !== -1) {
-      admins.value[index] = {
-        ...admins.value[index],
-        ...adminData
-      }
+const saveAdmin = async () => {
+  saving.value = true
+  try {
+    const adminData = {
+      name: form.name,
+      email: form.email,
+      role: form.isSuperAdmin ? 'superadmin' : 'admin',
+      is_active: form.active,
+      phone: form.phone || null
     }
-  } else {
-    admins.value.push({
-      id: Date.now(),
-      ...adminData,
-      createdAt: new Date().toISOString()
-    })
+
+    if (editingAdmin.value) {
+      // Update existing admin via API
+      const updated = await api.updateAdmin(editingAdmin.value.id, adminData)
+      const index = admins.value.findIndex(a => a.id === editingAdmin.value.id)
+      if (index !== -1) {
+        admins.value[index] = mapAdminFromApi(updated)
+      }
+      toast.success('Admin yangilandi')
+    } else {
+      // Create new admin via API  
+      const created = await api.createAdmin({
+        ...adminData,
+        password: form.password
+      })
+      admins.value.push(mapAdminFromApi(created))
+      toast.success('Yangi admin qo\'shildi')
+    }
+    showModal.value = false
+  } catch (err) {
+    console.error('Error saving admin:', err)
+    toast.error(err.message || 'Admin saqlashda xatolik')
+  } finally {
+    saving.value = false
   }
-  showModal.value = false
 }
 
 const confirmDelete = (admin) => {
@@ -729,11 +711,62 @@ const confirmDelete = (admin) => {
   showDeleteConfirm.value = true
 }
 
-const deleteAdmin = () => {
+const deleteAdmin = async () => {
   if (deletingAdmin.value) {
-    admins.value = admins.value.filter(a => a.id !== deletingAdmin.value.id)
+    try {
+      await api.deleteAdmin(deletingAdmin.value.id)
+      admins.value = admins.value.filter(a => a.id !== deletingAdmin.value.id)
+      toast.success('Admin o\'chirildi')
+    } catch (err) {
+      console.error('Error deleting admin:', err)
+      toast.error(err.message || 'Admin o\'chirishda xatolik')
+    }
   }
   showDeleteConfirm.value = false
   deletingAdmin.value = null
 }
+
+// Map backend user response to frontend admin format
+const mapAdminFromApi = (user) => ({
+  id: user.id,
+  name: user.name || user.full_name || '',
+  email: user.email || '',
+  username: user.email?.split('@')[0] || '',
+  role: user.role === 'superadmin' ? 'super' : 'admin',
+  active: user.is_active !== false,
+  createdAt: user.created_at || new Date().toISOString(),
+  permissions: user.permissions || {}
+})
+
+// Load admins from API
+const loadAdmins = async () => {
+  loading.value = true
+  try {
+    const response = await api.getAdmins()
+    const adminsList = Array.isArray(response) ? response : (response?.items || response?.data || [])
+    admins.value = adminsList.map(mapAdminFromApi)
+  } catch (err) {
+    console.error('Error loading admins:', err)
+    toast.error('Adminlarni yuklashda xatolik')
+    
+    // Fallback: try getting users with admin role
+    try {
+      const usersResp = await api.getUsers({ role: 'admin', page_size: 100 })
+      const superResp = await api.getUsers({ role: 'superadmin', page_size: 100 })
+      const allAdmins = [
+        ...(superResp?.items || []),
+        ...(usersResp?.items || [])
+      ]
+      admins.value = allAdmins.map(mapAdminFromApi)
+    } catch (e2) {
+      console.error('Fallback also failed:', e2)
+    }
+  } finally {
+    loading.value = false
+  }
+}
+
+onMounted(() => {
+  loadAdmins()
+})
 </script>

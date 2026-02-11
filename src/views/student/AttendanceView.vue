@@ -6,7 +6,7 @@
         <div class="flex items-center justify-between">
           <div>
             <p class="text-3xl font-bold text-slate-800">{{ stats.total }}</p>
-            <p class="text-sm text-slate-500 mt-1">Jami darslar</p>
+            <p class="text-sm text-slate-500 mt-1">{{ $t('attendance.title') }}</p>
           </div>
           <div class="w-12 h-12 bg-slate-100 rounded-xl flex items-center justify-center">
             <CalendarDays class="w-6 h-6 text-slate-600" />
@@ -18,7 +18,7 @@
         <div class="flex items-center justify-between">
           <div>
             <p class="text-3xl font-bold text-emerald-600">{{ stats.present }}</p>
-            <p class="text-sm text-slate-500 mt-1">Qatnashgan</p>
+            <p class="text-sm text-slate-500 mt-1">{{ $t('attendance.present') }}</p>
           </div>
           <div class="w-12 h-12 bg-emerald-100 rounded-xl flex items-center justify-center">
             <CheckCircle class="w-6 h-6 text-emerald-600" />
@@ -30,7 +30,7 @@
         <div class="flex items-center justify-between">
           <div>
             <p class="text-3xl font-bold text-amber-600">{{ stats.late }}</p>
-            <p class="text-sm text-slate-500 mt-1">Kechikkan</p>
+            <p class="text-sm text-slate-500 mt-1">{{ $t('attendance.late') }}</p>
           </div>
           <div class="w-12 h-12 bg-amber-100 rounded-xl flex items-center justify-center">
             <Clock class="w-6 h-6 text-amber-600" />
@@ -42,7 +42,7 @@
         <div class="flex items-center justify-between">
           <div>
             <p class="text-3xl font-bold text-rose-600">{{ stats.absent }}</p>
-            <p class="text-sm text-slate-500 mt-1">Kelmagan</p>
+            <p class="text-sm text-slate-500 mt-1">{{ $t('attendance.absent') }}</p>
           </div>
           <div class="w-12 h-12 bg-rose-100 rounded-xl flex items-center justify-center">
             <XCircle class="w-6 h-6 text-rose-600" />
@@ -55,8 +55,8 @@
     <div class="bg-white rounded-2xl border border-slate-200 p-6">
       <div class="flex items-center justify-between mb-4">
         <div>
-          <h2 class="text-lg font-semibold text-slate-800">Davomat foizi</h2>
-          <p class="text-sm text-slate-500">Umumiy ko'rsatkich</p>
+          <h2 class="text-lg font-semibold text-slate-800">{{ $t('dashboard.attendancePercentage') }}</h2>
+          <p class="text-sm text-slate-500">{{ $t('analytics.overview') }}</p>
         </div>
         <div 
           class="text-4xl font-bold"
@@ -77,15 +77,15 @@
       <div class="flex items-center justify-between mt-4 text-sm">
         <div class="flex items-center gap-2">
           <span class="w-3 h-3 rounded-full bg-emerald-500"></span>
-          <span class="text-slate-600">85%+ — A'lo</span>
+          <span class="text-slate-600">85%+ — {{ $t('common.active') }}</span>
         </div>
         <div class="flex items-center gap-2">
           <span class="w-3 h-3 rounded-full bg-amber-500"></span>
-          <span class="text-slate-600">70-84% — Yaxshi</span>
+          <span class="text-slate-600">70-84%</span>
         </div>
         <div class="flex items-center gap-2">
           <span class="w-3 h-3 rounded-full bg-rose-500"></span>
-          <span class="text-slate-600">&lt;70% — Yomon</span>
+          <span class="text-slate-600">&lt;70%</span>
         </div>
       </div>
     </div>
@@ -93,7 +93,7 @@
     <!-- Recent Records -->
     <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden">
       <div class="p-6 border-b border-slate-100">
-        <h2 class="text-lg font-semibold text-slate-800">So'nggi davomat yozuvlari</h2>
+        <h2 class="text-lg font-semibold text-slate-800">{{ $t('dashboard.recentAttendance') }}</h2>
       </div>
       
       <div class="divide-y divide-slate-100">
@@ -123,13 +123,13 @@
 
       <div v-if="recentRecords.length === 0" class="p-12 text-center">
         <ClipboardList class="w-12 h-12 text-slate-300 mx-auto mb-4" />
-        <p class="text-slate-500">Davomat yozuvlari topilmadi</p>
+        <p class="text-slate-500">{{ $t('common.noData') }}</p>
       </div>
     </div>
 
     <!-- By Subject -->
     <div class="bg-white rounded-2xl border border-slate-200 p-6">
-      <h2 class="text-lg font-semibold text-slate-800 mb-4">Fanlar bo'yicha davomat</h2>
+      <h2 class="text-lg font-semibold text-slate-800 mb-4">{{ $t('attendance.title') }}</h2>
       
       <div class="space-y-4">
         <div v-for="subject in subjectStats" :key="subject.name">
@@ -156,18 +156,18 @@
 </template>
 
 <script setup>
-import { ref, computed, markRaw, onMounted } from 'vue'
+import {
+    CalendarDays,
+    CheckCircle,
+    ClipboardList,
+    Clock,
+    FileText,
+    XCircle
+} from 'lucide-vue-next'
+import { computed, markRaw, onMounted, ref } from 'vue'
+import api from '../../services/api'
 import { useAuthStore } from '../../stores/auth'
 import { useToastStore } from '../../stores/toast'
-import api from '../../services/api'
-import {
-  CalendarDays,
-  CheckCircle,
-  Clock,
-  XCircle,
-  ClipboardList,
-  FileText
-} from 'lucide-vue-next'
 
 const authStore = useAuthStore()
 const toast = useToastStore()
@@ -186,7 +186,7 @@ async function loadAttendance() {
   error.value = null
   
   try {
-    const response = await api.getStudentAttendance(authStore.user?.studentId || authStore.user?.id)
+    const response = await api.getStudentAttendance(authStore.user?.studentDbId || authStore.user?.id)
     
     if (Array.isArray(response)) {
       records.value = response.map(r => ({

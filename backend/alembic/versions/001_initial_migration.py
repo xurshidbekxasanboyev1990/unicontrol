@@ -23,22 +23,25 @@ def upgrade() -> None:
     op.create_table(
         'users',
         sa.Column('id', sa.Integer(), autoincrement=True, nullable=False),
-        sa.Column('username', sa.String(50), nullable=False),
-        sa.Column('email', sa.String(100), nullable=False),
-        sa.Column('hashed_password', sa.String(255), nullable=False),
-        sa.Column('full_name', sa.String(100), nullable=False),
+        sa.Column('login', sa.String(50), nullable=False),
+        sa.Column('email', sa.String(255), nullable=True),
+        sa.Column('password_hash', sa.String(255), nullable=False),
+        sa.Column('name', sa.String(100), nullable=False),
         sa.Column('phone', sa.String(20), nullable=True),
-        sa.Column('avatar', sa.String(255), nullable=True),
-        sa.Column('role', sa.Enum('student', 'leader', 'admin', 'superadmin', name='userrole'), nullable=False),
-        sa.Column('is_active', sa.Boolean(), nullable=True, default=True),
-        sa.Column('is_verified', sa.Boolean(), nullable=True, default=False),
+        sa.Column('avatar', sa.String(500), nullable=True),
+        sa.Column('role', sa.Enum('STUDENT', 'LEADER', 'ADMIN', 'SUPERADMIN', name='user_role'), nullable=False, default='STUDENT'),
+        sa.Column('is_active', sa.Boolean(), nullable=False, default=True),
+        sa.Column('is_verified', sa.Boolean(), nullable=False, default=False),
+        sa.Column('is_first_login', sa.Boolean(), nullable=False, default=False),
         sa.Column('last_login', sa.DateTime(timezone=True), nullable=True),
+        sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
+        sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
+        sa.Column('refresh_token', sa.String(500), nullable=True),
+        sa.Column('settings', sa.Text(), nullable=True),
         sa.Column('device_tokens', postgresql.JSON(astext_type=sa.Text()), nullable=True),
-        sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=True),
-        sa.Column('updated_at', sa.DateTime(timezone=True), nullable=True),
         sa.PrimaryKeyConstraint('id')
     )
-    op.create_index('ix_users_username', 'users', ['username'], unique=True)
+    op.create_index('ix_users_login', 'users', ['login'], unique=True)
     op.create_index('ix_users_email', 'users', ['email'], unique=True)
     op.create_index('ix_users_role', 'users', ['role'])
 
@@ -241,7 +244,7 @@ def downgrade() -> None:
     op.drop_table('users')
     
     # Drop enums
-    op.execute('DROP TYPE IF EXISTS userrole')
+    op.execute('DROP TYPE IF EXISTS user_role')
     op.execute('DROP TYPE IF EXISTS attendancestatus')
     op.execute('DROP TYPE IF EXISTS weekday')
     op.execute('DROP TYPE IF EXISTS scheduletype')

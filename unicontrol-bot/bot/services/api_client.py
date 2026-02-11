@@ -11,10 +11,12 @@ logger = logging.getLogger(__name__)
 class UniControlAPI:
     """
     API client for UniControl backend.
-    Handles all communication with the main system.
+    Handles all communication via /api/v1/telegram/* endpoints
+    which use X-Bot-Token authentication.
     """
     
     def __init__(self):
+        # base_url should be like http://backend:8000 (no /api/v1)
         self.base_url = settings.api_base_url.rstrip("/")
         self.api_key = settings.api_key
         self._session: Optional[aiohttp.ClientSession] = None
@@ -27,7 +29,8 @@ class UniControlAPI:
                     "Content-Type": "application/json",
                     "X-API-Key": self.api_key,
                     "X-Bot-Token": settings.bot_token
-                }
+                },
+                timeout=aiohttp.ClientTimeout(total=30)
             )
         return self._session
     
@@ -48,68 +51,51 @@ class UniControlAPI:
         url = f"{self.base_url}{endpoint}"
         
         try:
+            logger.debug(f"API request: {method} {url}")
             async with session.request(method, url, params=params, json=json) as response:
                 if response.status == 200:
                     return await response.json()
                 elif response.status == 404:
+                    logger.debug(f"API 404: {url}")
                     return None
                 else:
                     error_text = await response.text()
-                    logger.error(f"API error {response.status}: {error_text}")
+                    logger.error(f"API error {response.status} {url}: {error_text}")
                     return None
         except aiohttp.ClientError as e:
-            logger.error(f"Request error: {e}")
+            logger.error(f"Request error ({url}): {e}")
+            return None
+        except Exception as e:
+            logger.error(f"Unexpected error ({url}): {e}")
             return None
     
-    # ==================== Groups API ====================
+    # ==================== Groups API (via /telegram) ====================
     
     async def search_groups(self, query: str) -> List[Dict[str, Any]]:
         """
         Search for academic groups by code or name.
-        
-        Args:
-            query: Search query (e.g., "KI_25" or "Kompyuter")
-            
-        Returns:
-            List of matching groups
+        Uses bot-specific endpoint with X-Bot-Token auth.
         """
         result = await self._request(
             "GET", 
-            "/api/v1/groups/search",
+            "/api/v1/telegram/groups/search",
             params={"q": query}
         )
         return result.get("items", []) if result else []
     
     async def get_group_by_code(self, code: str) -> Optional[Dict[str, Any]]:
-        """
-        Get group by exact code.
-        
-        Args:
-            code: Group code (e.g., "KI_25-09")
-            
-        Returns:
-            Group data or None
-        """
+        """Get group by exact code."""
         result = await self._request(
             "GET",
-            f"/api/v1/groups/code/{code}"
+            f"/api/v1/telegram/groups/code/{code}"
         )
         return result
     
     async def get_group(self, group_id: int) -> Optional[Dict[str, Any]]:
         """Get group by ID"""
-        return await self._request("GET", f"/api/v1/groups/{group_id}")
+        return await self._request("GET", f"/api/v1/telegram/groups/code/{group_id}")
     
-    async def list_groups(self, skip: int = 0, limit: int = 100) -> List[Dict[str, Any]]:
-        """List all groups"""
-        result = await self._request(
-            "GET",
-            "/api/v1/groups/",
-            params={"skip": skip, "limit": limit}
-        )
-        return result.get("items", []) if result else []
-    
-    # ==================== Attendance API ====================
+    # ==================== Attendance API (via /telegram) ====================
     
     async def get_group_attendance(
         self,
@@ -117,17 +103,7 @@ class UniControlAPI:
         date_from: Optional[date] = None,
         date_to: Optional[date] = None
     ) -> List[Dict[str, Any]]:
-        """
-        Get attendance records for a group.
-        
-        Args:
-            group_id: Academic group ID
-            date_from: Start date filter
-            date_to: End date filter
-            
-        Returns:
-            List of attendance records
-        """
+        """Get attendance records for a group."""
         params = {}
         if date_from:
             params["date_from"] = date_from.isoformat()
@@ -136,7 +112,7 @@ class UniControlAPI:
         
         result = await self._request(
             "GET",
-            f"/api/v1/attendance/group/{group_id}",
+            f"/api/v1/telegram/attendance/group/{group_id}",
             params=params
         )
         return result.get("items", []) if result else []
@@ -161,7 +137,7 @@ class UniControlAPI:
         
         result = await self._request(
             "GET",
-            f"/api/v1/attendance/student/{student_id}",
+            f"/api/v1/telegram/attendance/student/{student_id}",
             params=params
         )
         return result.get("items", []) if result else []
@@ -171,66 +147,26 @@ class UniControlAPI:
         group_id: int,
         since: datetime
     ) -> List[Dict[str, Any]]:
-        """
-        Get attendance records updated since a specific time.
-        Used for real-time notifications.
-        
-        Args:
-            group_id: Academic group ID
-            since: Get records updated after this time
-            
-        Returns:
-            List of updated attendance records
-        """
+        """Get attendance records updated since a specific time."""
         result = await self._request(
             "GET",
-            f"/api/v1/attendance/group/{group_id}/updates",
+            f"/api/v1/telegram/attendance/group/{group_id}/updates",
             params={"since": since.isoformat()}
         )
         return result.get("items", []) if result else []
     
-    # ==================== Students API ====================
-    
-    async def get_students_by_group(self, group_id: int) -> List[Dict[str, Any]]:
-        """Get all students in a group"""
-        result = await self._request(
+    # ==================== Subscription Check ====================
+
+    async def check_bot_subscription(self, group_id: int) -> Optional[Dict[str, Any]]:
+        """
+        Check if a group has active subscription with bot access.
+        Bot access requires Plus or higher plan.
+        """
+        return await self._request(
             "GET",
-            f"/api/v1/students/group/{group_id}"
+            f"/api/v1/telegram/bot-check-subscription/{group_id}"
         )
-        return result.get("items", []) if result else []
-    
-    async def search_student(self, query: str) -> List[Dict[str, Any]]:
-        """Search for students by name"""
-        result = await self._request(
-            "GET",
-            "/api/v1/students/search",
-            params={"q": query}
-        )
-        return result.get("items", []) if result else []
-    
-    async def get_student(self, student_id: int) -> Optional[Dict[str, Any]]:
-        """Get student by ID"""
-        return await self._request("GET", f"/api/v1/students/{student_id}")
-    
-    # ==================== Schedule API ====================
-    
-    async def get_group_schedule(
-        self,
-        group_id: int,
-        target_date: Optional[date] = None
-    ) -> List[Dict[str, Any]]:
-        """Get schedule for a group"""
-        params = {}
-        if target_date:
-            params["date"] = target_date.isoformat()
-        
-        result = await self._request(
-            "GET",
-            f"/api/v1/schedule/group/{group_id}",
-            params=params
-        )
-        return result.get("items", []) if result else []
-    
+
     # ==================== Bot Specific API ====================
     
     async def register_telegram_chat(
@@ -240,18 +176,7 @@ class UniControlAPI:
         chat_type: str,
         chat_title: Optional[str] = None
     ) -> bool:
-        """
-        Register Telegram chat for attendance notifications.
-        
-        Args:
-            chat_id: Telegram chat ID
-            group_code: Academic group code
-            chat_type: Chat type (private, group, supergroup)
-            chat_title: Chat title
-            
-        Returns:
-            True if successful
-        """
+        """Register Telegram chat for attendance notifications."""
         result = await self._request(
             "POST",
             "/api/v1/telegram/register",
@@ -278,17 +203,7 @@ class UniControlAPI:
         student_id: int,
         verification_code: str
     ) -> Optional[Dict[str, Any]]:
-        """
-        Verify student identity for personal attendance access.
-        
-        Args:
-            telegram_id: Telegram user ID
-            student_id: UniControl student ID
-            verification_code: Verification code from system
-            
-        Returns:
-            Student data if verified
-        """
+        """Verify student identity for personal attendance access."""
         result = await self._request(
             "POST",
             "/api/v1/telegram/verify",

@@ -13,6 +13,7 @@ from typing import Optional, TYPE_CHECKING
 from sqlalchemy import String, Integer, DateTime, ForeignKey, Text, Enum as SAEnum
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
+from app.config import TASHKENT_TZ
 from app.database import Base
 
 if TYPE_CHECKING:
@@ -142,7 +143,7 @@ class ActivityLog(Base):
     # Timestamp
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
-        default=datetime.utcnow,
+        default=lambda: datetime.now(TASHKENT_TZ),
         nullable=False,
         index=True
     )

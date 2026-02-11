@@ -3,27 +3,27 @@
     <!-- Header -->
     <div class="flex items-center justify-between">
       <div>
-        <h1 class="text-2xl font-bold text-slate-800">Foydalanuvchilar boshqaruvi</h1>
-        <p class="text-slate-500">Parollarni ko'rish va tiklash</p>
+        <h1 class="text-2xl font-bold text-slate-800">{{ $t('users.title') }}</h1>
+        <p class="text-slate-500">Jami: {{ totalUsers }} ta foydalanuvchi</p>
       </div>
     </div>
 
     <!-- Loading State -->
-    <div v-if="loading" class="flex items-center justify-center py-20">
+    <div v-if="loading && !users.length" class="flex items-center justify-center py-20">
       <Loader2 class="w-8 h-8 text-violet-500 animate-spin" />
-      <span class="ml-3 text-slate-600">Foydalanuvchilar yuklanmoqda...</span>
+      <span class="ml-3 text-slate-600">{{ $t('common.loading') }}</span>
     </div>
 
     <template v-else>
-    <!-- Search Section -->
+    <!-- Search & Filter Section -->
     <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
       <div class="mb-4 flex items-center gap-3">
         <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-violet-100">
           <Search :size="24" class="text-violet-600" />
         </div>
         <div>
-          <h2 class="font-semibold text-slate-800">Foydalanuvchi qidirish</h2>
-          <p class="text-sm text-slate-500">Ism yoki familiya bo'yicha qidiring</p>
+          <h2 class="font-semibold text-slate-800">{{ $t('users.searchUsers') }}</h2>
+          <p class="text-sm text-slate-500">Ism, login yoki talaba ID bo'yicha qidiring</p>
         </div>
       </div>
       
@@ -33,103 +33,223 @@
           <input 
             v-model="searchQuery"
             type="text"
-            placeholder="Ism familiya kiriting..."
+            placeholder="Ism, login yoki ID kiriting..."
             class="w-full rounded-xl border border-slate-200 py-3 pl-12 pr-4 focus:border-violet-400 focus:outline-none focus:ring-2 focus:ring-violet-400/20"
-            @input="searchUsers"
+            @input="onSearchInput"
           />
         </div>
         <select 
           v-model="filterRole"
           class="rounded-xl border border-slate-200 px-4 py-3 focus:border-violet-400 focus:outline-none"
+          @change="onFilterChange"
         >
-          <option value="">Barcha rollar</option>
-          <option value="student">Talaba</option>
-          <option value="leader">Guruh sardori</option>
-          <option value="admin">Admin</option>
+          <option value="">{{ $t('users.allRoles') }}</option>
+          <option value="student">{{ $t('users.student') }}</option>
+          <option value="leader">{{ $t('users.groupLeader') }}</option>
+          <option value="admin">{{ $t('users.admin') }}</option>
         </select>
       </div>
     </div>
 
-    <!-- Results -->
+    <!-- Results Table -->
     <div class="rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden">
-      <div class="border-b border-slate-100 bg-slate-50 p-4">
+      <div class="border-b border-slate-100 bg-slate-50 p-4 flex items-center justify-between">
         <h3 class="font-semibold text-slate-700">
-          Natijalar: {{ filteredUsers.length }} ta foydalanuvchi
+          {{ $t('users.title') }}: {{ totalUsers }}
         </h3>
+        <div v-if="loading" class="flex items-center gap-2 text-sm text-slate-500">
+          <Loader2 class="w-4 h-4 animate-spin" />
+          Yuklanmoqda...
+        </div>
       </div>
       
-      <div v-if="filteredUsers.length === 0" class="p-12 text-center">
+      <div v-if="users.length === 0 && !loading" class="p-12 text-center">
         <UserX :size="48" class="mx-auto mb-4 text-slate-300" />
-        <p class="text-slate-500">Foydalanuvchi topilmadi</p>
-        <p class="text-sm text-slate-400 mt-1">Boshqa so'z bilan qidirib ko'ring</p>
+        <p class="text-slate-500">{{ $t('users.noUsersFound') }}</p>
+        <p class="text-sm text-slate-400 mt-1">{{ $t('users.tryAnotherSearch') }}</p>
       </div>
       
-      <div v-else class="divide-y divide-slate-100">
-        <div 
-          v-for="user in filteredUsers" 
-          :key="user.id"
-          class="p-4 hover:bg-slate-50 transition-colors"
-        >
-          <div class="flex items-center gap-4">
-            <!-- Avatar -->
-            <div 
-              class="flex h-12 w-12 items-center justify-center rounded-xl text-lg font-bold text-white"
-              :class="getRoleColor(user.role)"
+      <!-- Table -->
+      <div v-else class="overflow-x-auto">
+        <table class="w-full">
+          <thead class="bg-slate-50 border-b border-slate-200">
+            <tr>
+              <th class="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">#</th>
+              <th class="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">F.I.O</th>
+              <th class="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">Login</th>
+              <th class="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">Parol</th>
+              <th class="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">Rol</th>
+              <th class="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">Guruh</th>
+              <th class="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">Telefon</th>
+              <th class="text-right px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">Amallar</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-100">
+            <tr 
+              v-for="(user, index) in users" 
+              :key="user.id"
+              class="hover:bg-slate-50 transition-colors"
             >
-              {{ user.name.charAt(0) }}
-            </div>
-            
-            <!-- Info -->
-            <div class="flex-1 min-w-0">
-              <div class="flex items-center gap-2">
-                <p class="font-semibold text-slate-800">{{ user.name }}</p>
+              <td class="px-4 py-3 text-sm text-slate-500">
+                {{ (currentPage - 1) * pageSize + index + 1 }}
+              </td>
+              <td class="px-4 py-3">
+                <div class="flex items-center gap-3">
+                  <div 
+                    class="flex h-9 w-9 items-center justify-center rounded-lg text-sm font-bold text-white flex-shrink-0"
+                    :class="getRoleColor(user.role)"
+                  >
+                    {{ user.name.charAt(0) }}
+                  </div>
+                  <div>
+                    <p class="font-medium text-slate-800 text-sm">{{ user.name }}</p>
+                    <p v-if="user.studentId" class="text-xs text-slate-400">ID: {{ user.studentId }}</p>
+                  </div>
+                </div>
+              </td>
+              <td class="px-4 py-3">
+                <div class="flex items-center gap-1">
+                  <span class="font-mono text-sm text-slate-700">{{ user.login || '-' }}</span>
+                  <button 
+                    v-if="user.login"
+                    @click="copyToClipboard(user.login)"
+                    class="text-slate-300 hover:text-violet-500 transition-colors"
+                  >
+                    <Copy :size="14" />
+                  </button>
+                </div>
+              </td>
+              <td class="px-4 py-3">
+                <div v-if="user.role !== 'admin' && user.role !== 'superadmin' && user.plainPassword" class="flex items-center gap-1">
+                  <span v-if="!user.showPassword" class="font-mono text-sm text-slate-500">••••••</span>
+                  <span v-else class="font-mono text-sm text-violet-700 font-medium">{{ user.plainPassword }}</span>
+                  <button 
+                    @click="user.showPassword = !user.showPassword"
+                    class="text-slate-300 hover:text-violet-500 transition-colors"
+                  >
+                    <Eye v-if="!user.showPassword" :size="14" />
+                    <EyeOff v-else :size="14" />
+                  </button>
+                  <button 
+                    @click="copyToClipboard(user.plainPassword)"
+                    class="text-slate-300 hover:text-violet-500 transition-colors"
+                  >
+                    <Copy :size="14" />
+                  </button>
+                </div>
+                <span v-else-if="user.role === 'admin' || user.role === 'superadmin'" class="text-xs text-slate-400">
+                  <Lock :size="14" class="inline" /> Yashirin
+                </span>
+                <span v-else class="text-xs text-slate-400">
+                  O'rnatilmagan
+                </span>
+              </td>
+              <td class="px-4 py-3">
                 <span 
                   class="rounded-lg px-2 py-0.5 text-xs font-medium"
                   :class="getRoleBadge(user.role)"
                 >
                   {{ getRoleLabel(user.role) }}
                 </span>
-              </div>
-              <div class="mt-1 flex items-center gap-4 text-sm text-slate-500">
-                <span v-if="user.studentId">ID: {{ user.studentId }}</span>
-                <span v-if="user.group">Guruh: {{ user.group }}</span>
-                <span v-if="user.phone">{{ user.phone }}</span>
-              </div>
-            </div>
-            
-            <!-- Actions -->
-            <div class="flex items-center gap-2">
-              <button 
-                @click="viewPassword(user)"
-                class="flex items-center gap-2 rounded-xl bg-violet-100 px-4 py-2 text-sm font-medium text-violet-700 transition-all hover:bg-violet-200"
-              >
-                <Eye :size="16" />
-                Parolni ko'rish
-              </button>
-              <button 
-                @click="resetPassword(user)"
-                class="flex items-center gap-2 rounded-xl bg-amber-100 px-4 py-2 text-sm font-medium text-amber-700 transition-all hover:bg-amber-200"
-              >
-                <RefreshCw :size="16" />
-                Tiklash
-              </button>
-            </div>
-          </div>
+              </td>
+              <td class="px-4 py-3 text-sm text-slate-600">{{ user.group || '-' }}</td>
+              <td class="px-4 py-3 text-sm text-slate-600">{{ user.phone || '-' }}</td>
+              <td class="px-4 py-3">
+                <div class="flex items-center justify-end gap-1">
+                  <button 
+                    @click="viewUserDetails(user)"
+                    class="p-2 rounded-lg text-slate-400 hover:text-violet-600 hover:bg-violet-50 transition-colors"
+                    title="Batafsil"
+                  >
+                    <Eye :size="16" />
+                  </button>
+                  <button 
+                    @click="resetPassword(user)"
+                    class="p-2 rounded-lg text-slate-400 hover:text-amber-600 hover:bg-amber-50 transition-colors"
+                    title="Parolni tiklash"
+                  >
+                    <RefreshCw :size="16" />
+                  </button>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Pagination -->
+      <div v-if="totalPages > 1" class="border-t border-slate-200 bg-slate-50 px-4 py-3 flex items-center justify-between">
+        <div class="text-sm text-slate-500">
+          {{ (currentPage - 1) * pageSize + 1 }}–{{ Math.min(currentPage * pageSize, totalUsers) }} / {{ totalUsers }}
+        </div>
+        <div class="flex items-center gap-1">
+          <!-- First -->
+          <button 
+            @click="goToPage(1)"
+            :disabled="currentPage === 1"
+            class="px-2 py-1.5 rounded-lg text-sm font-medium transition-colors"
+            :class="currentPage === 1 ? 'text-slate-300 cursor-not-allowed' : 'text-slate-600 hover:bg-white hover:shadow-sm'"
+          >
+            <ChevronsLeft :size="16" />
+          </button>
+          <!-- Prev -->
+          <button 
+            @click="goToPage(currentPage - 1)"
+            :disabled="currentPage === 1"
+            class="px-2 py-1.5 rounded-lg text-sm font-medium transition-colors"
+            :class="currentPage === 1 ? 'text-slate-300 cursor-not-allowed' : 'text-slate-600 hover:bg-white hover:shadow-sm'"
+          >
+            <ChevronLeft :size="16" />
+          </button>
+          
+          <!-- Page numbers -->
+          <template v-for="page in visiblePages" :key="page">
+            <span v-if="page === '...'" class="px-2 py-1.5 text-sm text-slate-400">...</span>
+            <button 
+              v-else
+              @click="goToPage(page)"
+              class="min-w-[36px] px-2 py-1.5 rounded-lg text-sm font-medium transition-colors"
+              :class="page === currentPage 
+                ? 'bg-violet-500 text-white shadow-sm' 
+                : 'text-slate-600 hover:bg-white hover:shadow-sm'"
+            >
+              {{ page }}
+            </button>
+          </template>
+          
+          <!-- Next -->
+          <button 
+            @click="goToPage(currentPage + 1)"
+            :disabled="currentPage === totalPages"
+            class="px-2 py-1.5 rounded-lg text-sm font-medium transition-colors"
+            :class="currentPage === totalPages ? 'text-slate-300 cursor-not-allowed' : 'text-slate-600 hover:bg-white hover:shadow-sm'"
+          >
+            <ChevronRight :size="16" />
+          </button>
+          <!-- Last -->
+          <button 
+            @click="goToPage(totalPages)"
+            :disabled="currentPage === totalPages"
+            class="px-2 py-1.5 rounded-lg text-sm font-medium transition-colors"
+            :class="currentPage === totalPages ? 'text-slate-300 cursor-not-allowed' : 'text-slate-600 hover:bg-white hover:shadow-sm'"
+          >
+            <ChevronsRight :size="16" />
+          </button>
         </div>
       </div>
     </div>
 
-    <!-- Password View Modal -->
+    <!-- User Details Modal -->
     <Teleport to="body">
       <div 
-        v-if="showPasswordModal" 
+        v-if="showDetailsModal" 
         class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm"
-        @click.self="showPasswordModal = false"
+        @click.self="showDetailsModal = false"
       >
         <div class="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl">
           <div class="mb-4 flex items-center justify-between">
             <h2 class="text-lg font-bold text-slate-800">Foydalanuvchi ma'lumotlari</h2>
-            <button @click="showPasswordModal = false" class="text-slate-400 hover:text-slate-600">
+            <button @click="showDetailsModal = false" class="text-slate-400 hover:text-slate-600">
               <X :size="24" />
             </button>
           </div>
@@ -152,9 +272,10 @@
               <div class="rounded-xl border border-slate-200 p-4">
                 <label class="mb-1 block text-xs font-medium text-slate-500">Login</label>
                 <div class="flex items-center justify-between">
-                  <span class="font-mono text-slate-800">{{ selectedUser.login || selectedUser.studentId || 'admin' }}</span>
+                  <span class="font-mono text-slate-800">{{ selectedUser.login || '-' }}</span>
                   <button 
-                    @click="copyToClipboard(selectedUser.login || selectedUser.studentId || 'admin')"
+                    v-if="selectedUser.login"
+                    @click="copyToClipboard(selectedUser.login)"
                     class="text-slate-400 hover:text-violet-500"
                   >
                     <Copy :size="16" />
@@ -162,17 +283,36 @@
                 </div>
               </div>
               
-              <div class="rounded-xl border border-violet-200 bg-violet-50 p-4">
+              <!-- Show password for non-admin users -->
+              <div v-if="selectedUser.role !== 'admin' && selectedUser.role !== 'superadmin' && selectedUser.plainPassword" class="rounded-xl border border-violet-200 bg-violet-50 p-4">
                 <label class="mb-1 block text-xs font-medium text-violet-600">Parol</label>
                 <div class="flex items-center justify-between">
-                  <span class="font-mono text-lg font-bold text-violet-700">{{ selectedUser.password || '123456' }}</span>
+                  <span class="font-mono text-lg font-bold text-violet-700">{{ selectedUser.plainPassword }}</span>
                   <button 
-                    @click="copyToClipboard(selectedUser.password || '123456')"
+                    @click="copyToClipboard(selectedUser.plainPassword)"
                     class="text-violet-400 hover:text-violet-600"
                   >
                     <Copy :size="16" />
                   </button>
                 </div>
+              </div>
+              <div v-else class="rounded-xl border border-slate-200 bg-slate-50 p-4">
+                <label class="mb-1 block text-xs font-medium text-slate-500">Parol</label>
+                <div class="flex items-center justify-between">
+                  <span class="text-sm text-slate-500">
+                    {{ (selectedUser.role === 'admin' || selectedUser.role === 'superadmin') ? 'Xavfsizlik sababli yashirin' : 'O\'rnatilmagan' }}
+                  </span>
+                </div>
+              </div>
+              
+              <div v-if="selectedUser.studentId" class="rounded-xl border border-slate-200 p-4">
+                <label class="mb-1 block text-xs font-medium text-slate-500">Talaba ID</label>
+                <span class="text-slate-800">{{ selectedUser.studentId }}</span>
+              </div>
+              
+              <div v-if="selectedUser.group" class="rounded-xl border border-slate-200 p-4">
+                <label class="mb-1 block text-xs font-medium text-slate-500">Guruh</label>
+                <span class="text-slate-800">{{ selectedUser.group }}</span>
               </div>
               
               <div v-if="selectedUser.phone" class="rounded-xl border border-slate-200 p-4">
@@ -180,21 +320,21 @@
                 <span class="text-slate-800">{{ selectedUser.phone }}</span>
               </div>
             </div>
-            
-            <div class="mt-4 rounded-xl bg-amber-50 p-4 text-sm text-amber-700">
-              <div class="flex items-start gap-2">
-                <AlertTriangle :size="18" class="mt-0.5 flex-shrink-0" />
-                <p>Bu ma'lumotlarni faqat foydalanuvchining o'ziga bering. Xavfsizlik uchun parolni o'zgartirish tavsiya etiladi.</p>
-              </div>
-            </div>
           </div>
           
-          <div class="mt-6">
+          <div class="mt-6 flex gap-3">
             <button 
-              @click="showPasswordModal = false"
-              class="w-full rounded-xl bg-slate-100 py-3 font-medium text-slate-700 hover:bg-slate-200"
+              @click="showDetailsModal = false"
+              class="flex-1 rounded-xl bg-slate-100 py-3 font-medium text-slate-700 hover:bg-slate-200"
             >
               Yopish
+            </button>
+            <button 
+              @click="showDetailsModal = false; resetPassword(selectedUser)"
+              class="flex-1 rounded-xl bg-amber-500 py-3 font-medium text-white hover:bg-amber-600 flex items-center justify-center gap-2"
+            >
+              <RefreshCw :size="16" />
+              Parolni tiklash
             </button>
           </div>
         </div>
@@ -255,7 +395,7 @@
               :disabled="resetting"
               class="flex-1 rounded-xl bg-slate-100 py-3 font-medium text-slate-700 hover:bg-slate-200 disabled:opacity-50"
             >
-              Bekor qilish
+              {{ $t('common.cancel') }}
             </button>
             <button 
               @click="confirmReset"
@@ -275,151 +415,193 @@
 
 <script setup>
 /**
- * UsersView.vue - Foydalanuvchilar boshqaruvi
+ * UsersView.vue - Admin Foydalanuvchilar boshqaruvi
  * 
- * Admin imkoniyatlari:
- * - Foydalanuvchi qidirish (ism/familiya)
- * - Parolni ko'rish
- * - Parolni tiklash
+ * - Server-side pagination (50 per page)
+ * - Server-side search (name, login, student_id)
+ * - Password visibility for below-admin users
+ * - Password reset
  */
 
-import { ref, computed, onMounted } from 'vue'
-import { useDataStore } from '@/stores/data'
-import { useToastStore } from '@/stores/toast'
 import api from '@/services/api'
+import { useToastStore } from '@/stores/toast'
 import {
-  Search,
-  Eye,
-  RefreshCw,
-  X,
+  ChevronLeft,
+  ChevronRight,
+  ChevronsLeft,
+  ChevronsRight,
   Copy,
-  AlertTriangle,
+  Eye,
+  EyeOff,
+  Loader2,
+  Lock,
+  RefreshCw,
+  Search,
   UserX,
-  Loader2
+  X
 } from 'lucide-vue-next'
+import { computed, onMounted, ref } from 'vue'
 
-const dataStore = useDataStore()
 const toast = useToastStore()
 
-// State
+// Pagination state
+const currentPage = ref(1)
+const pageSize = 50
+const totalUsers = ref(0)
+const totalPages = ref(0)
+const users = ref([])
+const loading = ref(true)
+
+// Search & filter
 const searchQuery = ref('')
 const filterRole = ref('')
-const showPasswordModal = ref(false)
+let searchTimeout = null
+
+// Modals
+const showDetailsModal = ref(false)
 const showResetModal = ref(false)
 const selectedUser = ref(null)
 const newPassword = ref('')
-const loading = ref(true)
 const resetting = ref(false)
 
-// Load students on mount
-onMounted(async () => {
+// Visible pagination pages
+const visiblePages = computed(() => {
+  const total = totalPages.value
+  const current = currentPage.value
+  const pages = []
+  
+  if (total <= 7) {
+    for (let i = 1; i <= total; i++) pages.push(i)
+    return pages
+  }
+  
+  // Always show first page
+  pages.push(1)
+  
+  if (current > 3) pages.push('...')
+  
+  // Middle pages
+  const start = Math.max(2, current - 1)
+  const end = Math.min(total - 1, current + 1)
+  for (let i = start; i <= end; i++) pages.push(i)
+  
+  if (current < total - 2) pages.push('...')
+  
+  // Always show last page
+  pages.push(total)
+  
+  return pages
+})
+
+// Load users from server
+async function loadUsers() {
   loading.value = true
   try {
-    await dataStore.fetchStudents({ page_size: 100 })
+    const params = {
+      page: currentPage.value,
+      page_size: pageSize
+    }
+    if (searchQuery.value.trim()) {
+      params.search = searchQuery.value.trim()
+    }
+    if (filterRole.value) {
+      params.role = filterRole.value
+    }
+    
+    const response = await api.getUsers(params)
+    const items = response?.items || []
+    
+    users.value = items.map(u => ({
+      id: u.id,
+      name: u.full_name || u.name || 'Noma\'lum',
+      studentId: u.student_id || '',
+      phone: u.phone || '',
+      group: u.group_name || '',
+      role: u.role || 'student',
+      login: u.login || u.student_id || '',
+      email: u.email || '',
+      plainPassword: u.plain_password || null,
+      isActive: u.is_active,
+      showPassword: false
+    }))
+    
+    totalUsers.value = response?.total || 0
+    totalPages.value = response?.total_pages || 1
   } catch (err) {
-    console.error('Error loading students:', err)
+    console.error('Error loading users:', err)
     toast.error('Foydalanuvchilarni yuklashda xatolik')
   } finally {
     loading.value = false
   }
-})
+}
 
-// Barcha foydalanuvchilar (talabalar + adminlar)
-const allUsers = computed(() => {
-  const users = []
-  
-  // Talabalar
-  dataStore.students.forEach(student => {
-    users.push({
-      id: student.id,
-      name: student.name,
-      studentId: student.studentId,
-      phone: student.phone,
-      group: student.group,
-      role: student.role || 'student',
-      login: student.studentId,
-      password: student.password || '123456'
-    })
-  })
-  
-  // Adminlar (mock)
-  users.push({
-    id: 'admin-1',
-    name: 'Admin Adminov',
-    role: 'admin',
-    login: 'admin',
-    password: 'admin123',
-    phone: '+998 90 000 00 00'
-  })
-  
-  return users
-})
+// Search with debounce
+function onSearchInput() {
+  if (searchTimeout) clearTimeout(searchTimeout)
+  searchTimeout = setTimeout(() => {
+    currentPage.value = 1
+    loadUsers()
+  }, 400)
+}
 
-// Filtrlangan foydalanuvchilar
-const filteredUsers = computed(() => {
-  let result = allUsers.value
-  
-  // Qidiruv
-  if (searchQuery.value) {
-    const query = searchQuery.value.toLowerCase()
-    result = result.filter(u => 
-      u.name.toLowerCase().includes(query) ||
-      (u.studentId && u.studentId.toLowerCase().includes(query))
-    )
-  }
-  
-  // Rol filtri
-  if (filterRole.value) {
-    result = result.filter(u => u.role === filterRole.value)
-  }
-  
-  return result
-})
+// Filter change
+function onFilterChange() {
+  currentPage.value = 1
+  loadUsers()
+}
 
-// Rol rangi
+// Navigate to page
+function goToPage(page) {
+  if (page < 1 || page > totalPages.value || page === currentPage.value) return
+  currentPage.value = page
+  loadUsers()
+}
+
+// Role helpers
 function getRoleColor(role) {
   const colors = {
     student: 'bg-gradient-to-br from-blue-400 to-blue-600',
     leader: 'bg-gradient-to-br from-emerald-400 to-emerald-600',
-    admin: 'bg-gradient-to-br from-violet-400 to-violet-600'
+    admin: 'bg-gradient-to-br from-violet-400 to-violet-600',
+    superadmin: 'bg-gradient-to-br from-amber-400 to-orange-600'
   }
   return colors[role] || colors.student
 }
 
-// Rol badge
 function getRoleBadge(role) {
   const badges = {
     student: 'bg-blue-100 text-blue-700',
     leader: 'bg-emerald-100 text-emerald-700',
-    admin: 'bg-violet-100 text-violet-700'
+    admin: 'bg-violet-100 text-violet-700',
+    superadmin: 'bg-amber-100 text-amber-700'
   }
   return badges[role] || badges.student
 }
 
-// Rol nomi
 function getRoleLabel(role) {
   const labels = {
     student: 'Talaba',
-    leader: 'Guruh sardori',
-    admin: 'Admin'
+    leader: 'Sardor',
+    admin: 'Admin',
+    superadmin: 'Super Admin'
   }
   return labels[role] || 'Foydalanuvchi'
 }
 
-// Parolni ko'rish
-function viewPassword(user) {
+// View user details
+function viewUserDetails(user) {
   selectedUser.value = user
-  showPasswordModal.value = true
+  showDetailsModal.value = true
 }
 
-// Parolni tiklash
+// Reset password
 function resetPassword(user) {
   selectedUser.value = user
   newPassword.value = ''
   showResetModal.value = true
 }
 
-// Avtomatik parol
+// Generate password
 function generatePassword() {
   const chars = 'abcdefghijklmnopqrstuvwxyz0123456789'
   let password = ''
@@ -429,35 +611,38 @@ function generatePassword() {
   newPassword.value = password
 }
 
-// Parolni tasdiqlash
+// Confirm reset
 async function confirmReset() {
   if (!newPassword.value) return
   
   resetting.value = true
   try {
-    // Only reset password for students (admins need separate handling)
-    if (selectedUser.value.role === 'student' || selectedUser.value.role === 'leader') {
-      await api.resetStudentPassword(selectedUser.value.id, newPassword.value)
+    await api.resetUserPassword(selectedUser.value.id, newPassword.value)
+    
+    // Update local user data
+    const user = users.value.find(u => u.id === selectedUser.value.id)
+    if (user && (user.role === 'student' || user.role === 'leader')) {
+      user.plainPassword = newPassword.value
     }
     
     toast.success('Parol yangilandi', `${selectedUser.value.name} uchun yangi parol o'rnatildi`)
     showResetModal.value = false
   } catch (err) {
     console.error('Error resetting password:', err)
-    toast.error('Parolni tiklashda xatolik yuz berdi')
+    toast.error('Parolni tiklashda xatolik')
   } finally {
     resetting.value = false
   }
 }
 
-// Clipboard
+// Copy to clipboard
 function copyToClipboard(text) {
   navigator.clipboard.writeText(text)
   toast.info('Nusxalandi', 'Ma\'lumot clipboard\'ga nusxalandi')
 }
 
-// Qidiruv
-function searchUsers() {
-  // Avtomatik computed orqali ishlaydi
-}
+// Load on mount
+onMounted(() => {
+  loadUsers()
+})
 </script>

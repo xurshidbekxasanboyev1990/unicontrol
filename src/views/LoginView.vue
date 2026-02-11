@@ -6,8 +6,26 @@
       class="absolute top-6 left-6 z-10 group flex items-center gap-2 px-4 py-2.5 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 rounded-xl text-slate-400 hover:text-white transition-all duration-300 backdrop-blur-sm"
     >
       <ArrowLeft class="w-5 h-5 group-hover:-translate-x-1 transition-transform duration-300" />
-      <span class="text-sm font-medium">Bosh sahifa</span>
+      <span class="text-sm font-medium">{{ t('login.backToHome') }}</span>
     </button>
+
+    <!-- Language Switcher -->
+    <div class="absolute top-6 right-6 z-10 flex items-center gap-1 bg-white/5 border border-white/10 rounded-xl p-1 backdrop-blur-sm">
+      <button
+        v-for="lang in languages"
+        :key="lang.code"
+        @click="langStore.setLocale(lang.code)"
+        :class="[
+          'flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-300',
+          langStore.locale === lang.code
+            ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
+            : 'text-slate-400 hover:text-white hover:bg-white/10'
+        ]"
+      >
+        <span class="text-base">{{ lang.flag }}</span>
+        <span class="hidden sm:inline">{{ lang.label }}</span>
+      </button>
+    </div>
 
     <!-- Animated Background -->
     <div class="absolute inset-0">
@@ -39,7 +57,7 @@
           </div>
         </div>
         <h1 class="text-4xl font-bold text-white mb-3 tracking-tight">Uni Control</h1>
-        <p class="text-slate-400 text-lg">Universitet boshqaruv tizimi</p>
+        <p class="text-slate-400 text-lg">{{ t('login.subtitle') }}</p>
       </div>
 
       <!-- Card -->
@@ -65,13 +83,13 @@
                     <ShieldAlert class="w-6 h-6 text-amber-400" />
                   </div>
                   <div>
-                    <h3 class="font-semibold text-amber-400 mb-1">Ruxsat etilmagan</h3>
-                    <p class="text-sm text-amber-300/80">Guruhingiz ruxsatga ega emas. Tizimga kirish uchun adminga murojaat qiling.</p>
+                    <h3 class="font-semibold text-amber-400 mb-1">{{ t('login.blocked') }}</h3>
+                    <p class="text-sm text-amber-300/80">{{ t('login.blockedMessage') }}</p>
                     <button 
                       @click="isBlocked = false; error = ''"
                       class="mt-3 text-sm text-amber-400 hover:text-amber-300 underline"
                     >
-                      Qayta urinish
+                      {{ t('login.tryAgain') }}
                     </button>
                   </div>
                 </div>
@@ -82,7 +100,7 @@
             <div class="space-y-2">
               <label class="text-sm font-medium text-slate-300 flex items-center gap-2">
                 <User class="w-4 h-4 text-slate-400" />
-                Login
+                {{ t('login.username') }}
               </label>
               <div class="relative group">
                 <div class="absolute inset-0 bg-gradient-to-r from-emerald-500/20 to-teal-500/20 rounded-2xl opacity-0 group-focus-within:opacity-100 blur-xl transition-opacity duration-300"></div>
@@ -96,7 +114,7 @@
                     v-model="username"
                     type="text"
                     class="w-full bg-white/5 border border-white/10 rounded-2xl pl-16 pr-4 py-4 text-white placeholder-slate-500 focus:outline-none focus:bg-white/10 focus:border-emerald-500/50 focus:ring-4 focus:ring-emerald-500/10 transition-all duration-300"
-                    placeholder="Loginni kiriting"
+                    :placeholder="t('login.usernamePlaceholder')"
                     autocomplete="username"
                   />
                 </div>
@@ -107,7 +125,7 @@
             <div class="space-y-2">
               <label class="text-sm font-medium text-slate-300 flex items-center gap-2">
                 <Lock class="w-4 h-4 text-slate-400" />
-                Parol
+                {{ t('login.password') }}
               </label>
               <div class="relative group">
                 <div class="absolute inset-0 bg-gradient-to-r from-emerald-500/20 to-teal-500/20 rounded-2xl opacity-0 group-focus-within:opacity-100 blur-xl transition-opacity duration-300"></div>
@@ -146,9 +164,9 @@
                   <div class="w-5 h-5 bg-white/5 border border-white/20 rounded-lg peer-checked:bg-emerald-500 peer-checked:border-emerald-500 transition-all duration-300 group-hover:border-white/40 group-hover:bg-white/10"></div>
                   <Check class="absolute inset-0 w-5 h-5 text-white opacity-0 peer-checked:opacity-100 transition-all duration-300 p-0.5" />
                 </div>
-                <span class="text-sm text-slate-400 group-hover:text-slate-200 transition-colors duration-300">Eslab qolish</span>
+                <span class="text-sm text-slate-400 group-hover:text-slate-200 transition-colors duration-300">{{ t('login.rememberMe') }}</span>
               </label>
-              <a href="#" class="text-sm text-emerald-400 hover:text-emerald-300 hover:underline transition-all duration-300 font-medium">Parolni unutdingizmi?</a>
+              <a href="#" class="text-sm text-emerald-400 hover:text-emerald-300 hover:underline transition-all duration-300 font-medium">{{ t('login.forgotPassword') }}</a>
             </div>
 
             <!-- Submit Button -->
@@ -166,7 +184,7 @@
               <div class="relative flex items-center justify-center gap-3 py-4 px-6 font-semibold text-white">
                 <Loader2 v-if="isLoading" class="w-5 h-5 animate-spin" />
                 <LogIn v-else class="w-5 h-5 group-hover:translate-x-1 transition-transform duration-300" />
-                <span>{{ isLoading ? 'Kirish...' : 'Tizimga kirish' }}</span>
+                <span>{{ isLoading ? t('login.loggingIn') : t('login.loginButton') }}</span>
                 <ArrowRight class="w-5 h-5 opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300" />
               </div>
             </button>
@@ -178,7 +196,7 @@
               <div class="w-full border-t border-white/10"></div>
             </div>
             <div class="relative flex justify-center">
-              <span class="px-4 bg-transparent text-slate-500 text-sm font-medium">Demo hisoblar</span>
+              <span class="px-4 bg-transparent text-slate-500 text-sm font-medium">{{ t('login.demoAccounts') }}</span>
             </div>
           </div>
 
@@ -197,7 +215,7 @@
                   <component :is="demo.icon" class="w-5 h-5 text-white transition-transform duration-300 group-hover:scale-110" />
                 </div>
                 <div class="text-left">
-                  <p class="text-sm font-semibold text-white group-hover:text-emerald-300 transition-colors duration-300">{{ demo.label }}</p>
+                  <p class="text-sm font-semibold text-white group-hover:text-emerald-300 transition-colors duration-300">{{ t(demo.labelKey) }}</p>
                   <p class="text-xs text-slate-500 group-hover:text-slate-300 transition-colors duration-300">{{ demo.username }}</p>
                 </div>
               </div>
@@ -209,14 +227,14 @@
       <!-- Footer -->
       <div class="mt-8 text-center">
         <p class="text-slate-500 text-sm">
-          © 2026 Uni Control. Barcha huquqlar himoyalangan.
+          {{ t('layout.allRightsReserved') }}
         </p>
         <div class="flex items-center justify-center gap-4 mt-3">
-          <a href="#" class="text-sm text-slate-500 hover:text-emerald-400 transition-colors">Yordam</a>
+          <a href="#" class="text-sm text-slate-500 hover:text-emerald-400 transition-colors">{{ t('layout.help') }}</a>
           <span class="text-slate-700">•</span>
-          <a href="#" class="text-sm text-slate-500 hover:text-emerald-400 transition-colors">Maxfiylik</a>
+          <a href="#" class="text-sm text-slate-500 hover:text-emerald-400 transition-colors">{{ t('layout.privacy') }}</a>
           <span class="text-slate-700">•</span>
-          <a href="#" class="text-sm text-slate-500 hover:text-emerald-400 transition-colors">Shartlar</a>
+          <a href="#" class="text-sm text-slate-500 hover:text-emerald-400 transition-colors">{{ t('layout.terms') }}</a>
         </div>
       </div>
     </div>
@@ -224,30 +242,39 @@
 </template>
 
 <script setup>
-import { ref, markRaw } from 'vue'
+import {
+    AlertCircle,
+    ArrowLeft,
+    ArrowRight,
+    Check,
+    Crown,
+    Eye,
+    EyeOff,
+    GraduationCap,
+    Loader2,
+    Lock,
+    LogIn,
+    Shield,
+    ShieldAlert,
+    User,
+    UserCircle,
+    Users
+} from 'lucide-vue-next'
+import { markRaw, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
-import { 
-  GraduationCap, 
-  User, 
-  Lock, 
-  Eye, 
-  EyeOff, 
-  LogIn, 
-  Loader2, 
-  AlertCircle,
-  ShieldAlert,
-  UserCircle,
-  Users,
-  Shield,
-  Crown,
-  Check,
-  ArrowRight,
-  ArrowLeft
-} from 'lucide-vue-next'
+import { useLanguageStore } from '../stores/language'
 
 const router = useRouter()
 const authStore = useAuthStore()
+const langStore = useLanguageStore()
+const { t } = langStore
+
+const languages = [
+  { code: 'uz', flag: '🇺🇿', label: "O'z" },
+  { code: 'ru', flag: '🇷🇺', label: 'Рус' },
+  { code: 'en', flag: '🇬🇧', label: 'Eng' }
+]
 
 const username = ref('')
 const password = ref('')
@@ -266,7 +293,7 @@ const demoAccounts = [
   { 
     username: 'ST-2024-001', 
     password: '123456', 
-    label: 'Talaba', 
+    labelKey: 'roles.student', 
     icon: markRaw(UserCircle), 
     bgClass: 'bg-gradient-to-br from-blue-500 to-blue-600',
     glowClass: 'bg-blue-500/10'
@@ -274,7 +301,7 @@ const demoAccounts = [
   { 
     username: 'ST-2024-002', 
     password: '123456', 
-    label: 'Sardor', 
+    labelKey: 'roles.leader', 
     icon: markRaw(Users), 
     bgClass: 'bg-gradient-to-br from-amber-500 to-orange-600',
     glowClass: 'bg-amber-500/10'
@@ -282,7 +309,7 @@ const demoAccounts = [
   { 
     username: 'admin', 
     password: '123', 
-    label: 'Admin', 
+    labelKey: 'roles.admin', 
     icon: markRaw(Shield), 
     bgClass: 'bg-gradient-to-br from-violet-500 to-purple-600',
     glowClass: 'bg-violet-500/10'
@@ -290,7 +317,7 @@ const demoAccounts = [
   { 
     username: 'super', 
     password: '123', 
-    label: 'Super Admin', 
+    labelKey: 'roles.superadmin', 
     icon: markRaw(Crown), 
     bgClass: 'bg-gradient-to-br from-rose-500 to-pink-600',
     glowClass: 'bg-rose-500/10'
@@ -307,16 +334,14 @@ const handleLogin = async () => {
   isBlocked.value = false
   
   if (!username.value || !password.value) {
-    error.value = 'Login va parolni kiriting'
+    error.value = t('login.invalidCredentials')
     return
   }
 
   isLoading.value = true
 
   try {
-    await new Promise(resolve => setTimeout(resolve, 800))
-    
-    const result = authStore.login({ login: username.value, password: password.value })
+    const result = await authStore.login({ login: username.value, password: password.value })
     
     if (result.success) {
       const redirectPath = {
@@ -330,10 +355,10 @@ const handleLogin = async () => {
     } else if (result.blocked) {
       isBlocked.value = true
     } else {
-      error.value = result.message || 'Talaba ID yoki parol noto\'g\'ri'
+      error.value = result.message || t('login.invalidCredentials')
     }
   } catch (err) {
-    error.value = 'Xatolik yuz berdi'
+    error.value = t('common.error')
   } finally {
     isLoading.value = false
   }

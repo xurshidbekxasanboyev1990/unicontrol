@@ -8,12 +8,16 @@ Version: 1.0.0
 """
 
 from typing import Optional
-from datetime import date
-from fastapi import APIRouter, Depends, Query, status
+from datetime import date, datetime, timedelta
+from app.config import now_tashkent, today_tashkent
+from fastapi import APIRouter, Depends, Query, status, BackgroundTasks
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
+from sqlalchemy.orm import selectinload
 
 from app.database import get_db
 from app.services.attendance_service import AttendanceService
+from app.services.telegram_notifier import send_attendance_to_telegram, send_batch_attendance_summary_to_telegram
 from app.schemas.attendance import (
     AttendanceCreate,
     AttendanceUpdate,
@@ -23,9 +27,11 @@ from app.schemas.attendance import (
     DailyAttendanceSummary,
     StudentAttendanceSummary,
 )
-from app.models.attendance import AttendanceStatus
+from app.models.attendance import Attendance as AttendanceModel, AttendanceStatus
+from app.models.student import Student
+from app.models.group import Group
 from app.core.dependencies import get_current_active_user, require_leader
-from app.models.user import User
+from app.models.user import User, UserRole
 
 router = APIRouter()
 
@@ -56,8 +62,10 @@ async def list_attendance(
         status=status
     )
     
+    is_superadmin = current_user.role == UserRole.SUPERADMIN
+    
     return {
-        "items": [AttendanceResponse.model_validate(a) for a in attendances],
+        "items": [AttendanceResponse.from_attendance(a, is_superadmin) for a in attendances],
         "total": total,
         "page": page,
         "page_size": page_size,
@@ -68,6 +76,7 @@ async def list_attendance(
 @router.post("", response_model=AttendanceResponse, status_code=status.HTTP_201_CREATED)
 async def create_attendance(
     attendance_data: AttendanceCreate,
+    background_tasks: BackgroundTasks,
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(require_leader)
 ):
@@ -75,15 +84,39 @@ async def create_attendance(
     Create or update attendance record.
     
     Requires leader role.
+    Sends real-time notification to Telegram only for NEW records (not upserts).
     """
     service = AttendanceService(db)
-    attendance = await service.create(attendance_data, current_user.id)
+    attendance, is_new = await service.create(attendance_data, current_user.id)
+    
+    # Only send Telegram notification for NEW records, not upsert updates
+    if is_new:
+        try:
+            # Load student with group
+            student_result = await db.execute(
+                select(Student).options(selectinload(Student.group)).where(Student.id == attendance.student_id)
+            )
+            student = student_result.scalar_one_or_none()
+            
+            if student and student.group:
+                background_tasks.add_task(
+                    send_attendance_to_telegram,
+                    db,
+                    attendance,
+                    student,
+                    student.group
+                )
+        except Exception as e:
+            import logging
+            logging.getLogger(__name__).error(f"Telegram notification error: {e}")
+    
     return AttendanceResponse.model_validate(attendance)
 
 
 @router.post("/batch", response_model=list)
 async def create_batch_attendance(
     batch_data: AttendanceBatch,
+    background_tasks: BackgroundTasks,
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(require_leader)
 ):
@@ -91,9 +124,47 @@ async def create_batch_attendance(
     Create attendance records in batch.
     
     Requires leader role.
+    Sends ONE summary notification to Telegram (not per-student).
+    Only notifies if there are genuinely new records (not re-saves of existing).
     """
     service = AttendanceService(db)
-    attendances = await service.batch_create(batch_data, current_user.id)
+    attendances, new_count = await service.batch_create(batch_data, current_user.id)
+    
+    # Send ONE summary notification (not 50 individual messages)
+    # Only send if there are new records (skip if all are re-saves/upserts)
+    if new_count > 0 and attendances:
+        try:
+            first = attendances[0]
+            student_result = await db.execute(
+                select(Student).options(selectinload(Student.group)).where(Student.id == first.student_id)
+            )
+            student = student_result.scalar_one_or_none()
+            
+            if student and student.group:
+                # Load all students for name display in summary
+                for att in attendances:
+                    s_result = await db.execute(
+                        select(Student).where(Student.id == att.student_id)
+                    )
+                    s = s_result.scalar_one_or_none()
+                    if s:
+                        att._student_name = getattr(s, 'full_name', None) or getattr(s, 'name', "Noma'lum")
+                    else:
+                        att._student_name = "Noma'lum"
+                
+                background_tasks.add_task(
+                    send_batch_attendance_summary_to_telegram,
+                    db,
+                    attendances,
+                    student.group,
+                    batch_data.lesson_number,
+                    batch_data.subject,
+                    False,  # is_update=False (new batch)
+                )
+        except Exception as e:
+            import logging
+            logging.getLogger(__name__).error(f"Telegram batch notification error: {e}")
+    
     return [AttendanceResponse.model_validate(a) for a in attendances]
 
 
@@ -109,7 +180,7 @@ async def get_daily_summary(
     group_id can be either numeric ID or group name string.
     """
     if target_date is None:
-        target_date = date.today()
+        target_date = today_tashkent()
     
     service = AttendanceService(db)
     return await service.get_daily_summary(target_date, group_id)
@@ -184,6 +255,7 @@ async def get_attendance(
 async def update_attendance(
     attendance_id: int,
     attendance_data: AttendanceUpdate,
+    background_tasks: BackgroundTasks,
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(require_leader)
 ):
@@ -191,9 +263,57 @@ async def update_attendance(
     Update attendance record.
     
     Requires leader role.
+    Admin/leader cannot edit after 24 hours. Superadmin can always edit.
+    Does NOT re-send Telegram notification to avoid duplicates.
     """
     service = AttendanceService(db)
+    attendance = await service.get_by_id(attendance_id)
+    if not attendance:
+        from app.core.exceptions import NotFoundException
+        raise NotFoundException("Attendance record not found")
+    
+    # 24-hour edit lock: only superadmin can edit after 24 hours
+    if current_user.role != UserRole.SUPERADMIN:
+        now = now_tashkent()
+        created = attendance.created_at
+        # Ensure both are tz-aware for comparison
+        if created and (not hasattr(created, 'tzinfo') or created.tzinfo is None):
+            from app.config import TASHKENT_TZ
+            created = created.replace(tzinfo=TASHKENT_TZ)
+        time_since_creation = now - created
+        if time_since_creation > timedelta(hours=24):
+            from fastapi import HTTPException as HTTPErr
+            raise HTTPErr(
+                status_code=403,
+                detail="Davomatni tahrirlash vaqti tugagan (24 soatdan oshgan). Faqat super admin o'zgartira oladi."
+            )
+    
+    # Remember old status to check if changed
+    old_status = attendance.status
+    
     attendance = await service.update(attendance_id, attendance_data)
+    
+    # Only send notification if status actually changed (not just a re-save)
+    new_status = attendance.status
+    if old_status != new_status:
+        try:
+            student_result = await db.execute(
+                select(Student).options(selectinload(Student.group)).where(Student.id == attendance.student_id)
+            )
+            student = student_result.scalar_one_or_none()
+            
+            if student and student.group:
+                background_tasks.add_task(
+                    send_attendance_to_telegram,
+                    db,
+                    attendance,
+                    student,
+                    student.group
+                )
+        except Exception as e:
+            import logging
+            logging.getLogger(__name__).error(f"Telegram update notification error: {e}")
+    
     return AttendanceResponse.model_validate(attendance)
 
 

@@ -10,12 +10,16 @@ Version: 1.0.0
 from typing import Optional
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
 from pydantic import BaseModel, Field
+from loguru import logger
 
 from app.database import get_db
 from app.services.ai_service import AIService
 from app.core.dependencies import get_current_active_user, require_leader
 from app.models.user import User
+from app.models.student import Student
+from app.models.notification import Notification, NotificationType, NotificationPriority
 
 router = APIRouter()
 
@@ -111,12 +115,39 @@ async def analyze_student(
     Requires leader role or higher.
     """
     service = AIService(db)
-    return await service.analyze_student(
+    result = await service.analyze_student(
         student_id=request.student_id,
         include_attendance=request.include_attendance,
         include_grades=request.include_grades,
         include_behavior=request.include_behavior
     )
+    
+    # Send notification to student about AI analysis
+    try:
+        student_result = await db.execute(
+            select(Student).where(Student.id == request.student_id)
+        )
+        student = student_result.scalar_one_or_none()
+        if student and student.user_id:
+            risk_text = ""
+            if hasattr(result, 'risk_level') and result.risk_level:
+                risk_map = {"low": "past", "medium": "o'rta", "high": "yuqori"}
+                risk_text = f" Xavf darajasi: {risk_map.get(result.risk_level, result.risk_level)}."
+            
+            notification = Notification(
+                user_id=student.user_id,
+                title="AI tahlil natijalari tayyor 🤖",
+                message=f"Sizning ko'rsatkichlaringiz AI tomonidan tahlil qilindi.{risk_text} Batafsil ma'lumot uchun AI tahlil sahifasini tekshiring.",
+                type=NotificationType.INFO,
+                priority=NotificationPriority.NORMAL,
+                sender_id=current_user.id,
+            )
+            db.add(notification)
+            await db.commit()
+    except Exception as e:
+        logger.warning(f"AI analysis notification error: {e}")
+    
+    return result
 
 
 @router.post("/analyze/group", response_model=GroupAnalysisResponse)
@@ -131,12 +162,44 @@ async def analyze_group(
     Requires leader role or higher.
     """
     service = AIService(db)
-    return await service.analyze_group(
+    result = await service.analyze_group(
         group_id=request.group_id,
         semester=request.semester,
         include_attendance=request.include_attendance,
         include_performance=request.include_performance
     )
+    
+    # Send notification to all students in the group
+    try:
+        from app.models.group import Group
+        group_result = await db.execute(
+            select(Group).where(Group.id == request.group_id)
+        )
+        group = group_result.scalar_one_or_none()
+        group_name = group.name if group else f"Guruh #{request.group_id}"
+        
+        students_result = await db.execute(
+            select(Student.user_id)
+            .where(Student.group_id == request.group_id)
+            .where(Student.user_id.isnot(None))
+        )
+        user_ids = [row[0] for row in students_result.all()]
+        
+        for uid in user_ids:
+            notification = Notification(
+                user_id=uid,
+                title="Guruh AI tahlili tayyor 📊",
+                message=f"\"{group_name}\" guruhining ko'rsatkichlari AI tomonidan tahlil qilindi. Natijalarni AI tahlil sahifasida ko'ring.",
+                type=NotificationType.INFO,
+                priority=NotificationPriority.NORMAL,
+                sender_id=current_user.id,
+            )
+            db.add(notification)
+        await db.commit()
+    except Exception as e:
+        logger.warning(f"AI group analysis notification error: {e}")
+    
+    return result
 
 
 @router.post("/predict/attendance", response_model=AttendancePredictionResponse)

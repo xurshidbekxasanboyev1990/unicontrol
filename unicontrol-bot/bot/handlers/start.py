@@ -12,13 +12,11 @@ router = Router(name="start")
 WELCOME_MESSAGE = """
 🎓 <b>UniControl Bot</b>ga xush kelibsiz!
 
-Bu bot orqali siz guruhingiz davomatini kuzatishingiz mumkin.
+Bu bot guruhingiz davomatini real vaqtda Telegramga yetkazadi.
 
-<b>Asosiy funksiyalar:</b>
-• 🔍 Guruh izlash va obuna bo'lish
-• 📋 Kunlik davomat hisoboti
-• ⚠️ Kech qolish/kelmaslik xabarlari
-• 📊 Haftalik statistika
+<b>Bot vazifasi:</b>
+📨 Saytdan kelgan davomat xabarlarini yetkazish
+✅ Keldi / ❌ Kelmadi / ⚠️ Kech qoldi / 📋 Sababli
 
 <b>Buyruqlar:</b>
 /search [kod] - Guruh izlash
@@ -37,7 +35,7 @@ HELP_MESSAGE = """
 <b>Bot qanday ishlaydi:</b>
 1. /search buyrug'i bilan guruhingizni toping
 2. /subscribe buyrug'i bilan obuna bo'ling
-3. Davomat yangiliklari avtomatik keladi
+3. Sardor davomat qilganida xabar avtomatik keladi
 
 <b>Buyruqlar ro'yxati:</b>
 
@@ -58,7 +56,11 @@ Xabar sozlamalari
 
 <b>Guruhda ishlatish:</b>
 Botni guruhga qo'shing va /subscribe buyrug'ini yuboring.
-Davomat yangiliklari shu guruhga keladi.
+Sardor davomat qilganida xabar real vaqtda keladi.
+
+<b>Obuna haqida:</b>
+Obuna Super Admin tomonidan saytdan beriladi.
+Bot faqat obunaga ega guruhlarga ishlaydi.
 
 <b>Muammo bo'lsa:</b>
 Guruh sardoringiz yoki admin bilan bog'laning.

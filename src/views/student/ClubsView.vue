@@ -4,8 +4,8 @@
     <div class="bg-gradient-to-br from-violet-500 via-purple-500 to-indigo-600 rounded-2xl p-6 text-white">
       <div class="flex items-center justify-between">
         <div>
-          <h1 class="text-2xl font-bold">To'garaklar</h1>
-          <p class="text-violet-100 mt-1">Qo'shimcha darslar va kurslar</p>
+          <h1 class="text-2xl font-bold">{{ $t('clubs.title') }}</h1>
+          <p class="text-violet-100 mt-1">{{ $t('clubs.description') }}</p>
         </div>
         <div class="w-14 h-14 bg-white/20 backdrop-blur rounded-2xl flex items-center justify-center">
           <BookOpen class="w-7 h-7" />
@@ -58,7 +58,7 @@
           <!-- Price badge -->
           <div class="absolute top-3 right-3">
             <span class="px-3 py-1.5 rounded-xl text-sm font-bold bg-white text-emerald-600 shadow-lg">
-              {{ formatPrice(club.price) }} so'm
+              {{ formatPrice(club.price) }} {{ $t('canteen.sum') }}
             </span>
           </div>
         </div>
@@ -91,7 +91,7 @@
             class="mt-4 w-full flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-xl font-medium hover:from-emerald-600 hover:to-teal-600 transition-all shadow-lg shadow-emerald-500/30 hover:shadow-emerald-500/50"
           >
             <Phone class="w-5 h-5" />
-            Bog'lanish
+            {{ $t('clubs.contact') }}
           </a>
         </div>
       </div>
@@ -102,8 +102,8 @@
       <div class="w-20 h-20 bg-violet-100 rounded-full flex items-center justify-center mx-auto mb-4">
         <BookOpen class="w-10 h-10 text-violet-400" />
       </div>
-      <p class="text-slate-500 text-lg">Bu kategoriyada to'garak yo'q</p>
-      <p class="text-slate-400 text-sm mt-2">Boshqa kategoriyani tanlang</p>
+      <p class="text-slate-500 text-lg">{{ $t('common.noData') }}</p>
+      <p class="text-slate-400 text-sm mt-2">{{ $t('common.noResults') }}</p>
     </div>
 
     <!-- Info Card -->
@@ -113,10 +113,9 @@
           <Lightbulb class="w-6 h-6 text-amber-600" />
         </div>
         <div>
-          <h3 class="font-semibold text-amber-800">To'garaklarga qanday yozilish mumkin?</h3>
+          <h3 class="font-semibold text-amber-800">{{ $t('clubs.howToJoin') }}</h3>
           <p class="text-sm text-amber-700 mt-2">
-            O'zingizga yoqqan to'garakni tanlang va "Bog'lanish" tugmasini bosib to'g'ridan-to'g'ri o'qituvchi bilan aloqaga chiqing. 
-            O'qituvchi sizga to'garak haqida batafsil ma'lumot beradi va ro'yxatga oladi.
+            {{ $t('clubs.howToJoinDesc') }}
           </p>
         </div>
       </div>
@@ -125,22 +124,26 @@
 </template>
 
 <script setup>
-import { ref, computed, markRaw, onMounted } from 'vue'
-import { useDataStore } from '../../stores/data'
-import { useToastStore } from '../../stores/toast'
 import {
   BookOpen,
-  Clock,
-  MapPin,
-  Phone,
-  Lightbulb,
   Calculator,
-  Globe,
+  Clock,
   Code,
   Dumbbell,
+  Globe,
+  Layers,
+  Lightbulb,
+  MapPin,
   Palette,
-  Layers
+  Phone
 } from 'lucide-vue-next'
+import { computed, markRaw, onMounted, ref } from 'vue'
+import { useDataStore } from '../../stores/data'
+import { useLanguageStore } from '../../stores/language'
+import { useToastStore } from '../../stores/toast'
+
+const { t } = useLanguageStore()
+const $t = t
 
 const dataStore = useDataStore()
 const toast = useToastStore()
@@ -153,21 +156,21 @@ onMounted(async () => {
   try {
     await dataStore.fetchClubs()
   } catch (err) {
-    toast.error('To\'garaklarni yuklashda xatolik')
+    toast.error($t('common.error'))
     console.error(err)
   } finally {
     loading.value = false
   }
 })
 
-const categories = [
-  { value: 'all', label: 'Barchasi', icon: markRaw(Layers) },
-  { value: 'fan', label: 'Fan', icon: markRaw(Calculator) },
-  { value: 'til', label: 'Til', icon: markRaw(Globe) },
-  { value: 'texnik', label: 'Texnik', icon: markRaw(Code) },
-  { value: 'sport', label: 'Sport', icon: markRaw(Dumbbell) },
-  { value: "san'at", label: "San'at", icon: markRaw(Palette) }
-]
+const categories = computed(() => [
+  { value: 'all', label: t('common.all'), icon: markRaw(Layers) },
+  { value: 'fan', label: t('clubs.science'), icon: markRaw(Calculator) },
+  { value: 'til', label: t('clubs.language'), icon: markRaw(Globe) },
+  { value: 'texnik', label: t('clubs.tech'), icon: markRaw(Code) },
+  { value: 'sport', label: t('clubs.sport'), icon: markRaw(Dumbbell) },
+  { value: "san'at", label: t('clubs.art'), icon: markRaw(Palette) }
+])
 
 const filteredClubs = computed(() => {
   const activeClubs = dataStore.clubs.filter(c => c.isActive)
@@ -188,13 +191,13 @@ const getCategoryGradient = (category) => {
 
 const getCategoryLabel = (category) => {
   const labels = {
-    'fan': 'Fan',
-    'til': 'Til kursi',
-    'texnik': 'Texnik',
-    'sport': 'Sport',
-    "san'at": "San'at"
+    'fan': t('clubs.science'),
+    'til': t('clubs.langCourse'),
+    'texnik': t('clubs.tech'),
+    'sport': t('clubs.sport'),
+    "san'at": t('clubs.art')
   }
-  return labels[category] || 'Boshqa'
+  return labels[category] || t('clubs.other')
 }
 
 const getCategoryIcon = (category) => {

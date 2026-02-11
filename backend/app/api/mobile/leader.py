@@ -22,6 +22,7 @@ from app.models.attendance import Attendance, AttendanceStatus
 from app.models.schedule import Schedule
 from app.models.notification import Notification
 from app.core.dependencies import get_current_active_user, require_leader
+from app.config import today_tashkent
 
 router = APIRouter()
 
@@ -55,7 +56,7 @@ async def get_leader_mobile_dashboard(
     if not group:
         return {"error": "No group assigned"}
     
-    today = date.today()
+    today = today_tashkent()
     
     # Get students count
     students_result = await db.execute(
@@ -157,7 +158,7 @@ async def get_today_attendance(
     if not group:
         return {"error": "No group assigned"}
     
-    today = date.today()
+    today = today_tashkent()
     
     # Get all students with attendance
     students = await db.execute(
@@ -222,7 +223,7 @@ async def mark_quick_attendance(
         from app.core.exceptions import NotFoundException
         raise NotFoundException("Student not found in your group")
     
-    today = date.today()
+    today = today_tashkent()
     status = AttendanceStatus(request.status)
     
     # Check if already marked
@@ -327,7 +328,7 @@ async def get_leader_today_schedule(
         return {"error": "No group assigned"}
     
     from app.models.schedule import WeekDay
-    today = date.today()
+    today = today_tashkent()
     weekday = WeekDay(today.isoweekday())
     
     schedules = await db.execute(
@@ -373,7 +374,7 @@ async def get_week_stats(
         return {"error": "No group assigned"}
     
     from datetime import timedelta
-    today = date.today()
+    today = today_tashkent()
     week_start = today - timedelta(days=today.weekday())
     
     # Get daily stats for the week

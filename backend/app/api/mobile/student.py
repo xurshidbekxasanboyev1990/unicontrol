@@ -20,6 +20,7 @@ from app.models.attendance import Attendance, AttendanceStatus
 from app.models.schedule import Schedule
 from app.models.notification import Notification
 from app.core.dependencies import get_current_active_user
+from app.config import today_tashkent
 
 router = APIRouter()
 
@@ -69,7 +70,7 @@ async def get_mobile_dashboard(
     if not student:
         return {"error": "Student profile not found"}
     
-    today = date.today()
+    today = today_tashkent()
     
     # Today's attendance
     today_attendance = await db.execute(
@@ -139,7 +140,7 @@ async def get_attendance_history(
         return {"error": "Student profile not found"}
     
     from datetime import timedelta
-    start_date = date.today() - timedelta(days=days)
+    start_date = today_tashkent() - timedelta(days=days)
     
     attendance = await db.execute(
         select(Attendance).where(
@@ -185,7 +186,7 @@ async def get_today_schedule(
         return {"error": "Student profile not found"}
     
     from app.models.schedule import WeekDay
-    today = date.today()
+    today = today_tashkent()
     weekday = WeekDay(today.isoweekday())
     
     schedules = await db.execute(

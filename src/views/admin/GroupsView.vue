@@ -3,8 +3,8 @@
     <!-- Header -->
     <div class="flex items-center justify-between flex-wrap gap-4">
       <div>
-        <h1 class="text-2xl font-bold text-slate-800">Guruhlar boshqaruvi</h1>
-        <p class="text-slate-500">{{ totalItems.toLocaleString() }} ta guruh</p>
+        <h1 class="text-2xl font-bold text-slate-800">{{ $t('groups.title') }}</h1>
+        <p class="text-slate-500">{{ totalItems.toLocaleString() }} {{ $t('groups.title') }}</p>
       </div>
       <div class="flex items-center gap-3">
         <!-- Search -->
@@ -13,7 +13,7 @@
           <input 
             v-model="searchQuery"
             type="text"
-            placeholder="Qidirish..."
+            placeholder="..."
             class="pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 focus:border-violet-500 focus:ring-2 focus:ring-violet-500/20 outline-none w-48"
           />
         </div>
@@ -21,7 +21,7 @@
         <!-- Excel Import -->
         <label class="px-4 py-2.5 bg-emerald-500 text-white rounded-xl font-medium hover:bg-emerald-600 transition-colors flex items-center gap-2 cursor-pointer">
           <FileSpreadsheet class="w-5 h-5" />
-          Excel yuklash
+          Excel
           <input 
             type="file"
             accept=".xlsx,.xls,.csv"
@@ -43,7 +43,7 @@
           class="px-4 py-2.5 bg-violet-500 text-white rounded-xl font-medium hover:bg-violet-600 transition-colors flex items-center gap-2"
         >
           <FolderPlus class="w-5 h-5" />
-          Yangi guruh
+          {{ $t('groups.addGroup') }}
         </button>
       </div>
     </div>
@@ -53,9 +53,9 @@
       <div class="flex items-start gap-3">
         <Info class="w-5 h-5 text-blue-500 mt-0.5" />
         <div>
-          <p class="text-sm font-medium text-blue-800">Excel fayl formati</p>
+          <p class="text-sm font-medium text-blue-800">{{ $t('groups.excelFormat') }}</p>
           <p class="text-sm text-blue-600 mt-1">
-            Excel faylda quyidagi ustunlar bo'lishi kerak: <span class="font-mono">Guruh, Fakultet, Talaba ID, Ism Familiya, Telefon, Parol</span>
+            {{ $t('groups.excelFormatDesc') }}
           </p>
           <button @click="downloadTemplate" class="text-sm text-blue-700 underline mt-2 hover:text-blue-800">
             Namuna faylni yuklab olish
@@ -68,7 +68,7 @@
     <div v-if="loading" class="flex items-center justify-center py-20">
       <div class="text-center">
         <RefreshCw class="w-12 h-12 text-violet-500 animate-spin mx-auto mb-4" />
-        <p class="text-slate-600">Guruhlar yuklanmoqda...</p>
+        <p class="text-slate-600">{{ $t('groups.loadingGroups') }}</p>
       </div>
     </div>
 
@@ -77,11 +77,11 @@
       <div class="flex items-center gap-3">
         <AlertCircle class="w-6 h-6 text-rose-500" />
         <div>
-          <h3 class="font-semibold text-rose-700">Xatolik yuz berdi</h3>
+          <h3 class="font-semibold text-rose-700">{{ $t('groups.errorOccurred') }}</h3>
           <p class="text-rose-600 text-sm mt-1">{{ error }}</p>
         </div>
         <button @click="refresh" class="ml-auto px-4 py-2 bg-rose-500 text-white rounded-lg hover:bg-rose-600">
-          Qayta urinish
+          {{ $t('common.retry') }}
         </button>
       </div>
     </div>
@@ -101,7 +101,7 @@
               class="px-3 py-1 rounded-full text-xs font-semibold"
               :class="group.isActive ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'"
             >
-              {{ group.isActive ? 'Faol' : 'O\'chirilgan' }}
+              {{ group.isActive ? $t('common.active') : $t('common.inactive') }}
             </span>
             <button 
               @click="toggleStatus(group)"
@@ -122,6 +122,14 @@
                 {{ group.name.slice(-3) }}
               </div>
               <div class="flex items-center gap-1">
+                <button 
+                  v-if="authStore.isSuperAdmin"
+                  @click="openSubscriptionModal(group)"
+                  class="p-2 text-slate-400 hover:text-emerald-500 hover:bg-emerald-50 rounded-lg transition-colors"
+                  title="Obuna berish"
+                >
+                  <CreditCard class="w-4 h-4" />
+                </button>
                 <button 
                   @click="openLeaderModal(group)"
                   class="p-2 text-slate-400 hover:text-amber-500 hover:bg-amber-50 rounded-lg transition-colors"
@@ -151,26 +159,26 @@
               <div class="flex items-center justify-between">
                 <span class="text-sm text-slate-500 flex items-center gap-2">
                   <Users class="w-4 h-4" />
-                  Talabalar
+                  {{ $t('groups.students') }}
                 </span>
                 <span class="font-semibold text-slate-700">{{ group.studentCount.toLocaleString() }}</span>
               </div>
               <div class="flex items-center justify-between">
                 <span class="text-sm text-slate-500 flex items-center gap-2">
                   <Crown class="w-4 h-4" />
-                  Sardor
+                  {{ $t('groups.leader') }}
                 </span>
                 <span 
                   class="font-medium"
                   :class="group.leaderName ? 'text-amber-600' : 'text-slate-400'"
                 >
-                  {{ group.leaderName || 'Tayinlanmagan' }}
+                  {{ group.leaderName || $t('common.notAssigned') }}
                 </span>
               </div>
               <div class="flex items-center justify-between">
                 <span class="text-sm text-slate-500 flex items-center gap-2">
                   <TrendingUp class="w-4 h-4" />
-                  Davomat
+                  {{ $t('attendance.title') }}
                 </span>
                 <span 
                   class="font-semibold"
@@ -187,12 +195,12 @@
       <!-- Empty State -->
       <div v-if="groups.length === 0" class="bg-white rounded-2xl border border-slate-200 p-12 text-center">
         <Layers class="w-12 h-12 text-slate-300 mx-auto mb-4" />
-        <p class="text-slate-500">Guruh topilmadi</p>
-        <p class="text-sm text-slate-400 mt-2">Excel fayl yuklash yoki qo'lda qo'shish mumkin</p>
+        <p class="text-slate-500">{{ $t('groups.noGroupsFound') }}</p>
+        <p class="text-sm text-slate-400 mt-2">{{ $t('groups.noGroupsFoundDesc') }}</p>
         <div class="flex items-center justify-center gap-3 mt-4">
           <label class="px-4 py-2 bg-emerald-500 text-white rounded-xl font-medium hover:bg-emerald-600 transition-colors cursor-pointer">
             <FileSpreadsheet class="w-4 h-4 inline mr-2" />
-            Excel yuklash
+            Excel
             <input 
               type="file"
               accept=".xlsx,.xls,.csv"
@@ -204,7 +212,7 @@
             @click="openModal()"
             class="px-4 py-2 bg-violet-500 text-white rounded-xl font-medium hover:bg-violet-600 transition-colors"
           >
-            Qo'lda qo'shish
+            {{ $t('groups.addGroup') }}
           </button>
         </div>
       </div>
@@ -258,7 +266,7 @@
         <div class="bg-white rounded-2xl max-w-lg w-full">
           <div class="p-6 border-b border-slate-100 flex items-center justify-between">
             <h2 class="text-lg font-semibold text-slate-800">
-              {{ editingGroup ? 'Guruhni tahrirlash' : 'Yangi guruh qo\'shish' }}
+              {{ editingGroup ? $t('groups.editGroup') : $t('groups.addGroup') }}
             </h2>
             <button @click="showModal = false" class="p-2 hover:bg-slate-100 rounded-lg transition-colors">
               <X class="w-5 h-5 text-slate-500" />
@@ -267,7 +275,7 @@
 
           <form @submit.prevent="saveGroup" class="p-6 space-y-4">
             <div>
-              <label class="block text-sm font-medium text-slate-700 mb-2">Guruh nomi *</label>
+              <label class="block text-sm font-medium text-slate-700 mb-2">{{ $t('groups.groupName') }} *</label>
               <input 
                 v-model="form.name"
                 type="text"
@@ -278,7 +286,7 @@
             </div>
             <div class="grid grid-cols-2 gap-4">
               <div>
-                <label class="block text-sm font-medium text-slate-700 mb-2">Kurs</label>
+                <label class="block text-sm font-medium text-slate-700 mb-2">{{ $t('groups.course') }}</label>
                 <input 
                   v-model="form.year"
                   type="number"
@@ -290,7 +298,7 @@
                 />
               </div>
               <div>
-                <label class="block text-sm font-medium text-slate-700 mb-2">Fakultet</label>
+                <label class="block text-sm font-medium text-slate-700 mb-2">{{ $t('groups.facultyLabel') }}</label>
                 <input 
                   v-model="form.faculty"
                   type="text"
@@ -300,7 +308,7 @@
               </div>
             </div>
             <div>
-              <label class="block text-sm font-medium text-slate-700 mb-2">Kontrakt summasi</label>
+              <label class="block text-sm font-medium text-slate-700 mb-2">{{ $t('groups.contractAmount') }}</label>
               <input 
                 v-model.number="form.contract_amount"
                 type="number"
@@ -314,7 +322,7 @@
                 @click="showModal = false"
                 class="flex-1 px-4 py-3 border border-slate-200 text-slate-700 rounded-xl font-medium hover:bg-slate-50 transition-colors"
               >
-                Bekor qilish
+                {{ $t('common.cancel') }}
               </button>
               <button 
                 type="submit"
@@ -322,7 +330,7 @@
                 class="flex-1 px-4 py-3 bg-violet-500 text-white rounded-xl font-medium hover:bg-violet-600 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
               >
                 <Loader2 v-if="saving" class="w-5 h-5 animate-spin" />
-                {{ saving ? 'Saqlanmoqda...' : 'Saqlash' }}
+                {{ saving ? $t('settings.saving') : $t('common.save') }}
               </button>
             </div>
           </form>
@@ -347,7 +355,7 @@
         <div class="bg-white rounded-2xl max-w-lg w-full max-h-[90vh] overflow-hidden">
           <div class="p-6 border-b border-slate-100 flex items-center justify-between">
             <div>
-              <h2 class="text-lg font-semibold text-slate-800">Sardor tayinlash</h2>
+              <h2 class="text-lg font-semibold text-slate-800">{{ $t('groups.assignLeader') }}</h2>
               <p class="text-sm text-slate-500">{{ selectedGroup?.name }} guruhi</p>
             </div>
             <button @click="showLeaderModal = false" class="p-2 hover:bg-slate-100 rounded-lg transition-colors">
@@ -359,7 +367,7 @@
             <!-- Loading -->
             <div v-if="loadingStudents" class="py-8 text-center">
               <RefreshCw class="w-8 h-8 text-violet-500 animate-spin mx-auto mb-2" />
-              <p class="text-slate-500">Talabalar yuklanmoqda...</p>
+              <p class="text-slate-500">{{ $t('groups.loadingStudents') }}</p>
             </div>
             
             <template v-else>
@@ -371,7 +379,7 @@
                       <Crown class="w-5 h-5" />
                     </div>
                     <div>
-                      <p class="font-medium text-amber-800">Hozirgi sardor</p>
+                      <p class="font-medium text-amber-800">{{ $t('groups.currentLeader') }}</p>
                       <p class="text-sm text-amber-600">{{ selectedGroup.leaderName }}</p>
                     </div>
                   </div>
@@ -379,7 +387,7 @@
                     @click="removeLeader"
                     class="px-3 py-1.5 bg-rose-100 text-rose-600 rounded-lg text-sm font-medium hover:bg-rose-200 transition-colors"
                   >
-                    Olib tashlash
+                    {{ $t('common.remove') }}
                   </button>
                 </div>
               </div>
@@ -390,7 +398,7 @@
               <input 
                 v-model="leaderSearch"
                 type="text"
-                placeholder="Talaba qidirish..."
+                :placeholder="$t('common.search') + '...'"
                 class="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 focus:border-violet-500 focus:ring-2 focus:ring-violet-500/20 outline-none"
               />
             </div>
@@ -406,11 +414,11 @@
               >
                 <div class="flex items-center gap-3">
                   <div class="w-10 h-10 rounded-full bg-gradient-to-br from-violet-400 to-purple-500 flex items-center justify-center text-white font-bold">
-                    {{ student.name.charAt(0) }}
+                    {{ (student.name || 'T').charAt(0) }}
                   </div>
                   <div class="flex-1">
-                    <p class="font-medium text-slate-800">{{ student.name }}</p>
-                    <p class="text-sm text-slate-500">{{ student.studentId }}</p>
+                    <p class="font-medium text-slate-800">{{ student.name || 'Ism kiritilmagan' }}</p>
+                    <p class="text-sm text-slate-500">{{ student.studentId || '—' }}</p>
                   </div>
                   <div v-if="selectedGroup?.leaderId === student.id">
                     <Crown class="w-5 h-5 text-amber-500" />
@@ -419,7 +427,7 @@
               </div>
               <div v-if="filteredGroupStudents.length === 0" class="text-center py-8 text-slate-500">
                 <Users class="w-8 h-8 mx-auto mb-2 text-slate-300" />
-                <p>Talaba topilmadi</p>
+                <p>{{ $t('groups.noStudentsFound') }}</p>
               </div>
             </div>
             </template>
@@ -446,7 +454,7 @@
           <div class="w-16 h-16 bg-rose-100 rounded-full flex items-center justify-center mx-auto mb-4">
             <AlertTriangle class="w-8 h-8 text-rose-500" />
           </div>
-          <h3 class="text-lg font-semibold text-slate-800 mb-2">O'chirishni tasdiqlang</h3>
+          <h3 class="text-lg font-semibold text-slate-800 mb-2">{{ $t('groups.confirmDeleteTitle') }}</h3>
           <p class="text-slate-500 mb-6">
             {{ deletingGroup?.name }} guruhini o'chirmoqchimisiz? Guruh ichidagi talabalar ham o'chiriladi.
           </p>
@@ -455,13 +463,13 @@
               @click="showDeleteConfirm = false"
               class="flex-1 px-4 py-3 border border-slate-200 text-slate-700 rounded-xl font-medium hover:bg-slate-50 transition-colors"
             >
-              Bekor qilish
+              {{ $t('common.cancel') }}
             </button>
             <button 
               @click="deleteGroup"
               class="flex-1 px-4 py-3 bg-rose-500 text-white rounded-xl font-medium hover:bg-rose-600 transition-colors"
             >
-              O'chirish
+              {{ $t('common.delete') }}
             </button>
           </div>
         </div>
@@ -517,14 +525,120 @@
               @click="showImportModal = false"
               class="flex-1 px-4 py-3 border border-slate-200 text-slate-700 rounded-xl font-medium hover:bg-slate-50 transition-colors"
             >
-              Bekor qilish
+              {{ $t('common.cancel') }}
             </button>
             <button 
               @click="confirmImport"
               class="flex-1 px-4 py-3 bg-emerald-500 text-white rounded-xl font-medium hover:bg-emerald-600 transition-colors"
             >
-              Barchasini import qilish
+              {{ $t('common.importAll') }}
             </button>
+          </div>
+        </div>
+      </div>
+    </Transition>
+
+    <!-- Subscription Assignment Modal (Super Admin) -->
+    <Transition
+      enter-active-class="transition-all duration-300"
+      enter-from-class="opacity-0"
+      enter-to-class="opacity-100"
+      leave-active-class="transition-all duration-300"
+      leave-from-class="opacity-100"
+      leave-to-class="opacity-0"
+    >
+      <div 
+        v-if="showSubscriptionModal"
+        class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
+        @click.self="showSubscriptionModal = false"
+      >
+        <div class="bg-white rounded-2xl max-w-lg w-full max-h-[90vh] overflow-hidden">
+          <div class="p-6 border-b border-slate-100 flex items-center justify-between">
+            <div>
+              <h2 class="text-lg font-semibold text-slate-800">{{ $t('groups.giveSubscription') }}</h2>
+              <p class="text-sm text-slate-500">{{ subscriptionGroup?.name }} guruhi</p>
+            </div>
+            <button @click="showSubscriptionModal = false" class="p-2 hover:bg-slate-100 rounded-lg transition-colors">
+              <X class="w-5 h-5 text-slate-500" />
+            </button>
+          </div>
+
+          <div class="p-6">
+            <!-- Loading -->
+            <div v-if="loadingPlans" class="py-8 text-center">
+              <RefreshCw class="w-8 h-8 text-violet-500 animate-spin mx-auto mb-2" />
+              <p class="text-slate-500">{{ $t('groups.loadingPlans') }}</p>
+            </div>
+
+            <template v-else>
+              <p class="text-sm text-slate-600 mb-4">
+                Rejani tanlang va guruhga 1 oylik obuna faollashtiring:
+              </p>
+
+              <!-- Plans List -->
+              <div class="space-y-3 max-h-72 overflow-y-auto">
+                <div 
+                  v-for="plan in subscriptionPlans" 
+                  :key="plan.id"
+                  @click="selectedPlanId = plan.id"
+                  class="p-4 border-2 rounded-xl cursor-pointer transition-all duration-200"
+                  :class="selectedPlanId === plan.id 
+                    ? 'border-emerald-500 bg-emerald-50 shadow-lg shadow-emerald-100' 
+                    : 'border-slate-200 hover:border-emerald-300 hover:bg-slate-50'"
+                >
+                  <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-3">
+                      <div 
+                        class="w-10 h-10 rounded-xl flex items-center justify-center"
+                        :class="{
+                          'bg-blue-100 text-blue-600': plan.plan_type === 'start',
+                          'bg-violet-100 text-violet-600': plan.plan_type === 'plus',
+                          'bg-amber-100 text-amber-600': plan.plan_type === 'pro',
+                          'bg-emerald-100 text-emerald-600': plan.plan_type === 'unlimited'
+                        }"
+                      >
+                        <Zap class="w-5 h-5" />
+                      </div>
+                      <div>
+                        <h4 class="font-semibold text-slate-800">{{ plan.name }}</h4>
+                        <p class="text-sm text-slate-500">{{ plan.duration_days || 30 }} kun</p>
+                      </div>
+                    </div>
+                    <div class="text-right">
+                      <p class="font-bold text-slate-800">{{ (plan.price || 0).toLocaleString() }} so'm</p>
+                      <div v-if="selectedPlanId === plan.id" class="mt-1">
+                        <Check class="w-5 h-5 text-emerald-500 ml-auto" />
+                      </div>
+                    </div>
+                  </div>
+                  <p v-if="plan.description" class="text-xs text-slate-400 mt-2">{{ plan.description }}</p>
+                </div>
+              </div>
+
+              <div v-if="subscriptionPlans.length === 0" class="text-center py-8 text-slate-500">
+                <CreditCard class="w-8 h-8 mx-auto mb-2 text-slate-300" />
+                <p>{{ $t('groups.noPlansFound') }}</p>
+              </div>
+
+              <!-- Actions -->
+              <div class="flex gap-3 pt-6">
+                <button 
+                  type="button"
+                  @click="showSubscriptionModal = false"
+                  class="flex-1 px-4 py-3 border border-slate-200 text-slate-700 rounded-xl font-medium hover:bg-slate-50 transition-colors"
+                >
+                  {{ $t('common.cancel') }}
+                </button>
+                <button 
+                  @click="assignSubscription"
+                  :disabled="!selectedPlanId || assigningSubscription"
+                  class="flex-1 px-4 py-3 bg-emerald-500 text-white rounded-xl font-medium hover:bg-emerald-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                >
+                  <Loader2 v-if="assigningSubscription" class="w-5 h-5 animate-spin" />
+                  {{ assigningSubscription ? $t('common.loading') : $t('groups.giveSubscription') }}
+                </button>
+              </div>
+            </template>
           </div>
         </div>
       </div>
@@ -538,33 +652,43 @@
  * Backend /groups endpoint dan ma'lumot oladi
  * CRUD operatsiyalari, sardor tayinlash
  */
-import { ref, reactive, computed, onMounted, watch } from 'vue'
-import { useDataStore } from '../../stores/data'
-import { useToastStore } from '../../stores/toast'
-import api from '../../services/api'
 import {
-  FolderPlus,
-  FileSpreadsheet,
-  Pencil,
-  Trash2,
-  Users,
-  Crown,
-  TrendingUp,
-  Layers,
-  Power,
-  X,
-  AlertTriangle,
-  Info,
-  Search,
-  RefreshCw,
-  Loader2,
-  ChevronLeft,
-  ChevronRight,
-  AlertCircle
+    AlertCircle,
+    AlertTriangle,
+    Check,
+    ChevronLeft,
+    ChevronRight,
+    CreditCard,
+    Crown,
+    FileSpreadsheet,
+    FolderPlus,
+    Info,
+    Layers,
+    Loader2,
+    Pencil,
+    Power,
+    RefreshCw,
+    Search,
+    Trash2,
+    TrendingUp,
+    Users,
+    X,
+    Zap
 } from 'lucide-vue-next'
+import { computed, onMounted, reactive, ref, watch } from 'vue'
+import api from '../../services/api'
+import { useDataStore } from '../../stores/data'
+import { useLanguageStore } from '../../stores/language'
+import { useToastStore } from '../../stores/toast'
 
 const dataStore = useDataStore()
 const toast = useToastStore()
+const langStore = useLanguageStore()
+const { t } = langStore
+
+// Auth store for role check
+import { useAuthStore } from '../../stores/auth'
+const authStore = useAuthStore()
 
 // State
 const loading = ref(true)
@@ -582,6 +706,14 @@ const leaderSearch = ref('')
 const importData = ref([])
 const groupStudents = ref([])
 const loadingStudents = ref(false)
+
+// Subscription assignment state
+const showSubscriptionModal = ref(false)
+const subscriptionGroup = ref(null)
+const subscriptionPlans = ref([])
+const selectedPlanId = ref(null)
+const loadingPlans = ref(false)
+const assigningSubscription = ref(false)
 
 // Pagination
 const currentPage = ref(1)
@@ -615,7 +747,7 @@ async function loadGroups() {
   try {
     const params = {
       page: currentPage.value,
-      limit: pageSize.value
+      page_size: pageSize.value
     }
     
     if (searchQuery.value) {
@@ -624,20 +756,22 @@ async function loadGroups() {
     
     const response = await api.getGroups(params)
     
-    if (response.data) {
-      groups.value = response.data.map(g => ({
+    // Backend returns { items: [...], total: N, page: N, ... }
+    const items = response.items || response.data || response
+    if (items && Array.isArray(items)) {
+      groups.value = items.map(g => ({
         id: g.id,
         name: g.name,
-        year: g.year || 1,
+        year: g.course_year || g.year || 1,
         faculty: g.faculty || '',
         contractAmount: g.contract_amount || 18411000,
         isActive: g.is_active !== false,
         leaderId: g.leader_id,
-        leaderName: g.leader?.full_name || null,
-        studentCount: g.student_count || 0,
+        leaderName: g.leader_name || g.leader?.full_name || null,
+        studentCount: g.students_count || g.student_count || 0,
         attendanceRate: g.attendance_rate || 0
       }))
-      totalItems.value = response.total || response.data.length
+      totalItems.value = response.total || items.length
     }
     
     // Also update store cache
@@ -666,12 +800,13 @@ function getGroupAttendance(groupName) {
 async function loadGroupStudents(groupId) {
   loadingStudents.value = true
   try {
-    const response = await api.getStudents({ group_id: groupId, limit: 100 })
-    groupStudents.value = response.data?.map(s => ({
+    const response = await api.getStudents({ group_id: groupId, page_size: 100 })
+    const items = response.items || response.data || []
+    groupStudents.value = items.map(s => ({
       id: s.id,
-      name: s.full_name,
-      studentId: s.student_id
-    })) || []
+      name: s.name || s.full_name || 'Ism kiritilmagan',
+      studentId: s.student_id || s.hemis_id || ''
+    }))
   } catch (e) {
     console.error('Load group students error:', e)
     groupStudents.value = []
@@ -684,8 +819,8 @@ const filteredGroupStudents = computed(() => {
   if (!leaderSearch.value) return groupStudents.value
   const query = leaderSearch.value.toLowerCase()
   return groupStudents.value.filter(s => 
-    s.name.toLowerCase().includes(query) ||
-    s.studentId.toLowerCase().includes(query)
+    (s.name || '').toLowerCase().includes(query) ||
+    (s.studentId || '').toLowerCase().includes(query)
   )
 })
 
@@ -726,17 +861,17 @@ async function saveGroup() {
     
     if (editingGroup.value) {
       await api.updateGroup(editingGroup.value.id, groupData)
-      toast.success('Guruh yangilandi')
+      toast.success(t('common.success'))
     } else {
       await api.createGroup(groupData)
-      toast.success('Yangi guruh qo\'shildi')
+      toast.success(t('common.success'))
     }
     
     showModal.value = false
     await loadGroups()
   } catch (e) {
     console.error('Save group error:', e)
-    toast.error(e.message || 'Saqlashda xatolik')
+    toast.error(e.message || t('common.error'))
   } finally {
     saving.value = false
   }
@@ -753,13 +888,13 @@ async function deleteGroup() {
   
   try {
     await api.deleteGroup(deletingGroup.value.id)
-    toast.success('Guruh o\'chirildi')
+    toast.success(t('common.success'))
     showDeleteConfirm.value = false
     deletingGroup.value = null
     await loadGroups()
   } catch (e) {
     console.error('Delete group error:', e)
-    toast.error(e.message || 'O\'chirishda xatolik')
+    toast.error(e.message || t('common.error'))
   }
 }
 
@@ -768,10 +903,10 @@ async function toggleStatus(group) {
   try {
     await api.updateGroup(group.id, { is_active: !group.isActive })
     group.isActive = !group.isActive
-    toast.info(group.isActive ? 'Guruh yoqildi' : 'Guruh o\'chirildi')
+    toast.info(t('common.success'))
   } catch (e) {
     console.error('Toggle status error:', e)
-    toast.error('Xatolik yuz berdi')
+    toast.error(t('common.error'))
   }
 }
 
@@ -790,12 +925,12 @@ async function assignLeader(student) {
     await api.assignGroupLeader(selectedGroup.value.id, student.id)
     selectedGroup.value.leaderId = student.id
     selectedGroup.value.leaderName = student.name
-    toast.success(`${student.name} sardor qilindi`)
+    toast.success(t('common.success'))
     showLeaderModal.value = false
     await loadGroups()
   } catch (e) {
     console.error('Assign leader error:', e)
-    toast.error(e.message || 'Sardor tayinlashda xatolik')
+    toast.error(e.message || t('common.error'))
   }
 }
 
@@ -806,12 +941,53 @@ async function removeLeader() {
     await api.removeGroupLeader(selectedGroup.value.id)
     selectedGroup.value.leaderId = null
     selectedGroup.value.leaderName = null
-    toast.info('Sardor olib tashlandi')
+    toast.info(t('common.success'))
     showLeaderModal.value = false
     await loadGroups()
   } catch (e) {
     console.error('Remove leader error:', e)
-    toast.error('Xatolik yuz berdi')
+    toast.error(t('common.error'))
+  }
+}
+
+// Subscription Management (Super Admin only)
+async function openSubscriptionModal(group) {
+  subscriptionGroup.value = group
+  selectedPlanId.value = null
+  showSubscriptionModal.value = true
+  loadingPlans.value = true
+  
+  try {
+    const plans = await api.getSubscriptionPlans()
+    subscriptionPlans.value = (plans || []).filter(p => p.is_active !== false)
+  } catch (e) {
+    console.error('Load plans error:', e)
+    subscriptionPlans.value = []
+    toast.error('Rejalarni yuklashda xatolik')
+  } finally {
+    loadingPlans.value = false
+  }
+}
+
+async function assignSubscription() {
+  if (!subscriptionGroup.value || !selectedPlanId.value) {
+    toast.error('Rejani tanlang')
+    return
+  }
+  
+  assigningSubscription.value = true
+  
+  try {
+    const result = await api.adminAssignSubscription(subscriptionGroup.value.id, selectedPlanId.value)
+    toast.success(result.message || 'Obuna faollashtirildi ✅')
+    showSubscriptionModal.value = false
+    subscriptionGroup.value = null
+    selectedPlanId.value = null
+  } catch (e) {
+    console.error('Assign subscription error:', e)
+    toast.error(e.message || 'Obuna berishda xatolik')
+  } finally {
+    assigningSubscription.value = false
   }
 }
 

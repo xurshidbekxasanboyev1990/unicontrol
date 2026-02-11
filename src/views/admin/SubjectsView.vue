@@ -10,7 +10,7 @@
             <GraduationCap class="w-8 h-8" />
             <span class="text-sm font-medium opacity-90">Boshqaruv</span>
           </div>
-          <h1 class="text-2xl md:text-3xl font-bold">Yo'nalishlar va Fanlar</h1>
+          <h1 class="text-2xl md:text-3xl font-bold">{{ $t('subjects.title') }}</h1>
           <p class="text-white/80 mt-2">Yo'nalishlarni boshqarish va ularga fanlarni biriktirish</p>
         </div>
         <button
@@ -434,16 +434,39 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import {
+    Atom,
+    Banknote,
+    BookOpen,
+    BookText,
+    Calculator,
+    Check,
+    Code,
+    Cpu,
+    FlaskConical,
+    Globe2,
+    GraduationCap,
+    Heart,
+    Info,
+    Languages,
+    Leaf,
+    Link2,
+    Microscope,
+    // Subject icons
+    Monitor,
+    Music,
+    Palette,
+    Pencil,
+    Plus,
+    Power,
+    Scale,
+    Trash2,
+    Trophy,
+    X
+} from 'lucide-vue-next'
+import { computed, onMounted, ref } from 'vue'
 import { useDataStore } from '../../stores/data'
 import { useToastStore } from '../../stores/toast'
-import {
-  GraduationCap, BookOpen, Plus, Pencil, Trash2, Power, Link2, Trophy,
-  Check, X, Info, Loader2,
-  // Subject icons
-  Monitor, Calculator, Atom, FlaskConical, Leaf, Scale, BookText, Globe2,
-  Languages, Heart, Banknote, Cpu, Code, Microscope, Palette, Music
-} from 'lucide-vue-next'
 
 const dataStore = useDataStore()
 const toast = useToastStore()

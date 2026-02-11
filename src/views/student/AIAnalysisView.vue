@@ -3,7 +3,7 @@
     <!-- Loading State -->
     <div v-if="loading" class="flex items-center justify-center py-12">
       <Loader2 class="w-8 h-8 animate-spin text-violet-600" />
-      <span class="ml-3 text-slate-600">Tahlil yuklanmoqda...</span>
+      <span class="ml-3 text-slate-600">{{ $t('common.loading') }}</span>
     </div>
 
     <!-- Error State -->
@@ -16,7 +16,7 @@
         @click="loadAnalysisData" 
         class="mt-4 px-4 py-2 bg-red-100 hover:bg-red-200 text-red-700 rounded-lg transition-colors"
       >
-        Qayta urinish
+        {{ $t('common.retry') }}
       </button>
     </div>
 
@@ -24,8 +24,8 @@
       <!-- Header -->
       <div class="flex items-center justify-between">
         <div>
-          <h1 class="text-2xl font-bold text-slate-800">AI Tahlil</h1>
-          <p class="text-slate-500">Sun'iy intellekt asosidagi tahlil va tavsiyalar</p>
+          <h1 class="text-2xl font-bold text-slate-800">{{ $t('ai.title') }}</h1>
+          <p class="text-slate-500">{{ $t('ai.recommendations') }}</p>
         </div>
         <button 
           @click="refreshAnalysis"
@@ -33,7 +33,7 @@
           class="flex items-center gap-2 rounded-xl bg-gradient-to-r from-violet-500 to-purple-600 px-4 py-2.5 text-white transition-all hover:from-violet-600 hover:to-purple-700 disabled:opacity-50"
         >
           <RefreshCw :size="18" :class="{ 'animate-spin': isAnalyzing }" />
-          <span>{{ isAnalyzing ? 'Tahlil qilinmoqda...' : 'Yangilash' }}</span>
+          <span>{{ isAnalyzing ? $t('ai.analyzing') : $t('common.refresh') }}</span>
         </button>
       </div>
 
@@ -228,25 +228,25 @@
  * - Trend va statistika
  */
 
-import { ref, computed, markRaw, onMounted } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import { useToastStore } from '@/stores/toast'
-import api from '../../services/api'
 import {
-  Sparkles,
-  RefreshCw,
-  TrendingUp,
-  BookOpen,
-  Lightbulb,
-  BarChart3,
-  CheckCircle,
-  Clock,
-  XCircle,
-  AlertTriangle,
-  Target,
-  Calendar,
-  Loader2
+    AlertTriangle,
+    BarChart3,
+    BookOpen,
+    Calendar,
+    CheckCircle,
+    Clock,
+    Lightbulb,
+    Loader2,
+    RefreshCw,
+    Sparkles,
+    Target,
+    TrendingUp,
+    XCircle
 } from 'lucide-vue-next'
+import { computed, markRaw, onMounted, ref } from 'vue'
+import api from '../../services/api'
 
 const authStore = useAuthStore()
 const toast = useToastStore()

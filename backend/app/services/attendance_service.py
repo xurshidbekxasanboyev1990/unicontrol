@@ -115,8 +115,9 @@ class AttendanceService:
         self,
         attendance_data: AttendanceCreate,
         recorded_by: Optional[int] = None
-    ) -> Attendance:
-        """Create attendance record."""
+    ) -> Tuple[Attendance, bool]:
+        """Create attendance record. Returns (attendance, is_new) tuple.
+        is_new=True if a new record was created, False if existing was updated (upsert)."""
         # Check if attendance already exists for this student and date
         existing_result = await self.db.execute(
             select(Attendance).where(
@@ -130,12 +131,15 @@ class AttendanceService:
         existing = existing_result.scalar_one_or_none()
         
         if existing:
+            # Track if status actually changed
+            old_status = existing.status
             # Update existing record
             for field, value in attendance_data.model_dump().items():
                 setattr(existing, field, value)
             existing.recorded_by = recorded_by
             await self.db.commit()
-            return existing
+            # Return is_new=False — this is an upsert update
+            return existing, False
         
         # Create new record
         attendance = Attendance(
@@ -147,7 +151,7 @@ class AttendanceService:
         await self.db.commit()
         await self.db.refresh(attendance)
         
-        return attendance
+        return attendance, True
     
     async def update(
         self,
@@ -183,9 +187,11 @@ class AttendanceService:
         self,
         batch_data: AttendanceBatch,
         recorded_by: Optional[int] = None
-    ) -> List[Attendance]:
-        """Create attendance records in batch."""
+    ) -> Tuple[List[Attendance], int]:
+        """Create attendance records in batch. 
+        Returns (attendances, new_count) — new_count is how many were truly new (not upsert)."""
         attendances = []
+        new_count = 0
         
         for item in batch_data.attendances:
             attendance_data = AttendanceCreate(
@@ -199,10 +205,12 @@ class AttendanceService:
                 note=item.note,
             )
             
-            attendance = await self.create(attendance_data, recorded_by)
+            attendance, is_new = await self.create(attendance_data, recorded_by)
             attendances.append(attendance)
+            if is_new:
+                new_count += 1
         
-        return attendances
+        return attendances, new_count
     
     async def get_daily_summary(
         self,

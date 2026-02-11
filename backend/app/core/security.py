@@ -7,7 +7,7 @@ Author: UniControl Team
 Version: 1.0.0
 """
 
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Optional, Union
 import jwt
 import bcrypt
@@ -65,9 +65,9 @@ def create_access_token(
         The encoded JWT token
     """
     if expires_delta:
-        expire = datetime.utcnow() + expires_delta
+        expire = datetime.now(timezone.utc) + expires_delta
     else:
-        expire = datetime.utcnow() + timedelta(
+        expire = datetime.now(timezone.utc) + timedelta(
             minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES
         )
     
@@ -75,7 +75,7 @@ def create_access_token(
         "sub": str(subject),
         "role": role,
         "exp": expire,
-        "iat": datetime.utcnow(),
+        "iat": datetime.now(timezone.utc),
         "type": "access"
     }
     
@@ -102,16 +102,16 @@ def create_refresh_token(
         The encoded JWT refresh token
     """
     if expires_delta:
-        expire = datetime.utcnow() + expires_delta
+        expire = datetime.now(timezone.utc) + expires_delta
     else:
-        expire = datetime.utcnow() + timedelta(
+        expire = datetime.now(timezone.utc) + timedelta(
             days=settings.REFRESH_TOKEN_EXPIRE_DAYS
         )
     
     to_encode = {
         "sub": str(subject),
         "exp": expire,
-        "iat": datetime.utcnow(),
+        "iat": datetime.now(timezone.utc),
         "type": "refresh"
     }
     
@@ -150,7 +150,9 @@ def verify_token(token: str, token_type: str = "access") -> Optional[dict]:
         
     except jwt.ExpiredSignatureError:
         return None
-    except jwt.JWTError:
+    except jwt.exceptions.InvalidTokenError:
+        return None
+    except Exception:
         return None
 
 
@@ -164,7 +166,7 @@ def generate_password_reset_token(email: str) -> str:
     Returns:
         The password reset token
     """
-    expire = datetime.utcnow() + timedelta(hours=1)
+    expire = datetime.now(timezone.utc) + timedelta(hours=1)
     
     to_encode = {
         "sub": email,

@@ -1,10 +1,11 @@
 """
 UniControl - API v1 Routes
 ==========================
-Web API routes.
+Web API routes (including clubs, subjects, directions, tournaments, settings, logs).
 
 Author: UniControl Team
-Version: 1.0.0
+Version: 1.0.2
+Updated: 2026-01-29
 """
 
 from fastapi import APIRouter
@@ -26,6 +27,18 @@ from app.api.v1 import (
     files,
     library,
     canteen,
+    clubs,
+    subjects,
+    directions,
+    tournaments,
+    system_settings,
+    logs,
+    statistics,
+    faqs,
+    subscriptions,
+    market,
+    sheets,
+    landing,
 )
 
 api_router = APIRouter()
@@ -139,4 +152,87 @@ api_router.include_router(
     canteen.router,
     prefix="/canteen",
     tags=["Canteen"]
+)
+
+# Clubs (To'garaklar)
+api_router.include_router(
+    clubs.router,
+    prefix="/clubs",
+    tags=["Clubs"]
+)
+
+# Subjects (Fanlar)
+api_router.include_router(
+    subjects.router,
+    prefix="/subjects",
+    tags=["Subjects"]
+)
+
+# Directions (Yo'nalishlar)
+api_router.include_router(
+    directions.router,
+    prefix="/directions",
+    tags=["Directions"]
+)
+
+# Tournaments (Musobaqalar)
+api_router.include_router(
+    tournaments.router,
+    prefix="/tournaments",
+    tags=["Tournaments"]
+)
+
+# Settings (Sozlamalar)
+api_router.include_router(
+    system_settings.router,
+    prefix="/settings",
+    tags=["Settings"]
+)
+
+# Logs (Super Admin)
+api_router.include_router(
+    logs.router,
+    prefix="/logs",
+    tags=["Logs"]
+)
+
+# Statistics
+api_router.include_router(
+    statistics.router,
+    prefix="/statistics",
+    tags=["Statistics"]
+)
+
+# FAQs (Help)
+api_router.include_router(
+    faqs.router,
+    prefix="/faqs",
+    tags=["FAQs"]
+)
+
+# Subscriptions (Obuna)
+api_router.include_router(
+    subscriptions.router,
+    prefix="/subscriptions",
+    tags=["Subscriptions"]
+)
+
+# UniMarket (Marketplace)
+api_router.include_router(
+    market.router,
+    tags=["UniMarket"]
+)
+
+# Google Sheets Schedule
+api_router.include_router(
+    sheets.router,
+    prefix="/sheets",
+    tags=["Google Sheets"]
+)
+
+# Landing Page Settings
+api_router.include_router(
+    landing.router,
+    prefix="/landing",
+    tags=["Landing"]
 )

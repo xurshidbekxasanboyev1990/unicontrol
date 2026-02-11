@@ -45,6 +45,36 @@ from app.models.canteen import (
     OrderItem,
     OrderStatus,
 )
+from app.models.club import Club, ClubMember
+from app.models.subject import Subject, Direction, DirectionSubject
+from app.models.tournament import Tournament, TournamentRegistration
+from app.models.market import (
+    UserMarketProfile,
+    ServiceListing,
+    MarketOrder as MarketOrderModel,
+    EscrowTransaction,
+    MarketDispute,
+    MarketMessage,
+    SellerPayout,
+    MarketTariffPayment,
+    MarketTariff,
+    ListingStatus,
+    ListingCategory,
+    MarketOrderStatus,
+    EscrowStatus,
+    DisputeStatus,
+    PayoutStatus,
+)
+from app.models.subscription import (
+    SubscriptionPlan,
+    GroupSubscription,
+    SubscriptionPayment,
+    SubscriptionSettings,
+    SubscriptionPlanType,
+    SubscriptionStatus,
+    PaymentStatus,
+)
+from app.models.landing import LandingSettings
 
 __all__ = [
     # User
@@ -98,4 +128,40 @@ __all__ = [
     "Order",
     "OrderItem",
     "OrderStatus",
+    # Club
+    "Club",
+    "ClubMember",
+    # Subject & Direction
+    "Subject",
+    "Direction",
+    "DirectionSubject",
+    # Tournament
+    "Tournament",
+    "TournamentRegistration",
+    # Market
+    "UserMarketProfile",
+    "ServiceListing",
+    "MarketOrderModel",
+    "EscrowTransaction",
+    "MarketDispute",
+    "MarketMessage",
+    "SellerPayout",
+    "MarketTariffPayment",
+    "MarketTariff",
+    "ListingStatus",
+    "ListingCategory",
+    "MarketOrderStatus",
+    "EscrowStatus",
+    "DisputeStatus",
+    "PayoutStatus",
+    # Subscription
+    "SubscriptionPlan",
+    "GroupSubscription",
+    "SubscriptionPayment",
+    "SubscriptionSettings",
+    "SubscriptionPlanType",
+    "SubscriptionStatus",
+    "PaymentStatus",
+    # Landing
+    "LandingSettings",
 ]

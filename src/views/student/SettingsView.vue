@@ -2,8 +2,8 @@
   <div class="space-y-6">
     <!-- Header -->
     <div>
-      <h1 class="text-2xl font-bold text-slate-800">Sozlamalar</h1>
-      <p class="text-slate-500">Ilova sozlamalari</p>
+      <h1 class="text-2xl font-bold text-slate-800">{{ t('settings.title') }}</h1>
+      <p class="text-slate-500">{{ t('settings.appSettings') }}</p>
     </div>
 
     <!-- Settings Sections -->
@@ -14,21 +14,22 @@
           <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-100">
             <Globe :size="20" class="text-blue-600" />
           </div>
-          <h2 class="font-semibold text-slate-800">Til</h2>
+          <h2 class="font-semibold text-slate-800">{{ t('settings.language') }}</h2>
         </div>
         
         <div class="flex items-center justify-between">
           <div>
-            <p class="font-medium text-slate-800">Interfeys tili</p>
-            <p class="text-sm text-slate-500">Ilova ko'rsatish tili</p>
+            <p class="font-medium text-slate-800">{{ t('settings.interfaceLanguage') }}</p>
+            <p class="text-sm text-slate-500">{{ t('settings.displayLanguage') }}</p>
           </div>
           <select
             v-model="language"
+            @change="onLanguageChange"
             class="rounded-xl border border-slate-200 px-4 py-2 text-slate-700 focus:border-emerald-400 focus:outline-none"
           >
-            <option value="uz">O'zbekcha</option>
-            <option value="ru">Русский</option>
-            <option value="en">English</option>
+            <option value="uz">{{ t('settings.uzbek') }}</option>
+            <option value="ru">{{ t('settings.russian') }}</option>
+            <option value="en">{{ t('settings.english') }}</option>
           </select>
         </div>
       </div>
@@ -39,14 +40,14 @@
           <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-100">
             <Bell :size="20" class="text-amber-600" />
           </div>
-          <h2 class="font-semibold text-slate-800">Bildirishnomalar</h2>
+          <h2 class="font-semibold text-slate-800">{{ t('settings.notifications') }}</h2>
         </div>
         
         <div class="space-y-4">
           <div class="flex items-center justify-between">
             <div>
-              <p class="font-medium text-slate-800">Push bildirishnomalar</p>
-              <p class="text-sm text-slate-500">Telefonga xabar yuborish</p>
+              <p class="font-medium text-slate-800">{{ t('settings.pushNotifications') }}</p>
+              <p class="text-sm text-slate-500">{{ t('settings.pushDesc') }}</p>
             </div>
             <label class="relative inline-flex cursor-pointer items-center">
               <input type="checkbox" v-model="notifications.push" class="peer sr-only" />
@@ -56,8 +57,8 @@
           
           <div class="flex items-center justify-between">
             <div>
-              <p class="font-medium text-slate-800">Email bildirishnomalar</p>
-              <p class="text-sm text-slate-500">Elektron pochtaga xabar</p>
+              <p class="font-medium text-slate-800">{{ t('settings.emailNotifications') }}</p>
+              <p class="text-sm text-slate-500">{{ t('settings.emailDesc') }}</p>
             </div>
             <label class="relative inline-flex cursor-pointer items-center">
               <input type="checkbox" v-model="notifications.email" class="peer sr-only" />
@@ -67,8 +68,8 @@
           
           <div class="flex items-center justify-between">
             <div>
-              <p class="font-medium text-slate-800">Davomat ogohlantirishi</p>
-              <p class="text-sm text-slate-500">Davomat past bo'lganda xabar</p>
+              <p class="font-medium text-slate-800">{{ t('settings.attendanceAlert') }}</p>
+              <p class="text-sm text-slate-500">{{ t('settings.attendanceAlertDesc') }}</p>
             </div>
             <label class="relative inline-flex cursor-pointer items-center">
               <input type="checkbox" v-model="notifications.attendance" class="peer sr-only" />
@@ -78,8 +79,8 @@
           
           <div class="flex items-center justify-between">
             <div>
-              <p class="font-medium text-slate-800">Jadval eslatmasi</p>
-              <p class="text-sm text-slate-500">Darsdan oldin eslatma</p>
+              <p class="font-medium text-slate-800">{{ t('settings.scheduleReminder') }}</p>
+              <p class="text-sm text-slate-500">{{ t('settings.scheduleReminderDesc') }}</p>
             </div>
             <label class="relative inline-flex cursor-pointer items-center">
               <input type="checkbox" v-model="notifications.schedule" class="peer sr-only" />
@@ -95,7 +96,7 @@
           <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-red-100">
             <Lock :size="20" class="text-red-600" />
           </div>
-          <h2 class="font-semibold text-slate-800">Xavfsizlik</h2>
+          <h2 class="font-semibold text-slate-800">{{ t('settings.security') }}</h2>
         </div>
         
         <div class="space-y-3">
@@ -105,7 +106,7 @@
           >
             <div class="flex items-center gap-3">
               <Key :size="20" class="text-slate-600" />
-              <span class="font-medium text-slate-800">Parolni o'zgartirish</span>
+              <span class="font-medium text-slate-800">{{ t('settings.changePassword') }}</span>
             </div>
             <ChevronRight :size="20" class="text-slate-400" />
           </button>
@@ -118,7 +119,7 @@
           <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-100">
             <Database :size="20" class="text-indigo-600" />
           </div>
-          <h2 class="font-semibold text-slate-800">Ma'lumotlar</h2>
+          <h2 class="font-semibold text-slate-800">{{ t('settings.data') }}</h2>
         </div>
         
         <div class="space-y-3">
@@ -128,7 +129,7 @@
           >
             <div class="flex items-center gap-3">
               <Download :size="20" class="text-slate-600" />
-              <span class="font-medium text-slate-800">Ma'lumotlarni yuklab olish</span>
+              <span class="font-medium text-slate-800">{{ t('settings.downloadData') }}</span>
             </div>
             <ChevronRight :size="20" class="text-slate-400" />
           </button>
@@ -139,7 +140,7 @@
           >
             <div class="flex items-center gap-3">
               <Trash2 :size="20" class="text-red-600" />
-              <span class="font-medium text-red-600">Keshni tozalash</span>
+              <span class="font-medium text-red-600">{{ t('settings.clearCache') }}</span>
             </div>
             <span class="text-sm text-red-500">45 MB</span>
           </button>
@@ -152,12 +153,12 @@
           <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-100">
             <Info :size="20" class="text-slate-600" />
           </div>
-          <h2 class="font-semibold text-slate-800">Ilova haqida</h2>
+          <h2 class="font-semibold text-slate-800">{{ t('settings.aboutApp') }}</h2>
         </div>
         
         <div class="space-y-3">
           <div class="flex items-center justify-between rounded-xl bg-slate-50 p-4">
-            <span class="text-slate-600">Versiya</span>
+            <span class="text-slate-600">{{ t('common.version') }}</span>
             <span class="font-medium text-slate-800">1.0.0</span>
           </div>
           
@@ -167,7 +168,7 @@
           >
             <div class="flex items-center gap-3">
               <HelpCircle :size="20" class="text-slate-600" />
-              <span class="font-medium text-slate-800">Yordam</span>
+              <span class="font-medium text-slate-800">{{ t('common.help') }}</span>
             </div>
             <ChevronRight :size="20" class="text-slate-400" />
           </button>
@@ -184,7 +185,7 @@
       >
         <div class="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl">
           <div class="mb-4 flex items-center justify-between">
-            <h2 class="text-lg font-bold text-slate-800">Parolni o'zgartirish</h2>
+            <h2 class="text-lg font-bold text-slate-800">{{ t('settings.changePassword') }}</h2>
             <button @click="showChangePassword = false" class="text-slate-400 hover:text-slate-600">
               <X :size="24" />
             </button>
@@ -192,7 +193,7 @@
           
           <div class="space-y-4">
             <div>
-              <label class="mb-1 block text-sm font-medium text-slate-700">Joriy parol</label>
+              <label class="mb-1 block text-sm font-medium text-slate-700">{{ t('settings.currentPassword') }}</label>
               <input
                 type="password"
                 v-model="passwordForm.current"
@@ -202,7 +203,7 @@
             </div>
             
             <div>
-              <label class="mb-1 block text-sm font-medium text-slate-700">Yangi parol</label>
+              <label class="mb-1 block text-sm font-medium text-slate-700">{{ t('settings.newPassword') }}</label>
               <input
                 type="password"
                 v-model="passwordForm.new"
@@ -212,7 +213,7 @@
             </div>
             
             <div>
-              <label class="mb-1 block text-sm font-medium text-slate-700">Yangi parolni tasdiqlash</label>
+              <label class="mb-1 block text-sm font-medium text-slate-700">{{ t('settings.confirmPassword') }}</label>
               <input
                 type="password"
                 v-model="passwordForm.confirm"
@@ -228,7 +229,7 @@
               :disabled="isChangingPassword"
               class="flex-1 rounded-xl border border-slate-200 py-3 font-medium text-slate-600 hover:bg-slate-50 disabled:opacity-50"
             >
-              Bekor qilish
+              {{ t('common.cancel') }}
             </button>
             <button
               @click="changePassword"
@@ -236,7 +237,7 @@
               class="flex-1 rounded-xl bg-emerald-500 py-3 font-medium text-white hover:bg-emerald-600 disabled:opacity-50 flex items-center justify-center gap-2"
             >
               <Loader2 v-if="isChangingPassword" class="w-5 h-5 animate-spin" />
-              <span>{{ isChangingPassword ? 'Saqlanmoqda...' : 'Saqlash' }}</span>
+              <span>{{ isChangingPassword ? t('settings.saving') : t('common.save') }}</span>
             </button>
           </div>
         </div>
@@ -257,22 +258,39 @@
  * 5. Ilova haqida - Versiya, Yordam
  */
 
-import { ref, computed } from 'vue'
-import { useRouter } from 'vue-router'
-import { useToastStore } from '@/stores/toast'
 import { useAuthStore } from '@/stores/auth'
-import api from '../../services/api'
+import { useLanguageStore } from '@/stores/language'
+import { useToastStore } from '@/stores/toast'
 import {
-  Globe, Bell, Lock, Database, Info, HelpCircle,
-  ChevronRight, Key, Download, Trash2, X, Loader2
+    Bell,
+    ChevronRight,
+    Database,
+    Download,
+    Globe,
+    HelpCircle,
+    Info,
+    Key,
+    Loader2,
+    Lock,
+    Trash2, X
 } from 'lucide-vue-next'
+import { computed, ref } from 'vue'
+import { useRouter } from 'vue-router'
+import api from '../../services/api'
 
 const router = useRouter()
 const toast = useToastStore()
 const authStore = useAuthStore()
+const langStore = useLanguageStore()
+const { t } = langStore
 
 // ============ TIL ============
-const language = ref('uz')
+const language = ref(langStore.locale)
+
+function onLanguageChange() {
+  langStore.setLocale(language.value)
+  toast.success(t('common.success'))
+}
 
 // ============ BILDIRISHNOMALAR ============
 const notifications = ref({
@@ -293,17 +311,17 @@ const passwordForm = ref({
 
 async function changePassword() {
   if (!passwordForm.value.current) {
-    toast.error('Joriy parolni kiriting')
+    toast.error(t('settings.enterCurrentPassword'))
     return
   }
   
   if (passwordForm.value.new !== passwordForm.value.confirm) {
-    toast.error('Yangi parollar mos kelmadi')
+    toast.error(t('settings.passwordMismatch'))
     return
   }
   
   if (passwordForm.value.new.length < 6) {
-    toast.error('Parol kamida 6 ta belgidan iborat bo\'lishi kerak')
+    toast.error(t('settings.passwordMinLength'))
     return
   }
   
@@ -311,12 +329,12 @@ async function changePassword() {
   
   try {
     await api.changePassword(passwordForm.value.current, passwordForm.value.new)
-    toast.success('Parol muvaffaqiyatli o\'zgartirildi')
+    toast.success(t('settings.passwordChanged'))
     showChangePassword.value = false
     passwordForm.value = { current: '', new: '', confirm: '' }
   } catch (e) {
     console.error('Error changing password:', e)
-    const errorMsg = e.response?.data?.detail || 'Parolni o\'zgartirishda xatolik'
+    const errorMsg = e.response?.data?.detail || t('settings.passwordError')
     toast.error(errorMsg)
   } finally {
     isChangingPassword.value = false
@@ -325,13 +343,11 @@ async function changePassword() {
 
 // ============ MA'LUMOTLAR ============
 async function downloadData() {
-  toast.info('Ma\'lumotlar yuklab olinmoqda...')
+  toast.info(t('settings.downloading'))
   
   try {
-    // Try to export user's data
     const response = await api.exportToExcel('students', { my_data: true })
     
-    // Create download link
     const url = window.URL.createObjectURL(new Blob([response]))
     const link = document.createElement('a')
     link.href = url
@@ -341,18 +357,17 @@ async function downloadData() {
     link.remove()
     window.URL.revokeObjectURL(url)
     
-    toast.success('Ma\'lumotlar yuklandi')
+    toast.success(t('settings.downloadComplete'))
   } catch (e) {
     console.error('Error downloading data:', e)
-    toast.info('Ma\'lumotlar yuklab olish hozirda mavjud emas')
+    toast.info(t('settings.downloadUnavailable'))
   }
 }
 
 function clearCache() {
-  // Clear local storage cache
   localStorage.removeItem('unicontrol_cache')
   localStorage.removeItem('unicontrol_data_cache')
-  toast.success('Kesh tozalandi')
+  toast.success(t('settings.cacheCleared'))
 }
 
 // ============ YORDAM ============

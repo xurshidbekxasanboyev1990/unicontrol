@@ -10,9 +10,27 @@ Version: 1.0.0
 
 from functools import lru_cache
 from typing import List, Optional
+from datetime import datetime
 from pydantic import field_validator, PostgresDsn
 from pydantic_settings import BaseSettings, SettingsConfigDict
 import json
+import pytz
+
+# =====================
+# TIMEZONE CONFIGURATION
+# =====================
+TIMEZONE_NAME = "Asia/Tashkent"
+TASHKENT_TZ = pytz.timezone(TIMEZONE_NAME)
+
+
+def now_tashkent() -> datetime:
+    """Hozirgi vaqtni Asia/Tashkent timezone da qaytaradi."""
+    return datetime.now(TASHKENT_TZ)
+
+
+def today_tashkent():
+    """Bugungi sanani Asia/Tashkent timezone da qaytaradi."""
+    return datetime.now(TASHKENT_TZ).date()
 
 
 class Settings(BaseSettings):
@@ -56,8 +74,8 @@ class Settings(BaseSettings):
     # ====================
     SECRET_KEY: str
     ALGORITHM: str = "HS256"
-    ACCESS_TOKEN_EXPIRE_MINUTES: int = 480
-    REFRESH_TOKEN_EXPIRE_DAYS: int = 30
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
+    REFRESH_TOKEN_EXPIRE_DAYS: int = 7
     
     # ====================
     # CORS
@@ -109,6 +127,12 @@ class Settings(BaseSettings):
     # ====================
     TELEGRAM_BOT_TOKEN: Optional[str] = None
     TELEGRAM_BOT_WEBHOOK_SECRET: Optional[str] = None
+    
+    # ====================
+    # GOOGLE SHEETS
+    # ====================
+    GOOGLE_SHEETS_CREDENTIALS_PATH: str = "./kuafjadvalbot-8ea862c40108.json"
+    GOOGLE_SHEETS_SPREADSHEET_ID: str = "19VtQQe7M8lTqcAF9aIRABuSZ1jtEtI03"
     
     # ====================
     # REDIS

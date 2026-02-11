@@ -2,8 +2,8 @@
   <div class="space-y-6">
     <!-- Header -->
     <div>
-      <h1 class="text-2xl font-bold text-slate-800">Yordam</h1>
-      <p class="text-slate-500">Ko'p so'raladigan savollar va qo'llab-quvvatlash</p>
+      <h1 class="text-2xl font-bold text-slate-800">{{ $t('common.help') }}</h1>
+      <p class="text-slate-500">{{ $t('common.help') }}</p>
     </div>
 
     <!-- Search -->
@@ -12,7 +12,7 @@
       <input
         v-model="searchQuery"
         type="text"
-        placeholder="Savollarni qidiring..."
+        :placeholder="$t('help.searchPlaceholder')"
         class="w-full rounded-2xl border border-slate-200 bg-white py-4 pl-12 pr-4 text-slate-700 placeholder-slate-400 shadow-sm focus:border-blue-400 focus:outline-none"
       />
     </div>
@@ -27,8 +27,8 @@
           <MessageCircle :size="24" class="text-blue-600" />
         </div>
         <div class="text-left">
-          <h3 class="font-medium text-slate-800">Xabar yuborish</h3>
-          <p class="text-sm text-slate-500">Qo'llab-quvvatlashga murojaat</p>
+          <h3 class="font-medium text-slate-800">{{ $t('help.sendMessage') }}</h3>
+          <p class="text-sm text-slate-500">{{ $t('help.supportContact') }}</p>
         </div>
       </button>
 
@@ -40,7 +40,7 @@
           <Phone :size="24" class="text-green-600" />
         </div>
         <div class="text-left">
-          <h3 class="font-medium text-slate-800">Qo'ng'iroq qilish</h3>
+          <h3 class="font-medium text-slate-800">{{ $t('help.callUs') }}</h3>
           <p class="text-sm text-slate-500">+998 71 234 56 78</p>
         </div>
       </a>
@@ -107,19 +107,19 @@
           <p class="text-slate-600">{{ faq.answer }}</p>
           
           <div class="mt-4 flex items-center gap-4">
-            <span class="text-sm text-slate-500">Bu javob foydali bo'ldimi?</span>
+            <span class="text-sm text-slate-500">{{ $t('help.wasHelpful') }}</span>
             <div class="flex gap-2">
               <button 
                 @click="rateFaq(faq.id, true)"
                 class="flex items-center gap-1 rounded-lg bg-green-100 px-3 py-1 text-sm text-green-600 hover:bg-green-200"
               >
-                <ThumbsUp :size="14" /> Ha
+                <ThumbsUp :size="14" /> {{ $t('help.yes') }}
               </button>
               <button 
                 @click="rateFaq(faq.id, false)"
                 class="flex items-center gap-1 rounded-lg bg-red-100 px-3 py-1 text-sm text-red-600 hover:bg-red-200"
               >
-                <ThumbsDown :size="14" /> Yo'q
+                <ThumbsDown :size="14" /> {{ $t('help.no') }}
               </button>
             </div>
           </div>
@@ -133,7 +133,7 @@
         <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-red-100">
           <Play :size="20" class="text-red-600" />
         </div>
-        <h2 class="font-semibold text-slate-800">Video qo'llanmalar</h2>
+        <h2 class="font-semibold text-slate-800">{{ $t('help.videoTutorials') }}</h2>
       </div>
       
       <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -165,19 +165,19 @@
           <BookOpen :size="28" />
         </div>
         <div>
-          <h2 class="text-xl font-semibold">Foydalanuvchi qo'llanmasi</h2>
-          <p class="text-blue-100">Tizimdan foydalanish bo'yicha to'liq qo'llanma</p>
+          <h2 class="text-xl font-semibold">{{ $t('help.userGuide') }}</h2>
+          <p class="text-blue-100">{{ $t('help.userGuideDesc') }}</p>
         </div>
       </div>
       
       <div class="mt-4 flex gap-3">
         <button class="flex items-center gap-2 rounded-xl bg-white/20 px-4 py-2 backdrop-blur transition-all hover:bg-white/30">
           <Download :size="18" />
-          PDF yuklab olish
+          {{ $t('help.pdfDownload') }}
         </button>
         <button class="flex items-center gap-2 rounded-xl bg-white px-4 py-2 text-blue-600 transition-all hover:bg-blue-50">
           <ExternalLink :size="18" />
-          Onlayn o'qish
+          {{ $t('help.readOnline') }}
         </button>
       </div>
     </div>
@@ -191,7 +191,7 @@
       >
         <div class="w-full max-w-lg rounded-2xl bg-white p-6 shadow-2xl">
           <div class="mb-4 flex items-center justify-between">
-            <h2 class="text-lg font-bold text-slate-800">Xabar yuborish</h2>
+            <h2 class="text-lg font-bold text-slate-800">{{ $t('help.sendMessage') }}</h2>
             <button @click="showContactForm = false" class="text-slate-400 hover:text-slate-600">
               <X :size="24" />
             </button>
@@ -199,32 +199,32 @@
           
           <div class="space-y-4">
             <div>
-              <label class="mb-1 block text-sm font-medium text-slate-700">Mavzu</label>
+              <label class="mb-1 block text-sm font-medium text-slate-700">{{ $t('help.subject') }}</label>
               <select
                 v-model="contactForm.subject"
                 class="w-full rounded-xl border border-slate-200 px-4 py-3 focus:border-blue-400 focus:outline-none"
               >
-                <option value="">Tanlang...</option>
-                <option value="technical">Texnik muammo</option>
-                <option value="attendance">Davomat haqida</option>
-                <option value="schedule">Jadval haqida</option>
-                <option value="library">Kutubxona haqida</option>
-                <option value="other">Boshqa</option>
+                <option value="">{{ $t('help.selectPlaceholder') }}</option>
+                <option value="technical">{{ $t('help.technicalIssue') }}</option>
+                <option value="attendance">{{ $t('help.aboutAttendance') }}</option>
+                <option value="schedule">{{ $t('help.aboutSchedule') }}</option>
+                <option value="library">{{ $t('help.aboutLibrary') }}</option>
+                <option value="other">{{ $t('help.other') }}</option>
               </select>
             </div>
             
             <div>
-              <label class="mb-1 block text-sm font-medium text-slate-700">Xabar</label>
+              <label class="mb-1 block text-sm font-medium text-slate-700">{{ $t('help.message') }}</label>
               <textarea
                 v-model="contactForm.message"
                 rows="5"
                 class="w-full rounded-xl border border-slate-200 px-4 py-3 focus:border-blue-400 focus:outline-none"
-                placeholder="Muammoingizni batafsil yozing..."
+                :placeholder="$t('help.describeProblem')"
               ></textarea>
             </div>
             
             <div>
-              <label class="mb-1 block text-sm font-medium text-slate-700">Fayl biriktirish (ixtiyoriy)</label>
+              <label class="mb-1 block text-sm font-medium text-slate-700">{{ $t('help.attachFile') }}</label>
               <div class="flex items-center gap-3">
                 <input type="file" class="hidden" ref="fileInput" @change="handleFileSelect" />
                 <button
@@ -232,7 +232,7 @@
                   class="flex items-center gap-2 rounded-xl border border-slate-200 px-4 py-2 text-slate-600 hover:bg-slate-50"
                 >
                   <Paperclip :size="18" />
-                  Fayl tanlash
+                  {{ $t('help.selectFile') }}
                 </button>
                 <span v-if="contactForm.file" class="text-sm text-slate-600">
                   {{ contactForm.file.name }}
@@ -246,13 +246,13 @@
               @click="showContactForm = false"
               class="flex-1 rounded-xl border border-slate-200 py-3 font-medium text-slate-600 hover:bg-slate-50"
             >
-              Bekor qilish
+              {{ $t('common.cancel') }}
             </button>
             <button
               @click="submitContact"
               class="flex-1 rounded-xl bg-blue-500 py-3 font-medium text-white hover:bg-blue-600"
             >
-              Yuborish
+              {{ $t('common.send') }}
             </button>
           </div>
         </div>
@@ -262,16 +262,32 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
-import { useToastStore } from '@/stores/toast'
 import api from '@/services/api'
+import { useLanguageStore } from '@/stores/language'
+import { useToastStore } from '@/stores/toast'
 import {
-  Search, MessageCircle, Phone, Send, HelpCircle, ChevronDown,
-  ThumbsUp, ThumbsDown, Play, BookOpen, Download, ExternalLink,
-  X, Paperclip, Calendar, Book, Settings, User
+  Book,
+  BookOpen,
+  Calendar,
+  ChevronDown,
+  Download, ExternalLink,
+  HelpCircle,
+  MessageCircle,
+  Paperclip,
+  Phone,
+  Play,
+  Search,
+  Send,
+  Settings,
+  ThumbsDown,
+  ThumbsUp,
+  User,
+  X
 } from 'lucide-vue-next'
+import { computed, onMounted, ref } from 'vue'
 
 const toast = useToastStore()
+const { t } = useLanguageStore()
 
 // State
 const searchQuery = ref('')
@@ -296,21 +312,13 @@ async function loadFaqs() {
   loading.value = true
   try {
     const response = await api.getFaqs()
-    if (Array.isArray(response)) {
-      faqs.value = response.map(f => ({
-        id: f.id,
-        category: f.category || 'all',
-        question: f.question,
-        answer: f.answer
-      }))
-    } else if (response?.data) {
-      faqs.value = response.data.map(f => ({
-        id: f.id,
-        category: f.category || 'all',
-        question: f.question,
-        answer: f.answer
-      }))
-    }
+    const list = response?.items || response?.data || (Array.isArray(response) ? response : [])
+    faqs.value = list.map(f => ({
+      id: f.id,
+      category: f.category || 'all',
+      question: f.question,
+      answer: f.answer
+    }))
   } catch (err) {
     console.error('Load FAQs error:', err)
     // Keep empty faqs if API fails
@@ -320,23 +328,23 @@ async function loadFaqs() {
 }
 
 // Categories
-const categories = [
-  { id: 'all', name: 'Barchasi', icon: HelpCircle },
-  { id: 'attendance', name: 'Davomat', icon: Calendar },
-  { id: 'library', name: 'Kutubxona', icon: Book },
-  { id: 'settings', name: 'Sozlamalar', icon: Settings },
-  { id: 'profile', name: 'Profil', icon: User }
-]
+const categories = computed(() => [
+  { id: 'all', name: t('help.categories.all'), icon: HelpCircle },
+  { id: 'attendance', name: t('help.categories.attendance'), icon: Calendar },
+  { id: 'library', name: t('help.categories.library'), icon: Book },
+  { id: 'settings', name: t('help.categories.settings'), icon: Settings },
+  { id: 'profile', name: t('help.categories.profile'), icon: User }
+])
 
 // FAQs - Now loaded from API
 // Removed hardcoded demo data
 
 // Videos (placeholder - no API for this)
-const videos = [
-  { id: 1, title: 'Tizimga kirish va profil', thumbnail: 'https://picsum.photos/320/180?random=1', duration: '3:45' },
-  { id: 2, title: 'Davomat ko\'rish', thumbnail: 'https://picsum.photos/320/180?random=2', duration: '2:30' },
-  { id: 3, title: 'Kutubxonadan foydalanish', thumbnail: 'https://picsum.photos/320/180?random=3', duration: '5:15' }
-]
+const videos = computed(() => [
+  { id: 1, title: t('help.videoTitles.loginProfile'), thumbnail: 'https://picsum.photos/320/180?random=1', duration: '3:45' },
+  { id: 2, title: t('help.videoTitles.viewAttendance'), thumbnail: 'https://picsum.photos/320/180?random=2', duration: '2:30' },
+  { id: 3, title: t('help.videoTitles.useLibrary'), thumbnail: 'https://picsum.photos/320/180?random=3', duration: '5:15' }
+])
 
 // Computed
 const filteredFaqs = computed(() => {
@@ -368,7 +376,7 @@ function toggleFaq(id) {
 }
 
 function rateFaq(id, helpful) {
-  toast.success(helpful ? 'Rahmat! Fikringiz uchun!' : 'Tushundik. Yaxshilashga harakat qilamiz.')
+  toast.success(helpful ? t('help.thanksFeedback') : t('help.willImprove'))
 }
 
 function handleFileSelect(event) {
@@ -380,12 +388,12 @@ function handleFileSelect(event) {
 
 function submitContact() {
   if (!contactForm.value.subject || !contactForm.value.message) {
-    toast.error('Mavzu va xabarni to\'ldiring')
+    toast.error(t('help.fillSubjectAndMessage'))
     return
   }
   
   // Here you would send to API
-  toast.success('Xabaringiz yuborildi. Tez orada javob beramiz.')
+  toast.success(t('help.messageSent'))
   showContactForm.value = false
   contactForm.value = { subject: '', message: '', file: null }
 }

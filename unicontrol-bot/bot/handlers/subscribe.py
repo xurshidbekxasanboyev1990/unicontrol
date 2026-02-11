@@ -4,10 +4,12 @@ from aiogram.filters import Command
 from sqlalchemy import select, update
 import logging
 from datetime import datetime
+from bot.config import now_tashkent
 
 from bot.services import UniControlAPI, AttendanceFormatter
 from bot.keyboards import get_confirm_keyboard, get_settings_keyboard, get_unsubscribe_confirm_keyboard
 from bot.database import async_session, Subscription
+from bot.middlewares.subscription_check import clear_subscription_cache
 
 router = Router(name="subscribe")
 logger = logging.getLogger(__name__)
@@ -97,22 +99,59 @@ async def perform_subscription(
             )
             return False
         
-        # Create subscription
+        # Check if group has bot-level subscription (Plus+)
+        group_id = group.get("id")
+        if group_id:
+            sub_check = await api.check_bot_subscription(group_id)
+            if sub_check and not sub_check.get("has_access", False):
+                block_msg = sub_check.get("message", "Obuna topilmadi")
+                await message.answer(
+                    f"🔒 <b>Bot xizmati mavjud emas</b>\n\n"
+                    f"<b>{group_code}</b> guruhi uchun bot xizmati bloklangan.\n\n"
+                    f"📌 <i>{block_msg}</i>\n\n"
+                    "💡 <i>Obunani faollashtirish uchun Super Admin ga murojaat qiling.\n"
+                    "Admin guruhlar sahifasidan obuna beradi.</i>",
+                    parse_mode="HTML"
+                )
+                return False
+        
+        # Create or reactivate subscription
         async with async_session() as session:
-            subscription = Subscription(
-                chat_id=chat_id,
-                chat_title=chat_title,
-                chat_type=chat_type,
-                group_code=group_code,
-                group_id=group.get("id"),
-                group_name=group.get("name"),
-                subscribed_by=user_id or message.from_user.id,
-                notify_late=True,
-                notify_absent=True,
-                notify_present=False,
-                is_active=True
+            # Check for existing inactive subscription for this chat
+            result = await session.execute(
+                select(Subscription).where(Subscription.chat_id == chat_id)
             )
-            session.add(subscription)
+            existing_sub = result.scalar_one_or_none()
+            
+            if existing_sub:
+                # Reactivate and update existing subscription
+                existing_sub.group_code = group_code
+                existing_sub.group_id = group.get("id")
+                existing_sub.group_name = group.get("name")
+                existing_sub.chat_title = chat_title
+                existing_sub.chat_type = chat_type
+                existing_sub.subscribed_by = user_id or message.from_user.id
+                existing_sub.notify_late = True
+                existing_sub.notify_absent = True
+                existing_sub.notify_present = False
+                existing_sub.is_active = True
+                existing_sub.updated_at = now_tashkent()
+            else:
+                # Create new subscription
+                subscription = Subscription(
+                    chat_id=chat_id,
+                    chat_title=chat_title,
+                    chat_type=chat_type,
+                    group_code=group_code,
+                    group_id=group.get("id"),
+                    group_name=group.get("name"),
+                    subscribed_by=user_id or message.from_user.id,
+                    notify_late=True,
+                    notify_absent=True,
+                    notify_present=False,
+                    is_active=True
+                )
+                session.add(subscription)
             await session.commit()
         
         # Register with backend
@@ -187,7 +226,7 @@ async def callback_confirm_unsubscribe(callback: CallbackQuery):
             await session.execute(
                 update(Subscription)
                 .where(Subscription.chat_id == chat_id)
-                .values(is_active=False, updated_at=datetime.utcnow())
+                .values(is_active=False, updated_at=now_tashkent())
             )
             await session.commit()
         
@@ -265,7 +304,7 @@ async def callback_resubscribe(callback: CallbackQuery):
             await session.execute(
                 update(Subscription)
                 .where(Subscription.chat_id == chat_id)
-                .values(is_active=False, updated_at=datetime.utcnow())
+                .values(is_active=False, updated_at=now_tashkent())
             )
             await session.commit()
         
@@ -317,7 +356,7 @@ async def callback_setting_toggle(callback: CallbackQuery):
             # Toggle setting
             current_value = getattr(subscription, setting, False)
             setattr(subscription, setting, not current_value)
-            subscription.updated_at = datetime.utcnow()
+            subscription.updated_at = now_tashkent()
             
             await session.commit()
             

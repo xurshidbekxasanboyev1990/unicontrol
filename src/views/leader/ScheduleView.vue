@@ -4,7 +4,7 @@
     <div v-if="loading" class="flex items-center justify-center py-20">
       <div class="text-center">
         <RefreshCw class="w-12 h-12 text-emerald-500 animate-spin mx-auto mb-4" />
-        <p class="text-slate-600">Jadval yuklanmoqda...</p>
+        <p class="text-slate-600">{{ $t('common.loading') }}</p>
       </div>
     </div>
 
@@ -13,11 +13,11 @@
       <div class="flex items-center gap-3">
         <AlertCircle class="w-6 h-6 text-rose-500" />
         <div>
-          <h3 class="font-semibold text-rose-700">Xatolik yuz berdi</h3>
+          <h3 class="font-semibold text-rose-700">{{ $t('dashboard.errorOccurred') }}</h3>
           <p class="text-rose-600 text-sm mt-1">{{ error }}</p>
         </div>
         <button @click="loadSchedule" class="ml-auto px-4 py-2 bg-rose-500 text-white rounded-lg hover:bg-rose-600">
-          Qayta urinish
+          {{ $t('common.retry') }}
         </button>
       </div>
     </div>
@@ -27,7 +27,7 @@
       <!-- Header with View Toggle -->
       <div class="flex items-center justify-between">
         <div>
-          <h1 class="text-2xl font-bold text-slate-800">Dars jadvali</h1>
+          <h1 class="text-2xl font-bold text-slate-800">{{ $t('schedule.title') }}</h1>
           <p class="text-slate-500">{{ groupName }} guruh jadvali</p>
         </div>
         <div class="flex items-center gap-3">
@@ -123,8 +123,8 @@
 
       <!-- Week View -->
       <template v-else>
-        <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden">
-          <div class="grid grid-cols-6 border-b border-slate-100">
+        <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden overflow-x-auto">
+          <div class="grid grid-cols-6 border-b border-slate-100 min-w-[640px]">
             <div class="p-4 bg-slate-50"></div>
             <div 
               v-for="day in weekDays" 
@@ -139,7 +139,7 @@
           <div 
             v-for="timeSlot in timeSlots" 
             :key="timeSlot"
-            class="grid grid-cols-6 border-b border-slate-100 last:border-0"
+            class="grid grid-cols-6 border-b border-slate-100 last:border-0 min-w-[640px]"
           >
             <div class="p-4 text-sm font-medium text-slate-500 bg-slate-50 flex items-center justify-center">
               {{ timeSlot }}
@@ -207,7 +207,7 @@
               </div>
             </div>
             <div>
-              <p class="text-sm text-slate-500">Xona</p>
+              <p class="text-sm text-slate-500">Xona / Bino</p>
               <p class="font-medium text-slate-800">{{ selectedLesson.room || selectedLesson.roomNumber || 'Ko\'rsatilmagan' }}</p>
             </div>
           </div>
@@ -233,21 +233,21 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
-import { useDataStore } from '../../stores/data'
-import { useAuthStore } from '../../stores/auth'
-import api from '../../services/api'
 import {
-  CalendarDays,
-  User,
-  Clock,
-  MapPin,
-  Coffee,
-  RefreshCw,
   AlertCircle,
+  CalendarDays,
   CheckCircle,
+  Clock,
+  Coffee,
+  MapPin,
+  RefreshCw,
+  User,
   X
 } from 'lucide-vue-next'
+import { computed, onMounted, ref } from 'vue'
+import api from '../../services/api'
+import { useAuthStore } from '../../stores/auth'
+import { useDataStore } from '../../stores/data'
 
 const dataStore = useDataStore()
 const authStore = useAuthStore()
@@ -258,9 +258,10 @@ const error = ref(null)
 const viewMode = ref('week')
 const schedule = ref([])
 const selectedLesson = ref(null)
+const groupInfo = ref(null)
 
 const weekDays = ['Dushanba', 'Seshanba', 'Chorshanba', 'Payshanba', 'Juma']
-const timeSlots = ['08:30', '10:00', '11:30', '14:00', '15:30']
+const timeSlots = ['08:30', '10:00', '12:00', '13:30', '15:00']
 
 const subjectColors = [
   'bg-gradient-to-br from-blue-500 to-blue-600',
@@ -272,7 +273,7 @@ const subjectColors = [
 
 // Computed
 const groupName = computed(() => {
-  return authStore.user?.groupName || authStore.user?.group_name || 'Guruh'
+  return groupInfo.value?.name || authStore.user?.groupName || 'Guruh'
 })
 
 const subjectColorMap = computed(() => {
@@ -319,27 +320,61 @@ async function loadSchedule() {
   error.value = null
   
   try {
-    const groupId = authStore.user?.groupId || authStore.user?.group_id
+    // First get group info from dashboard
+    const dashboardResp = await api.request('/dashboard/leader')
+    const groupId = dashboardResp?.group?.id
+    groupInfo.value = dashboardResp?.group
     
-    // Try API first
+    if (!groupId) {
+      error.value = 'Guruh ma\'lumotlari topilmadi'
+      return
+    }
+    
+    // Try to get week schedule first
     try {
-      let response
-      if (groupId) {
-        response = await api.request(`/schedule/group/${groupId}`)
-      } else {
-        response = await api.request('/schedule/my')
+      const response = await api.request(`/schedule/group/${groupId}/week`)
+      
+      // Week schedule response format: { monday: [], tuesday: [], ... }
+      const allLessons = []
+      const dayMapping = {
+        'monday': 'Dushanba',
+        'tuesday': 'Seshanba', 
+        'wednesday': 'Chorshanba',
+        'thursday': 'Payshanba',
+        'friday': 'Juma',
+        'saturday': 'Shanba'
       }
       
-      if (response && response.data) {
-        schedule.value = response.data.map(s => normalizeScheduleItem(s))
+      if (response && typeof response === 'object') {
+        for (const [dayKey, lessons] of Object.entries(response)) {
+          if (Array.isArray(lessons)) {
+            lessons.forEach(lesson => {
+              allLessons.push(normalizeScheduleItem({
+                ...lesson,
+                day: dayMapping[dayKey] || dayKey
+              }))
+            })
+          }
+        }
+        schedule.value = allLessons
       } else if (Array.isArray(response)) {
         schedule.value = response.map(s => normalizeScheduleItem(s))
       }
     } catch (e) {
-      console.log('Schedule API not available, using store data')
-      // Fallback to store
-      await dataStore.fetchSchedule()
-      schedule.value = dataStore.schedule || []
+      // Fallback to list endpoint
+      try {
+        const response = await api.request(`/schedule?group_id=${groupId}`)
+        if (response && response.items) {
+          schedule.value = response.items.map(s => normalizeScheduleItem(s))
+        } else if (Array.isArray(response)) {
+          schedule.value = response.map(s => normalizeScheduleItem(s))
+        }
+      } catch (listError) {
+        console.log('Schedule API not available, using store data')
+        // Fallback to store
+        await dataStore.fetchSchedule()
+        schedule.value = dataStore.schedule || []
+      }
     }
   } catch (e) {
     console.error('Load schedule error:', e)
@@ -350,20 +385,29 @@ async function loadSchedule() {
 }
 
 function normalizeScheduleItem(item) {
+  // Build time string: strip spaces and seconds for consistent HH:MM-HH:MM format
+  let timeRange = item.time_range || (item.start_time && item.end_time ? `${item.start_time}-${item.end_time}` : '')
+  timeRange = timeRange.replace(/\s/g, '').replace(/(\d{2}:\d{2}):\d{2}/g, '$1')
+  const startTime = item.start_time ? item.start_time.substring(0, 5) : (timeRange.split('-')[0] || '')
+  // Build location: combine building + room
+  const building = item.building || ''
+  const room = item.room || item.room_number || item.roomNumber || ''
+  const location = item.location || (building && room ? `${building}, ${room}` : building || room) || ''
   return {
     id: item.id,
     day: item.day || item.day_name || item.dayName,
     dayName: item.day || item.day_name || item.dayName,
-    time: item.time || item.start_time || item.startTime,
-    startTime: item.time || item.start_time || item.startTime,
-    endTime: item.end_time || item.endTime,
+    time: timeRange || item.time || item.start_time || item.startTime,
+    startTime: startTime || item.startTime || timeRange,
+    endTime: item.end_time ? item.end_time.substring(0, 5) : (item.endTime || ''),
     subject: item.subject || item.subject_name || item.subjectName,
     subjectName: item.subject || item.subject_name || item.subjectName,
-    teacher: item.teacher || item.teacher_name || item.teacherName,
-    teacherName: item.teacher || item.teacher_name || item.teacherName,
-    room: item.room || item.room_number || item.roomNumber,
-    roomNumber: item.room || item.room_number || item.roomNumber,
-    type: item.type || item.lesson_type || 'lecture'
+    teacher: item.teacher_name || item.teacher || item.teacherName,
+    teacherName: item.teacher_name || item.teacher || item.teacherName,
+    room: location,
+    roomNumber: location,
+    building: building,
+    type: item.schedule_type || item.type || item.lesson_type || 'lecture'
   }
 }
 
@@ -375,8 +419,10 @@ const isToday = (day) => {
 const getLessonAt = (day, time) => {
   return schedule.value.find(s => {
     const lessonDay = s.day || s.dayName
-    const lessonTime = s.time || s.startTime
-    return lessonDay === day && lessonTime === time
+    const lessonTime = s.time || s.startTime || ''
+    // Match start time: lessonTime could be "08:30" or "08:30-10:00"
+    const startTime = lessonTime.split('-')[0]?.trim()
+    return lessonDay === day && startTime === time
   })
 }
 

@@ -13,6 +13,7 @@ from typing import Optional, TYPE_CHECKING
 from sqlalchemy import String, Integer, DateTime, ForeignKey, Text, Boolean, Enum as SAEnum
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
+from app.config import TASHKENT_TZ
 from app.database import Base
 
 if TYPE_CHECKING:
@@ -165,7 +166,7 @@ class MutoolaSync(Base):
     # Timestamps
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
-        default=datetime.utcnow,
+        default=lambda: datetime.now(TASHKENT_TZ),
         nullable=False
     )
     
@@ -265,13 +266,13 @@ class MutoolaMapping(Base):
     # Timestamps
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
-        default=datetime.utcnow,
+        default=lambda: datetime.now(TASHKENT_TZ),
         nullable=False
     )
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
-        default=datetime.utcnow,
-        onupdate=datetime.utcnow,
+        default=lambda: datetime.now(TASHKENT_TZ),
+        onupdate=lambda: datetime.now(TASHKENT_TZ),
         nullable=False
     )
     

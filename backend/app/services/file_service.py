@@ -21,6 +21,7 @@ import mimetypes
 from datetime import datetime
 from typing import Optional, List, Tuple
 from pathlib import Path
+from loguru import logger
 
 from sqlalchemy import select, func, and_, or_
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -33,7 +34,7 @@ from app.schemas.file import (
     FolderCreate, FolderUpdate, FolderResponse,
     FileManagerResponse, StorageStats
 )
-from app.config import settings
+from app.config import settings, now_tashkent
 
 
 # File type mappings based on extension
@@ -354,7 +355,7 @@ class FileService:
         for field, value in update_data.items():
             setattr(file, field, value)
         
-        file.updated_at = datetime.utcnow()
+        file.updated_at = now_tashkent()
         await self.db.commit()
         await self.db.refresh(file)
         
@@ -379,8 +380,8 @@ class FileService:
         try:
             if os.path.exists(file.path):
                 os.remove(file.path)
-        except Exception:
-            pass  # Continue even if file deletion fails
+        except Exception as e:
+            logger.warning(f"Failed to delete physical file {file.path}: {e}")
         
         # Delete database record
         await self.db.delete(file)
@@ -521,7 +522,7 @@ class FileService:
             else:
                 folder.path = f"/{folder.name}"
         
-        folder.updated_at = datetime.utcnow()
+        folder.updated_at = now_tashkent()
         await self.db.commit()
         await self.db.refresh(folder)
         

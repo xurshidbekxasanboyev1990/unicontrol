@@ -13,8 +13,8 @@
             <Bell :size="20" class="animate-bounce" />
           </div>
           <div>
-            <p class="font-semibold">Hisobot topshirish muddati 3 kun qoldi!</p>
-            <p class="text-sm text-white/80">{{ currentMonth }} oyi hisobotini topshirishni unutmang</p>
+            <p class="font-semibold">{{ $t('reports.deadlineReminder', { days: 3 }) }}</p>
+            <p class="text-sm text-white/80">{{ $t('reports.monthlyReminder', { month: currentMonth }) }}</p>
           </div>
         </div>
         <button 
@@ -35,8 +35,8 @@
          ======================================== -->
     <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
       <div>
-        <h1 class="text-2xl font-bold text-slate-800">Hisobotlar</h1>
-        <p class="text-slate-500">{{ currentGroup?.name }} - Guruh hisobotlari</p>
+        <h1 class="text-2xl font-bold text-slate-800">{{ $t('reports.title') }}</h1>
+        <p class="text-slate-500">{{ currentGroup?.name }} - {{ $t('reports.groupReports') }}</p>
       </div>
       
       <button
@@ -44,7 +44,7 @@
         class="flex items-center gap-2 rounded-xl bg-emerald-500 px-5 py-2.5 font-medium text-white shadow-lg shadow-emerald-500/30 transition-all hover:bg-emerald-600"
       >
         <Plus :size="20" />
-        Yangi hisobot
+        {{ $t('reports.newReport') }}
       </button>
     </div>
 
@@ -60,16 +60,7 @@
             ? 'bg-white text-emerald-600 shadow' 
             : 'text-slate-600 hover:text-slate-800'"
         >
-          Mening hisobotlarim
-        </button>
-        <button
-          @click="activeTab = 'others'"
-          class="rounded-lg px-4 py-2 text-sm font-medium transition-all"
-          :class="activeTab === 'others' 
-            ? 'bg-white text-emerald-600 shadow' 
-            : 'text-slate-600 hover:text-slate-800'"
-        >
-          Boshqa guruhlar
+          {{ $t('reports.myReports') }}
         </button>
       </div>
 
@@ -123,7 +114,7 @@
                   {{ getStatusText(report.status) }}
                 </span>
                 <span class="text-xs text-slate-400">
-                  Yaratilgan: {{ report.createdAt }}
+                  {{ $t('reports.created') }}: {{ report.createdAt }}
                 </span>
                 <!-- File indicators -->
                 <span v-if="report.files?.images > 0" class="flex items-center gap-1 text-xs text-blue-500">
@@ -140,14 +131,14 @@
             <button 
               @click="viewReport(report)"
               class="rounded-lg bg-slate-100 p-2.5 text-slate-600 transition-all hover:bg-slate-200"
-              title="Ko'rish"
+              :title="$t('reports.view')"
             >
               <Eye :size="18" />
             </button>
             <button 
               @click="downloadReport(report)"
               class="rounded-lg bg-emerald-100 p-2.5 text-emerald-600 transition-all hover:bg-emerald-200"
-              title="Yuklab olish"
+              :title="$t('reports.downloadReport')"
             >
               <Download :size="18" />
             </button>
@@ -155,14 +146,15 @@
               v-if="report.status === 'draft'"
               @click="editReport(report)"
               class="rounded-lg bg-blue-100 p-2.5 text-blue-600 transition-all hover:bg-blue-200"
-              title="Tahrirlash"
+              :title="$t('reports.editReport')"
             >
               <Pencil :size="18" />
             </button>
             <button 
+              v-if="report.status === 'draft' || report.status === 'pending' || report.status === 'failed'"
               @click="deleteReport(report)"
               class="rounded-lg bg-red-100 p-2.5 text-red-600 transition-all hover:bg-red-200"
-              title="O'chirish"
+              :title="$t('reports.deleteReport')"
             >
               <Trash2 :size="18" />
             </button>
@@ -173,19 +165,19 @@
         <div class="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
           <div class="rounded-xl bg-green-50 p-3 text-center">
             <p class="text-xl font-bold text-green-600">{{ report.stats?.attendance || 0 }}%</p>
-            <p class="text-xs text-green-600/70">Davomat</p>
+            <p class="text-xs text-green-600/70">{{ $t('reports.attendanceStat') }}</p>
           </div>
           <div class="rounded-xl bg-blue-50 p-3 text-center">
             <p class="text-xl font-bold text-blue-600">{{ report.stats?.contract || 0 }}%</p>
-            <p class="text-xs text-blue-600/70">Kontrakt</p>
+            <p class="text-xs text-blue-600/70">{{ $t('reports.contractStat') }}</p>
           </div>
           <div class="rounded-xl bg-purple-50 p-3 text-center">
             <p class="text-xl font-bold text-purple-600">{{ report.stats?.activities || 0 }}</p>
-            <p class="text-xs text-purple-600/70">Tadbirlar</p>
+            <p class="text-xs text-purple-600/70">{{ $t('reports.eventsStat') }}</p>
           </div>
           <div class="rounded-xl bg-orange-50 p-3 text-center">
             <p class="text-xl font-bold text-orange-600">{{ report.stats?.meetings || 0 }}</p>
-            <p class="text-xs text-orange-600/70">Yig'ilishlar</p>
+            <p class="text-xs text-orange-600/70">{{ $t('reports.meetingsStat') }}</p>
           </div>
         </div>
       </div>
@@ -196,81 +188,21 @@
         class="flex flex-col items-center justify-center rounded-2xl border border-dashed border-slate-300 bg-slate-50 py-16"
       >
         <FileText :size="48" class="mb-3 text-slate-300" />
-        <p class="text-lg font-medium text-slate-500">Hisobotlar topilmadi</p>
-        <p class="text-sm text-slate-400">Yangi hisobot yaratish uchun tugmani bosing</p>
+        <p class="text-lg font-medium text-slate-500">{{ $t('reports.noReportsFound') }}</p>
+        <p class="text-sm text-slate-400">{{ $t('reports.noReportsDesc') }}</p>
         <button
           @click="openCreateModal"
           class="mt-4 flex items-center gap-2 rounded-xl bg-emerald-500 px-5 py-2.5 font-medium text-white"
         >
           <Plus :size="18" />
-          Yangi hisobot
+          {{ $t('reports.newReport') }}
         </button>
       </div>
     </div>
 
     <!-- ========================================
-         BOSHQA GURUHLAR (Other Groups Tab)
+         BOSHQA GURUHLAR (Removed - Leaders can only see own reports)
          ======================================== -->
-    <div v-if="activeTab === 'others'" class="space-y-4">
-      <div class="rounded-2xl border border-slate-200 bg-white p-4">
-        <p class="mb-3 text-sm font-medium text-slate-600">Guruhni tanlang:</p>
-        <div class="flex flex-wrap gap-2">
-          <button
-            @click="selectedOtherGroup = null"
-            class="rounded-xl px-4 py-2 text-sm font-medium transition-all"
-            :class="selectedOtherGroup === null
-              ? 'bg-emerald-500 text-white'
-              : 'bg-slate-100 text-slate-600 hover:bg-slate-200'"
-          >
-            Barchasi
-          </button>
-          <button
-            v-for="group in otherGroups"
-            :key="group.id"
-            @click="selectedOtherGroup = group.id"
-            class="rounded-xl px-4 py-2 text-sm font-medium transition-all"
-            :class="selectedOtherGroup === group.id
-              ? 'bg-emerald-500 text-white'
-              : 'bg-slate-100 text-slate-600 hover:bg-slate-200'"
-          >
-            {{ group.name }}
-          </button>
-        </div>
-      </div>
-
-      <!-- Other groups reports list -->
-      <div 
-        v-for="report in otherGroupsReports" 
-        :key="report.id"
-        class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm"
-      >
-        <div class="flex items-start justify-between">
-          <div class="flex gap-4">
-            <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-slate-100 text-slate-600">
-              <FileText :size="22" />
-            </div>
-            <div>
-              <h3 class="font-semibold text-slate-800">{{ report.title }}</h3>
-              <p class="text-sm text-slate-500">{{ report.groupName }} • {{ report.period }}</p>
-            </div>
-          </div>
-          <button 
-            @click="viewReport(report)"
-            class="rounded-lg bg-slate-100 p-2 text-slate-600 hover:bg-slate-200"
-          >
-            <Eye :size="18" />
-          </button>
-        </div>
-      </div>
-
-      <div 
-        v-if="otherGroupsReports.length === 0"
-        class="flex flex-col items-center justify-center rounded-2xl border border-dashed border-slate-300 bg-slate-50 py-12"
-      >
-        <FileText :size="40" class="mb-2 text-slate-300" />
-        <p class="text-slate-500">Boshqa guruhlar hisobotlari topilmadi</p>
-      </div>
-    </div>
 
     <!-- ========================================
          HISOBOT YARATISH MODAL
@@ -284,7 +216,7 @@
         <!-- Modal Header -->
         <div class="flex items-center justify-between border-b border-slate-200 p-6">
           <div>
-            <h2 class="text-xl font-bold text-slate-800">Yangi hisobot yaratish</h2>
+            <h2 class="text-xl font-bold text-slate-800">{{ $t('reports.createReport') }}</h2>
             <p class="text-sm text-slate-500">{{ currentGroup?.name }} - {{ getMonthLabel(newReport.month) }} {{ newReport.year }}</p>
           </div>
           <button 
@@ -314,7 +246,7 @@
                 v-if="section.auto"
                 class="rounded bg-white/20 px-1.5 py-0.5 text-xs"
               >
-                Avto
+                {{ $t('reports.autoTag') }}
               </span>
             </button>
           </div>
@@ -323,33 +255,33 @@
           <div v-if="activeSection === 'attendance'" class="space-y-4">
             <div class="flex items-center gap-2 rounded-xl bg-green-50 p-3 text-green-700">
               <CheckCircle :size="20" />
-              <span class="text-sm">Bu ma'lumotlar tizim tomonidan avtomatik to'ldirilgan</span>
+              <span class="text-sm">{{ $t('reports.autoFilledNote') }}</span>
             </div>
 
             <!-- Attendance Stats Grid -->
             <div class="grid grid-cols-2 gap-4 sm:grid-cols-4">
               <div class="rounded-xl border border-green-200 bg-green-50 p-4 text-center">
                 <p class="text-3xl font-bold text-green-600">{{ autoData.attendance.rate }}%</p>
-                <p class="text-sm text-green-600/70">Umumiy davomat</p>
+                <p class="text-sm text-green-600/70">{{ $t('reports.overallAttendance') }}</p>
               </div>
               <div class="rounded-xl border border-blue-200 bg-blue-50 p-4 text-center">
                 <p class="text-3xl font-bold text-blue-600">{{ autoData.attendance.present }}</p>
-                <p class="text-sm text-blue-600/70">Qatnashgan</p>
+                <p class="text-sm text-blue-600/70">{{ $t('reports.attended') }}</p>
               </div>
               <div class="rounded-xl border border-orange-200 bg-orange-50 p-4 text-center">
                 <p class="text-3xl font-bold text-orange-600">{{ autoData.attendance.late }}</p>
-                <p class="text-sm text-orange-600/70">Kechikkan</p>
+                <p class="text-sm text-orange-600/70">{{ $t('reports.late') }}</p>
               </div>
               <div class="rounded-xl border border-red-200 bg-red-50 p-4 text-center">
                 <p class="text-3xl font-bold text-red-600">{{ autoData.attendance.absent }}</p>
-                <p class="text-sm text-red-600/70">Sababsiz</p>
+                <p class="text-sm text-red-600/70">{{ $t('reports.absentWithout') }}</p>
               </div>
             </div>
 
             <!-- Students Attendance Table -->
             <div class="rounded-xl border border-slate-200">
               <div class="border-b border-slate-200 bg-slate-50 px-4 py-3">
-                <h4 class="font-semibold text-slate-700">Talabalar davomati</h4>
+                <h4 class="font-semibold text-slate-700">{{ $t('reports.studentAttendance') }}</h4>
               </div>
               <div class="divide-y divide-slate-100">
                 <div 
@@ -359,8 +291,8 @@
                 >
                   <span class="text-slate-700">{{ student.name }}</span>
                   <div class="flex items-center gap-4">
-                    <span class="text-sm text-green-600">{{ student.present }} dars</span>
-                    <span class="text-sm text-red-600">{{ student.absent }} yo'q</span>
+                    <span class="text-sm text-green-600">{{ student.present }} {{ $t('reports.lessons') }}</span>
+                    <span class="text-sm text-red-600">{{ student.absent }} {{ $t('reports.absent') }}</span>
                     <span 
                       class="rounded-lg px-2 py-1 text-sm font-medium"
                       :class="student.rate >= 80 ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'"
@@ -377,29 +309,29 @@
           <div v-if="activeSection === 'contract'" class="space-y-4">
             <div class="flex items-center gap-2 rounded-xl bg-green-50 p-3 text-green-700">
               <CheckCircle :size="20" />
-              <span class="text-sm">Bu ma'lumotlar tizim tomonidan avtomatik to'ldirilgan</span>
+              <span class="text-sm">{{ $t('reports.autoFilledNote') }}</span>
             </div>
 
             <!-- Contract Stats -->
             <div class="grid grid-cols-2 gap-4 sm:grid-cols-3">
               <div class="rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-center">
                 <p class="text-3xl font-bold text-emerald-600">{{ autoData.contract.rate }}%</p>
-                <p class="text-sm text-emerald-600/70">To'langan</p>
+                <p class="text-sm text-emerald-600/70">{{ $t('reports.contractPaid') }}</p>
               </div>
               <div class="rounded-xl border border-blue-200 bg-blue-50 p-4 text-center">
                 <p class="text-2xl font-bold text-blue-600">{{ formatMoney(autoData.contract.paid) }}</p>
-                <p class="text-sm text-blue-600/70">To'langan summa</p>
+                <p class="text-sm text-blue-600/70">{{ $t('reports.paidAmount') }}</p>
               </div>
               <div class="rounded-xl border border-slate-200 bg-slate-50 p-4 text-center">
                 <p class="text-2xl font-bold text-slate-600">{{ formatMoney(autoData.contract.total) }}</p>
-                <p class="text-sm text-slate-600/70">Umumiy summa</p>
+                <p class="text-sm text-slate-600/70">{{ $t('reports.totalAmount') }}</p>
               </div>
             </div>
 
             <!-- Students Contract Table -->
             <div class="rounded-xl border border-slate-200">
               <div class="border-b border-slate-200 bg-slate-50 px-4 py-3">
-                <h4 class="font-semibold text-slate-700">Talabalar kontrakt holati</h4>
+                <h4 class="font-semibold text-slate-700">{{ $t('reports.studentContractStatus') }}</h4>
               </div>
               <div class="divide-y divide-slate-100">
                 <div 
@@ -434,41 +366,41 @@
           <div v-if="activeSection === 'activities'" class="space-y-4">
             <div class="flex items-center gap-2 rounded-xl bg-blue-50 p-3 text-blue-700">
               <Pencil :size="20" />
-              <span class="text-sm">Guruh tadbirlari va yutuqlarini qo'lda kiriting</span>
+              <span class="text-sm">{{ $t('reports.groupActivities') }}</span>
             </div>
 
             <div>
               <label class="mb-2 block text-sm font-medium text-slate-700">
-                O'tkazilgan tadbirlar
+                {{ $t('reports.eventsHeld') }}
               </label>
               <textarea
                 v-model="newReport.activities.events"
                 rows="4"
-                placeholder="Masalan: Sport musobaqasi, Ilmiy konferensiya, Volontyorlik..."
+                :placeholder="$t('reports.eventsPlaceholder')"
                 class="w-full rounded-xl border border-slate-200 p-4 text-slate-700 placeholder-slate-400 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
               ></textarea>
             </div>
 
             <div>
               <label class="mb-2 block text-sm font-medium text-slate-700">
-                Guruh yutuqlari
+                {{ $t('reports.achievements') }}
               </label>
               <textarea
                 v-model="newReport.activities.achievements"
                 rows="3"
-                placeholder="Masalan: 1-o'rin olimpiadada, Grant yutildi..."
+                :placeholder="$t('reports.achievementsPlaceholder')"
                 class="w-full rounded-xl border border-slate-200 p-4 text-slate-700 placeholder-slate-400 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
               ></textarea>
             </div>
 
             <div>
               <label class="mb-2 block text-sm font-medium text-slate-700">
-                Qo'shimcha izoh
+                {{ $t('reports.additionalNotes') }}
               </label>
               <textarea
                 v-model="newReport.activities.notes"
                 rows="2"
-                placeholder="Boshqa muhim ma'lumotlar..."
+                :placeholder="$t('reports.additionalNotesPlaceholder')"
                 class="w-full rounded-xl border border-slate-200 p-4 text-slate-700 placeholder-slate-400 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
               ></textarea>
             </div>
@@ -478,29 +410,29 @@
           <div v-if="activeSection === 'parents'" class="space-y-4">
             <div class="flex items-center gap-2 rounded-xl bg-blue-50 p-3 text-blue-700">
               <Pencil :size="20" />
-              <span class="text-sm">Ota-onalar bilan ishlash haqida ma'lumot kiriting</span>
+              <span class="text-sm">{{ $t('reports.parentWork') }}</span>
             </div>
 
             <div>
               <label class="mb-2 block text-sm font-medium text-slate-700">
-                O'tkazilgan yig'ilishlar
+                {{ $t('reports.meetingsHeld') }}
               </label>
               <textarea
                 v-model="newReport.parents.meetings"
                 rows="3"
-                placeholder="Masalan: 15-yanvar - Ota-onalar yig'ilishi (20 nafar qatnashdi)..."
+                :placeholder="$t('reports.meetingsPlaceholder')"
                 class="w-full rounded-xl border border-slate-200 p-4 text-slate-700 placeholder-slate-400 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
               ></textarea>
             </div>
 
             <div>
               <label class="mb-2 block text-sm font-medium text-slate-700">
-                Individual suhbatlar
+                {{ $t('reports.individualTalks') }}
               </label>
               <textarea
                 v-model="newReport.parents.conversations"
                 rows="3"
-                placeholder="Masalan: Aliyev ota-onasi bilan davomat masalasida suhbat..."
+                :placeholder="$t('reports.individualTalksPlaceholder')"
                 class="w-full rounded-xl border border-slate-200 p-4 text-slate-700 placeholder-slate-400 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
               ></textarea>
             </div>
@@ -508,7 +440,7 @@
             <div class="grid grid-cols-2 gap-4">
               <div>
                 <label class="mb-2 block text-sm font-medium text-slate-700">
-                  Yig'ilishlar soni
+                  {{ $t('reports.meetingsCount') }}
                 </label>
                 <input
                   v-model.number="newReport.parents.meetingsCount"
@@ -519,7 +451,7 @@
               </div>
               <div>
                 <label class="mb-2 block text-sm font-medium text-slate-700">
-                  Qatnashgan ota-onalar
+                  {{ $t('reports.parentAttendees') }}
                 </label>
                 <input
                   v-model.number="newReport.parents.attendedParents"
@@ -535,29 +467,29 @@
           <div v-if="activeSection === 'problems'" class="space-y-4">
             <div class="flex items-center gap-2 rounded-xl bg-amber-50 p-3 text-amber-700">
               <AlertCircle :size="20" />
-              <span class="text-sm">Guruhda mavjud muammolarni yozing</span>
+              <span class="text-sm">{{ $t('reports.problemsNote') }}</span>
             </div>
 
             <div>
               <label class="mb-2 block text-sm font-medium text-slate-700">
-                Asosiy muammolar
+                {{ $t('reports.mainProblems') }}
               </label>
               <textarea
                 v-model="newReport.problems.main"
                 rows="4"
-                placeholder="Masalan: Davomat muammosi, O'quv jarayonidagi qiyinchiliklar..."
+                :placeholder="$t('reports.mainProblemsPlaceholder')"
                 class="w-full rounded-xl border border-slate-200 p-4 text-slate-700 placeholder-slate-400 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
               ></textarea>
             </div>
 
             <div>
               <label class="mb-2 block text-sm font-medium text-slate-700">
-                Yechim talab qiladigan masalalar
+                {{ $t('reports.solutionNeeded') }}
               </label>
               <textarea
                 v-model="newReport.problems.needsSolution"
                 rows="3"
-                placeholder="Masalan: Admin yordam kerak, O'quv xona jihozlash..."
+                :placeholder="$t('reports.solutionNeededPlaceholder')"
                 class="w-full rounded-xl border border-slate-200 p-4 text-slate-700 placeholder-slate-400 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
               ></textarea>
             </div>
@@ -567,29 +499,29 @@
           <div v-if="activeSection === 'plans'" class="space-y-4">
             <div class="flex items-center gap-2 rounded-xl bg-purple-50 p-3 text-purple-700">
               <Calendar :size="20" />
-              <span class="text-sm">Keyingi oy uchun rejalarni kiriting</span>
+              <span class="text-sm">{{ $t('reports.nextMonthPlans') }}</span>
             </div>
 
             <div>
               <label class="mb-2 block text-sm font-medium text-slate-700">
-                Rejalashtirilgan tadbirlar
+                {{ $t('reports.plannedEvents') }}
               </label>
               <textarea
                 v-model="newReport.plans.events"
                 rows="3"
-                placeholder="Masalan: Guruh sayohati, Ilmiy seminar..."
+                :placeholder="$t('reports.plannedEventsPlaceholder')"
                 class="w-full rounded-xl border border-slate-200 p-4 text-slate-700 placeholder-slate-400 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
               ></textarea>
             </div>
 
             <div>
               <label class="mb-2 block text-sm font-medium text-slate-700">
-                Maqsadlar
+                {{ $t('reports.goals') }}
               </label>
               <textarea
                 v-model="newReport.plans.goals"
                 rows="3"
-                placeholder="Masalan: Davomat 95%ga ko'tarish, Kontrakt 100% to'lash..."
+                :placeholder="$t('reports.goalsPlaceholder')"
                 class="w-full rounded-xl border border-slate-200 p-4 text-slate-700 placeholder-slate-400 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
               ></textarea>
             </div>
@@ -599,14 +531,14 @@
           <div v-if="activeSection === 'files'" class="space-y-6">
             <div class="flex items-center gap-2 rounded-xl bg-indigo-50 p-3 text-indigo-700">
               <Upload :size="20" />
-              <span class="text-sm">Hisobotga tegishli rasm va videolarni yuklang</span>
+              <span class="text-sm">{{ $t('reports.uploadMedia') }}</span>
             </div>
 
             <!-- Images Upload -->
             <div>
               <label class="mb-3 flex items-center gap-2 text-sm font-medium text-slate-700">
                 <ImageIcon :size="18" class="text-blue-500" />
-                Rasmlar (max 10 ta)
+                {{ $t('reports.imagesMax') }}
               </label>
               <div class="grid grid-cols-2 gap-4 sm:grid-cols-5">
                 <!-- Uploaded images preview -->
@@ -636,7 +568,7 @@
                     @change="handleImageUpload"
                   />
                   <Plus :size="24" class="text-slate-400" />
-                  <span class="mt-1 text-xs text-slate-500">Qo'shish</span>
+                  <span class="mt-1 text-xs text-slate-500">{{ $t('reports.addImage') }}</span>
                 </label>
               </div>
             </div>
@@ -645,7 +577,7 @@
             <div>
               <label class="mb-3 flex items-center gap-2 text-sm font-medium text-slate-700">
                 <Video :size="18" class="text-purple-500" />
-                Videolar (max 3 ta, har biri 50MB gacha)
+                {{ $t('reports.videosMax') }}
               </label>
               <div class="space-y-3">
                 <!-- Uploaded videos -->
@@ -683,7 +615,7 @@
                     @change="handleVideoUpload"
                   />
                   <Upload :size="20" class="text-slate-400" />
-                  <span class="text-sm text-slate-500">Video yuklash</span>
+                  <span class="text-sm text-slate-500">{{ $t('reports.uploadVideo') }}</span>
                 </label>
               </div>
             </div>
@@ -692,7 +624,7 @@
             <div>
               <label class="mb-3 flex items-center gap-2 text-sm font-medium text-slate-700">
                 <FileText :size="18" class="text-emerald-500" />
-                Hujjatlar (PDF, Word - max 5 ta)
+                {{ $t('reports.documentsMax') }}
               </label>
               <div class="space-y-2">
                 <!-- Uploaded documents -->
@@ -730,7 +662,7 @@
                     @change="handleDocUpload"
                   />
                   <Upload :size="18" class="text-slate-400" />
-                  <span class="text-sm text-slate-500">Hujjat yuklash</span>
+                  <span class="text-sm text-slate-500">{{ $t('reports.uploadDocument') }}</span>
                 </label>
               </div>
             </div>
@@ -741,7 +673,7 @@
         <div class="flex items-center justify-between border-t border-slate-200 p-6">
           <div class="flex items-center gap-4">
             <span class="text-sm text-slate-500">
-              <span class="font-medium text-emerald-600">{{ completedSections }}</span> / {{ reportSections.length }} bo'lim to'ldirilgan
+              <span class="font-medium text-emerald-600">{{ completedSections }}</span> / {{ reportSections.length }} {{ $t('reports.sectionsCompleted') }}
             </span>
           </div>
           <div class="flex gap-3">
@@ -749,13 +681,13 @@
               @click="saveDraft"
               class="rounded-xl border border-slate-200 px-5 py-2.5 font-medium text-slate-600 transition-all hover:bg-slate-100"
             >
-              Qoralama saqlash
+              {{ $t('reports.saveDraft') }}
             </button>
             <button
               @click="submitReport"
               class="rounded-xl bg-emerald-500 px-5 py-2.5 font-medium text-white shadow-lg shadow-emerald-500/30 transition-all hover:bg-emerald-600"
             >
-              Hisobotni topshirish
+              {{ $t('reports.submitReport') }}
             </button>
           </div>
         </div>
@@ -789,38 +721,38 @@
           <div class="mb-6 grid grid-cols-2 gap-4 sm:grid-cols-4">
             <div class="rounded-xl bg-green-50 p-4 text-center">
               <p class="text-2xl font-bold text-green-600">{{ selectedReport.stats?.attendance || 0 }}%</p>
-              <p class="text-xs text-green-600/70">Davomat</p>
+              <p class="text-xs text-green-600/70">{{ $t('reports.attendanceStat') }}</p>
             </div>
             <div class="rounded-xl bg-blue-50 p-4 text-center">
               <p class="text-2xl font-bold text-blue-600">{{ selectedReport.stats?.contract || 0 }}%</p>
-              <p class="text-xs text-blue-600/70">Kontrakt</p>
+              <p class="text-xs text-blue-600/70">{{ $t('reports.contractStat') }}</p>
             </div>
             <div class="rounded-xl bg-purple-50 p-4 text-center">
               <p class="text-2xl font-bold text-purple-600">{{ selectedReport.stats?.activities || 0 }}</p>
-              <p class="text-xs text-purple-600/70">Tadbirlar</p>
+              <p class="text-xs text-purple-600/70">{{ $t('reports.eventsStat') }}</p>
             </div>
             <div class="rounded-xl bg-orange-50 p-4 text-center">
               <p class="text-2xl font-bold text-orange-600">{{ selectedReport.stats?.meetings || 0 }}</p>
-              <p class="text-xs text-orange-600/70">Yig'ilishlar</p>
+              <p class="text-xs text-orange-600/70">{{ $t('reports.meetingsStat') }}</p>
             </div>
           </div>
 
           <!-- Report Content -->
           <div v-if="selectedReport.content" class="space-y-4">
             <div v-if="selectedReport.content.activities" class="rounded-xl border border-slate-200 p-4">
-              <h4 class="mb-2 font-semibold text-slate-700">Guruh faoliyati</h4>
+              <h4 class="mb-2 font-semibold text-slate-700">{{ $t('reports.groupActivity') }}</h4>
               <p class="text-sm text-slate-600">{{ selectedReport.content.activities }}</p>
             </div>
             <div v-if="selectedReport.content.parents" class="rounded-xl border border-slate-200 p-4">
-              <h4 class="mb-2 font-semibold text-slate-700">Ota-onalar bilan ishlash</h4>
+              <h4 class="mb-2 font-semibold text-slate-700">{{ $t('reports.parentWorkLabel') }}</h4>
               <p class="text-sm text-slate-600">{{ selectedReport.content.parents }}</p>
             </div>
             <div v-if="selectedReport.content.problems" class="rounded-xl border border-slate-200 p-4">
-              <h4 class="mb-2 font-semibold text-slate-700">Muammolar</h4>
+              <h4 class="mb-2 font-semibold text-slate-700">{{ $t('reports.problems') }}</h4>
               <p class="text-sm text-slate-600">{{ selectedReport.content.problems }}</p>
             </div>
             <div v-if="selectedReport.content.plans" class="rounded-xl border border-slate-200 p-4">
-              <h4 class="mb-2 font-semibold text-slate-700">Keyingi oy rejalari</h4>
+              <h4 class="mb-2 font-semibold text-slate-700">{{ $t('reports.nextPlans') }}</h4>
               <p class="text-sm text-slate-600">{{ selectedReport.content.plans }}</p>
             </div>
           </div>
@@ -828,13 +760,13 @@
           <!-- Attached Files -->
           <div v-if="selectedReport.files" class="mt-4 flex flex-wrap gap-2">
             <span v-if="selectedReport.files.images > 0" class="flex items-center gap-1 rounded-lg bg-blue-100 px-3 py-1.5 text-sm text-blue-700">
-              <ImageIcon :size="14" /> {{ selectedReport.files.images }} rasm
+              <ImageIcon :size="14" /> {{ selectedReport.files.images }} {{ $t('reports.imagesLabel') }}
             </span>
             <span v-if="selectedReport.files.videos > 0" class="flex items-center gap-1 rounded-lg bg-purple-100 px-3 py-1.5 text-sm text-purple-700">
-              <Video :size="14" /> {{ selectedReport.files.videos }} video
+              <Video :size="14" /> {{ selectedReport.files.videos }} {{ $t('reports.videosLabel') }}
             </span>
             <span v-if="selectedReport.files.docs > 0" class="flex items-center gap-1 rounded-lg bg-emerald-100 px-3 py-1.5 text-sm text-emerald-700">
-              <FileText :size="14" /> {{ selectedReport.files.docs }} hujjat
+              <FileText :size="14" /> {{ selectedReport.files.docs }} {{ $t('reports.documentsLabel') }}
             </span>
           </div>
         </div>
@@ -845,7 +777,7 @@
             class="flex items-center gap-2 rounded-xl bg-emerald-500 px-5 py-2.5 font-medium text-white"
           >
             <Download :size="18" />
-            PDF yuklash
+            {{ $t('reports.downloadPdf') }}
           </button>
         </div>
       </div>
@@ -864,21 +796,37 @@
  * 4. Eslatma - Muddat yaqinlashganda ogohlantirish
  */
 
-import { ref, computed, onMounted } from 'vue'
-import { useDataStore } from '@/stores/data'
-import { useAuthStore } from '@/stores/auth'
-import { useToastStore } from '@/stores/toast'
 import api from '@/services/api'
-import { 
-  Plus, FileText, Eye, Download, Trash2, Pencil, X, Bell,
-  CheckCircle, AlertCircle, Calendar, Upload, 
-  Image as ImageIcon, Video, Loader2
+import { useAuthStore } from '@/stores/auth'
+import { useDataStore } from '@/stores/data'
+import { useLanguageStore } from '@/stores/language'
+import { useToastStore } from '@/stores/toast'
+import { jsPDF } from 'jspdf'
+import autoTable from 'jspdf-autotable'
+import {
+    AlertCircle,
+    Bell,
+    Calendar,
+    CheckCircle,
+    Download,
+    Eye,
+    FileText,
+    Image as ImageIcon,
+    Pencil,
+    Plus,
+    Trash2,
+    Upload,
+    Video,
+    X
 } from 'lucide-vue-next'
+import { computed, onMounted, ref } from 'vue'
 
 // ============ STORES ============
 const dataStore = useDataStore()
 const authStore = useAuthStore()
 const toastStore = useToastStore()
+const langStore = useLanguageStore()
+const { t } = langStore
 
 // ============ STATE ============
 const activeTab = ref('my')
@@ -892,6 +840,8 @@ const activeSection = ref('attendance')
 const showDeadlineReminder = ref(true)
 const loading = ref(false)
 const saving = ref(false)
+const groupInfo = ref(null)
+const groupStudentsList = ref([])
 
 // File uploads
 const uploadedImages = ref([])
@@ -924,57 +874,53 @@ const newReport = ref({
 })
 
 // ============ REPORT SECTIONS CONFIG ============
-const reportSections = [
-  { id: 'attendance', label: 'Davomat', icon: CheckCircle, auto: true },
-  { id: 'contract', label: 'Kontrakt', icon: FileText, auto: true },
-  { id: 'activities', label: 'Guruh faoliyati', icon: Calendar, auto: false },
-  { id: 'parents', label: 'Ota-onalar', icon: Bell, auto: false },
-  { id: 'problems', label: 'Muammolar', icon: AlertCircle, auto: false },
-  { id: 'plans', label: 'Rejalar', icon: Calendar, auto: false },
-  { id: 'files', label: 'Fayllar', icon: Upload, auto: false }
-]
+const reportSections = computed(() => [
+  { id: 'attendance', label: t('reports.sectionAttendance'), icon: CheckCircle, auto: true },
+  { id: 'contract', label: t('reports.sectionContract'), icon: FileText, auto: true },
+  { id: 'activities', label: t('reports.sectionActivities'), icon: Calendar, auto: false },
+  { id: 'parents', label: t('reports.sectionParents'), icon: Bell, auto: false },
+  { id: 'problems', label: t('reports.sectionProblems'), icon: AlertCircle, auto: false },
+  { id: 'plans', label: t('reports.sectionPlans'), icon: Calendar, auto: false },
+  { id: 'files', label: t('reports.sectionFiles'), icon: Upload, auto: false }
+])
 
 // ============ MONTHS CONFIG ============
-const months = [
-  { value: 1, label: 'Yanvar' },
-  { value: 2, label: 'Fevral' },
-  { value: 3, label: 'Mart' },
-  { value: 4, label: 'Aprel' },
-  { value: 5, label: 'May' },
-  { value: 6, label: 'Iyun' },
-  { value: 7, label: 'Iyul' },
-  { value: 8, label: 'Avgust' },
-  { value: 9, label: 'Sentyabr' },
-  { value: 10, label: 'Oktyabr' },
-  { value: 11, label: 'Noyabr' },
-  { value: 12, label: 'Dekabr' }
-]
+const months = computed(() => [
+  { value: 1, label: t('reports.january') },
+  { value: 2, label: t('reports.february') },
+  { value: 3, label: t('reports.march') },
+  { value: 4, label: t('reports.april') },
+  { value: 5, label: t('reports.may') },
+  { value: 6, label: t('reports.june') },
+  { value: 7, label: t('reports.july') },
+  { value: 8, label: t('reports.august') },
+  { value: 9, label: t('reports.september') },
+  { value: 10, label: t('reports.october') },
+  { value: 11, label: t('reports.november') },
+  { value: 12, label: t('reports.december') }
+])
 
 // ============ COMPUTED ============
 
 // Joriy oy nomi
 const currentMonth = computed(() => {
-  return months.find(m => m.value === selectedMonth.value)?.label || ''
+  return months.value.find(m => m.value === selectedMonth.value)?.label || ''
 })
 
-// Joriy guruh
+// Joriy guruh - API dan olish
 const currentGroup = computed(() => {
-  const groupId = authStore.user?.groupId
-  if (groupId) {
-    return dataStore.groups.find(g => g.id === groupId)
-  }
-  return dataStore.groups.find(g => g.leaderName === authStore.user?.name) || dataStore.groups[0]
+  return groupInfo.value
 })
 
 // Boshqa guruhlar
 const otherGroups = computed(() => {
-  return dataStore.groups.filter(g => g.id !== currentGroup.value?.id)
+  if (!groupInfo.value) return []
+  return dataStore.groups.filter(g => g.id !== groupInfo.value.id)
 })
 
 // Guruh talabalari
 const groupStudents = computed(() => {
-  if (!currentGroup.value) return []
-  return dataStore.students.filter(s => s.groupId === currentGroup.value.id)
+  return groupStudentsList.value
 })
 
 // Avtomatik ma'lumotlar (Davomat va Kontrakt)
@@ -1046,41 +992,67 @@ const autoData = computed(() => {
 // Mening hisobotlarim (from API)
 const myReports = ref([])
 
+// Load group info and students from dashboard API
+const loadGroupData = async () => {
+  try {
+    const dashboardResp = await api.request('/dashboard/leader')
+    if (dashboardResp?.group) {
+      groupInfo.value = dashboardResp.group
+    }
+    
+    // Load students for this group
+    if (groupInfo.value?.id) {
+      try {
+        const studentsResp = await api.request(`/students?group_id=${groupInfo.value.id}&page_size=100`)
+        if (studentsResp?.items) {
+          groupStudentsList.value = studentsResp.items
+        } else if (Array.isArray(studentsResp)) {
+          groupStudentsList.value = studentsResp
+        }
+      } catch (e) {
+        console.log('Students API not available')
+      }
+    }
+  } catch (e) {
+    console.error('Error loading group data:', e)
+  }
+}
+
 // Load reports from API
 const loadReports = async () => {
   loading.value = true
   try {
-    const response = await api.getReports({ group_id: currentGroup.value?.id })
-    if (response?.items) {
-      myReports.value = response.items.map(r => ({
-        id: r.id,
-        title: r.title || `${getMonthLabel(r.month)} oyi hisoboti`,
-        period: `${getMonthLabel(r.month)} ${r.year}`,
-        month: r.month,
-        year: r.year,
-        status: r.status || 'pending',
-        createdAt: new Date(r.created_at).toLocaleDateString('uz-UZ'),
-        stats: r.stats || { attendance: 0, contract: 0, activities: 0, meetings: 0 },
-        files: r.files || { images: 0, videos: 0, docs: 0 },
-        content: r.content || {}
-      }))
-    } else if (Array.isArray(response)) {
-      myReports.value = response.map(r => ({
-        id: r.id,
-        title: r.title || `${getMonthLabel(r.month)} oyi hisoboti`,
-        period: `${getMonthLabel(r.month)} ${r.year}`,
-        month: r.month,
-        year: r.year,
-        status: r.status || 'pending',
-        createdAt: new Date(r.created_at).toLocaleDateString('uz-UZ'),
-        stats: r.stats || { attendance: 0, contract: 0, activities: 0, meetings: 0 },
-        files: r.files || { images: 0, videos: 0, docs: 0 },
-        content: r.content || {}
-      }))
+    if (!groupInfo.value?.id) return
+    
+    // Try to load from API, but fallback to local storage if not available
+    try {
+      const response = await api.request('/reports?page_size=50')
+      if (response?.items && response.items.length > 0) {
+        // Filter reports for current group
+        const groupReports = response.items.filter(r => r.group_id === groupInfo.value.id)
+        myReports.value = groupReports.map(r => ({
+          id: r.id,
+          title: r.name || r.title || 'Hisobot',
+          period: r.date_from ? `${new Date(r.date_from).toLocaleDateString('uz-UZ')} - ${new Date(r.date_to).toLocaleDateString('uz-UZ')}` : '',
+          month: r.date_from ? new Date(r.date_from).getMonth() + 1 : null,
+          year: r.date_from ? new Date(r.date_from).getFullYear() : null,
+          status: r.status || 'pending',
+          createdAt: new Date(r.created_at).toLocaleDateString('uz-UZ'),
+          stats: { attendance: 0, contract: 0, activities: 0, meetings: 0 },
+          files: { images: 0, videos: 0, docs: 0 },
+          content: {}
+        }))
+      }
+    } catch (apiErr) {
+      console.log('Reports API not available, using local data')
+      // Load from localStorage if available
+      const saved = localStorage.getItem(`reports_${groupInfo.value.id}`)
+      if (saved) {
+        myReports.value = JSON.parse(saved)
+      }
     }
   } catch (err) {
     console.error('Error loading reports:', err)
-    // Keep empty if API fails
   } finally {
     loading.value = false
   }
@@ -1091,23 +1063,25 @@ const otherGroupsReports = ref([])
 
 const loadOtherReports = async () => {
   try {
-    const response = await api.getReports({ exclude_group: currentGroup.value?.id })
-    if (response?.items) {
-      otherGroupsReports.value = response.items.map(r => ({
-        id: r.id,
-        title: r.title || `${getMonthLabel(r.month)} oyi hisoboti`,
-        groupName: r.group_name || 'Noma\'lum',
-        groupId: r.group_id,
-        period: `${getMonthLabel(r.month)} ${r.year}`
-      }))
-    } else if (Array.isArray(response)) {
-      otherGroupsReports.value = response.map(r => ({
-        id: r.id,
-        title: r.title || `${getMonthLabel(r.month)} oyi hisoboti`,
-        groupName: r.group_name || 'Noma\'lum',
-        groupId: r.group_id,
-        period: `${getMonthLabel(r.month)} ${r.year}`
-      }))
+    if (!groupInfo.value?.id) return
+    
+    // Try to load from API
+    try {
+      const response = await api.request('/reports?page_size=50')
+      if (response?.items && response.items.length > 0) {
+        // Filter reports for other groups
+        const otherReports = response.items.filter(r => r.group_id && r.group_id !== groupInfo.value.id)
+        otherGroupsReports.value = otherReports.map(r => ({
+          id: r.id,
+          title: r.name || r.title || 'Hisobot',
+          groupName: r.group_name || 'Noma\'lum',
+          groupId: r.group_id,
+          period: r.date_from ? `${new Date(r.date_from).toLocaleDateString('uz-UZ')}` : ''
+        }))
+      }
+    } catch (apiErr) {
+      console.log('Other reports API not available')
+      // Keep empty - no local fallback for other groups
     }
   } catch (err) {
     console.error('Error loading other reports:', err)
@@ -1138,7 +1112,7 @@ const completedSections = computed(() => {
 
 // Oy nomini olish
 const getMonthLabel = (month) => {
-  return months.find(m => m.value === month)?.label || ''
+  return months.value.find(m => m.value === month)?.label || ''
 }
 
 // Pul formatini chiqarish
@@ -1178,12 +1152,12 @@ const getStatusBadgeClass = (status) => {
 // Status text
 const getStatusText = (status) => {
   const texts = {
-    approved: 'Tasdiqlangan',
-    pending: 'Tekshirilmoqda',
-    draft: 'Qoralama',
-    rejected: 'Rad etilgan'
+    approved: t('reports.statusApproved'),
+    pending: t('reports.statusReviewing'),
+    draft: t('reports.statusDraft'),
+    rejected: t('reports.statusRejected')
   }
-  return texts[status] || 'Noma\'lum'
+  return texts[status] || t('reports.statusUnknown')
 }
 
 // Eslatmani yopish
@@ -1225,7 +1199,7 @@ const handleVideoUpload = (event) => {
   
   // 50MB limit
   if (file.size > 50 * 1024 * 1024) {
-    toastStore.error('Video hajmi 50MB dan oshmasligi kerak')
+    toastStore.error(t('reports.videoSizeError'))
     return
   }
   
@@ -1284,7 +1258,7 @@ const openCreateModal = () => {
 const saveDraft = () => {
   const report = {
     id: Date.now(),
-    title: `${getMonthLabel(newReport.value.month)} oyi hisoboti`,
+    title: t('reports.monthlyReport', { month: getMonthLabel(newReport.value.month) }),
     period: `${getMonthLabel(newReport.value.month)} ${newReport.value.year}`,
     status: 'draft',
     createdAt: new Date().toLocaleDateString('uz-UZ'),
@@ -1309,24 +1283,32 @@ const saveDraft = () => {
   
   myReports.value.unshift(report)
   showCreateModal.value = false
-  toastStore.success('Qoralama saqlandi')
+  toastStore.success(t('reports.draftSaved'))
 }
 
 // Hisobot topshirish
 const submitReport = async () => {
   saving.value = true
   try {
-    const reportData = {
-      title: `${getMonthLabel(newReport.value.month)} oyi hisoboti`,
+    // Create report object for local storage
+    const report = {
+      id: Date.now(),
+      title: t('reports.monthlyReport', { month: getMonthLabel(newReport.value.month) }),
+      period: `${getMonthLabel(newReport.value.month)} ${newReport.value.year}`,
       month: newReport.value.month,
       year: newReport.value.year,
-      group_id: currentGroup.value?.id,
       status: 'pending',
+      createdAt: new Date().toLocaleDateString('uz-UZ'),
       stats: {
         attendance: autoData.value.attendance.rate,
         contract: autoData.value.contract.rate,
         activities: newReport.value.activities.events ? 1 : 0,
         meetings: newReport.value.parents.meetingsCount
+      },
+      files: {
+        images: uploadedImages.value.length,
+        videos: uploadedVideos.value.length,
+        docs: uploadedDocs.value.length
       },
       content: {
         activities: newReport.value.activities.events,
@@ -1337,30 +1319,53 @@ const submitReport = async () => {
       }
     }
 
-    const response = await api.createReport(reportData)
-    
-    // Add to local list
-    const report = {
-      id: response?.id || Date.now(),
-      title: reportData.title,
-      period: `${getMonthLabel(newReport.value.month)} ${newReport.value.year}`,
-      status: 'pending',
-      createdAt: new Date().toLocaleDateString('uz-UZ'),
-      stats: reportData.stats,
-      files: {
-        images: uploadedImages.value.length,
-        videos: uploadedVideos.value.length,
-        docs: uploadedDocs.value.length
-      },
-      content: reportData.content
+    // Save to backend
+    let savedToBackend = false
+    try {
+      const startDate = new Date(newReport.value.year, newReport.value.month - 1, 1)
+      const endDate = new Date(newReport.value.year, newReport.value.month, 0)
+      
+      const reportData = {
+        name: report.title,
+        description: `${groupInfo.value?.name || 'Guruh'} - ${report.title}. Davomat: ${autoData.value.attendance.rate}%, Kontrakt: ${autoData.value.contract.rate}%`,
+        report_type: 'attendance',
+        format: 'pdf',
+        date_from: startDate.toISOString().split('T')[0],
+        date_to: endDate.toISOString().split('T')[0],
+        group_id: groupInfo.value?.id || null
+      }
+      
+      console.log('Creating report with data:', reportData)
+      const response = await api.createReport(reportData)
+      console.log('Report created response:', response)
+      if (response?.id) {
+        report.id = response.id
+        report.status = response.status || 'pending'
+        savedToBackend = true
+      }
+    } catch (apiErr) {
+      console.error('Report creation API error:', apiErr)
+      console.error('Error details:', apiErr?.data, apiErr?.status)
+      // Show warning but continue with local save
+      toastStore.warning(t('reports.savedLocallyWarning') || 'Serverga saqlanmadi, lokal saqlandi')
     }
     
+    // Add to local list
     myReports.value.unshift(report)
+    
+    // Save to localStorage as backup
+    if (groupInfo.value?.id) {
+      localStorage.setItem(`reports_${groupInfo.value.id}`, JSON.stringify(myReports.value))
+    }
+    
     showCreateModal.value = false
-    toastStore.success('Hisobot muvaffaqiyatli topshirildi!')
+    toastStore.success(savedToBackend 
+      ? (t('reports.reportSubmitted') || 'Hisobot muvaffaqiyatli topshirildi')
+      : (t('reports.reportSavedLocally') || 'Hisobot lokal saqlandi')
+    )
   } catch (err) {
     console.error('Error submitting report:', err)
-    toastStore.error('Hisobotni topshirishda xatolik yuz berdi')
+    toastStore.error(t('reports.submitError'))
   } finally {
     saving.value = false
   }
@@ -1368,12 +1373,22 @@ const submitReport = async () => {
 
 // Load data on mount
 onMounted(async () => {
-  await Promise.all([
-    dataStore.fetchGroups(),
-    dataStore.fetchStudents(),
-    loadReports(),
-    loadOtherReports()
-  ])
+  loading.value = true
+  try {
+    // First load group info from dashboard API
+    await loadGroupData()
+    
+    // Then load other data
+    await Promise.all([
+      dataStore.fetchGroups(),
+      loadReports(),
+      loadOtherReports()
+    ])
+  } catch (e) {
+    console.error('Error loading data:', e)
+  } finally {
+    loading.value = false
+  }
 })
 
 // Hisobotni ko'rish
@@ -1385,7 +1400,7 @@ const viewReport = (report) => {
 // Hisobotni tahrirlash
 const editReport = (report) => {
   // Fill form with report data
-  newReport.value.month = months.find(m => report.period.includes(m.label))?.value || 1
+  newReport.value.month = months.value.find(m => report.period.includes(m.label))?.value || 1
   newReport.value.activities.events = report.content?.activities || ''
   newReport.value.parents.meetings = report.content?.parents || ''
   newReport.value.problems.main = report.content?.problems || ''
@@ -1395,18 +1410,197 @@ const editReport = (report) => {
 }
 
 // Hisobotni yuklab olish (PDF)
-const downloadReport = (report) => {
-  toastStore.info(`"${report.title}" yuklab olinmoqda...`)
+const downloadReport = async (report) => {
+  toastStore.info(t('reports.pdfDownloading'))
+  
+  try {
+    const group = groupInfo.value || {}
+    const stats = report.stats || autoData.value
+    const content = report.content || {}
+    
+    // Create PDF document
+    const doc = new jsPDF('p', 'mm', 'a4')
+    const pageWidth = doc.internal.pageSize.getWidth()
+    let y = 20
+    
+    // Title
+    doc.setFontSize(20)
+    doc.setTextColor(30, 41, 59)
+    doc.text(report.title, pageWidth / 2, y, { align: 'center' })
+    y += 10
+    
+    // Subtitle - Group info
+    doc.setFontSize(12)
+    doc.setTextColor(100, 116, 139)
+    doc.text(`Guruh: ${group.name || 'N/A'}`, pageWidth / 2, y, { align: 'center' })
+    y += 6
+    doc.text(`Davr: ${report.period}`, pageWidth / 2, y, { align: 'center' })
+    y += 6
+    doc.text(`Sana: ${report.createdAt || new Date().toLocaleDateString('uz-UZ')}`, pageWidth / 2, y, { align: 'center' })
+    y += 15
+    
+    // Line separator
+    doc.setDrawColor(16, 185, 129)
+    doc.setLineWidth(0.5)
+    doc.line(20, y, pageWidth - 20, y)
+    y += 15
+    
+    // Statistics section header
+    doc.setFontSize(14)
+    doc.setTextColor(30, 41, 59)
+    doc.text('Umumiy Ko\'rsatkichlar', 20, y)
+    y += 10
+    
+    // Statistics boxes
+    const statData = [
+      { label: 'Davomat', value: `${stats.attendance?.rate || stats.attendance || 0}%`, color: [34, 197, 94] },
+      { label: 'Kontrakt', value: `${stats.contract?.rate || stats.contract || 0}%`, color: [59, 130, 246] },
+      { label: 'Tadbirlar', value: `${stats.activities || 0}`, color: [245, 158, 11] },
+      { label: 'Yig\'ilishlar', value: `${stats.meetings || 0}`, color: [239, 68, 68] }
+    ]
+    
+    const boxWidth = 40
+    const boxHeight = 25
+    const startX = (pageWidth - (boxWidth * 4 + 15)) / 2
+    
+    statData.forEach((stat, i) => {
+      const x = startX + i * (boxWidth + 5)
+      
+      // Box background
+      doc.setFillColor(stat.color[0], stat.color[1], stat.color[2])
+      doc.roundedRect(x, y, boxWidth, boxHeight, 3, 3, 'F')
+      
+      // Value
+      doc.setFontSize(16)
+      doc.setTextColor(255, 255, 255)
+      doc.text(stat.value, x + boxWidth / 2, y + 12, { align: 'center' })
+      
+      // Label
+      doc.setFontSize(9)
+      doc.text(stat.label, x + boxWidth / 2, y + 20, { align: 'center' })
+    })
+    y += boxHeight + 15
+    
+    // Students attendance table
+    if (autoData.value?.studentsAttendance?.length > 0) {
+      doc.setFontSize(14)
+      doc.setTextColor(30, 41, 59)
+      doc.text('Talabalar Davomati', 20, y)
+      y += 5
+      
+      const tableData = autoData.value.studentsAttendance.map((s, i) => [
+        i + 1,
+        s.name,
+        s.present,
+        s.absent,
+        `${s.rate}%`
+      ])
+      
+      autoTable(doc, {
+        startY: y,
+        head: [['#', 'Talaba', 'Kelgan', 'Kelmagan', 'Foiz']],
+        body: tableData,
+        theme: 'striped',
+        headStyles: { fillColor: [16, 185, 129], textColor: 255 },
+        styles: { fontSize: 10, cellPadding: 3 },
+        columnStyles: {
+          0: { cellWidth: 10 },
+          1: { cellWidth: 70 },
+          2: { cellWidth: 25, halign: 'center' },
+          3: { cellWidth: 25, halign: 'center' },
+          4: { cellWidth: 25, halign: 'center' }
+        }
+      })
+      
+      y = doc.lastAutoTable.finalY + 15
+    }
+    
+    // Check if we need a new page
+    if (y > 250) {
+      doc.addPage()
+      y = 20
+    }
+    
+    // Content sections
+    const sections = [
+      { title: 'Guruh Faoliyati', text: content.activities },
+      { title: 'Yutuqlar', text: content.achievements },
+      { title: 'Ota-onalar bilan ishlash', text: content.parents },
+      { title: 'Muammolar', text: content.problems },
+      { title: 'Rejalar', text: content.plans }
+    ]
+    
+    sections.forEach(section => {
+      if (section.text) {
+        if (y > 260) {
+          doc.addPage()
+          y = 20
+        }
+        
+        doc.setFontSize(12)
+        doc.setTextColor(30, 41, 59)
+        doc.text(section.title, 20, y)
+        y += 6
+        
+        doc.setFontSize(10)
+        doc.setTextColor(71, 85, 105)
+        const lines = doc.splitTextToSize(section.text, pageWidth - 40)
+        doc.text(lines, 20, y)
+        y += lines.length * 5 + 10
+      }
+    })
+    
+    // Footer
+    const pageCount = doc.internal.getNumberOfPages()
+    for (let i = 1; i <= pageCount; i++) {
+      doc.setPage(i)
+      doc.setFontSize(9)
+      doc.setTextColor(148, 163, 184)
+      doc.text('UniControl - Talabalar boshqaruv tizimi', pageWidth / 2, 285, { align: 'center' })
+      doc.text(`Sahifa ${i} / ${pageCount}`, pageWidth - 20, 285, { align: 'right' })
+    }
+    
+    // Save PDF
+    const fileName = `${report.title.replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.pdf`
+    doc.save(fileName)
+    
+    toastStore.success(t('reports.pdfDownloaded'))
+  } catch (err) {
+    console.error('PDF download error:', err)
+    toastStore.error(t('reports.pdfError'))
+  }
 }
 
 // Hisobotni o'chirish
-const deleteReport = (report) => {
-  if (confirm('Hisobotni o\'chirishni xohlaysizmi?')) {
+const deleteReport = async (report) => {
+  if (!confirm(t('reports.confirmDeleteReport'))) return
+
+  // Faqat draft/pending/failed hisobotlarni o'chirish mumkin
+  if (!['draft', 'pending', 'failed'].includes(report.status)) {
+    toastStore.error('Faqat kutilayotgan yoki qoralama hisobotlarni o\'chirish mumkin')
+    return
+  }
+
+  try {
+    // Try to delete from backend
+    if (typeof report.id === 'number') {
+      await api.request(`/reports/${report.id}`, { method: 'DELETE' })
+    }
+    
     const index = myReports.value.findIndex(r => r.id === report.id)
     if (index !== -1) {
       myReports.value.splice(index, 1)
-      toastStore.success('Hisobot o\'chirildi')
     }
+    
+    // Update localStorage
+    if (groupInfo.value?.id) {
+      localStorage.setItem(`reports_${groupInfo.value.id}`, JSON.stringify(myReports.value))
+    }
+    
+    toastStore.success(t('reports.reportDeleted'))
+  } catch (err) {
+    console.error('Delete error:', err)
+    toastStore.error('Hisobotni o\'chirishda xatolik')
   }
 }
 </script>

@@ -10,9 +10,10 @@ Version: 1.0.0
 from datetime import datetime, date, time
 from enum import Enum
 from typing import Optional, TYPE_CHECKING
-from sqlalchemy import String, Integer, DateTime, Date, Time, ForeignKey, Text, Enum as SAEnum
+from sqlalchemy import String, Integer, DateTime, Date, Time, ForeignKey, Text, Boolean, Enum as SAEnum
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
+from app.config import TASHKENT_TZ
 from app.database import Base
 
 if TYPE_CHECKING:
@@ -122,14 +123,23 @@ class Attendance(Base):
     # Timestamps
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
-        default=datetime.utcnow,
+        default=lambda: datetime.now(TASHKENT_TZ),
         nullable=False
     )
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
-        default=datetime.utcnow,
-        onupdate=datetime.utcnow,
+        default=lambda: datetime.now(TASHKENT_TZ),
+        onupdate=lambda: datetime.now(TASHKENT_TZ),
         nullable=False
+    )
+    
+    # Telegram notification tracking - prevents bot from re-sending what backend already sent
+    telegram_notified: Mapped[bool] = mapped_column(
+        Boolean,
+        default=False,
+        server_default="false",
+        nullable=False,
+        comment="Whether Telegram notification was already sent by backend"
     )
     
     # Relationships
@@ -153,6 +163,13 @@ class Attendance(Base):
     
     def __repr__(self) -> str:
         return f"<Attendance(id={self.id}, student_id={self.student_id}, date={self.date}, status={self.status.value})>"
+    
+    @property
+    def student_name(self) -> Optional[str]:
+        """Get student full name."""
+        if self.student:
+            return getattr(self.student, 'full_name', None) or getattr(self.student, 'name', None)
+        return None
     
     @property
     def is_present(self) -> bool:

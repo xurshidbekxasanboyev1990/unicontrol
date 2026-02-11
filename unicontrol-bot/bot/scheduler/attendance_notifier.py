@@ -1,6 +1,7 @@
 import asyncio
 import logging
 from datetime import datetime, timedelta
+from bot.config import now_tashkent
 from typing import Dict, List, Optional
 from sqlalchemy import select
 from aiogram import Bot
@@ -92,20 +93,20 @@ class AttendanceNotifier:
     ):
         """Check a specific group for attendance updates"""
         # Get last check time for this group
-        last_check = self.last_check.get(group_id, datetime.utcnow() - timedelta(minutes=10))
+        last_check = self.last_check.get(group_id, now_tashkent() - timedelta(minutes=10))
         
         # Get recent updates from API
         updates = await self.api.get_recent_attendance_updates(group_id, last_check)
         
         if not updates:
-            self.last_check[group_id] = datetime.utcnow()
+            self.last_check[group_id] = now_tashkent()
             return
         
         # Process each update
         for attendance in updates:
             await self._notify_subscriptions(attendance, subscriptions)
         
-        self.last_check[group_id] = datetime.utcnow()
+        self.last_check[group_id] = now_tashkent()
     
     async def _notify_subscriptions(
         self, 

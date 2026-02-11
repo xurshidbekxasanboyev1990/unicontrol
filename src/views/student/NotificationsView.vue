@@ -3,8 +3,8 @@
     <!-- Header -->
     <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
       <div>
-        <h1 class="text-2xl font-bold text-slate-800">Bildirishnomalar</h1>
-        <p class="text-slate-500">Xabarlar va e'lonlar</p>
+        <h1 class="text-2xl font-bold text-slate-800">{{ $t('notifications.title') }}</h1>
+        <p class="text-slate-500">{{ $t('notifications.title') }}</p>
       </div>
       
       <div class="flex items-center gap-3">
@@ -13,7 +13,7 @@
           class="flex items-center gap-2 rounded-xl border border-slate-200 px-4 py-2 text-slate-600 hover:bg-slate-50"
         >
           <CheckCheck :size="18" />
-          <span>Barchasini o'qilgan deb belgilash</span>
+          <span>{{ $t('notifications.markAllRead') }}</span>
         </button>
       </div>
     </div>
@@ -46,13 +46,13 @@
       <!-- Loading State -->
       <div v-if="loading" class="flex items-center justify-center py-8">
         <Loader2 class="w-8 h-8 animate-spin text-blue-600" />
-        <span class="ml-3 text-slate-600">Yuklanmoqda...</span>
+        <span class="ml-3 text-slate-600">{{ $t('common.loading') }}</span>
       </div>
 
       <!-- Error State -->
       <div v-else-if="error" class="bg-red-50 border border-red-200 rounded-xl p-4">
         <p class="text-red-600">{{ error }}</p>
-        <button @click="loadNotifications" class="mt-2 text-red-700 underline">Qayta urinish</button>
+        <button @click="loadNotifications" class="mt-2 text-red-700 underline">{{ $t('common.retry') }}</button>
       </div>
 
       <template v-else>
@@ -61,7 +61,7 @@
             v-for="notification in filteredNotifications"
             :key="notification.id"
             class="flex gap-4 rounded-2xl border bg-white p-4 shadow-sm transition-all"
-            :class="notification.read ? 'border-slate-200' : 'border-blue-200 bg-blue-50/50'"
+            :class="notification.isRead ? 'border-slate-200' : 'border-blue-200 bg-blue-50/50'"
           >
           <!-- Icon -->
           <div 
@@ -79,17 +79,17 @@
           <div class="flex-1 min-w-0">
             <div class="flex items-start justify-between gap-2">
               <h3 class="font-medium text-slate-800">{{ notification.title }}</h3>
-              <span class="flex-shrink-0 text-xs text-slate-400">{{ notification.time }}</span>
+              <span class="flex-shrink-0 text-xs text-slate-400">{{ notification.time || formatTime(notification.createdAt) }}</span>
             </div>
             <p class="mt-1 text-sm text-slate-600">{{ notification.message }}</p>
             
             <!-- Action Button -->
-            <div v-if="notification.action" class="mt-3">
+            <div v-if="notification.actionUrl" class="mt-3">
               <button
                 @click="handleAction(notification)"
                 class="inline-flex items-center gap-1 rounded-lg bg-blue-500 px-3 py-1.5 text-sm text-white hover:bg-blue-600"
               >
-                {{ notification.actionText }}
+                {{ notification.actionText || $t('common.view') }}
                 <ArrowRight :size="14" />
               </button>
             </div>
@@ -98,17 +98,17 @@
           <!-- Actions -->
           <div class="flex flex-col gap-2">
             <button
-              v-if="!notification.read"
+              v-if="!notification.isRead"
               @click="markAsRead(notification.id)"
               class="rounded-lg p-2 text-slate-400 hover:bg-slate-100 hover:text-blue-500"
-              title="O'qilgan deb belgilash"
+              :title="$t('notifications.markAsRead')"
             >
               <Check :size="18" />
             </button>
             <button
               @click="deleteNotification(notification.id)"
               class="rounded-lg p-2 text-slate-400 hover:bg-slate-100 hover:text-red-500"
-              title="O'chirish"
+              :title="$t('common.delete')"
             >
               <Trash2 :size="18" />
             </button>
@@ -124,8 +124,8 @@
           <div class="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-slate-100">
             <Bell :size="32" class="text-slate-400" />
           </div>
-          <h3 class="text-lg font-medium text-slate-800">Xabarlar yo'q</h3>
-          <p class="mt-1 text-slate-500">Yangi xabarlar shu yerda ko'rsatiladi</p>
+          <h3 class="text-lg font-medium text-slate-800">{{ $t('notifications.noNotifications') }}</h3>
+          <p class="mt-1 text-slate-500">{{ $t('common.noData') }}</p>
         </div>
       </template>
     </div>
@@ -138,8 +138,8 @@
             <BellRing :size="20" class="text-indigo-600" />
           </div>
           <div>
-            <h3 class="font-medium text-slate-800">Push bildirishnomalar</h3>
-            <p class="text-sm text-slate-500">Yangi xabarlar haqida xabar oling</p>
+            <h3 class="font-medium text-slate-800">{{ $t('settings.pushNotifications') }}</h3>
+            <p class="text-sm text-slate-500">{{ $t('settings.pushDesc') }}</p>
           </div>
         </div>
         
@@ -151,19 +151,19 @@
       
       <div v-if="pushEnabled" class="mt-4 space-y-3 border-t border-slate-100 pt-4">
         <label class="flex items-center justify-between">
-          <span class="text-sm text-slate-600">E'lonlar</span>
+          <span class="text-sm text-slate-600">{{ $t('notifications.announcements') }}</span>
           <input type="checkbox" v-model="pushSettings.announcements" class="rounded border-slate-300" />
         </label>
         <label class="flex items-center justify-between">
-          <span class="text-sm text-slate-600">Davomat ogohlantirishi</span>
+          <span class="text-sm text-slate-600">{{ $t('notifications.attendanceWarning') }}</span>
           <input type="checkbox" v-model="pushSettings.attendance" class="rounded border-slate-300" />
         </label>
         <label class="flex items-center justify-between">
-          <span class="text-sm text-slate-600">Jadval o'zgarishlari</span>
+          <span class="text-sm text-slate-600">{{ $t('notifications.scheduleChanges') }}</span>
           <input type="checkbox" v-model="pushSettings.schedule" class="rounded border-slate-300" />
         </label>
         <label class="flex items-center justify-between">
-          <span class="text-sm text-slate-600">Kutubxona eslatmalari</span>
+          <span class="text-sm text-slate-600">{{ $t('notifications.libraryReminders') }}</span>
           <input type="checkbox" v-model="pushSettings.library" class="rounded border-slate-300" />
         </label>
       </div>
@@ -172,17 +172,28 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
+import { useDataStore } from '@/stores/data'
+import { useLanguageStore } from '@/stores/language'
 import { useToastStore } from '@/stores/toast'
-import api from '../../services/api'
 import {
-  Bell, BellRing, Check, CheckCheck, Trash2, ArrowRight,
-  Megaphone, Calendar, AlertTriangle, BookOpen, Users, Info, Loader2
+  AlertTriangle,
+  ArrowRight,
+  Bell, BellRing,
+  BookOpen,
+  Calendar,
+  Check, CheckCheck,
+  Info, Loader2,
+  Megaphone,
+  Trash2
 } from 'lucide-vue-next'
+import { computed, onMounted, ref } from 'vue'
+import { useRouter } from 'vue-router'
+import api from '../../services/api'
 
 const router = useRouter()
 const toast = useToastStore()
+const dataStore = useDataStore()
+const { t } = useLanguageStore()
 
 // State
 const loading = ref(true)
@@ -198,15 +209,15 @@ const pushSettings = ref({
 
 // Tabs
 const tabs = computed(() => [
-  { id: 'all', name: 'Barchasi', icon: Bell, count: unreadCount.value },
-  { id: 'announcement', name: 'E\'lonlar', icon: Megaphone, count: getTypeCount('announcement') },
-  { id: 'schedule', name: 'Jadval', icon: Calendar, count: getTypeCount('schedule') },
-  { id: 'attendance', name: 'Davomat', icon: AlertTriangle, count: getTypeCount('attendance') },
-  { id: 'library', name: 'Kutubxona', icon: BookOpen, count: getTypeCount('library') }
+  { id: 'all', name: t('common.all'), icon: Bell, count: unreadCount.value },
+  { id: 'announcement', name: t('notifications.announcements'), icon: Megaphone, count: getTypeCount('announcement') },
+  { id: 'schedule', name: t('notifications.scheduleChanges'), icon: Calendar, count: getTypeCount('schedule') },
+  { id: 'attendance', name: t('notifications.attendanceWarning'), icon: AlertTriangle, count: getTypeCount('attendance') },
+  { id: 'info', name: t('notifications.info'), icon: Info, count: getTypeCount('info') }
 ])
 
-// Notifications
-const notifications = ref([])
+// Use store notifications
+const notifications = computed(() => dataStore.notifications)
 
 // Load notifications from API
 const loadNotifications = async () => {
@@ -214,23 +225,29 @@ const loadNotifications = async () => {
   error.value = null
   
   try {
-    const response = await api.getNotifications({ limit: 50 })
-    notifications.value = (response.items || response || []).map(n => ({
-      id: n.id,
-      type: n.type || 'announcement',
-      title: n.title,
-      message: n.message || n.content,
-      time: formatTime(n.created_at),
-      read: n.is_read || n.read || false,
-      action: n.action_type,
-      actionText: n.action_text || getActionText(n.action_type)
-    }))
+    await dataStore.fetchNotifications({ page_size: 100 })
   } catch (e) {
     console.error('Error loading notifications:', e)
-    error.value = 'Bildirishnomalarni yuklashda xatolik'
+    error.value = t('notifications.loadError')
   } finally {
     loading.value = false
   }
+}
+
+// Computed
+const filteredNotifications = computed(() => {
+  if (activeTab.value === 'all') {
+    return notifications.value
+  }
+  return notifications.value.filter(n => n.type === activeTab.value)
+})
+
+const unreadCount = computed(() => {
+  return dataStore.unreadCount
+})
+
+function getTypeCount(type) {
+  return notifications.value.filter(n => n.type === type && !n.isRead && !n.read).length
 }
 
 // Format time helper
@@ -243,37 +260,11 @@ const formatTime = (dateStr) => {
   const diffHours = Math.floor(diffMs / 3600000)
   const diffDays = Math.floor(diffMs / 86400000)
   
-  if (diffMins < 60) return `${diffMins} daqiqa oldin`
-  if (diffHours < 24) return `${diffHours} soat oldin`
-  if (diffDays === 1) return 'Kecha'
-  if (diffDays < 7) return `${diffDays} kun oldin`
+  if (diffMins < 60) return t('notifications.minutesAgo', { min: diffMins })
+  if (diffHours < 24) return t('notifications.hoursAgo', { hours: diffHours })
+  if (diffDays === 1) return t('notifications.daysAgo', { days: 1 })
+  if (diffDays < 7) return t('notifications.daysAgo', { days: diffDays })
   return date.toLocaleDateString('uz-UZ')
-}
-
-// Get action text
-const getActionText = (actionType) => {
-  const texts = {
-    schedule: 'Jadvalga o\'tish',
-    attendance: 'Davomatni ko\'rish',
-    library: 'Kutubxonaga o\'tish'
-  }
-  return texts[actionType] || 'Ko\'rish'
-}
-
-// Computed
-const filteredNotifications = computed(() => {
-  if (activeTab.value === 'all') {
-    return notifications.value
-  }
-  return notifications.value.filter(n => n.type === activeTab.value)
-})
-
-const unreadCount = computed(() => {
-  return notifications.value.filter(n => !n.read).length
-})
-
-function getTypeCount(type) {
-  return notifications.value.filter(n => n.type === type && !n.read).length
 }
 
 // Methods
@@ -312,59 +303,39 @@ function getNotificationIconColor(type) {
 
 async function markAsRead(id) {
   try {
-    await api.markNotificationRead(id)
-    const notification = notifications.value.find(n => n.id === id)
-    if (notification) {
-      notification.read = true
-    }
+    await dataStore.markNotificationRead(id)
   } catch (e) {
     console.error('Error marking as read:', e)
-    // Still update locally
-    const notification = notifications.value.find(n => n.id === id)
-    if (notification) {
-      notification.read = true
-    }
   }
 }
 
 async function markAllAsRead() {
   try {
-    await api.markAllNotificationsRead()
-    notifications.value.forEach(n => n.read = true)
-    toast.success('Barcha xabarlar o\'qilgan deb belgilandi')
+    await dataStore.markAllNotificationsRead()
+    toast.success(t('notifications.allMarkedRead'))
   } catch (e) {
     console.error('Error marking all as read:', e)
-    // Still update locally
-    notifications.value.forEach(n => n.read = true)
-    toast.success('Barcha xabarlar o\'qilgan deb belgilandi')
+    toast.success(t('notifications.allMarkedRead'))
   }
 }
 
 async function deleteNotification(id) {
   try {
     await api.deleteNotification(id)
-    const index = notifications.value.findIndex(n => n.id === id)
-    if (index > -1) {
-      notifications.value.splice(index, 1)
-      toast.success('Xabar o\'chirildi')
-    }
+    // Refresh from store
+    await dataStore.fetchNotifications({ page_size: 100 })
+    toast.success(t('notifications.messageDeleted'))
   } catch (e) {
     console.error('Error deleting notification:', e)
-    toast.error('O\'chirishda xatolik')
+    toast.error(t('notifications.deleteError'))
   }
 }
 
 function handleAction(notification) {
   markAsRead(notification.id)
   
-  const routes = {
-    schedule: '/student/schedule',
-    attendance: '/student/attendance',
-    library: '/student/library'
-  }
-  
-  if (routes[notification.action]) {
-    router.push(routes[notification.action])
+  if (notification.actionUrl) {
+    router.push(notification.actionUrl)
   }
 }
 

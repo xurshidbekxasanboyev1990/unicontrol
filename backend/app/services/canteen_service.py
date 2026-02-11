@@ -15,6 +15,7 @@ Version: 1.0.0
 """
 
 from datetime import datetime, date, timedelta
+from app.config import now_tashkent, today_tashkent
 from decimal import Decimal
 from typing import Optional, List, Tuple
 
@@ -258,7 +259,7 @@ class CanteenService:
     
     async def _generate_order_number(self) -> str:
         """Generate unique order number for today."""
-        today = date.today()
+        today = today_tashkent()
         
         # Count orders today
         count_query = select(func.count(Order.id)).where(
@@ -345,7 +346,7 @@ class CanteenService:
         order = result.scalar_one_or_none()
         
         if order and order.user:
-            order.user_name = order.user.full_name
+            order.user_name = order.user.name
         
         return order
     
@@ -430,7 +431,7 @@ class CanteenService:
         
         for order in orders:
             if order.user:
-                order.user_name = order.user.full_name
+                order.user_name = order.user.name
         
         return orders, total
     
@@ -457,7 +458,7 @@ class CanteenService:
         
         # Set completion time if completed
         if status == OrderStatus.COMPLETED:
-            order.completed_at = datetime.utcnow()
+            order.completed_at = now_tashkent()
         
         await self.db.commit()
         await self.db.refresh(order)
@@ -473,7 +474,7 @@ class CanteenService:
         Returns:
             Statistics object
         """
-        today = date.today()
+        today = today_tashkent()
         
         # Orders today
         orders_today_query = select(func.count(Order.id)).where(

@@ -25,6 +25,7 @@ class UserBase(BaseModel):
 
 class UserCreate(UserBase):
     """Schema for creating a user."""
+    login: Optional[str] = Field(None, max_length=50)
     password: str = Field(..., min_length=6, max_length=100)
 
 
@@ -53,6 +54,7 @@ class PasswordReset(BaseModel):
 class UserResponse(BaseModel):
     """Schema for user response."""
     id: int
+    login: Optional[str] = None
     email: Optional[EmailStr] = None
     name: str
     role: UserRole
@@ -62,6 +64,7 @@ class UserResponse(BaseModel):
     is_first_login: bool = False
     created_at: datetime
     last_login: Optional[datetime] = None
+    plain_password: Optional[str] = None
     # Extended fields for students
     student_id: Optional[str] = None
     group_id: Optional[int] = None

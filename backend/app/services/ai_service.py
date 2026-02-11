@@ -15,7 +15,7 @@ from sqlalchemy import select, func
 from sqlalchemy.orm import joinedload
 import openai
 
-from app.config import settings
+from app.config import settings, now_tashkent
 from app.models.student import Student
 from app.models.attendance import Attendance, AttendanceStatus
 from app.models.report import Report, ReportType, ReportStatus
@@ -45,7 +45,7 @@ class AIService:
         Returns:
             AI analysis response
         """
-        start_time = datetime.utcnow()
+        start_time = now_tashkent()
         
         # Gather context data
         context_data = await self._gather_context(request)
@@ -92,14 +92,14 @@ class AIService:
             ai_model=settings.OPENAI_MODEL,
             ai_tokens_used=tokens_used,
             started_at=start_time,
-            completed_at=datetime.utcnow(),
+            completed_at=now_tashkent(),
         )
         
         self.db.add(report)
         await self.db.commit()
         await self.db.refresh(report)
         
-        processing_time = (datetime.utcnow() - start_time).total_seconds()
+        processing_time = (now_tashkent() - start_time).total_seconds()
         
         return AIAnalysisResponse(
             id=report.id,
@@ -364,5 +364,5 @@ Iltimos, yuqoridagi ma'lumotlarni tahlil qiling va so'rovga javob bering.
             "attendance": attendance_context,
             "payment": payment_context,
             "insights": insights,
-            "generated_at": datetime.utcnow().isoformat(),
+            "generated_at": now_tashkent().isoformat(),
         }

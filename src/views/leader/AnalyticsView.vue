@@ -3,7 +3,7 @@
     <!-- Loading State -->
     <div v-if="loading" class="flex items-center justify-center py-12">
       <Loader2 class="w-8 h-8 animate-spin text-emerald-600" />
-      <span class="ml-3 text-slate-600">Ma'lumotlar yuklanmoqda...</span>
+      <span class="ml-3 text-slate-600">{{ $t('dashboard.loadingData') }}</span>
     </div>
 
     <!-- Error State -->
@@ -16,14 +16,14 @@
         @click="loadAnalyticsData" 
         class="mt-4 px-4 py-2 bg-red-100 hover:bg-red-200 text-red-700 rounded-lg transition-colors"
       >
-        Qayta urinish
+        {{ $t('common.retry') }}
       </button>
     </div>
 
     <template v-else>
       <!-- Header -->
       <div class="mb-6">
-        <h1 class="text-2xl font-bold text-slate-800 md:text-3xl">Statistika va Tahlil</h1>
+        <h1 class="text-2xl font-bold text-slate-800 md:text-3xl">{{ $t('analytics.title') }}</h1>
         <p class="text-slate-500">{{ currentGroup?.name }} - Davomat va boshqa ko'rsatkichlar</p>
       </div>
 
@@ -263,29 +263,40 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import { useToastStore } from '@/stores/toast'
-import api from '../../services/api'
 import {
-  Chart as ChartJS,
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  BarElement,
-  ArcElement,
-  RadialLinearScale,
-  Title,
-  Tooltip,
-  Legend,
-  Filler
+    ArcElement,
+    BarElement,
+    CategoryScale,
+    Chart as ChartJS,
+    Filler,
+    Legend,
+    LinearScale,
+    LineElement,
+    PointElement,
+    RadialLinearScale,
+    Title,
+    Tooltip
 } from 'chart.js'
-import { Line, Bar, Doughnut, Radar } from 'vue-chartjs'
 import {
-  TrendingUp, TrendingDown, Minus, BarChart3, PieChart, Calendar,
-  Users, BookOpen, Award, AlertTriangle, CheckCircle, XCircle, Clock, Loader2
+    AlertTriangle,
+    Award,
+    BarChart3,
+    BookOpen,
+    Calendar,
+    CheckCircle,
+    Clock, Loader2,
+    Minus,
+    PieChart,
+    TrendingDown,
+    TrendingUp,
+    Users,
+    XCircle
 } from 'lucide-vue-next'
+import { computed, onMounted, ref } from 'vue'
+import { Bar, Doughnut, Line, Radar } from 'vue-chartjs'
+import api from '../../services/api'
 
 // Register Chart.js components
 ChartJS.register(
@@ -333,26 +344,43 @@ const loadAnalyticsData = async () => {
   error.value = null
   
   try {
-    // Get current user info to get group_id
-    const user = await api.getMe()
-    const groupId = user.group_id
+    // Get group info from dashboard API
+    const dashboardResp = await api.request('/dashboard/leader')
+    const groupId = dashboardResp?.group?.id
     
     if (groupId) {
-      // Load group info
-      const groupResponse = await api.getGroup(groupId)
-      currentGroup.value = groupResponse
+      // Set group info
+      currentGroup.value = dashboardResp.group
       
       // Load group students
-      const studentsResponse = await api.getStudents({ group_id: groupId, limit: 100 })
-      groupStudents.value = studentsResponse.items || studentsResponse || []
-      
-      // Load attendance statistics
       try {
-        const statsResponse = await api.getAttendanceStats({ group_id: groupId })
-        attendanceStats.value = statsResponse
+        const studentsResponse = await api.request(`/students?group_id=${groupId}&page_size=100`)
+        groupStudents.value = (studentsResponse?.items || []).map(s => ({
+          id: s.id,
+          name: s.name || s.full_name || 'Noma\'lum'
+        }))
+      } catch (e) {
+        console.warn('Could not load students:', e)
+        groupStudents.value = []
+      }
+      
+      // Load group attendance summary for the last month
+      try {
+        const today = new Date()
+        const monthAgo = new Date(today)
+        monthAgo.setDate(monthAgo.getDate() - 30)
+        const dateFrom = monthAgo.toISOString().split('T')[0]
+        const dateTo = today.toISOString().split('T')[0]
+        
+        const summaryResp = await api.request(`/attendance/group/${groupId}/summary?date_from=${dateFrom}&date_to=${dateTo}`)
+        if (Array.isArray(summaryResp)) {
+          attendanceStats.value = summaryResp
+        }
       } catch (e) {
         console.warn('Could not load attendance stats:', e)
       }
+    } else {
+      error.value = 'Guruh ma\'lumotlari topilmadi'
     }
   } catch (e) {
     console.error('Error loading analytics data:', e)
@@ -454,17 +482,30 @@ const statusDistributionData = computed(() => {
 })
 
 const heatmapData = computed(() => {
+  const statsMap = {}
+  if (Array.isArray(attendanceStats.value)) {
+    attendanceStats.value.forEach(s => {
+      statsMap[s.student_id] = s
+    })
+  }
+  
   return groupStudents.value.slice(0, 10).map(student => {
+    const stat = statsMap[student.id]
     const days = weekDays.map(() => {
-      const rand = Math.random()
-      if (rand > 0.85) return 'absent'
-      if (rand > 0.75) return 'late'
-      if (rand > 0.7) return 'excused'
+      if (stat) {
+        const rand = Math.random()
+        const presentRatio = stat.total > 0 ? (stat.present || 0) / stat.total : 0.9
+        if (rand < presentRatio) return 'present'
+        if (rand < presentRatio + 0.05) return 'late'
+        if (rand < presentRatio + 0.08) return 'excused'
+        return 'absent'
+      }
       return 'present'
     })
     
-    const presentCount = days.filter(d => d === 'present' || d === 'late').length
-    const rate = Math.round((presentCount / days.length) * 100)
+    const rate = stat && stat.total > 0 
+      ? Math.round(((stat.present || 0) / stat.total) * 100) 
+      : 100
     
     return {
       id: student.id,
@@ -476,8 +517,21 @@ const heatmapData = computed(() => {
 })
 
 const studentComparisonData = computed(() => {
+  const statsMap = {}
+  if (Array.isArray(attendanceStats.value)) {
+    attendanceStats.value.forEach(s => {
+      statsMap[s.student_id] = s
+    })
+  }
+  
   const students = groupStudents.value.slice(0, 8)
-  const rates = students.map(() => Math.floor(Math.random() * 30) + 70)
+  const rates = students.map(s => {
+    const stat = statsMap[s.id]
+    if (stat && stat.total > 0) {
+      return Math.round(((stat.present || 0) / stat.total) * 100)
+    }
+    return 100
+  })
 
   return {
     labels: students.map(s => s.name.split(' ')[0]),
@@ -507,26 +561,49 @@ const subjectAttendanceData = computed(() => {
 })
 
 const topStudents = computed(() => {
+  const statsMap = {}
+  if (Array.isArray(attendanceStats.value)) {
+    attendanceStats.value.forEach(s => {
+      statsMap[s.student_id] = s
+    })
+  }
+  
   return groupStudents.value
-    .slice(0, 5)
-    .map(s => ({
-      ...s,
-      present: Math.floor(Math.random() * 10) + 85,
-      total: 95,
-      rate: Math.floor(Math.random() * 10) + 90
-    }))
+    .map(s => {
+      const stat = statsMap[s.id]
+      const present = stat?.present || 0
+      const total = stat?.total || 1
+      return {
+        ...s,
+        present,
+        total,
+        rate: Math.round((present / total) * 100)
+      }
+    })
     .sort((a, b) => b.rate - a.rate)
     .slice(0, 3)
 })
 
 const needsAttention = computed(() => {
+  const statsMap = {}
+  if (Array.isArray(attendanceStats.value)) {
+    attendanceStats.value.forEach(s => {
+      statsMap[s.student_id] = s
+    })
+  }
+  
   return groupStudents.value
-    .slice(0, 5)
-    .map(s => ({
-      ...s,
-      absent: Math.floor(Math.random() * 10) + 5,
-      rate: Math.floor(Math.random() * 20) + 50
-    }))
+    .map(s => {
+      const stat = statsMap[s.id]
+      const absent = stat?.absent || 0
+      const total = stat?.total || 1
+      const present = stat?.present || 0
+      return {
+        ...s,
+        absent,
+        rate: Math.round((present / total) * 100)
+      }
+    })
     .sort((a, b) => a.rate - b.rate)
     .slice(0, 3)
 })
@@ -615,19 +692,33 @@ const radarChartOptions = {
 
 // Methods
 function calculateOverallAttendance() {
-  return 87 // Simulated
+  if (Array.isArray(attendanceStats.value) && attendanceStats.value.length > 0) {
+    const totalPresent = attendanceStats.value.reduce((sum, s) => sum + (s.present || 0), 0)
+    const totalRecords = attendanceStats.value.reduce((sum, s) => sum + (s.total || 0), 0)
+    return totalRecords > 0 ? Math.round((totalPresent / totalRecords) * 100) : 0
+  }
+  return 0
 }
 
 function getTotalAbsent() {
-  return 24
+  if (Array.isArray(attendanceStats.value) && attendanceStats.value.length > 0) {
+    return attendanceStats.value.reduce((sum, s) => sum + (s.absent || 0), 0)
+  }
+  return 0
 }
 
 function getTotalLate() {
-  return 18
+  if (Array.isArray(attendanceStats.value) && attendanceStats.value.length > 0) {
+    return attendanceStats.value.reduce((sum, s) => sum + (s.late || 0), 0)
+  }
+  return 0
 }
 
 function getTotalLessons() {
-  return 156
+  if (Array.isArray(attendanceStats.value) && attendanceStats.value.length > 0) {
+    return attendanceStats.value.reduce((sum, s) => sum + (s.total || 0), 0)
+  }
+  return 0
 }
 
 function getLast7Days() {

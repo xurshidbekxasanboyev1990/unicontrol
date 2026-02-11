@@ -14,7 +14,7 @@
             <Cake :size="24" />
           </div>
           <div>
-            <h3 class="text-lg font-bold">🎂 Ertangi tug'ilgan kun!</h3>
+            <h3 class="text-lg font-bold">🎂 {{ $t('dashboard.tomorrowBirthday') }}</h3>
             <p class="text-sm text-white/80">{{ tomorrowDateFormatted }}</p>
           </div>
         </div>
@@ -31,12 +31,12 @@
             <div class="flex-1">
               <p class="font-semibold text-lg">{{ student.name }}</p>
               <p class="text-sm text-white/80">
-                {{ student.birthDate }} yilda tug'ilgan
+                {{ student.birthDate }} {{ $t('dashboard.bornInYear') }}
               </p>
             </div>
             <div class="text-right">
               <p class="text-3xl font-bold">{{ calculateAge(student.birthDate) }}</p>
-              <p class="text-xs text-white/70">yoshga to'ladi</p>
+              <p class="text-xs text-white/70">{{ $t('dashboard.willTurn') }}</p>
             </div>
           </div>
         </div>
@@ -44,11 +44,11 @@
         <div class="mt-4 flex gap-3">
           <button class="flex items-center gap-2 rounded-xl bg-white/20 px-4 py-2 text-sm font-medium backdrop-blur transition-all hover:bg-white/30">
             <Gift :size="18" />
-            Tabriklamoqchiman
+            {{ $t('dashboard.congratulate') }}
           </button>
           <button class="flex items-center gap-2 rounded-xl bg-white px-4 py-2 text-sm font-medium text-purple-600 transition-all hover:bg-white/90">
             <Send :size="18" />
-            Xabar yuborish
+            {{ $t('dashboard.sendMessage') }}
           </button>
         </div>
       </div>
@@ -57,8 +57,8 @@
     <!-- Header -->
     <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
       <div>
-        <h1 class="text-2xl font-bold text-slate-800 md:text-3xl">Dashboard</h1>
-        <p class="text-slate-500">{{ currentGroup?.name }} - Bugungi holat</p>
+        <h1 class="text-2xl font-bold text-slate-800 md:text-3xl">{{ $t('layout.dashboard') }}</h1>
+        <p class="text-slate-500">{{ currentGroup?.name }} <span v-if="currentGroup?.specialty" class="text-emerald-600">({{ currentGroup?.specialty }})</span> - {{ $t('dashboard.todayStatus') }}</p>
       </div>
       
       <div class="flex items-center gap-3">
@@ -74,9 +74,9 @@
       <div class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
         <div class="flex items-start justify-between">
           <div>
-            <p class="text-sm text-slate-500">Davomat foizi</p>
+            <p class="text-sm text-slate-500">{{ $t('dashboard.attendancePercentage') }}</p>
             <p class="mt-1 text-3xl font-bold text-slate-800">{{ attendanceRate }}%</p>
-            <p class="mt-1 text-xs text-slate-400">Bu oy</p>
+            <p class="mt-1 text-xs text-slate-400">{{ $t('dashboard.thisMonth') }}</p>
           </div>
           <div class="rounded-lg bg-green-100 p-2.5">
             <CheckCircle :size="24" class="text-green-600" />
@@ -88,9 +88,9 @@
       <div class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
         <div class="flex items-start justify-between">
           <div>
-            <p class="text-sm text-slate-500">Darslar</p>
+            <p class="text-sm text-slate-500">{{ $t('dashboard.lessons') }}</p>
             <p class="mt-1 text-3xl font-bold text-slate-800">{{ todayLessons.length }}</p>
-            <p class="mt-1 text-xs text-slate-400">Bugun</p>
+            <p class="mt-1 text-xs text-slate-400">{{ $t('dashboard.today') }}</p>
           </div>
           <div class="rounded-lg bg-purple-100 p-2.5">
             <BookOpen :size="24" class="text-purple-600" />
@@ -102,9 +102,9 @@
       <div class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
         <div class="flex items-start justify-between">
           <div>
-            <p class="text-sm text-slate-500">Bugungi davomat</p>
+            <p class="text-sm text-slate-500">{{ $t('attendance.todayAttendance') }}</p>
             <p class="mt-1 text-3xl font-bold text-slate-800">{{ presentToday }}/{{ groupStudents.length }}</p>
-            <p class="mt-1 text-xs text-slate-400">Kelganlar</p>
+            <p class="mt-1 text-xs text-slate-400">{{ $t('attendance.present') }}</p>
           </div>
           <div class="rounded-lg bg-blue-100 p-2.5">
             <Users :size="24" class="text-blue-600" />
@@ -116,9 +116,9 @@
       <div class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
         <div class="flex items-start justify-between">
           <div>
-            <p class="text-sm text-slate-500">Kelmagan</p>
+            <p class="text-sm text-slate-500">{{ $t('attendance.absent') }}</p>
             <p class="mt-1 text-3xl font-bold text-slate-800">{{ absentToday }}</p>
-            <p class="mt-1 text-xs text-slate-400">Bugun</p>
+            <p class="mt-1 text-xs text-slate-400">{{ $t('dashboard.today') }}</p>
           </div>
           <div class="rounded-lg bg-red-100 p-2.5">
             <XCircle :size="24" class="text-red-600" />
@@ -132,13 +132,13 @@
       <!-- Bugungi jadval -->
       <div class="lg:col-span-2 rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
         <div class="mb-4 flex items-center justify-between">
-          <h3 class="font-semibold text-slate-800">Bugungi darslar</h3>
+          <h3 class="font-semibold text-slate-800">{{ $t('dashboard.todaySchedule') }}</h3>
           <Calendar :size="18" class="text-slate-400" />
         </div>
         
         <div v-if="todayLessons.length === 0" class="flex flex-col items-center justify-center py-8 text-slate-400">
           <Calendar :size="40" class="mb-2 opacity-50" />
-          <p class="text-sm">Bugun darslar yo'q</p>
+          <p class="text-sm">{{ $t('dashboard.noLessonsToday') }}</p>
         </div>
         
         <div v-else class="space-y-3">
@@ -167,7 +167,7 @@
       <!-- Tezkor amallar -->
       <div class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
         <div class="mb-4 flex items-center justify-between">
-          <h3 class="font-semibold text-slate-800">Tezkor amallar</h3>
+          <h3 class="font-semibold text-slate-800">{{ $t('common.actions') }}</h3>
           <Zap :size="18" class="text-yellow-500" />
         </div>
         
@@ -177,28 +177,28 @@
             class="flex flex-col items-center gap-3 rounded-xl bg-blue-50 p-4 text-blue-600 transition-all hover:bg-blue-100"
           >
             <CheckCircle :size="28" />
-            <span class="text-sm font-medium">Davomat</span>
+            <span class="text-sm font-medium">{{ $t('layout.attendance') }}</span>
           </button>
           <button
             @click="navigateTo('/leader/students')"
             class="flex flex-col items-center gap-3 rounded-xl bg-purple-50 p-4 text-purple-600 transition-all hover:bg-purple-100"
           >
             <Users :size="28" />
-            <span class="text-sm font-medium">Talabalar</span>
+            <span class="text-sm font-medium">{{ $t('layout.students') }}</span>
           </button>
           <button
             @click="navigateTo('/leader/schedule')"
             class="flex flex-col items-center gap-3 rounded-xl bg-green-50 p-4 text-green-600 transition-all hover:bg-green-100"
           >
             <Calendar :size="28" />
-            <span class="text-sm font-medium">Jadval</span>
+            <span class="text-sm font-medium">{{ $t('layout.schedule') }}</span>
           </button>
           <button
             @click="navigateTo('/leader/analytics')"
             class="flex flex-col items-center gap-3 rounded-xl bg-orange-50 p-4 text-orange-600 transition-all hover:bg-orange-100"
           >
             <TrendingUp :size="28" />
-            <span class="text-sm font-medium">Statistika</span>
+            <span class="text-sm font-medium">{{ $t('layout.analytics') }}</span>
           </button>
         </div>
       </div>
@@ -207,22 +207,22 @@
     <!-- Davomat xulosasi (to'liq) -->
     <div class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
       <div class="mb-4 flex items-center justify-between">
-        <h3 class="font-semibold text-slate-800">Bugungi davomat xulosasi</h3>
-        <span class="text-sm text-slate-500">{{ groupStudents.length }} talaba</span>
+        <h3 class="font-semibold text-slate-800">{{ $t('attendance.todayAttendance') }}</h3>
+        <span class="text-sm text-slate-500">{{ groupStudents.length }} {{ $t('roles.student').toLowerCase() }}</span>
       </div>
       
-      <div class="grid grid-cols-3 gap-4 mb-4">
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
         <div class="rounded-xl bg-green-50 p-4 text-center">
           <p class="text-3xl font-bold text-green-600">{{ presentToday }}</p>
-          <p class="text-sm text-green-600/70">Keldi</p>
+          <p class="text-sm text-green-600/70">{{ $t('attendance.present') }}</p>
         </div>
         <div class="rounded-xl bg-red-50 p-4 text-center">
           <p class="text-3xl font-bold text-red-600">{{ absentToday }}</p>
-          <p class="text-sm text-red-600/70">Kelmadi</p>
+          <p class="text-sm text-red-600/70">{{ $t('attendance.absent') }}</p>
         </div>
         <div class="rounded-xl bg-yellow-50 p-4 text-center">
           <p class="text-3xl font-bold text-yellow-600">{{ lateToday }}</p>
-          <p class="text-sm text-yellow-600/70">Kechikdi</p>
+          <p class="text-sm text-yellow-600/70">{{ $t('attendance.late') }}</p>
         </div>
       </div>
       
@@ -255,16 +255,21 @@
  * Leader Dashboard - Real API Integration
  * Guruh sardorining boshqaruv paneli
  */
-import { ref, computed, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
-import { useDataStore } from '@/stores/data'
-import { useAuthStore } from '@/stores/auth'
 import api from '@/services/api'
-import { 
-  Users, BookOpen, Calendar, TrendingUp,
-  CheckCircle, XCircle, Zap, Cake, Gift, Send,
-  RefreshCw, AlertCircle
+import { useAuthStore } from '@/stores/auth'
+import { useDataStore } from '@/stores/data'
+import {
+    BookOpen,
+    Cake,
+    Calendar,
+    CheckCircle,
+    Gift, Send,
+    TrendingUp,
+    Users,
+    XCircle, Zap
 } from 'lucide-vue-next'
+import { computed, onMounted, ref } from 'vue'
+import { useRouter } from 'vue-router'
 
 const router = useRouter()
 const dataStore = useDataStore()
@@ -284,37 +289,67 @@ async function loadDashboard() {
   error.value = null
   
   try {
-    // Leader dashboard endpoint mavjud bo'lsa
+    let groupId = null
+    
+    // Leader dashboard endpoint - guruh statistikalari
     try {
       const response = await api.request('/dashboard/leader')
       dashboardData.value = response
+      
+      if (response.group?.id) {
+        groupId = response.group.id
+      }
     } catch (e) {
-      console.log('Leader dashboard endpoint not available')
+      console.warn('Leader dashboard endpoint not available')
     }
     
-    // Guruh talabalarini yuklash
-    const groupId = authStore.user?.groupId || authStore.user?.managed_group_id
+    // Agar dashboard-dan olmagan bo'lsak
+    if (!groupId) {
+      groupId = authStore.user?.groupId || authStore.user?.managed_group_id || authStore.user?.group_id
+    }
+    
     if (groupId) {
+      // Guruh talabalarini yuklash
       try {
-        const studentsResp = await api.getStudents({ group_id: groupId, limit: 100 })
-        groupStudentsList.value = studentsResp.data?.map(s => ({
+        const studentsResp = await api.getStudents({ group_id: groupId, page_size: 100 })
+        const items = studentsResp.items || studentsResp.data || []
+        groupStudentsList.value = items.map(s => ({
           id: s.id,
-          name: s.full_name,
-          studentId: s.student_id,
+          name: s.name || s.full_name || 'Ism kiritilmagan',
+          studentId: s.student_id || '',
           groupId: s.group_id,
           phone: s.phone,
           birthDate: s.birth_date
-        })) || []
+        }))
       } catch (e) {
-        console.log('Could not load group students')
+        console.warn('Could not load group students')
       }
       
       // Jadval yuklash
       try {
-        const scheduleResp = await api.getSchedule({ group_id: groupId })
-        scheduleList.value = scheduleResp.data || []
+        const scheduleResp = await api.getScheduleByGroup(groupId)
+        // Week schedule returns {monday: [], tuesday: [], ...}
+        const dayMapping = {
+          'monday': 'Dushanba', 'tuesday': 'Seshanba', 'wednesday': 'Chorshanba',
+          'thursday': 'Payshanba', 'friday': 'Juma', 'saturday': 'Shanba', 'sunday': 'Yakshanba'
+        }
+        const allLessons = []
+        for (const [dayKey, lessons] of Object.entries(scheduleResp || {})) {
+          if (Array.isArray(lessons)) {
+            lessons.forEach(lesson => {
+              allLessons.push({
+                ...lesson,
+                day: dayMapping[dayKey] || dayKey,
+                time: lesson.time_range || `${lesson.start_time || ''}-${lesson.end_time || ''}`,
+                room: lesson.room || lesson.location || '',
+                teacher: lesson.teacher_name || ''
+              })
+            })
+          }
+        }
+        scheduleList.value = allLessons
       } catch (e) {
-        console.log('Could not load schedule')
+        console.warn('Could not load schedule')
       }
       
       // Bugungi davomat
@@ -322,11 +357,12 @@ async function loadDashboard() {
         const today = new Date().toISOString().split('T')[0]
         const attResp = await api.getAttendance({ 
           group_id: groupId, 
-          date: today 
+          date_from: today,
+          date_to: today
         })
-        attendanceToday.value = attResp.data || []
+        attendanceToday.value = attResp.items || attResp.data || []
       } catch (e) {
-        console.log('Could not load today attendance')
+        console.warn('Could not load today attendance')
       }
     }
   } catch (e) {
@@ -339,11 +375,21 @@ async function loadDashboard() {
 
 // Computed
 const currentGroup = computed(() => {
+  // dashboardData dan olish
+  if (dashboardData.value?.group) {
+    return {
+      id: dashboardData.value.group.id,
+      name: dashboardData.value.group.name,
+      specialty: dashboardData.value.group.specialty || dashboardData.value.group.faculty,
+      students_count: dashboardData.value.group.students_count
+    }
+  }
   const groupId = authStore.user?.groupId || authStore.user?.managed_group_id
   const groupName = authStore.user?.group || authStore.user?.managedGroup
   return {
     id: groupId,
-    name: groupName || authStore.user?.group_name || 'Noma\'lum guruh'
+    name: groupName || authStore.user?.group_name || 'Noma\'lum guruh',
+    specialty: ''
   }
 })
 
@@ -400,10 +446,10 @@ function calculateAge(birthDate) {
 }
 
 const todayLessons = computed(() => {
-  const days = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday']
+  const days = ['Yakshanba', 'Dushanba', 'Seshanba', 'Chorshanba', 'Payshanba', 'Juma', 'Shanba']
   const today = days[new Date().getDay()]
   return scheduleList.value.filter(s => 
-    s.day?.toLowerCase() === today
+    s.day === today
   )
 })
 

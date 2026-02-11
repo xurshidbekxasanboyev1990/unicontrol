@@ -13,6 +13,7 @@ from typing import Optional, TYPE_CHECKING
 from sqlalchemy import String, Integer, DateTime, Date, Time, ForeignKey, Text, Boolean, Enum as SAEnum
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
+from app.config import TASHKENT_TZ, today_tashkent
 from app.database import Base
 
 if TYPE_CHECKING:
@@ -191,13 +192,13 @@ class Schedule(Base):
     # Timestamps
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
-        default=datetime.utcnow,
+        default=lambda: datetime.now(TASHKENT_TZ),
         nullable=False
     )
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
-        default=datetime.utcnow,
-        onupdate=datetime.utcnow,
+        default=lambda: datetime.now(TASHKENT_TZ),
+        onupdate=lambda: datetime.now(TASHKENT_TZ),
         nullable=False
     )
     
@@ -220,8 +221,8 @@ class Schedule(Base):
     @property
     def duration_minutes(self) -> int:
         """Get class duration in minutes."""
-        start_dt = datetime.combine(date.today(), self.start_time)
-        end_dt = datetime.combine(date.today(), self.end_time)
+        start_dt = datetime.combine(today_tashkent(), self.start_time)
+        end_dt = datetime.combine(today_tashkent(), self.end_time)
         return int((end_dt - start_dt).total_seconds() / 60)
     
     @property

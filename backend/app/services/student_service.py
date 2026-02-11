@@ -8,6 +8,7 @@ Version: 1.0.0
 """
 
 from datetime import datetime, date
+from app.config import now_tashkent, today_tashkent
 from decimal import Decimal
 from typing import Optional, List, Tuple
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -114,7 +115,7 @@ class StudentService:
     
     async def _generate_student_id(self) -> str:
         """Generate unique student ID."""
-        year = datetime.now().year
+        year = now_tashkent().year
         prefix = f"ST-{year}-"
         
         # Find max existing student_id for this year
@@ -163,7 +164,7 @@ class StudentService:
             gender=student_data.gender,
             contract_amount=student_data.contract_amount,
             contract_paid=student_data.contract_paid,
-            enrollment_date=student_data.enrollment_date or date.today(),
+            enrollment_date=student_data.enrollment_date or today_tashkent(),
             graduation_date=student_data.graduation_date,
         )
         
@@ -316,7 +317,7 @@ class StudentService:
             raise NotFoundException("Student not found")
         
         student.is_graduated = True
-        student.graduation_date = date.today()
+        student.graduation_date = today_tashkent()
         await self.db.commit()
         
         return student

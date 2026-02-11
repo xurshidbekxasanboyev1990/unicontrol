@@ -11,6 +11,7 @@ from typing import Optional
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 from pydantic import BaseModel
+from loguru import logger
 
 from app.database import get_db
 from app.core.dependencies import get_current_active_user, require_admin
@@ -56,7 +57,7 @@ class PushNotificationService:
             
             self.firebase_initialized = True
         except Exception as e:
-            print(f"Firebase init error: {e}")
+            logger.warning(f"Firebase init error: {e}")
     
     async def send_notification(
         self,

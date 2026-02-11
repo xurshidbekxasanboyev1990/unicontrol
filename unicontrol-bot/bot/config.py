@@ -1,7 +1,21 @@
 from pydantic_settings import BaseSettings
 from pydantic import Field, field_validator
 from typing import Optional, List
+from datetime import datetime
+import pytz
 import json
+
+# Timezone helpers
+TIMEZONE_NAME = "Asia/Tashkent"
+TASHKENT_TZ = pytz.timezone(TIMEZONE_NAME)
+
+def now_tashkent():
+    """Get current datetime in Tashkent timezone."""
+    return datetime.now(TASHKENT_TZ)
+
+def today_tashkent():
+    """Get current date in Tashkent timezone."""
+    return datetime.now(TASHKENT_TZ).date()
 
 
 class Settings(BaseSettings):

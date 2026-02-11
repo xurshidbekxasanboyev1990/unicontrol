@@ -21,9 +21,9 @@
         </div>
         
         <div class="flex-1">
-          <p class="text-blue-100">Xush kelibsiz!</p>
-          <h1 class="text-2xl font-bold">{{ user?.name || 'Talaba' }}</h1>
-          <p class="mt-1 text-sm text-blue-200">{{ currentGroup?.name }} guruhi</p>
+          <p class="text-blue-100">{{ t('dashboard.welcome') }}</p>
+          <h1 class="text-2xl font-bold">{{ user?.name || t('dashboard.studentDefault') }}</h1>
+          <p class="mt-1 text-sm text-blue-200">{{ currentGroup?.name }} {{ t('dashboard.groupSuffix') }}</p>
         </div>
         
         <div class="text-right">
@@ -42,7 +42,7 @@
           </div>
           <div>
             <p class="text-2xl font-bold text-slate-800">{{ attendanceRate }}%</p>
-            <p class="text-xs text-slate-500">Davomat</p>
+            <p class="text-xs text-slate-500">{{ t('dashboard.attendanceRate') }}</p>
           </div>
         </div>
       </div>
@@ -54,7 +54,7 @@
           </div>
           <div>
             <p class="text-2xl font-bold text-slate-800">{{ todayLessons.length }}</p>
-            <p class="text-xs text-slate-500">Bugungi dars</p>
+            <p class="text-xs text-slate-500">{{ t('dashboard.todayLessons') }}</p>
           </div>
         </div>
       </div>
@@ -66,7 +66,7 @@
           </div>
           <div>
             <p class="text-2xl font-bold text-slate-800">{{ borrowedBooks }}</p>
-            <p class="text-xs text-slate-500">Olingan kitob</p>
+            <p class="text-xs text-slate-500">{{ t('dashboard.borrowedBooks') }}</p>
           </div>
         </div>
       </div>
@@ -78,7 +78,7 @@
           </div>
           <div>
             <p class="text-2xl font-bold text-slate-800">{{ unreadNotifications }}</p>
-            <p class="text-xs text-slate-500">Yangi xabar</p>
+            <p class="text-xs text-slate-500">{{ t('dashboard.newMessages') }}</p>
           </div>
         </div>
       </div>
@@ -89,15 +89,15 @@
       <!-- Today's Schedule -->
       <div class="lg:col-span-2 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
         <div class="mb-4 flex items-center justify-between">
-          <h2 class="font-semibold text-slate-800">Bugungi darslar</h2>
+          <h2 class="font-semibold text-slate-800">{{ t('dashboard.todaySchedule') }}</h2>
           <router-link to="/student/schedule" class="text-sm text-blue-500 hover:text-blue-600">
-            Barchasi →
+            {{ t('dashboard.viewAll') }}
           </router-link>
         </div>
         
         <div v-if="todayLessons.length === 0" class="flex flex-col items-center justify-center py-8 text-slate-400">
           <Calendar :size="48" class="mb-2 opacity-50" />
-          <p>Bugun darslar yo'q</p>
+          <p>{{ t('dashboard.noLessonsToday') }}</p>
         </div>
         
         <div v-else class="space-y-3">
@@ -130,9 +130,9 @@
       <!-- Recent Attendance -->
       <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
         <div class="mb-4 flex items-center justify-between">
-          <h2 class="font-semibold text-slate-800">So'nggi davomat</h2>
+          <h2 class="font-semibold text-slate-800">{{ t('dashboard.recentAttendance') }}</h2>
           <router-link to="/student/attendance" class="text-sm text-blue-500 hover:text-blue-600">
-            Barchasi →
+            {{ t('dashboard.viewAll') }}
           </router-link>
         </div>
         
@@ -169,9 +169,9 @@
       <!-- Library Quick Access -->
       <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
         <div class="mb-4 flex items-center justify-between">
-          <h2 class="font-semibold text-slate-800">Kutubxona</h2>
+          <h2 class="font-semibold text-slate-800">{{ t('dashboard.libraryAccess') }}</h2>
           <router-link to="/student/library" class="text-sm text-blue-500 hover:text-blue-600">
-            Barchasi →
+            {{ t('dashboard.viewAll') }}
           </router-link>
         </div>
         
@@ -181,21 +181,21 @@
             class="flex flex-col items-center gap-2 rounded-xl bg-blue-50 p-3 text-blue-600 transition-all hover:bg-blue-100"
           >
             <GraduationCap :size="24" />
-            <span class="text-xs">Darsliklar</span>
+            <span class="text-xs">{{ t('dashboard.textbooks') }}</span>
           </button>
           <button
             @click="$router.push('/student/library?category=ilmiy')"
             class="flex flex-col items-center gap-2 rounded-xl bg-purple-50 p-3 text-purple-600 transition-all hover:bg-purple-100"
           >
             <FileText :size="24" />
-            <span class="text-xs">Ilmiy</span>
+            <span class="text-xs">{{ t('dashboard.scientific') }}</span>
           </button>
           <button
             @click="$router.push('/student/library?category=badiiy')"
             class="flex flex-col items-center gap-2 rounded-xl bg-amber-50 p-3 text-amber-600 transition-all hover:bg-amber-100"
           >
             <BookOpen :size="24" />
-            <span class="text-xs">Badiiy</span>
+            <span class="text-xs">{{ t('dashboard.fiction') }}</span>
           </button>
         </div>
         
@@ -222,7 +222,7 @@
         <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-100">
           <Calendar :size="20" class="text-blue-600" />
         </div>
-        <span class="font-medium text-slate-700">Jadval</span>
+        <span class="font-medium text-slate-700">{{ t('layout.schedule') }}</span>
       </router-link>
       
       <router-link 
@@ -232,7 +232,7 @@
         <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-green-100">
           <CheckCircle :size="20" class="text-green-600" />
         </div>
-        <span class="font-medium text-slate-700">Davomat</span>
+        <span class="font-medium text-slate-700">{{ t('layout.attendance') }}</span>
       </router-link>
       
       <router-link 
@@ -242,7 +242,7 @@
         <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-purple-100">
           <Book :size="20" class="text-purple-600" />
         </div>
-        <span class="font-medium text-slate-700">Kutubxona</span>
+        <span class="font-medium text-slate-700">{{ t('layout.library') }}</span>
       </router-link>
       
       <router-link 
@@ -252,7 +252,7 @@
         <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-100">
           <User :size="20" class="text-amber-600" />
         </div>
-        <span class="font-medium text-slate-700">Profil</span>
+        <span class="font-medium text-slate-700">{{ t('common.profile') }}</span>
       </router-link>
     </div>
   </div>
@@ -262,18 +262,28 @@
 /**
  * Student Dashboard - Real API Integration
  */
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import api from '@/services/api'
 import { useAuthStore } from '@/stores/auth'
 import { useDataStore } from '@/stores/data'
-import api from '@/services/api'
+import { useLanguageStore } from '@/stores/language'
 import {
-  TrendingUp, BookOpen, Book, Bell, Calendar,
-  CheckCircle, XCircle, Clock, GraduationCap, FileText, User,
-  RefreshCw
+    Bell,
+    Book,
+    BookOpen,
+    Calendar,
+    CheckCircle,
+    Clock,
+    FileText,
+    GraduationCap,
+    TrendingUp,
+    User,
+    XCircle
 } from 'lucide-vue-next'
+import { computed, onMounted, onUnmounted, ref } from 'vue'
 
 const authStore = useAuthStore()
 const dataStore = useDataStore()
+const { t } = useLanguageStore()
 
 // State
 const loading = ref(true)
@@ -294,28 +304,71 @@ async function loadDashboard() {
       const response = await api.request('/dashboard/student')
       dashboardData.value = response
     } catch (e) {
-      console.log('Student dashboard endpoint not available')
+      console.log('Student dashboard endpoint not available:', e.message)
     }
     
     // Load schedule for group
     const groupId = authStore.user?.groupId || authStore.user?.group_id
     if (groupId) {
       try {
-        const scheduleResp = await api.getSchedule({ group_id: groupId })
-        scheduleList.value = scheduleResp.data || []
+        const dayMap = {
+          'monday': 'Dushanba', 'tuesday': 'Seshanba', 'wednesday': 'Chorshanba',
+          'thursday': 'Payshanba', 'friday': 'Juma', 'saturday': 'Shanba', 'sunday': 'Yakshanba'
+        }
+        const scheduleResp = await api.getScheduleByGroup(groupId)
+        let items = []
+        if (Array.isArray(scheduleResp)) {
+          items = scheduleResp
+        } else if (typeof scheduleResp === 'object') {
+          // Week schedule format: { monday: [...], tuesday: [...] }
+          for (const [eng, uz] of Object.entries(dayMap)) {
+            if (scheduleResp[eng] && Array.isArray(scheduleResp[eng])) {
+              scheduleResp[eng].forEach(s => {
+                items.push({ ...s, day: uz })
+              })
+            }
+          }
+          // Also check for items/data arrays
+          if (items.length === 0 && scheduleResp.items) items = scheduleResp.items
+          if (items.length === 0 && scheduleResp.data) items = scheduleResp.data
+        }
+        scheduleList.value = items.map(s => ({
+          id: s.id,
+          day: s.day || dayMap[s.day_of_week] || s.day_of_week || '',
+          time: s.time || s.time_range || (s.start_time && s.end_time ? `${s.start_time}-${s.end_time}` : ''),
+          subject: s.subject || s.subject_name || '',
+          teacher: s.teacher || s.teacher_name || '',
+          room: s.room || s.classroom || s.location || ''
+        }))
       } catch (e) {
-        console.log('Schedule not available')
+        console.log('Schedule not available:', e.message)
       }
     }
     
     // Load attendance for current student
-    const studentId = authStore.user?.id
+    const studentId = authStore.user?.studentDbId || authStore.user?.id
     if (studentId) {
       try {
-        const attResp = await api.getAttendance({ student_id: studentId, limit: 10 })
-        attendanceList.value = attResp.data || []
+        const attResp = await api.getStudentAttendance(studentId)
+        if (Array.isArray(attResp)) {
+          attendanceList.value = attResp.map(a => ({
+            id: a.id,
+            date: a.date,
+            status: a.status,
+            subject: a.subject || a.lesson_name || 'Umumiy',
+            student_id: a.student_id
+          }))
+        } else if (attResp?.data) {
+          attendanceList.value = (attResp.data || []).map(a => ({
+            id: a.id,
+            date: a.date,
+            status: a.status,
+            subject: a.subject || a.lesson_name || 'Umumiy',
+            student_id: a.student_id
+          }))
+        }
       } catch (e) {
-        console.log('Attendance not available')
+        console.log('Attendance not available:', e.message)
       }
     }
   } catch (e) {
@@ -362,16 +415,14 @@ const formattedTime = computed(() => {
 })
 
 const todayLessons = computed(() => {
-  const days = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday']
-  const today = days[new Date().getDay()]
-  return scheduleList.value.filter(s => 
-    s.day?.toLowerCase() === today
-  )
+  const dayNames = ['Yakshanba', 'Dushanba', 'Seshanba', 'Chorshanba', 'Payshanba', 'Juma', 'Shanba']
+  const today = dayNames[new Date().getDay()]
+  return scheduleList.value.filter(s => s.day === today)
 })
 
 const attendanceRate = computed(() => {
-  if (dashboardData.value?.attendanceRate) {
-    return Math.round(dashboardData.value.attendanceRate)
+  if (dashboardData.value?.attendance?.attendance_rate) {
+    return Math.round(dashboardData.value.attendance.attendance_rate)
   }
   if (attendanceList.value.length === 0) return 100
   const present = attendanceList.value.filter(a => 
@@ -390,15 +441,15 @@ const recentAttendance = computed(() => {
     }))
 })
 
-const borrowedBooks = computed(() => dashboardData.value?.borrowedBooks || 0)
-const unreadNotifications = computed(() => dashboardData.value?.unreadNotifications || 0)
+const borrowedBooks = computed(() => dashboardData.value?.borrowed_books || dashboardData.value?.borrowedBooks || 0)
+const unreadNotifications = computed(() => dashboardData.value?.unread_notifications || dashboardData.value?.unreadNotifications || 0)
 const totalBooks = ref(5000)
 
 // Methods
 function getLessonStatus(lesson) {
   const now = new Date()
   const timeStr = lesson.time || lesson.start_time || ''
-  if (!timeStr.includes('-')) return 'Kutilmoqda'
+  if (!timeStr.includes('-')) return t('schedule.upcoming')
   
   const [startHour, startMin] = timeStr.split('-')[0].split(':').map(Number)
   const [endHour, endMin] = timeStr.split('-')[1].split(':').map(Number)
@@ -409,9 +460,9 @@ function getLessonStatus(lesson) {
   const endTime = new Date()
   endTime.setHours(endHour, endMin, 0)
   
-  if (now < startTime) return 'Kutilmoqda'
-  if (now > endTime) return 'Tugadi'
-  return 'Hozir'
+  if (now < startTime) return t('schedule.upcoming')
+  if (now > endTime) return t('schedule.finished')
+  return t('schedule.ongoing')
 }
 
 function getLessonStatusClass(lesson) {
@@ -434,9 +485,9 @@ function getAttendanceBadge(status) {
 }
 
 function getAttendanceText(status) {
-  if (status === 'present' || status === 'keldi') return 'Keldi'
-  if (status === 'absent' || status === 'kelmadi') return 'Kelmadi'
-  return 'Kechikdi'
+  if (status === 'present' || status === 'keldi') return t('attendance.present')
+  if (status === 'absent' || status === 'kelmadi') return t('attendance.absent')
+  return t('attendance.late')
 }
 
 function formatDateShort(date) {

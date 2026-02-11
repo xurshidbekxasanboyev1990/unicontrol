@@ -23,8 +23,8 @@
     <!-- Header -->
     <div class="flex items-center justify-between">
       <div>
-        <h1 class="text-2xl font-bold text-slate-800">Sozlamalar</h1>
-        <p class="text-slate-500">Fakultet va guruhlar sozlamalari</p>
+        <h1 class="text-2xl font-bold text-slate-800">{{ $t('settings.title') }}</h1>
+        <p class="text-slate-500">{{ $t('settings.appSettings') }}</p>
       </div>
       <button 
         @click="loadSettings"
@@ -32,7 +32,7 @@
         class="flex items-center gap-2 px-4 py-2 text-slate-600 hover:bg-slate-100 rounded-xl transition-colors disabled:opacity-50"
       >
         <RefreshCw :size="18" :class="{ 'animate-spin': isRefreshing }" />
-        Yangilash
+        {{ $t('common.refresh') }}
       </button>
     </div>
 
@@ -42,11 +42,11 @@
       <div class="bg-white rounded-2xl border border-slate-200 p-6">
         <h2 class="text-lg font-semibold text-slate-800 mb-4 flex items-center gap-2">
           <Building class="w-5 h-5 text-slate-400" />
-          Fakultet ma'lumotlari
+          {{ $t('profile.faculty') }}
         </h2>
         <div class="space-y-4">
           <div>
-            <label class="block text-sm font-medium text-slate-700 mb-2">Fakultet nomi</label>
+            <label class="block text-sm font-medium text-slate-700 mb-2">{{ $t('settings.facultyName') }}</label>
             <input 
               v-model="settings.faculty_name"
               type="text"
@@ -54,7 +54,7 @@
             />
           </div>
           <div>
-            <label class="block text-sm font-medium text-slate-700 mb-2">Fakultet kodi</label>
+            <label class="block text-sm font-medium text-slate-700 mb-2">{{ $t('settings.facultyCode') }}</label>
             <input 
               v-model="settings.faculty_code"
               type="text"
@@ -62,7 +62,7 @@
             />
           </div>
           <div>
-            <label class="block text-sm font-medium text-slate-700 mb-2">O'quv yili</label>
+            <label class="block text-sm font-medium text-slate-700 mb-2">{{ $t('settings.academicYear') }}</label>
             <select 
               v-model="settings.academic_year"
               class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-violet-500 focus:ring-2 focus:ring-violet-500/20 outline-none"
@@ -73,7 +73,7 @@
             </select>
           </div>
           <div>
-            <label class="block text-sm font-medium text-slate-700 mb-2">Semestr</label>
+            <label class="block text-sm font-medium text-slate-700 mb-2">{{ $t('settings.semester') }}</label>
             <select 
               v-model="settings.semester"
               class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-violet-500 focus:ring-2 focus:ring-violet-500/20 outline-none"
@@ -407,7 +407,7 @@
           :disabled="!hasChanges || isSaving"
           class="px-6 py-3 border border-slate-200 text-slate-600 rounded-xl font-medium hover:bg-slate-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          Bekor qilish
+          {{ $t('common.cancel') }}
         </button>
         <button 
           @click="saveSettings"
@@ -416,7 +416,7 @@
         >
           <Loader2 v-if="isSaving" class="w-5 h-5 animate-spin" />
           <Save v-else class="w-5 h-5" />
-          {{ isSaving ? 'Saqlanmoqda...' : 'Sozlamalarni saqlash' }}
+          {{ isSaving ? $t('settings.saving') : $t('common.save') }}
         </button>
       </div>
     </div>
@@ -437,21 +437,21 @@
  * - Ko'rinish sozlamalari
  */
 
-import { ref, reactive, computed, onMounted } from 'vue'
 import api from '@/services/api'
 import { useToastStore } from '@/stores/toast'
 import {
-  Building,
-  ClipboardCheck,
-  Bell,
-  CreditCard,
-  FileText,
-  Monitor,
-  Save,
-  RefreshCw,
-  AlertCircle,
-  Loader2
+    AlertCircle,
+    Bell,
+    Building,
+    ClipboardCheck,
+    CreditCard,
+    FileText,
+    Loader2,
+    Monitor,
+    RefreshCw,
+    Save
 } from 'lucide-vue-next'
+import { computed, onMounted, reactive, ref } from 'vue'
 
 const toast = useToastStore()
 

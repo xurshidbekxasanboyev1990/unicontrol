@@ -4,7 +4,8 @@ UniControl Backend - Main Application Entry Point
 FastAPI application factory with middleware, routes, and event handlers.
 
 Author: UniControl Team
-Version: 1.0.0
+Version: 1.0.1
+Updated: 2026-01-29
 """
 
 from contextlib import asynccontextmanager
@@ -19,6 +20,7 @@ import sys
 from app.config import settings
 from app.database import init_db, close_db
 from app.core.exceptions import APIException
+from app.core.rate_limiter import RateLimitMiddleware
 from app.api.v1 import api_router as api_v1_router
 from app.api.mobile import mobile_router
 
@@ -110,6 +112,9 @@ def create_application() -> FastAPI:
     
     # GZip Compression
     app.add_middleware(GZipMiddleware, minimum_size=1000)
+    
+    # Rate Limiting (Redis-based)
+    app.add_middleware(RateLimitMiddleware)
     
     # Request timing middleware
     @app.middleware("http")

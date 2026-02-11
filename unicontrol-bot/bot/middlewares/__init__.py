@@ -7,11 +7,13 @@ from .force_subscribe import (
     UserTrackingMiddleware,
     BannedUserMiddleware
 )
+from .subscription_check import SubscriptionCheckMiddleware
 
 __all__ = [
     "ThrottlingMiddleware",
     "ForceSubscribeMiddleware",
     "MaintenanceModeMiddleware",
     "UserTrackingMiddleware",
-    "BannedUserMiddleware"
+    "BannedUserMiddleware",
+    "SubscriptionCheckMiddleware"
 ]

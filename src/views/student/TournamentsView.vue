@@ -7,11 +7,11 @@
       <div class="relative">
         <div class="flex items-center gap-3 mb-2">
           <Trophy class="w-8 h-8" />
-          <span class="text-sm font-medium opacity-90">Bellashuvlar</span>
+          <span class="text-sm font-medium opacity-90">{{ $t('tournaments.title') }}</span>
         </div>
-        <h1 class="text-2xl md:text-3xl font-bold">Turnirlar va Musobaqalar</h1>
+        <h1 class="text-2xl md:text-3xl font-bold">{{ $t('tournaments.title') }}</h1>
         <p class="text-white/80 mt-2 max-w-xl">
-          Qiziqarli bellashuvlarda qatnashing, o'z qobiliyatingizni namoyish eting va sovrinlar yutib oling!
+          {{ $t('tournaments.noTournamentsDesc') }}
         </p>
       </div>
     </div>
@@ -20,7 +20,7 @@
     <div v-if="myRegistrations.length > 0" class="bg-white rounded-2xl border border-slate-200 p-6">
       <h2 class="font-bold text-lg text-slate-800 mb-4 flex items-center gap-2">
         <ClipboardCheck class="w-5 h-5 text-emerald-500" />
-        Mening arizalarim
+        {{ $t('tournaments.myTournaments') }}
       </h2>
       <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
         <div
@@ -96,7 +96,7 @@
               <div>
                 <p class="text-slate-800 font-medium">{{ formatDate(tournament.startDate) }}</p>
                 <p v-if="tournament.startDate !== tournament.endDate" class="text-xs text-slate-400">
-                  {{ formatDate(tournament.endDate) }} gacha
+                  → {{ formatDate(tournament.endDate) }}
                 </p>
               </div>
             </div>
@@ -120,9 +120,9 @@
               </div>
               <div>
                 <p :class="isDeadlinePassed(tournament.registrationDeadline) ? 'text-rose-500' : 'text-emerald-600'" class="font-medium">
-                  {{ isDeadlinePassed(tournament.registrationDeadline) ? 'Muddat tugagan' : 'Ro\'yxat ochiq' }}
+                  {{ isDeadlinePassed(tournament.registrationDeadline) ? $t('tournaments.registrationClosed') : $t('tournaments.registrationOpen') }}
                 </p>
-                <p class="text-xs text-slate-400">{{ formatDate(tournament.registrationDeadline) }} gacha</p>
+                <p class="text-xs text-slate-400">{{ formatDate(tournament.registrationDeadline) }}</p>
               </div>
             </div>
 
@@ -139,7 +139,7 @@
                 <BookOpen class="w-4 h-4 text-blue-500" />
               </div>
               <div>
-                <p class="text-blue-600 font-medium">Fan bo'yicha bellashuv</p>
+                <p class="text-blue-600 font-medium">{{ $t('tournaments.subjectCompetition') }}</p>
                 <p class="text-xs text-slate-400">
                   {{ getParticipationRuleInfo(tournament) }}
                 </p>
@@ -150,20 +150,20 @@
           <!-- Participants -->
           <div class="pt-4 border-t border-slate-100">
             <div class="flex items-center justify-between mb-2">
-              <span class="text-sm text-slate-500">Ishtirokchilar</span>
+              <span class="text-sm text-slate-500">{{ $t('tournaments.participants') }}</span>
               <span class="text-sm font-semibold text-slate-700">
-                {{ tournament.registrations.length }} / {{ tournament.maxParticipants }}
+                {{ tournament.registrationsCount || 0 }} / {{ tournament.maxParticipants }}
               </span>
             </div>
             <div class="h-2 bg-slate-100 rounded-full overflow-hidden">
               <div 
                 :class="[
                   'h-full rounded-full transition-all',
-                  tournament.registrations.length >= tournament.maxParticipants 
+                  (tournament.registrationsCount || 0) >= tournament.maxParticipants 
                     ? 'bg-rose-500' 
                     : 'bg-gradient-to-r from-emerald-500 to-teal-500'
                 ]"
-                :style="{ width: `${Math.min((tournament.registrations.length / tournament.maxParticipants) * 100, 100)}%` }"
+                :style="{ width: `${Math.min(((tournament.registrationsCount || 0) / tournament.maxParticipants) * 100, 100)}%` }"
               ></div>
             </div>
           </div>
@@ -177,21 +177,21 @@
             class="w-full py-3 bg-slate-200 text-slate-500 rounded-xl font-semibold flex items-center justify-center gap-2"
           >
             <CheckCircle class="w-5 h-5" />
-            Ro'yxatdan o'tgansiz
+            {{ $t('tournaments.registered') }}
           </button>
           <button
             v-else-if="isDeadlinePassed(tournament.registrationDeadline)"
             disabled
             class="w-full py-3 bg-slate-200 text-slate-500 rounded-xl font-semibold"
           >
-            Muddat tugagan
+            {{ $t('tournaments.registrationClosed') }}
           </button>
           <button
-            v-else-if="tournament.registrations.length >= tournament.maxParticipants"
+            v-else-if="(tournament.registrationsCount || 0) >= tournament.maxParticipants"
             disabled
             class="w-full py-3 bg-slate-200 text-slate-500 rounded-xl font-semibold"
           >
-            Joylar to'lgan
+            {{ $t('common.noData') }}
           </button>
           <button
             v-else-if="hasParticipationRules(tournament) && !canParticipateInTournament(tournament)"
@@ -199,7 +199,7 @@
             class="w-full py-3 bg-amber-100 text-amber-600 rounded-xl font-semibold flex items-center justify-center gap-2"
           >
             <AlertCircle class="w-5 h-5" />
-            Yo'nalishingiz mos emas
+            {{ $t('tournaments.directionCantParticipate') }}
           </button>
           <button
             v-else
@@ -207,7 +207,7 @@
             class="w-full py-3 bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-xl font-semibold shadow-lg shadow-emerald-500/25 hover:shadow-xl hover:shadow-emerald-500/30 transition-all flex items-center justify-center gap-2"
           >
             <UserPlus class="w-5 h-5" />
-            Ro'yxatdan o'tish
+            {{ $t('tournaments.register') }}
           </button>
         </div>
       </div>
@@ -216,8 +216,8 @@
     <!-- Empty state -->
     <div v-if="filteredTournaments.length === 0" class="text-center py-16 bg-white rounded-2xl border border-slate-200">
       <Trophy class="w-16 h-16 mx-auto text-slate-300 mb-4" />
-      <h3 class="text-lg font-semibold text-slate-600">Hozircha turnirlar yo'q</h3>
-      <p class="text-slate-400 mt-1">Tez orada yangi bellashuvlar e'lon qilinadi</p>
+      <h3 class="text-lg font-semibold text-slate-600">{{ $t('tournaments.noTournaments') }}</h3>
+      <p class="text-slate-400 mt-1">{{ $t('tournaments.noTournamentsDesc') }}</p>
     </div>
 
     <!-- Registration Modal -->
@@ -230,7 +230,7 @@
             <div :class="['p-6 text-white relative overflow-hidden', getCategoryGradient(selectedTournament?.category)]">
               <div class="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2"></div>
               <div class="relative">
-                <h3 class="text-xl font-bold">Ro'yxatdan o'tish</h3>
+                <h3 class="text-xl font-bold">{{ $t('tournaments.registration') }}</h3>
                 <p class="text-white/80 mt-1 text-sm">{{ selectedTournament?.title }}</p>
               </div>
             </div>
@@ -239,22 +239,22 @@
             <div class="p-6 overflow-y-auto max-h-[calc(90vh-200px)] space-y-4">
               <!-- Auto-filled info -->
               <div class="p-4 bg-emerald-50 rounded-xl border border-emerald-100">
-                <p class="text-sm text-emerald-700 mb-2 font-medium">Ma'lumotlaringiz avtomatik to'ldirildi</p>
+                <p class="text-sm text-emerald-700 mb-2 font-medium">{{ $t('tournaments.autoFilled') }}</p>
                 <div class="grid grid-cols-2 gap-2 text-sm">
                   <div>
-                    <span class="text-emerald-600">Ism:</span>
+                    <span class="text-emerald-600">{{ $t('tournaments.yourName') }}:</span>
                     <span class="text-emerald-800 font-medium ml-1">{{ regForm.firstName }}</span>
                   </div>
                   <div>
-                    <span class="text-emerald-600">Familiya:</span>
+                    <span class="text-emerald-600">{{ $t('tournaments.yourSurname') }}:</span>
                     <span class="text-emerald-800 font-medium ml-1">{{ regForm.lastName }}</span>
                   </div>
                   <div>
-                    <span class="text-emerald-600">Telefon:</span>
+                    <span class="text-emerald-600">{{ $t('tournaments.yourPhone') }}:</span>
                     <span class="text-emerald-800 font-medium ml-1">{{ regForm.phone }}</span>
                   </div>
                   <div>
-                    <span class="text-emerald-600">Guruh:</span>
+                    <span class="text-emerald-600">{{ $t('tournaments.yourGroup') }}:</span>
                     <span class="text-emerald-800 font-medium ml-1">{{ regForm.group }}</span>
                   </div>
                 </div>
@@ -265,14 +265,14 @@
                 <div class="flex items-center gap-2">
                   <BookOpen class="w-5 h-5 text-blue-500" />
                   <label class="text-sm font-semibold text-slate-700">
-                    Fan tanlash
+                    {{ $t('schedule.subjects') }}
                   </label>
                 </div>
                 
                 <!-- Direction info -->
                 <div v-if="getStudentDirectionName()" class="p-3 bg-blue-50 rounded-xl border border-blue-100">
                   <p class="text-sm text-blue-700">
-                    <span class="font-medium">Sizning yo'nalishingiz:</span> {{ getStudentDirectionName() }}
+                    <span class="font-medium">{{ $t('tournaments.yourDirection') }}:</span> {{ getStudentDirectionName() }}
                   </p>
                 </div>
 
@@ -281,9 +281,9 @@
                   <div class="flex items-start gap-3">
                     <AlertCircle class="w-5 h-5 text-amber-500 shrink-0 mt-0.5" />
                     <div>
-                      <p class="text-sm font-medium text-amber-700">Sizning yo'nalishingiz qatnasha olmaydi</p>
+                      <p class="text-sm font-medium text-amber-700">{{ $t('tournaments.directionCantParticipate') }}</p>
                       <p class="text-xs text-amber-600 mt-1">
-                        Bu turnir sizning yo'nalishingiz uchun ochiq emas
+                        {{ $t('tournaments.directionNotOpen') }}
                       </p>
                     </div>
                   </div>
@@ -293,7 +293,7 @@
                 <div v-else-if="getStudentParticipationRule(selectedTournament)?.selectionMode === 'fixed'" class="space-y-2">
                   <div class="p-3 bg-emerald-50 rounded-xl border border-emerald-100">
                     <p class="text-sm text-emerald-700 font-medium mb-2">
-                      Sizning yo'nalishingiz uchun fan avtomatik belgilangan:
+                      {{ $t('tournaments.autoFilled') }}:
                     </p>
                     <div class="flex items-center gap-2 p-2 bg-white rounded-lg border border-emerald-200">
                       <BookOpen class="w-5 h-5 text-emerald-500" />
@@ -306,7 +306,7 @@
                 <!-- SINGLE mode - Choose one from allowed -->
                 <div v-else-if="getStudentParticipationRule(selectedTournament)?.selectionMode === 'single'" class="space-y-2">
                   <p class="text-xs text-slate-500">
-                    Quyidagi fanlardan <strong>bittasini</strong> tanlang:
+                    {{ $t('tournaments.selectOneSubject') }}:
                   </p>
                   <div class="grid grid-cols-2 gap-2">
                     <label
@@ -342,15 +342,15 @@
                 <div v-else-if="getStudentParticipationRule(selectedTournament)?.selectionMode === 'multiple'" class="space-y-2">
                   <div class="flex items-center justify-between">
                     <p class="text-xs text-slate-500">
-                      Quyidagi fanlardan tanlang:
+                      {{ $t('tournaments.selectSubjects') }}
                     </p>
                     <span class="text-xs font-medium text-blue-600">
-                      {{ selectedSubjectIds.length }} / {{ getStudentParticipationRule(selectedTournament)?.maxSelect || '?' }} tanlandi
+                      {{ selectedSubjectIds.length }} / {{ getStudentParticipationRule(selectedTournament)?.maxSelect || '?' }} {{ $t('tournaments.selectedCount') }}
                     </span>
                   </div>
                   <p class="text-xs text-slate-400">
-                    Kamida {{ getStudentParticipationRule(selectedTournament)?.minSelect || 1 }} ta, 
-                    ko'pi bilan {{ getStudentParticipationRule(selectedTournament)?.maxSelect || '?' }} ta tanlashingiz mumkin
+                    {{ $t('tournaments.minimum') }} {{ getStudentParticipationRule(selectedTournament)?.minSelect || 1 }} ta, 
+                    {{ $t('tournaments.maximum') }} {{ getStudentParticipationRule(selectedTournament)?.maxSelect || '?' }} {{ $t('tournaments.canSelect') }}
                   </p>
                   <div class="grid grid-cols-2 gap-2">
                     <label
@@ -398,7 +398,7 @@
                   v-model="regForm.customFieldValues[field.name]"
                   type="text"
                   class="w-full px-4 py-2.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500"
-                  :placeholder="`${field.name} kiriting`"
+                  :placeholder="$t('tournaments.enterField', { name: field.name })"
                 />
 
                 <input
@@ -406,7 +406,7 @@
                   v-model.number="regForm.customFieldValues[field.name]"
                   type="number"
                   class="w-full px-4 py-2.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500"
-                  :placeholder="`${field.name} kiriting`"
+                  :placeholder="$t('tournaments.enterField', { name: field.name })"
                 />
 
                 <select
@@ -414,7 +414,7 @@
                   v-model="regForm.customFieldValues[field.name]"
                   class="w-full px-4 py-2.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500"
                 >
-                  <option value="">Tanlang...</option>
+                  <option value="">{{ t('tournaments.selectPlaceholder') }}</option>
                   <option v-for="opt in field.options" :key="opt" :value="opt">{{ opt }}</option>
                 </select>
 
@@ -423,20 +423,20 @@
                   v-model="regForm.customFieldValues[field.name]"
                   rows="3"
                   class="w-full px-4 py-2.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500"
-                  :placeholder="`${field.name} kiriting`"
+                  :placeholder="$t('tournaments.enterField', { name: field.name })"
                 ></textarea>
               </div>
 
               <!-- Comment field -->
               <div class="space-y-1">
                 <label class="block text-sm font-medium text-slate-700">
-                  Izoh (ixtiyoriy)
+                  {{ $t('attendance.comment') }}
                 </label>
                 <textarea
                   v-model="regForm.comment"
                   rows="3"
                   class="w-full px-4 py-2.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500"
-                  placeholder="Qo'shimcha ma'lumot yoki savol bo'lsa yozing..."
+                  :placeholder="$t('tournaments.additionalInfo')"
                 ></textarea>
               </div>
             </div>
@@ -447,13 +447,13 @@
                 @click="showRegisterModal = false"
                 class="px-5 py-2.5 text-slate-600 hover:bg-slate-200 rounded-xl font-medium transition-colors"
               >
-                Bekor qilish
+                {{ $t('common.cancel') }}
               </button>
               <button
                 @click="submitRegistration"
                 class="px-6 py-2.5 bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-xl font-semibold shadow-lg shadow-emerald-500/25 hover:shadow-xl transition-all"
               >
-                Ariza yuborish
+                {{ $t('common.send') }}
               </button>
             </div>
           </div>
@@ -470,15 +470,15 @@
             <div class="w-20 h-20 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-5 animate-bounce-gentle">
               <CheckCircle class="w-10 h-10 text-emerald-500" />
             </div>
-            <h3 class="text-2xl font-bold text-slate-800 mb-2">Muvaffaqiyatli!</h3>
+            <h3 class="text-2xl font-bold text-slate-800 mb-2">{{ $t('tournaments.success') }}</h3>
             <p class="text-slate-500 mb-6">
-              Arizangiz qabul qilindi. Administrator tasdiqlangandan so'ng sizga xabar beriladi.
+              {{ $t('common.success') }}
             </p>
             <button
               @click="showSuccessModal = false"
               class="px-8 py-3 bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-xl font-semibold shadow-lg shadow-emerald-500/25 hover:shadow-xl transition-all"
             >
-              Tushunarli
+              {{ $t('common.close') }}
             </button>
           </div>
         </div>
@@ -488,19 +488,32 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
-import { useDataStore } from '../../stores/data'
-import { useAuthStore } from '../../stores/auth'
-import { useToastStore } from '../../stores/toast'
 import {
-  Trophy, Calendar, MapPin, Clock, Gift, UserPlus, CheckCircle,
-  Brain, Dumbbell, Palette, FlaskConical, ClipboardCheck, BookOpen, AlertCircle,
-  GraduationCap
+  AlertCircle,
+  BookOpen,
+  Brain,
+  Calendar,
+  CheckCircle,
+  ClipboardCheck,
+  Clock,
+  Dumbbell,
+  FlaskConical,
+  Gift,
+  MapPin,
+  Palette,
+  Trophy,
+  UserPlus
 } from 'lucide-vue-next'
+import { computed, onMounted, ref } from 'vue'
+import { useAuthStore } from '../../stores/auth'
+import { useDataStore } from '../../stores/data'
+import { useLanguageStore } from '../../stores/language'
+import { useToastStore } from '../../stores/toast'
 
 const dataStore = useDataStore()
 const authStore = useAuthStore()
 const toast = useToastStore()
+const { t } = useLanguageStore()
 
 // Loading states
 const loading = ref(false)
@@ -516,7 +529,7 @@ onMounted(async () => {
       dataStore.fetchSubjects()
     ])
   } catch (err) {
-    toast.error('Ma\'lumotlarni yuklashda xatolik')
+    toast.error(t('common.error'))
     console.error(err)
   } finally {
     loading.value = false
@@ -529,13 +542,13 @@ const selectedCategory = ref('all')
 const selectedTournament = ref(null)
 const selectedSubjectIds = ref([]) // YANGI: array ga o'zgartirildi
 
-const categories = [
-  { value: 'all', label: 'Barchasi', icon: Trophy },
-  { value: 'intellektual', label: 'Intellektual', icon: Brain },
-  { value: 'sport', label: 'Sport', icon: Dumbbell },
-  { value: 'ijodiy', label: 'Ijodiy', icon: Palette },
-  { value: 'ilmiy', label: 'Ilmiy', icon: FlaskConical }
-]
+const categories = computed(() => [
+  { value: 'all', label: t('common.all'), icon: Trophy },
+  { value: 'intellektual', label: t('ai.analysis'), icon: Brain },
+  { value: 'sport', label: t('clubs.sport'), icon: Dumbbell },
+  { value: 'ijodiy', label: t('clubs.art'), icon: Palette },
+  { value: 'ilmiy', label: t('clubs.science'), icon: FlaskConical }
+])
 
 const regForm = ref({
   firstName: '',
@@ -571,10 +584,10 @@ const getCategoryIcon = (category) => {
 
 const getCategoryLabel = (category) => {
   const labels = {
-    intellektual: 'Intellektual',
-    sport: 'Sport',
-    ijodiy: 'Ijodiy',
-    ilmiy: 'Ilmiy'
+    intellektual: t('tournaments.intellectual'),
+    sport: t('tournaments.sport'),
+    ijodiy: t('tournaments.creative'),
+    ilmiy: t('tournaments.scientific')
   }
   return labels[category] || category
 }
@@ -605,9 +618,9 @@ const isRegistered = (tournamentId) => {
 
 const getStatusLabel = (status) => {
   const labels = {
-    pending: 'Kutilmoqda',
-    approved: 'Tasdiqlangan',
-    rejected: 'Rad etilgan'
+    pending: t('common.loading'),
+    approved: t('common.active'),
+    rejected: t('common.inactive')
   }
   return labels[status] || status
 }
@@ -631,6 +644,7 @@ const openRegisterModal = (tournament) => {
     phone: authStore.user?.phone || '',
     group: authStore.user?.group || '',
     studentId: authStore.user?.studentId || authStore.user?.id,
+    studentDbId: authStore.user?.studentDbId || authStore.user?.student_db_id || authStore.user?.id,
     customFieldValues: {},
     comment: ''
   }
@@ -703,16 +717,16 @@ const canSelectMore = computed(() => {
 // Qatnashish qoidasi haqida ma'lumot
 const getParticipationRuleInfo = (tournament) => {
   const rule = getStudentParticipationRule(tournament)
-  if (!rule) return "Sizning yo'nalishingiz mos emas"
+  if (!rule) return t('tournaments.directionNotMatch')
   
   switch (rule.selectionMode) {
     case 'fixed':
       const fixedSubject = dataStore.getSubjectById(rule.allowedSubjectIds[0])
-      return `Fan: ${fixedSubject?.name || 'Noma\'lum'}`
+      return t('tournaments.subjectLabel', { name: fixedSubject?.name || t('tournaments.unknownSubject') })
     case 'single':
-      return `${rule.allowedSubjectIds.length} tadan 1 ta tanlang`
+      return t('tournaments.selectOneFrom', { count: rule.allowedSubjectIds.length })
     case 'multiple':
-      return `${rule.minSelect}-${rule.maxSelect} ta fan tanlang`
+      return t('tournaments.selectRange', { min: rule.minSelect, max: rule.maxSelect })
     default:
       return ''
   }
@@ -732,23 +746,23 @@ const submitRegistration = async () => {
     const rule = getStudentParticipationRule(selectedTournament.value)
     
     if (!rule) {
-      toast.error('Sizning yo\'nalishingiz bu turnirda qatnasha olmaydi')
+      toast.error(t('tournaments.directionCantParticipateError'))
       return
     }
 
     // Validatsiya
     if (rule.selectionMode === 'single' && selectedSubjectIds.value.length !== 1) {
-      toast.error('Bitta fan tanlang')
+      toast.error(t('tournaments.selectOneSubjectError'))
       return
     }
     
     if (rule.selectionMode === 'multiple') {
       if (selectedSubjectIds.value.length < rule.minSelect) {
-        toast.error(`Kamida ${rule.minSelect} ta fan tanlang`)
+        toast.error(t('tournaments.minSelectError', { min: rule.minSelect }))
         return
       }
       if (selectedSubjectIds.value.length > rule.maxSelect) {
-        toast.error(`Ko'pi bilan ${rule.maxSelect} ta fan tanlang`)
+        toast.error(t('tournaments.maxSelectError', { max: rule.maxSelect }))
         return
       }
     }
@@ -757,7 +771,7 @@ const submitRegistration = async () => {
   // Validate required custom fields
   for (const field of selectedTournament.value.customFields || []) {
     if (field.required && !regForm.value.customFieldValues[field.name]) {
-      toast.error(`"${field.name}" maydonini to'ldiring`)
+      toast.error(t('tournaments.fillFieldError', { name: field.name }))
       return
     }
   }
@@ -774,11 +788,20 @@ const submitRegistration = async () => {
     if (result.success) {
       showRegisterModal.value = false
       showSuccessModal.value = true
+    } else if (result.alreadyRegistered) {
+      showRegisterModal.value = false
+      toast.info(result.message || t('tournaments.alreadyRegistered'))
     } else {
-      toast.error(result.message || 'Xatolik yuz berdi')
+      toast.error(result.message || t('tournaments.errorOccurred'))
     }
   } catch (err) {
-    toast.error(err.message || 'Ro\'yxatdan o\'tishda xatolik')
+    const errMsg = err?.message || ''
+    if (errMsg.includes('allaqachon') || errMsg.includes('409')) {
+      showRegisterModal.value = false
+      toast.info(t('tournaments.alreadyRegistered'))
+    } else {
+      toast.error(errMsg || t('tournaments.registrationError'))
+    }
   } finally {
     submitting.value = false
   }

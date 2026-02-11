@@ -15,11 +15,13 @@
  * - Router: Barcha sahifalar va navigation guards
  */
 
-import { createApp } from 'vue'
 import { createPinia } from 'pinia'
+import { createApp } from 'vue'
 import App from './App.vue'
-import router from './router'
 import './assets/styles/main.css'
+import i18nPlugin from './i18n/plugin'
+import router from './router'
+import './style.css'
 
 // Vue ilova instance yaratish
 const app = createApp(App)
@@ -30,6 +32,9 @@ const pinia = createPinia()
 // MUHIM: Avval Pinia ulanadi, chunki Router'ning navigation guards
 // Pinia store'lardan (auth.js) foydalanadi
 app.use(pinia)
+
+// i18n plugin (Pinia keyin, chunki language store ishlatadi)
+app.use(i18nPlugin)
 
 // Router ulash (sahifalar va navigatsiya)
 app.use(router)

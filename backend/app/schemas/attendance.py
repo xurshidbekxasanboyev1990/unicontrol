@@ -8,6 +8,7 @@ Version: 1.0.0
 """
 
 from datetime import datetime, date, time
+from app.config import now_tashkent, TASHKENT_TZ
 from typing import Optional, List
 from pydantic import BaseModel, Field, ConfigDict
 
@@ -60,8 +61,27 @@ class AttendanceResponse(BaseModel):
     recorded_by: Optional[int] = None
     created_at: datetime
     updated_at: datetime
+    is_editable: bool = True
     
     model_config = ConfigDict(from_attributes=True)
+    
+    @classmethod
+    def from_attendance(cls, attendance, is_superadmin: bool = False):
+        """Create response with computed is_editable field."""
+        from datetime import timedelta
+        resp = cls.model_validate(attendance)
+        if not is_superadmin:
+            now = now_tashkent()
+            created = attendance.created_at
+            # Ensure both are tz-aware for comparison
+            if created and (not hasattr(created, 'tzinfo') or created.tzinfo is None):
+                created = created.replace(tzinfo=TASHKENT_TZ)
+            try:
+                time_since = now - created
+                resp.is_editable = time_since <= timedelta(hours=24)
+            except Exception:
+                resp.is_editable = True
+        return resp
 
 
 class AttendanceBatchItem(BaseModel):

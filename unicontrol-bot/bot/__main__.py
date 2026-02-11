@@ -15,7 +15,8 @@ from bot.middlewares import (
     ForceSubscribeMiddleware,
     MaintenanceModeMiddleware,
     UserTrackingMiddleware,
-    BannedUserMiddleware
+    BannedUserMiddleware,
+    SubscriptionCheckMiddleware
 )
 from bot.scheduler import AttendanceNotifier
 
@@ -94,7 +95,11 @@ async def main():
     dp.message.middleware(ForceSubscribeMiddleware(bot))
     dp.callback_query.middleware(ForceSubscribeMiddleware(bot))
     
-    # 5. Throttling
+    # 5. Subscription plan check (bot access requires Plus+)
+    dp.message.middleware(SubscriptionCheckMiddleware())
+    dp.callback_query.middleware(SubscriptionCheckMiddleware())
+    
+    # 6. Throttling
     dp.message.middleware(ThrottlingMiddleware())
     dp.callback_query.middleware(ThrottlingMiddleware())
     

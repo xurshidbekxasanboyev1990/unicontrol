@@ -3,7 +3,7 @@
     <!-- Page Header -->
     <div class="flex items-center justify-between">
       <div>
-        <h1 class="text-2xl font-bold text-slate-800">Ma'lumotlar Import</h1>
+        <h1 class="text-2xl font-bold text-slate-800">{{ $t('importData.title') }}</h1>
         <p class="text-slate-500 mt-1">Excel yoki CSV fayllardan ma'lumotlarni yuklash</p>
       </div>
     </div>
@@ -66,9 +66,9 @@
 </template>
 
 <script setup>
-import { CheckCircle, AlertCircle, Info, Download } from 'lucide-vue-next'
 import ExcelImport from '@/components/excel/ExcelImport.vue'
 import { useToastStore } from '@/stores/toast'
+import { AlertCircle, CheckCircle, Download, Info } from 'lucide-vue-next'
 
 const toast = useToastStore()
 

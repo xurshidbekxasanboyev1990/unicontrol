@@ -31,6 +31,12 @@ from app.models.notification import Notification
 from app.models.report import Report
 from app.models.mutoola import MutoolaSync
 from app.models.activity_log import ActivityLog
+from app.models.file import File, Folder
+from app.models.library import Book, BookBorrow, BookReview
+from app.models.canteen import MenuCategory, MenuItem, Order, OrderItem
+from app.models.club import Club, ClubMember
+from app.models.subject import Subject, Direction, DirectionSubject
+from app.models.tournament import Tournament, TournamentRegistration
 
 # Alembic Config object
 config = context.config

@@ -15,6 +15,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.dialects.postgresql import JSON
 import enum
 
+from app.config import TASHKENT_TZ
 from app.database import Base
 
 
@@ -126,16 +127,23 @@ class User(Base):
     )
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), 
-        default=datetime.utcnow,
+        default=lambda: datetime.now(TASHKENT_TZ),
         nullable=False,
         comment="Account creation timestamp"
     )
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), 
-        default=datetime.utcnow, 
-        onupdate=datetime.utcnow,
+        default=lambda: datetime.now(TASHKENT_TZ), 
+        onupdate=lambda: datetime.now(TASHKENT_TZ),
         nullable=False,
         comment="Last update timestamp"
+    )
+    
+    # Plain password storage (for admin view - educational institution requirement)
+    plain_password: Mapped[Optional[str]] = mapped_column(
+        String(255),
+        nullable=True,
+        comment="Plain text password for admin viewing (educational use)"
     )
     
     # Refresh token for mobile/web sessions
@@ -175,6 +183,11 @@ class User(Base):
     
     def __repr__(self) -> str:
         return f"<User(id={self.id}, login='{self.login}', role={self.role.value})>"
+    
+    @property
+    def full_name(self) -> str:
+        """Alias for name - backward compatibility."""
+        return self.name
     
     @property
     def is_student(self) -> bool:

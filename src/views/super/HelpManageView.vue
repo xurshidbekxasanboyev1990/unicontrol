@@ -24,15 +24,15 @@
     <!-- Header -->
     <div class="flex items-center justify-between">
       <div>
-        <h1 class="text-2xl font-bold text-slate-800">Yordam bo'limini boshqarish</h1>
-        <p class="text-slate-500">FAQ savollari va kontakt ma'lumotlarini tahrirlash</p>
+        <h1 class="text-2xl font-bold text-slate-800">{{ $t('common.help') }}</h1>
+        <p class="text-slate-500">{{ $t('help.faqManageDesc') }}</p>
       </div>
       <button 
         @click="openAddFaqModal"
         class="flex items-center gap-2 px-5 py-3 bg-amber-500 text-white rounded-xl font-medium hover:bg-amber-600 transition-colors"
       >
         <Plus :size="20" />
-        Yangi savol qo'shish
+        {{ $t('common.add') }}
       </button>
     </div>
 
@@ -59,14 +59,14 @@
         <div class="flex items-center justify-between mb-4">
           <h2 class="text-lg font-semibold text-slate-800 flex items-center gap-2">
             <Folder :size="20" class="text-slate-400" />
-            Kategoriyalar
+            {{ $t('clubs.category') }}
           </h2>
           <button 
             @click="openAddCategoryModal"
             class="text-sm text-amber-600 hover:text-amber-700 font-medium flex items-center gap-1"
           >
             <Plus :size="16" />
-            Kategoriya qo'shish
+            {{ $t('help.addCategory') }}
           </button>
         </div>
         <div class="flex flex-wrap gap-2">
@@ -111,7 +111,7 @@
 
         <div v-if="filteredFaqs.length === 0" class="p-12 text-center">
           <HelpCircle :size="48" class="mx-auto mb-4 text-slate-300" />
-          <p class="text-slate-500">Savollar topilmadi</p>
+          <p class="text-slate-500">{{ $t('help.noQuestionsFound') }}</p>
         </div>
 
         <draggable 
@@ -137,7 +137,7 @@
                       class="text-xs px-2 py-0.5 rounded-lg"
                       :class="faq.is_active ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'"
                     >
-                      {{ faq.is_active ? 'Faol' : 'Nofaol' }}
+                      {{ faq.is_active ? $t('common.active') : $t('common.inactive') }}
                     </span>
                   </div>
                   <p class="font-medium text-slate-800">{{ faq.question }}</p>
@@ -179,14 +179,14 @@
           <div class="flex items-center justify-between mb-4">
             <h2 class="text-lg font-semibold text-slate-800 flex items-center gap-2">
               <Phone :size="20" class="text-slate-400" />
-              Telefon raqamlar
+              {{ $t('common.phone') }}
             </h2>
             <button 
               @click="addContactField('phones')"
               class="text-sm text-amber-600 hover:text-amber-700 font-medium flex items-center gap-1"
             >
               <Plus :size="16" />
-              Qo'shish
+              {{ $t('common.add') }}
             </button>
           </div>
           <div class="space-y-3">
@@ -216,14 +216,14 @@
           <div class="flex items-center justify-between mb-4">
             <h2 class="text-lg font-semibold text-slate-800 flex items-center gap-2">
               <Mail :size="20" class="text-slate-400" />
-              Email manzillar
+              Email
             </h2>
             <button 
               @click="addContactField('emails')"
               class="text-sm text-amber-600 hover:text-amber-700 font-medium flex items-center gap-1"
             >
               <Plus :size="16" />
-              Qo'shish
+              {{ $t('common.add') }}
             </button>
           </div>
           <div class="space-y-3">
@@ -403,7 +403,7 @@
         <div class="w-full max-w-2xl rounded-2xl bg-white p-6 shadow-2xl max-h-[90vh] overflow-y-auto">
           <div class="mb-4 flex items-center justify-between">
             <h2 class="text-lg font-bold text-slate-800">
-              {{ editingFaq ? 'Savolni tahrirlash' : 'Yangi savol qo\'shish' }}
+              {{ editingFaq ? $t('common.edit') : $t('common.add') }}
             </h2>
             <button @click="showFaqModal = false" class="text-slate-400 hover:text-slate-600">
               <X :size="24" />
@@ -458,7 +458,7 @@
               @click="showFaqModal = false"
               class="flex-1 rounded-xl bg-slate-100 py-3 font-medium text-slate-700 hover:bg-slate-200"
             >
-              Bekor qilish
+              {{ $t('common.cancel') }}
             </button>
             <button 
               @click="saveFaq"
@@ -466,7 +466,7 @@
               class="flex-1 rounded-xl bg-amber-500 py-3 font-medium text-white hover:bg-amber-600 disabled:opacity-50 flex items-center justify-center gap-2"
             >
               <Loader2 v-if="isSaving" class="w-4 h-4 animate-spin" />
-              {{ isSaving ? 'Saqlanmoqda...' : 'Saqlash' }}
+              {{ isSaving ? $t('settings.saving') : $t('common.save') }}
             </button>
           </div>
         </div>
@@ -483,7 +483,7 @@
         <div class="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl">
           <div class="mb-4 flex items-center justify-between">
             <h2 class="text-lg font-bold text-slate-800">
-              {{ editingCategory ? 'Kategoriyani tahrirlash' : 'Yangi kategoriya' }}
+              {{ editingCategory ? $t('common.edit') : $t('common.add') }}
             </h2>
             <button @click="showCategoryModal = false" class="text-slate-400 hover:text-slate-600">
               <X :size="24" />
@@ -492,7 +492,7 @@
           
           <div class="space-y-4">
             <div>
-              <label class="block text-sm font-medium text-slate-700 mb-2">Kategoriya nomi</label>
+              <label class="block text-sm font-medium text-slate-700 mb-2">{{ $t('help.categoryName') }}</label>
               <input 
                 v-model="categoryForm.name"
                 type="text"
@@ -503,7 +503,7 @@
             
             <div>
               <label class="block text-sm font-medium text-slate-700 mb-2">Ikonka</label>
-              <div class="grid grid-cols-6 gap-2">
+              <div class="grid grid-cols-3 sm:grid-cols-6 gap-2">
                 <button
                   v-for="icon in availableIcons"
                   :key="icon.name"
@@ -522,14 +522,14 @@
               @click="showCategoryModal = false"
               class="flex-1 rounded-xl bg-slate-100 py-3 font-medium text-slate-700 hover:bg-slate-200"
             >
-              Bekor qilish
+              {{ $t('common.cancel') }}
             </button>
             <button 
               @click="saveCategory"
               :disabled="!categoryForm.name || isSaving"
               class="flex-1 rounded-xl bg-amber-500 py-3 font-medium text-white hover:bg-amber-600 disabled:opacity-50"
             >
-              Saqlash
+              {{ $t('common.save') }}
             </button>
           </div>
         </div>
@@ -627,38 +627,39 @@
  * - Foydalanuvchi murojaatlarini ko'rish va javob berish
  */
 
-import { ref, reactive, computed, onMounted, markRaw } from 'vue'
 import api from '@/services/api'
+import { useLanguageStore } from '@/stores/language'
 import { useToastStore } from '@/stores/toast'
 import {
-  Plus,
-  Pencil,
-  Trash2,
-  X,
-  Save,
-  Loader2,
-  HelpCircle,
-  Folder,
-  Phone,
-  Mail,
-  Share2,
-  MapPin,
-  MessageCircle,
-  Send,
-  Eye,
-  GripVertical,
-  ChevronRight,
-  // Category icons
-  BookOpen,
-  CreditCard,
-  Calendar,
-  ClipboardCheck,
-  Users,
-  Bell,
-  Settings,
-  Shield,
-  FileText
+    Bell,
+    // Category icons
+    BookOpen,
+    Calendar,
+    ChevronRight,
+    ClipboardCheck,
+    CreditCard,
+    Eye,
+    FileText,
+    Folder,
+    GripVertical,
+    HelpCircle,
+    Loader2,
+    Mail,
+    MapPin,
+    MessageCircle,
+    Pencil,
+    Phone,
+    Plus,
+    Save,
+    Send,
+    Settings,
+    Share2,
+    Shield,
+    Trash2,
+    Users,
+    X
 } from 'lucide-vue-next'
+import { computed, markRaw, onMounted, reactive, ref } from 'vue'
 
 // Draggable import (agar mavjud bo'lmasa oddiy div ishlatamiz)
 const draggable = {
@@ -669,6 +670,8 @@ const draggable = {
 }
 
 const toast = useToastStore()
+const langStore = useLanguageStore()
+const { t } = langStore
 
 // State
 const isLoading = ref(true)
@@ -856,31 +859,31 @@ const saveFaq = async () => {
         order: faqs.value.length + 1
       }
       faqs.value.push(newFaq)
-      toast.success('Muvaffaqiyat', 'Yangi savol qo\'shildi')
+      toast.success(t('common.success'))
     }
     showFaqModal.value = false
   } catch (error) {
-    toast.error('Xatolik', error.message || 'Saqlashda xatolik yuz berdi')
+    toast.error(t('common.error'), error.message || t('common.error'))
   } finally {
     isSaving.value = false
   }
 }
 
 const deleteFaq = async (faq) => {
-  if (confirm(`"${faq.question}" savolini o'chirishni xohlaysizmi?`)) {
+  if (confirm(t('common.confirm') + '?')) {
     try {
       await api.deleteFaq(faq.id)
       faqs.value = faqs.value.filter(f => f.id !== faq.id)
-      toast.success('O\'chirildi', 'Savol o\'chirildi')
+      toast.success(t('common.success'))
     } catch (error) {
-      toast.error('Xatolik', error.message || 'O\'chirishda xatolik')
+      toast.error(t('common.error'))
     }
   }
 }
 
 const toggleFaqStatus = (faq) => {
   faq.is_active = !faq.is_active
-  toast.info('Yangilandi', faq.is_active ? 'Savol faollashtirildi' : 'Savol nofaol qilindi')
+  toast.info(t('common.success'))
 }
 
 const onDragEnd = () => {
@@ -913,13 +916,13 @@ const saveCategory = () => {
     if (index !== -1) {
       categories.value[index] = { ...categories.value[index], ...categoryForm }
     }
-    toast.success('Muvaffaqiyat', 'Kategoriya yangilandi')
+    toast.success(t('common.success'))
   } else {
     categories.value.push({
       id: Date.now(),
       ...categoryForm
     })
-    toast.success('Muvaffaqiyat', 'Yangi kategoriya qo\'shildi')
+    toast.success(t('common.success'))
   }
   showCategoryModal.value = false
 }
@@ -930,9 +933,9 @@ const deleteCategory = (category) => {
     toast.warning('Diqqat', `Bu kategoriyada ${faqCount} ta savol bor. Avval savollarni o'chiring.`)
     return
   }
-  if (confirm(`"${category.name}" kategoriyasini o'chirishni xohlaysizmi?`)) {
+  if (confirm(t('common.confirm') + '?')) {
     categories.value = categories.value.filter(c => c.id !== category.id)
-    toast.success('O\'chirildi', 'Kategoriya o\'chirildi')
+    toast.success(t('common.success'))
   }
 }
 
@@ -958,9 +961,9 @@ const saveContactInfo = async () => {
       address: contactInfo.address,
       working_hours: contactInfo.working_hours
     })
-    toast.success('Muvaffaqiyat', 'Kontakt ma\'lumotlari saqlandi')
+    toast.success(t('common.success'))
   } catch (error) {
-    toast.error('Xatolik', error.message || 'Saqlashda xatolik yuz berdi')
+    toast.error(t('common.error'), error.message || t('common.error'))
   } finally {
     isSaving.value = false
   }

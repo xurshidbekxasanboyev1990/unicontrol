@@ -20,7 +20,7 @@ from app.schemas.user import (
     PasswordUpdate,
     RefreshToken,
 )
-from app.core.dependencies import get_current_active_user
+from app.core.dependencies import get_current_active_user, require_admin
 from app.models.user import User, UserRole
 
 router = APIRouter()
@@ -86,6 +86,7 @@ async def get_current_user_profile(
         student = result.scalar_one_or_none()
         
         if student:
+            response_data["student_db_id"] = student.id  # database PK for attendance etc.
             response_data["student_id"] = student.student_id
             response_data["group_id"] = student.group_id
             response_data["full_name"] = student.name
@@ -133,26 +134,41 @@ async def change_password(
 
 
 @router.post("/logout")
-async def logout():
+async def logout(
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_active_user)
+):
     """
     Logout current user.
     
-    Note: JWT tokens are stateless, so logout is handled client-side
-    by removing the token. This endpoint is for API completeness.
+    Invalidates the refresh token server-side so it cannot be reused.
+    Client should also remove local tokens.
     """
+    current_user.refresh_token = None
+    db.add(current_user)
+    await db.commit()
     return {"message": "Logged out successfully"}
 
 
 @router.post("/register", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
 async def register(
     user_data: UserCreate,
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(require_admin)
 ):
     """
     Register a new user.
     
-    Note: In production, this should be restricted or require admin approval.
+    Requires admin or superadmin role.
+    Admins can only create student/leader roles.
+    Superadmins can create any role.
     """
+    from app.core.exceptions import ForbiddenException
+    
+    # Admins can only create student/leader, not other admins
+    if current_user.role == UserRole.ADMIN and user_data.role in [UserRole.ADMIN, UserRole.SUPERADMIN]:
+        raise ForbiddenException("Faqat superadmin admin yaratishi mumkin")
+    
     service = AuthService(db)
     user = await service.register(user_data)
     return UserResponse.model_validate(user)

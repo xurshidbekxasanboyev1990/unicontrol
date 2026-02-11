@@ -13,6 +13,7 @@ from typing import Optional, TYPE_CHECKING
 from sqlalchemy import String, Integer, DateTime, Date, ForeignKey, Text, Boolean, Enum as SAEnum
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
+from app.config import TASHKENT_TZ
 from app.database import Base
 
 if TYPE_CHECKING:
@@ -45,6 +46,8 @@ class ReportStatus(str, Enum):
     PROCESSING = "processing"
     COMPLETED = "completed"
     FAILED = "failed"
+    APPROVED = "approved"
+    REJECTED = "rejected"
 
 
 class Report(Base):
@@ -191,6 +194,24 @@ class Report(Base):
         comment="Number of downloads"
     )
     
+    # Approval fields
+    approved_by: Mapped[Optional[int]] = mapped_column(
+        Integer,
+        ForeignKey("users.id", ondelete="SET NULL"),
+        nullable=True,
+        comment="User who approved/rejected the report"
+    )
+    approved_at: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True),
+        nullable=True,
+        comment="Approval/rejection time"
+    )
+    rejection_reason: Mapped[Optional[str]] = mapped_column(
+        Text,
+        nullable=True,
+        comment="Reason for rejection"
+    )
+    
     # Expiry
     expires_at: Mapped[Optional[datetime]] = mapped_column(
         DateTime(timezone=True),
@@ -201,13 +222,13 @@ class Report(Base):
     # Timestamps
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
-        default=datetime.utcnow,
+        default=lambda: datetime.now(TASHKENT_TZ),
         nullable=False
     )
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
-        default=datetime.utcnow,
-        onupdate=datetime.utcnow,
+        default=lambda: datetime.now(TASHKENT_TZ),
+        onupdate=lambda: datetime.now(TASHKENT_TZ),
         nullable=False
     )
     
@@ -215,6 +236,12 @@ class Report(Base):
     created_by_user: Mapped["User"] = relationship(
         "User",
         foreign_keys=[created_by],
+        lazy="joined"
+    )
+    
+    approved_by_user: Mapped[Optional["User"]] = relationship(
+        "User",
+        foreign_keys=[approved_by],
         lazy="joined"
     )
     
@@ -248,6 +275,16 @@ class Report(Base):
         return self.status == ReportStatus.FAILED
     
     @property
+    def is_approved(self) -> bool:
+        """Check if report is approved."""
+        return self.status == ReportStatus.APPROVED
+    
+    @property
+    def is_rejected(self) -> bool:
+        """Check if report is rejected."""
+        return self.status == ReportStatus.REJECTED
+    
+    @property
     def processing_time(self) -> Optional[float]:
         """Get processing time in seconds."""
         if self.started_at and self.completed_at:
@@ -259,4 +296,4 @@ class Report(Base):
         """Check if report file is expired."""
         if self.expires_at is None:
             return False
-        return datetime.utcnow() > self.expires_at
+        return datetime.now(TASHKENT_TZ) > self.expires_at

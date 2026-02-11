@@ -21,6 +21,7 @@ from sqlalchemy import (
 )
 from sqlalchemy.orm import relationship, backref
 
+from app.config import TASHKENT_TZ
 from app.database import Base
 
 
@@ -112,8 +113,8 @@ class File(Base):
     download_count = Column(Integer, default=0, comment="Download counter")
     
     # Timestamps
-    created_at = Column(DateTime, default=datetime.utcnow, comment="Upload timestamp")
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = Column(DateTime, default=lambda: datetime.now(TASHKENT_TZ), comment="Upload timestamp")
+    updated_at = Column(DateTime, default=lambda: datetime.now(TASHKENT_TZ), onupdate=lambda: datetime.now(TASHKENT_TZ))
     
     # Relationships
     folder = relationship("Folder", back_populates="files")
@@ -191,8 +192,8 @@ class Folder(Base):
     icon = Column(String(50), nullable=True, comment="Custom icon name")
     
     # Timestamps
-    created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = Column(DateTime, default=lambda: datetime.now(TASHKENT_TZ))
+    updated_at = Column(DateTime, default=lambda: datetime.now(TASHKENT_TZ), onupdate=lambda: datetime.now(TASHKENT_TZ))
     
     # Relationships
     files = relationship("File", back_populates="folder", cascade="all, delete-orphan")
