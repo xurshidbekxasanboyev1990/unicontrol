@@ -1,0 +1,161 @@
+/* UniControl - Global Styles */
+:root {
+  font-family: 'SF Pro Display', 'Inter', system-ui, -apple-system, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  -webkit-text-size-adjust: 100%;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+#app {
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  text-align: left;
+}
+
+/* ===== RESPONSIVE UTILITIES ===== */
+
+/* Tables - horizontal scroll on mobile */
+.table-responsive {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Safe area padding for mobile notches */
+@supports (padding: env(safe-area-inset-bottom)) {
+  .safe-bottom {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+}
+
+/* Touch-friendly tap targets */
+@media (max-width: 640px) {
+
+  button,
+  a,
+  select,
+  input[type="checkbox"],
+  input[type="radio"] {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  /* Prevent zoom on input focus (iOS) */
+  input[type="text"],
+  input[type="email"],
+  input[type="password"],
+  input[type="number"],
+  input[type="tel"],
+  input[type="url"],
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
+
+  /* Better modal positioning on mobile */
+  .modal-overlay,
+  [class*="fixed inset-0"][class*="z-50"] {
+    align-items: flex-end !important;
+  }
+
+  .modal-overlay>div,
+  [class*="fixed inset-0"][class*="z-50"]>div {
+    max-height: 90vh;
+    border-radius: 1.5rem 1.5rem 0 0 !important;
+  }
+
+  /* Responsive text sizes on mobile */
+  h1 {
+    font-size: 1.5rem !important;
+  }
+
+  /* Full-width cards on mobile */
+  .space-y-6>div {
+    border-radius: 1rem;
+  }
+
+  /* Better scrollbar for horizontal scroll */
+  .overflow-x-auto {
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+  }
+
+  /* Prevent layout shift from scrollbar */
+  .overflow-x-auto::-webkit-scrollbar {
+    height: 4px;
+  }
+
+  .overflow-x-auto::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.15);
+    border-radius: 4px;
+  }
+}
+
+/* Smooth transitions for responsive changes */
+@media (prefers-reduced-motion: no-preference) {
+  * {
+    transition-property: margin, padding, width, max-width;
+    transition-duration: 0s;
+  }
+}
+
+/* Print styles */
+@media print {
+
+  .no-print,
+  nav,
+  aside,
+  footer {
+    display: none !important;
+  }
+}
+
+/* Custom scrollbar */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 4px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.12);
+  border-radius: 4px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.2);
+}
+
+/* Hide scrollbar utility */
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Tablet breakpoint adjustments */
+@media (min-width: 641px) and (max-width: 1023px) {
+  .lg\:pl-72 {
+    padding-left: 0;
+  }
+}

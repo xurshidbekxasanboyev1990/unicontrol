@@ -1,0 +1,154 @@
+# ========================================
+# UniControl - Docker Compose
+# ========================================
+# Bitta `docker compose up -d` bilan to'liq ishga tushadi
+# Barcha sozlamalar .env fayldan olinadi
+#
+# Ishga tushirish: docker compose up -d
+# To'xtatish: docker compose down
+# Loglarni ko'rish: docker compose logs -f
+
+services:
+  # ============================================
+  # PostgreSQL Database
+  # ============================================
+  db:
+    image: postgres:15-alpine
+    container_name: unicontrol_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${DB_USER:-unicontrol}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD muhit oʻzgaruvchisi .env faylda belgilanishi shart}
+      POSTGRES_DB: ${DB_NAME:-unicontrol}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      # init-db.sql removed - using Alembic migrations instead
+    ports:
+      - "${DB_PORT:-5555}:5432"
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ${DB_USER:-unicontrol} -d ${DB_NAME:-unicontrol}" ]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  # ============================================
+  # Redis Cache
+  # ============================================
+  redis:
+    image: redis:7-alpine
+    container_name: unicontrol_redis
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+    ports:
+      - "${REDIS_PORT:-6666}:6379"
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  # ============================================
+  # Backend API (FastAPI)
+  # ============================================
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: unicontrol_backend
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      - DATABASE_URL=postgresql+asyncpg://${DB_USER:-unicontrol}:${DB_PASSWORD}@db:5432/${DB_NAME:-unicontrol}
+      - REDIS_URL=redis://redis:6379/0
+      - CORS_ORIGINS=${CORS_ORIGINS:-http://localhost:3000,http://localhost:5173,http://localhost:5174}
+      - DB_HOST=db
+      - DB_PORT=5432
+      - DB_USER=${DB_USER:-unicontrol}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_NAME=${DB_NAME:-unicontrol}
+      - TELEGRAM_BOT_TOKEN=${BOT_TOKEN:-}
+    ports:
+      - "${BACKEND_PORT:-8000}:8000"
+    volumes:
+      - backend_uploads:/app/uploads
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: [ "CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')" ]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+
+  # ============================================
+  # Frontend (Vue.js + Vite)
+  # ============================================
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        VITE_API_URL: ${VITE_API_URL:-/api/v1}
+        VITE_DEMO_MODE: ${VITE_DEMO_MODE:-false}
+    container_name: unicontrol_frontend
+    restart: unless-stopped
+    ports:
+      - "${FRONTEND_PORT:-5173}:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+
+  # ============================================
+  # Telegram Bot (ixtiyoriy)
+  # ============================================
+  bot:
+    build:
+      context: ./unicontrol-bot
+      dockerfile: Dockerfile
+    container_name: unicontrol_bot
+    restart: unless-stopped
+    environment:
+      - BOT_TOKEN=${BOT_TOKEN:-}
+      - API_BASE_URL=http://backend:8000/api/v1
+      - REDIS_URL=redis://redis:6379/1
+    depends_on:
+      backend:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    profiles:
+      - bot
+
+  # ============================================
+  # Adminer (Database UI) - ixtiyoriy
+  # ============================================
+  adminer:
+    image: adminer:latest
+    container_name: unicontrol_adminer
+    restart: unless-stopped
+    ports:
+      - "${ADMINER_PORT:-8080}:8080"
+    depends_on:
+      - db
+    profiles:
+      - tools
+
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+  backend_logs:
+    driver: local
+  backend_uploads:
+    driver: local
+
+networks:
+  default:
+    name: unicontrol_network

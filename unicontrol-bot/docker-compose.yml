@@ -1,0 +1,23 @@
+version: "3.8"
+
+services:
+  bot:
+    build: .
+    container_name: unicontrol-bot
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      - API_BASE_URL=http://unicontrol_backend:8000
+    networks:
+      - unicontrol_network
+    volumes:
+      - bot-data:/app/data
+
+volumes:
+  bot-data:
+
+
+networks:
+  unicontrol_network:
+    external: true
