@@ -1,10 +1,10 @@
 <template>
   <div class="space-y-6">
     <!-- Header -->
-    <div class="flex items-center justify-between">
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
       <div>
-        <h1 class="text-2xl font-bold text-slate-800">{{ $t('users.title') }}</h1>
-        <p class="text-slate-500">Jami: {{ totalUsers }} ta foydalanuvchi</p>
+        <h1 class="text-xl sm:text-2xl font-bold text-slate-800">{{ $t('users.title') }}</h1>
+        <p class="text-sm text-slate-500">Jami: {{ totalUsers }} ta foydalanuvchi</p>
       </div>
     </div>
 
@@ -27,7 +27,7 @@
         </div>
       </div>
       
-      <div class="flex gap-3">
+      <div class="flex flex-col sm:flex-row gap-3">
         <div class="relative flex-1">
           <Search class="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
           <input 
@@ -71,17 +71,17 @@
       
       <!-- Table -->
       <div v-else class="overflow-x-auto">
-        <table class="w-full">
+        <table class="w-full min-w-[800px]">
           <thead class="bg-slate-50 border-b border-slate-200">
             <tr>
-              <th class="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">#</th>
-              <th class="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">F.I.O</th>
-              <th class="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">Login</th>
-              <th class="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">Parol</th>
-              <th class="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">Rol</th>
-              <th class="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">Guruh</th>
-              <th class="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">Telefon</th>
-              <th class="text-right px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">Amallar</th>
+              <th class="text-left px-3 sm:px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide whitespace-nowrap">#</th>
+              <th class="text-left px-3 sm:px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide whitespace-nowrap">F.I.O</th>
+              <th class="text-left px-3 sm:px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide whitespace-nowrap">Login</th>
+              <th class="text-left px-3 sm:px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide whitespace-nowrap">Parol</th>
+              <th class="text-left px-3 sm:px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide whitespace-nowrap">Rol</th>
+              <th class="text-left px-3 sm:px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide whitespace-nowrap">Guruh</th>
+              <th class="text-left px-3 sm:px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide whitespace-nowrap">Telefon</th>
+              <th class="text-right px-3 sm:px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide whitespace-nowrap">Amallar</th>
             </tr>
           </thead>
           <tbody class="divide-y divide-slate-100">

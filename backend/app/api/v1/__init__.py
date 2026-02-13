@@ -39,6 +39,8 @@ from app.api.v1 import (
     market,
     sheets,
     landing,
+    contracts,
+    quizzes,
 )
 
 api_router = APIRouter()
@@ -235,4 +237,18 @@ api_router.include_router(
     landing.router,
     prefix="/landing",
     tags=["Landing"]
+)
+
+# Contracts (Kontrakt ma'lumotlari)
+api_router.include_router(
+    contracts.router,
+    prefix="/contracts",
+    tags=["Contracts"]
+)
+
+# Quizzes (Topshiriqlar/Flashcards)
+api_router.include_router(
+    quizzes.router,
+    prefix="/quizzes",
+    tags=["Quizzes"]
 )

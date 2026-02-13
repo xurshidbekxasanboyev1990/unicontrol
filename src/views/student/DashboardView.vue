@@ -5,9 +5,9 @@
       <div class="absolute -right-10 -top-10 h-40 w-40 rounded-full bg-white/10"></div>
       <div class="absolute -bottom-10 -left-10 h-32 w-32 rounded-full bg-white/10"></div>
       
-      <div class="relative flex items-center gap-4">
+      <div class="relative flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4">
         <div class="relative">
-          <div class="h-16 w-16 overflow-hidden rounded-2xl bg-white/20 backdrop-blur">
+          <div class="h-14 w-14 sm:h-16 sm:w-16 overflow-hidden rounded-2xl bg-white/20 backdrop-blur">
             <img 
               v-if="user?.avatar" 
               :src="user.avatar" 
@@ -22,11 +22,11 @@
         
         <div class="flex-1">
           <p class="text-blue-100">{{ t('dashboard.welcome') }}</p>
-          <h1 class="text-2xl font-bold">{{ user?.name || t('dashboard.studentDefault') }}</h1>
-          <p class="mt-1 text-sm text-blue-200">{{ currentGroup?.name }} {{ t('dashboard.groupSuffix') }}</p>
+          <h1 class="text-xl sm:text-2xl font-bold">{{ user?.name || t('dashboard.studentDefault') }}</h1>
+          <p class="mt-1 text-xs sm:text-sm text-blue-200">{{ currentGroup?.name }} {{ t('dashboard.groupSuffix') }}</p>
         </div>
         
-        <div class="text-right">
+        <div class="hidden sm:block text-right">
           <p class="text-sm text-blue-200">{{ formattedDate }}</p>
           <p class="text-lg font-medium">{{ formattedTime }}</p>
         </div>
@@ -34,51 +34,123 @@
     </div>
 
     <!-- Quick Stats -->
-    <div class="grid grid-cols-2 gap-4 lg:grid-cols-4">
-      <div class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-        <div class="flex items-center gap-3">
-          <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-green-100">
-            <TrendingUp :size="24" class="text-green-600" />
+    <div class="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
+      <div class="rounded-2xl border border-slate-200 bg-white p-3 sm:p-4 shadow-sm">
+        <div class="flex items-center gap-2 sm:gap-3">
+          <div class="flex h-10 w-10 sm:h-12 sm:w-12 items-center justify-center rounded-xl bg-green-100">
+            <TrendingUp :size="20" class="text-green-600" />
           </div>
           <div>
-            <p class="text-2xl font-bold text-slate-800">{{ attendanceRate }}%</p>
-            <p class="text-xs text-slate-500">{{ t('dashboard.attendanceRate') }}</p>
+            <p class="text-lg sm:text-2xl font-bold text-slate-800">{{ attendanceRate }}%</p>
+            <p class="text-[10px] sm:text-xs text-slate-500">{{ t('dashboard.attendanceRate') }}</p>
           </div>
         </div>
       </div>
       
-      <div class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-        <div class="flex items-center gap-3">
-          <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-100">
-            <BookOpen :size="24" class="text-blue-600" />
+      <div class="rounded-2xl border border-slate-200 bg-white p-3 sm:p-4 shadow-sm">
+        <div class="flex items-center gap-2 sm:gap-3">
+          <div class="flex h-10 w-10 sm:h-12 sm:w-12 items-center justify-center rounded-xl bg-blue-100">
+            <BookOpen :size="20" class="text-blue-600" />
           </div>
           <div>
-            <p class="text-2xl font-bold text-slate-800">{{ todayLessons.length }}</p>
-            <p class="text-xs text-slate-500">{{ t('dashboard.todayLessons') }}</p>
+            <p class="text-lg sm:text-2xl font-bold text-slate-800">{{ todayLessons.length }}</p>
+            <p class="text-[10px] sm:text-xs text-slate-500">{{ t('dashboard.todayLessons') }}</p>
           </div>
         </div>
       </div>
       
-      <div class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-        <div class="flex items-center gap-3">
-          <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-purple-100">
-            <Book :size="24" class="text-purple-600" />
+      <div class="rounded-2xl border border-slate-200 bg-white p-3 sm:p-4 shadow-sm">
+        <div class="flex items-center gap-2 sm:gap-3">
+          <div class="flex h-10 w-10 sm:h-12 sm:w-12 items-center justify-center rounded-xl bg-purple-100">
+            <Book :size="20" class="text-purple-600" />
           </div>
           <div>
-            <p class="text-2xl font-bold text-slate-800">{{ borrowedBooks }}</p>
-            <p class="text-xs text-slate-500">{{ t('dashboard.borrowedBooks') }}</p>
+            <p class="text-lg sm:text-2xl font-bold text-slate-800">{{ borrowedBooks }}</p>
+            <p class="text-[10px] sm:text-xs text-slate-500">{{ t('dashboard.borrowedBooks') }}</p>
           </div>
         </div>
       </div>
       
-      <div class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-        <div class="flex items-center gap-3">
-          <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-amber-100">
-            <Bell :size="24" class="text-amber-600" />
+      <div class="rounded-2xl border border-slate-200 bg-white p-3 sm:p-4 shadow-sm">
+        <div class="flex items-center gap-2 sm:gap-3">
+          <div class="flex h-10 w-10 sm:h-12 sm:w-12 items-center justify-center rounded-xl bg-amber-100">
+            <Bell :size="20" class="text-amber-600" />
           </div>
           <div>
-            <p class="text-2xl font-bold text-slate-800">{{ unreadNotifications }}</p>
-            <p class="text-xs text-slate-500">{{ t('dashboard.newMessages') }}</p>
+            <p class="text-lg sm:text-2xl font-bold text-slate-800">{{ unreadNotifications }}</p>
+            <p class="text-[10px] sm:text-xs text-slate-500">{{ t('dashboard.newMessages') }}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Birthday Card (guruh a'zolarining tug'ilgan kunlari) -->
+    <div 
+      v-if="todayBirthdays.length > 0 || tomorrowBirthdays.length > 0"
+      class="relative overflow-hidden rounded-2xl bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 p-5 text-white shadow-lg"
+    >
+      <div class="absolute -right-6 -top-6 h-28 w-28 rounded-full bg-white/10"></div>
+      <div class="absolute -bottom-6 -left-6 h-32 w-32 rounded-full bg-white/10"></div>
+      
+      <div class="relative">
+        <!-- Bugungi tug'ilgan kunlar -->
+        <div v-if="todayBirthdays.length > 0">
+          <div class="flex items-center gap-3 mb-3">
+            <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-white/20 backdrop-blur">
+              <Cake :size="20" />
+            </div>
+            <h3 class="text-base font-bold">🎉 {{ t('dashboard.todayBirthday') }}</h3>
+          </div>
+          
+          <div class="space-y-2">
+            <div 
+              v-for="student in todayBirthdays" 
+              :key="'today-' + student.id"
+              class="flex items-center gap-3 rounded-xl bg-white/15 p-3 backdrop-blur border border-white/20"
+            >
+              <div class="relative flex h-11 w-11 items-center justify-center rounded-xl bg-white/20 text-lg font-bold">
+                {{ student.name.charAt(0) }}
+                <span class="absolute -top-1 -right-1 text-sm">🎂</span>
+              </div>
+              <div class="flex-1 min-w-0">
+                <p class="font-semibold truncate">{{ student.name }}</p>
+                <p class="text-xs text-white/80">{{ student.age }} {{ t('dashboard.yearsOld') }}</p>
+              </div>
+              <button 
+                @click="sendBirthdayCongrats(student)"
+                :disabled="congratsSending[student.id]"
+                class="flex items-center gap-1.5 rounded-lg bg-white/20 px-3 py-1.5 text-xs font-medium backdrop-blur transition-all hover:bg-white/30 disabled:opacity-50 shrink-0"
+              >
+                <Gift :size="14" />
+                {{ congratsSent[student.id] ? '✓' : t('dashboard.sendCongrats') }}
+              </button>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Ertangi tug'ilgan kunlar -->
+        <div v-if="tomorrowBirthdays.length > 0" :class="{ 'mt-4 pt-4 border-t border-white/20': todayBirthdays.length > 0 }">
+          <div class="flex items-center gap-3 mb-3">
+            <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-white/20 backdrop-blur">
+              <Calendar :size="20" />
+            </div>
+            <h3 class="text-base font-bold">🎂 {{ t('dashboard.birthdayTomorrow') }}</h3>
+          </div>
+          
+          <div class="space-y-2">
+            <div 
+              v-for="student in tomorrowBirthdays" 
+              :key="'tmrw-' + student.id"
+              class="flex items-center gap-3 rounded-xl bg-white/10 p-3 backdrop-blur"
+            >
+              <div class="flex h-11 w-11 items-center justify-center rounded-xl bg-white/20 text-lg font-bold">
+                {{ student.name.charAt(0) }}
+              </div>
+              <div class="flex-1 min-w-0">
+                <p class="font-semibold truncate">{{ student.name }}</p>
+                <p class="text-xs text-white/80">{{ student.age }} {{ t('dashboard.willTurn') }}</p>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -270,10 +342,12 @@ import {
     Bell,
     Book,
     BookOpen,
+    Cake,
     Calendar,
     CheckCircle,
     Clock,
     FileText,
+    Gift,
     GraduationCap,
     TrendingUp,
     User,
@@ -291,6 +365,11 @@ const currentTime = ref(new Date())
 const dashboardData = ref(null)
 const scheduleList = ref([])
 const attendanceList = ref([])
+
+// Birthday state
+const birthdayData = ref({ today: [], tomorrow: [] })
+const congratsSending = ref({})
+const congratsSent = ref({})
 
 let timeInterval = null
 
@@ -371,6 +450,20 @@ async function loadDashboard() {
         console.log('Attendance not available:', e.message)
       }
     }
+    
+    // Guruh a'zolarining tug'ilgan kunlarini yuklash
+    const groupIdForBday = groupId || authStore.user?.groupId || authStore.user?.group_id
+    if (groupIdForBday) {
+      try {
+        const bdayResp = await api.getUpcomingBirthdays({ group_id: groupIdForBday, days: 1 })
+        birthdayData.value = {
+          today: (bdayResp.today || []).filter(s => s.id !== (authStore.user?.studentDbId)),
+          tomorrow: (bdayResp.tomorrow || []).filter(s => s.id !== (authStore.user?.studentDbId))
+        }
+      } catch (e) {
+        console.log('Birthdays not available:', e.message)
+      }
+    }
   } catch (e) {
     console.error('Dashboard load error:', e)
   } finally {
@@ -413,6 +506,30 @@ const formattedTime = computed(() => {
     minute: '2-digit'
   })
 })
+
+// Birthday computed
+const todayBirthdays = computed(() => birthdayData.value.today || [])
+const tomorrowBirthdays = computed(() => birthdayData.value.tomorrow || [])
+
+// Birthday congrats
+async function sendBirthdayCongrats(student) {
+  congratsSending.value[student.id] = true
+  try {
+    const senderName = authStore.user?.name || 'Guruh a\'zosi'
+    await api.createNotification({
+      user_id: student.user_id,
+      title: "🎂 Tug'ilgan kun tabrigi!",
+      message: `🎉 Hurmatli ${student.name}!\n\nTug'ilgan kuningiz muborak bo'lsin! Sizga baxt, sog'lik va muvaffaqiyatlar tilaymiz!\n\nHurmat bilan, ${senderName}`,
+      type: 'info',
+      priority: 'normal'
+    })
+    congratsSent.value[student.id] = true
+  } catch (e) {
+    console.error('Tabrik yuborishda xatolik:', e)
+  } finally {
+    congratsSending.value[student.id] = false
+  }
+}
 
 const todayLessons = computed(() => {
   const dayNames = ['Yakshanba', 'Dushanba', 'Seshanba', 'Chorshanba', 'Payshanba', 'Juma', 'Shanba']

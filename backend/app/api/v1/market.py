@@ -285,9 +285,6 @@ async def action_tariff_payment(
     if not payment:
         raise HTTPException(status_code=404, detail="To'lov topilmadi")
 
-    if payment.status != "pending":
-        raise HTTPException(status_code=400, detail="Bu to'lov allaqachon ko'rib chiqilgan")
-
     payment.status = action
     payment.admin_note = admin_note
     payment.approved_by = current_user.id

@@ -25,11 +25,11 @@
     <!-- Main Content -->
     <template v-else>
       <!-- Welcome Header -->
-      <div class="bg-gradient-to-br from-violet-500 to-purple-600 rounded-2xl p-6 text-white">
+      <div class="bg-gradient-to-br from-violet-500 to-purple-600 rounded-2xl p-4 sm:p-6 text-white">
         <div class="flex items-center justify-between">
           <div>
-            <h1 class="text-2xl font-bold">{{ $t('dashboard.adminPanel') }}</h1>
-            <p class="text-violet-100 mt-1">{{ $t('dashboard.facultyManagement') }}</p>
+            <h1 class="text-xl sm:text-2xl font-bold">{{ $t('dashboard.adminPanel') }}</h1>
+            <p class="text-violet-100 mt-1 text-sm sm:text-base">{{ $t('dashboard.facultyManagement') }}</p>
           </div>
           <div class="flex items-center gap-3">
             <button @click="refresh" class="w-10 h-10 bg-white/20 backdrop-blur rounded-xl flex items-center justify-center hover:bg-white/30 transition-colors">
@@ -43,61 +43,61 @@
       </div>
 
       <!-- Stats Grid -->
-      <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <div class="bg-white rounded-2xl border border-slate-200 p-5">
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+        <div class="bg-white rounded-2xl border border-slate-200 p-3 sm:p-5">
           <div class="flex items-center justify-between">
             <div>
-              <p class="text-3xl font-bold text-slate-800">{{ (totalStudents || 0).toLocaleString() }}</p>
-              <p class="text-sm text-slate-500 mt-1">{{ $t('dashboard.totalStudents') }}</p>
+              <p class="text-xl sm:text-3xl font-bold text-slate-800">{{ (totalStudents || 0).toLocaleString() }}</p>
+              <p class="text-xs sm:text-sm text-slate-500 mt-1">{{ $t('dashboard.totalStudents') }}</p>
             </div>
-            <div class="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
-              <Users class="w-6 h-6 text-blue-600" />
+            <div class="w-10 h-10 sm:w-12 sm:h-12 bg-blue-100 rounded-xl flex items-center justify-center">
+              <Users class="w-5 h-5 sm:w-6 sm:h-6 text-blue-600" />
             </div>
           </div>
         </div>
 
-        <div class="bg-white rounded-2xl border border-slate-200 p-5">
+        <div class="bg-white rounded-2xl border border-slate-200 p-3 sm:p-5">
           <div class="flex items-center justify-between">
             <div>
-              <p class="text-3xl font-bold text-violet-600">{{ (totalGroups || 0).toLocaleString() }}</p>
-              <p class="text-sm text-slate-500 mt-1">{{ $t('dashboard.totalGroups') }}</p>
+              <p class="text-xl sm:text-3xl font-bold text-violet-600">{{ (totalGroups || 0).toLocaleString() }}</p>
+              <p class="text-xs sm:text-sm text-slate-500 mt-1">{{ $t('dashboard.totalGroups') }}</p>
             </div>
-            <div class="w-12 h-12 bg-violet-100 rounded-xl flex items-center justify-center">
-              <Layers class="w-6 h-6 text-violet-600" />
+            <div class="w-10 h-10 sm:w-12 sm:h-12 bg-violet-100 rounded-xl flex items-center justify-center">
+              <Layers class="w-5 h-5 sm:w-6 sm:h-6 text-violet-600" />
             </div>
           </div>
         </div>
 
-        <div class="bg-white rounded-2xl border border-slate-200 p-5">
+        <div class="bg-white rounded-2xl border border-slate-200 p-3 sm:p-5">
           <div class="flex items-center justify-between">
             <div>
-              <p class="text-3xl font-bold text-emerald-600">{{ avgAttendance }}%</p>
-              <p class="text-sm text-slate-500 mt-1">{{ $t('dashboard.avgAttendance') }}</p>
+              <p class="text-xl sm:text-3xl font-bold text-emerald-600">{{ avgAttendance }}%</p>
+              <p class="text-xs sm:text-sm text-slate-500 mt-1">{{ $t('dashboard.avgAttendance') }}</p>
             </div>
-            <div class="w-12 h-12 bg-emerald-100 rounded-xl flex items-center justify-center">
-              <TrendingUp class="w-6 h-6 text-emerald-600" />
+            <div class="w-10 h-10 sm:w-12 sm:h-12 bg-emerald-100 rounded-xl flex items-center justify-center">
+              <TrendingUp class="w-5 h-5 sm:w-6 sm:h-6 text-emerald-600" />
             </div>
           </div>
         </div>
 
-        <div class="bg-white rounded-2xl border border-slate-200 p-5">
+        <div class="bg-white rounded-2xl border border-slate-200 p-3 sm:p-5">
           <div class="flex items-center justify-between">
             <div>
-              <p class="text-3xl font-bold text-rose-600">{{ (pendingContracts || 0).toLocaleString() }}</p>
-              <p class="text-sm text-slate-500 mt-1">{{ $t('dashboard.unpaid') }}</p>
+              <p class="text-xl sm:text-3xl font-bold text-rose-600">{{ (pendingContracts || 0).toLocaleString() }}</p>
+              <p class="text-xs sm:text-sm text-slate-500 mt-1">{{ $t('dashboard.unpaid') }}</p>
             </div>
-            <div class="w-12 h-12 bg-rose-100 rounded-xl flex items-center justify-center">
-              <CreditCard class="w-6 h-6 text-rose-600" />
+            <div class="w-10 h-10 sm:w-12 sm:h-12 bg-rose-100 rounded-xl flex items-center justify-center">
+              <CreditCard class="w-5 h-5 sm:w-6 sm:h-6 text-rose-600" />
             </div>
           </div>
         </div>
       </div>
 
     <!-- Quick Actions -->
-    <div class="grid grid-cols-2 lg:grid-cols-5 gap-4">
-      <router-link to="/admin/students" class="bg-white rounded-2xl border border-slate-200 p-5 hover:shadow-lg hover:border-blue-200 transition-all group">
-        <div class="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
-          <UserPlus class="w-6 h-6 text-blue-600" />
+    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4">
+      <router-link to="/admin/students" class="bg-white rounded-2xl border border-slate-200 p-4 sm:p-5 hover:shadow-lg hover:border-blue-200 transition-all group">
+        <div class="w-10 h-10 sm:w-12 sm:h-12 bg-blue-100 rounded-xl flex items-center justify-center mb-2 sm:mb-3 group-hover:scale-110 transition-transform">
+          <UserPlus class="w-5 h-5 sm:w-6 sm:h-6 text-blue-600" />
         </div>
         <h3 class="font-semibold text-slate-800">{{ $t('layout.students') }}</h3>
         <p class="text-sm text-slate-500 mt-1">{{ $t('students.addStudent') }}</p>
@@ -237,21 +237,21 @@
  * Backend /dashboard/admin endpoint dan ma'lumot oladi
  */
 import {
-    AlertCircle,
-    BarChart3,
-    Bell,
-    Clock,
-    CreditCard,
-    FileText,
-    FolderPlus,
-    Key,
-    Layers,
-    RefreshCw,
-    Shield,
-    TrendingUp,
-    UserCheck,
-    UserPlus,
-    Users
+  AlertCircle,
+  BarChart3,
+  Bell,
+  Clock,
+  CreditCard,
+  FileText,
+  FolderPlus,
+  Key,
+  Layers,
+  RefreshCw,
+  Shield,
+  TrendingUp,
+  UserCheck,
+  UserPlus,
+  Users
 } from 'lucide-vue-next'
 import { computed, markRaw, onMounted, ref } from 'vue'
 import api from '../../services/api'

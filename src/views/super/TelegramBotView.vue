@@ -1,10 +1,10 @@
 <template>
   <div class="space-y-6">
     <!-- Header -->
-    <div class="flex items-center justify-between flex-wrap gap-4">
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
       <div>
-        <h1 class="text-2xl font-bold text-slate-800">{{ $t('telegram.title') }}</h1>
-        <p class="text-slate-500">Bot holati va ulangan guruhlar</p>
+        <h1 class="text-xl sm:text-2xl font-bold text-slate-800">{{ $t('telegram.title') }}</h1>
+        <p class="text-sm text-slate-500">Bot holati va ulangan guruhlar</p>
       </div>
       <button
         @click="refresh"
@@ -42,26 +42,26 @@
     </div>
 
     <!-- Stats -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-      <div class="bg-white rounded-2xl border border-slate-200 p-6">
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
+      <div class="bg-white rounded-2xl border border-slate-200 p-4 sm:p-6">
         <div class="flex items-center gap-3 mb-2">
           <div class="w-10 h-10 bg-violet-100 rounded-xl flex items-center justify-center">
             <MessageSquare class="w-5 h-5 text-violet-600" />
           </div>
           <div>
-            <p class="text-sm text-slate-500">Ulangan chatlar</p>
-            <p class="text-2xl font-bold text-slate-800">{{ registeredChats.length }}</p>
+            <p class="text-xs sm:text-sm text-slate-500">Ulangan chatlar</p>
+            <p class="text-xl sm:text-2xl font-bold text-slate-800">{{ registeredChats.length }}</p>
           </div>
         </div>
       </div>
-      <div class="bg-white rounded-2xl border border-slate-200 p-6">
+      <div class="bg-white rounded-2xl border border-slate-200 p-4 sm:p-6">
         <div class="flex items-center gap-3 mb-2">
           <div class="w-10 h-10 bg-emerald-100 rounded-xl flex items-center justify-center">
             <Building2 class="w-5 h-5 text-emerald-600" />
           </div>
           <div>
-            <p class="text-sm text-slate-500">Obunali guruhlar</p>
-            <p class="text-2xl font-bold text-slate-800">{{ activeGroups }}</p>
+            <p class="text-xs sm:text-sm text-slate-500">Obunali guruhlar</p>
+            <p class="text-xl sm:text-2xl font-bold text-slate-800">{{ activeGroups }}</p>
           </div>
         </div>
       </div>

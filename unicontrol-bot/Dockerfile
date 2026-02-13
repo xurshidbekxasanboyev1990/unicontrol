@@ -9,8 +9,10 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy application code
 COPY . .
 
-# Create non-root user
-RUN useradd -m -r botuser && chown -R botuser:botuser /app
+# Create non-root user and data directory
+RUN useradd -m -r botuser && \
+    mkdir -p /app/data && \
+    chown -R botuser:botuser /app
 USER botuser
 
 # Run bot

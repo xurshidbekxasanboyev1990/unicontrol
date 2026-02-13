@@ -1,10 +1,10 @@
 <template>
   <div class="space-y-6">
     <!-- Header -->
-    <div class="flex items-center justify-between">
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
       <div>
-        <h1 class="text-2xl font-bold text-slate-800">{{ $t('subscription.manageSubscriptions') }}</h1>
-        <p class="text-slate-500">Guruh obunalari va to'lovlarni boshqarish</p>
+        <h1 class="text-xl sm:text-2xl font-bold text-slate-800">{{ $t('subscription.manageSubscriptions') }}</h1>
+        <p class="text-sm text-slate-500">Guruh obunalari va to'lovlarni boshqarish</p>
       </div>
       <button
         v-if="!trialActivated"
@@ -23,13 +23,13 @@
     </div>
 
     <!-- Tabs -->
-    <div class="flex gap-2 bg-white rounded-xl p-1.5 border border-slate-200 shadow-sm">
+    <div class="flex gap-1.5 sm:gap-2 bg-white rounded-xl p-1.5 border border-slate-200 shadow-sm overflow-x-auto">
       <button
         v-for="tab in tabs"
         :key="tab.id"
         @click="activeTab = tab.id"
         :class="[
-          'flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-medium transition-all',
+          'flex-1 min-w-[80px] flex items-center justify-center gap-1.5 sm:gap-2 py-2 sm:py-2.5 rounded-lg text-xs sm:text-sm font-medium transition-all whitespace-nowrap',
           activeTab === tab.id
             ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/25'
             : 'text-slate-600 hover:bg-slate-100'
@@ -46,7 +46,7 @@
     <!-- Tab: Payments -->
     <div v-if="activeTab === 'payments'" class="space-y-4">
       <!-- Filter -->
-      <div class="flex gap-3">
+      <div class="flex flex-wrap gap-2 sm:gap-3">
         <button
           v-for="f in paymentFilters"
           :key="f.value"
@@ -106,24 +106,25 @@
               >
                 <Eye class="w-5 h-5" />
               </button>
-              <template v-if="payment.status === 'pending'">
-                <button
-                  @click="approvePayment(payment)"
-                  class="px-4 py-2 bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 transition-colors flex items-center gap-1.5 text-sm font-medium"
-                >
-                  <Check class="w-4 h-4" /> Tasdiqlash
-                </button>
-                <button
-                  @click="openRejectModal(payment)"
-                  class="px-4 py-2 bg-rose-500 text-white rounded-lg hover:bg-rose-600 transition-colors flex items-center gap-1.5 text-sm font-medium"
-                >
-                  <X class="w-4 h-4" /> Rad etish
-                </button>
-              </template>
-              <span v-else :class="[
+              <button
+                v-if="payment.status !== 'approved'"
+                @click="approvePayment(payment)"
+                class="px-4 py-2 bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 transition-colors flex items-center gap-1.5 text-sm font-medium"
+              >
+                <Check class="w-4 h-4" /> Tasdiqlash
+              </button>
+              <button
+                v-if="payment.status !== 'rejected'"
+                @click="openRejectModal(payment)"
+                class="px-4 py-2 bg-rose-500 text-white rounded-lg hover:bg-rose-600 transition-colors flex items-center gap-1.5 text-sm font-medium"
+              >
+                <X class="w-4 h-4" /> Rad etish
+              </button>
+              <span :class="[
                 'px-3 py-1 rounded-full text-xs font-bold',
                 payment.status === 'approved' ? 'bg-emerald-100 text-emerald-700' :
-                'bg-rose-100 text-rose-700'
+                payment.status === 'rejected' ? 'bg-rose-100 text-rose-700' :
+                'bg-amber-100 text-amber-700'
               ]">
                 {{ getStatusLabel(payment.status) }}
               </span>
@@ -139,7 +140,7 @@
     <!-- Tab: Market Payments -->
     <div v-if="activeTab === 'market-payments'" class="space-y-4">
       <!-- Filter -->
-      <div class="flex gap-3">
+      <div class="flex flex-wrap gap-2 sm:gap-3">
         <button
           v-for="f in paymentFilters"
           :key="'m'+f.value"
@@ -204,24 +205,25 @@
               >
                 <Eye class="w-5 h-5" />
               </button>
-              <template v-if="payment.status === 'pending'">
-                <button
-                  @click="approveMarketPayment(payment)"
-                  class="px-4 py-2 bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 transition-colors flex items-center gap-1.5 text-sm font-medium"
-                >
-                  <Check class="w-4 h-4" /> Tasdiqlash
-                </button>
-                <button
-                  @click="rejectMarketPayment(payment)"
-                  class="px-4 py-2 bg-rose-500 text-white rounded-lg hover:bg-rose-600 transition-colors flex items-center gap-1.5 text-sm font-medium"
-                >
-                  <X class="w-4 h-4" /> Rad etish
-                </button>
-              </template>
-              <span v-else :class="[
+              <button
+                v-if="payment.status !== 'approved'"
+                @click="approveMarketPayment(payment)"
+                class="px-4 py-2 bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 transition-colors flex items-center gap-1.5 text-sm font-medium"
+              >
+                <Check class="w-4 h-4" /> Tasdiqlash
+              </button>
+              <button
+                v-if="payment.status !== 'rejected'"
+                @click="rejectMarketPayment(payment)"
+                class="px-4 py-2 bg-rose-500 text-white rounded-lg hover:bg-rose-600 transition-colors flex items-center gap-1.5 text-sm font-medium"
+              >
+                <X class="w-4 h-4" /> Rad etish
+              </button>
+              <span :class="[
                 'px-3 py-1 rounded-full text-xs font-bold',
                 payment.status === 'approved' ? 'bg-emerald-100 text-emerald-700' :
-                'bg-rose-100 text-rose-700'
+                payment.status === 'rejected' ? 'bg-rose-100 text-rose-700' :
+                'bg-amber-100 text-amber-700'
               ]">
                 {{ getStatusLabel(payment.status) }}
               </span>
@@ -805,27 +807,27 @@ import api from '@/services/api'
 import { useLanguageStore } from '@/stores/language'
 import { useToastStore } from '@/stores/toast'
 import {
-    Ban,
-    Bot,
-    Check,
-    CheckCircle,
-    Clock, CreditCard,
-    Crown,
-    DollarSign,
-    Eye,
-    Loader2,
-    Package,
-    Pause,
-    Pencil,
-    Play,
-    Plus,
-    Rocket,
-    Save,
-    Settings,
-    ShieldOff,
-    Trash2,
-    X,
-    XCircle
+  Ban,
+  Bot,
+  Check,
+  CheckCircle,
+  Clock, CreditCard,
+  Crown,
+  DollarSign,
+  Eye,
+  Loader2,
+  Package,
+  Pause,
+  Pencil,
+  Play,
+  Plus,
+  Rocket,
+  Save,
+  Settings,
+  ShieldOff,
+  Trash2,
+  X,
+  XCircle
 } from 'lucide-vue-next'
 import { computed, markRaw, onMounted, ref } from 'vue'
 

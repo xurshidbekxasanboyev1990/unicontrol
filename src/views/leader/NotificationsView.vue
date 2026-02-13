@@ -5,8 +5,8 @@
          ======================================== -->
     <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
       <div>
-        <h1 class="text-2xl font-bold text-slate-800">{{ $t('notifications.title') }}</h1>
-        <p class="text-slate-500">{{ $t('notifications.sendNotification') }}</p>
+        <h1 class="text-xl sm:text-2xl font-bold text-slate-800">{{ $t('notifications.title') }}</h1>
+        <p class="text-sm text-slate-500">{{ $t('notifications.sendNotification') }}</p>
       </div>
       
       <!-- Yangi xabar tugmasi -->
@@ -126,7 +126,7 @@
                 @click="newMessage.type = type.value"
                 class="flex items-center justify-center gap-2 rounded-xl border p-3 transition-all"
                 :class="newMessage.type === type.value 
-                  ? `border-${type.color}-500 bg-${type.color}-50 text-${type.color}-600`
+                  ? colorClasses[type.color]?.active || ''
                   : 'border-slate-200 text-slate-600 hover:border-slate-300'"
               >
                 <component :is="type.icon" :size="18" />
@@ -164,7 +164,7 @@
             <div class="flex items-center gap-3">
               <div 
                 class="flex h-10 w-10 items-center justify-center rounded-lg"
-                :class="`bg-${template.color}-100 text-${template.color}-600`"
+                :class="colorClasses[template.color]?.bg || 'bg-blue-100 text-blue-600'"
               >
                 <component :is="template.icon" :size="20" />
               </div>
@@ -439,6 +439,12 @@ const modalMessage = ref({
 })
 
 // Xabar turlari
+const colorClasses = {
+  blue: { active: 'border-blue-500 bg-blue-50 text-blue-600', bg: 'bg-blue-100 text-blue-600' },
+  yellow: { active: 'border-yellow-500 bg-yellow-50 text-yellow-600', bg: 'bg-yellow-100 text-yellow-600' },
+  green: { active: 'border-green-500 bg-green-50 text-green-600', bg: 'bg-green-100 text-green-600' },
+  red: { active: 'border-red-500 bg-red-50 text-red-600', bg: 'bg-red-100 text-red-600' }
+}
 const messageTypes = computed(() => [
   { value: 'info', label: t('notifications.info'), icon: markRaw(Info), color: 'blue' },
   { value: 'warning', label: t('notifications.warning'), icon: markRaw(AlertTriangle), color: 'yellow' },

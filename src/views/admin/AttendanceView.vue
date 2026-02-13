@@ -69,12 +69,12 @@
     </div>
 
     <!-- Stats Cards -->
-    <div class="grid grid-cols-2 lg:grid-cols-5 gap-4">
-      <div class="bg-gradient-to-br from-slate-50 to-slate-100/50 rounded-2xl p-5 border border-slate-200/50">
+    <div class="grid grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4">
+      <div class="bg-gradient-to-br from-slate-50 to-slate-100/50 rounded-2xl p-3 sm:p-5 border border-slate-200/50">
         <div class="flex items-center justify-between">
           <div>
-            <p class="text-2xl font-bold text-slate-700">{{ stats.total }}</p>
-            <p class="text-sm text-slate-500 font-medium">Jami</p>
+            <p class="text-xl sm:text-2xl font-bold text-slate-700">{{ stats.total }}</p>
+            <p class="text-xs sm:text-sm text-slate-500 font-medium">Jami</p>
           </div>
           <div class="w-10 h-10 bg-slate-200/50 rounded-xl flex items-center justify-center">
             <Users class="w-5 h-5 text-slate-500" />
@@ -138,36 +138,36 @@
     <!-- Attendance Table -->
     <div v-else class="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
       <div class="overflow-x-auto">
-        <table class="w-full text-sm">
+        <table class="w-full text-sm min-w-[900px]">
           <thead>
             <tr class="bg-slate-50 border-b border-slate-200">
-              <th class="text-left px-5 py-4 font-semibold text-slate-600">#</th>
-              <th class="text-left px-5 py-4 font-semibold text-slate-600">Talaba</th>
-              <th class="text-left px-5 py-4 font-semibold text-slate-600">Guruh</th>
-              <th class="text-left px-5 py-4 font-semibold text-slate-600">Sana</th>
-              <th class="text-left px-5 py-4 font-semibold text-slate-600">Fan</th>
-              <th class="text-left px-5 py-4 font-semibold text-slate-600">Para</th>
-              <th class="text-left px-5 py-4 font-semibold text-slate-600">Holat</th>
-              <th class="text-left px-5 py-4 font-semibold text-slate-600">Kechikish</th>
-              <th class="text-left px-5 py-4 font-semibold text-slate-600">Izoh/Sabab</th>
-              <th class="text-left px-5 py-4 font-semibold text-slate-600">Amallar</th>
+              <th class="text-left px-3 sm:px-5 py-3 sm:py-4 font-semibold text-slate-600 whitespace-nowrap">#</th>
+              <th class="text-left px-3 sm:px-5 py-3 sm:py-4 font-semibold text-slate-600 whitespace-nowrap">Talaba</th>
+              <th class="text-left px-3 sm:px-5 py-3 sm:py-4 font-semibold text-slate-600 whitespace-nowrap">Guruh</th>
+              <th class="text-left px-3 sm:px-5 py-3 sm:py-4 font-semibold text-slate-600 whitespace-nowrap">Sana</th>
+              <th class="text-left px-3 sm:px-5 py-3 sm:py-4 font-semibold text-slate-600 whitespace-nowrap">Fan</th>
+              <th class="text-left px-3 sm:px-5 py-3 sm:py-4 font-semibold text-slate-600 whitespace-nowrap">Para</th>
+              <th class="text-left px-3 sm:px-5 py-3 sm:py-4 font-semibold text-slate-600 whitespace-nowrap">Holat</th>
+              <th class="text-left px-3 sm:px-5 py-3 sm:py-4 font-semibold text-slate-600 whitespace-nowrap">Kechikish</th>
+              <th class="text-left px-3 sm:px-5 py-3 sm:py-4 font-semibold text-slate-600 whitespace-nowrap">Izoh/Sabab</th>
+              <th class="text-left px-3 sm:px-5 py-3 sm:py-4 font-semibold text-slate-600 whitespace-nowrap">Amallar</th>
             </tr>
           </thead>
           <tbody class="divide-y divide-slate-100">
             <tr v-for="(record, index) in filteredRecords" :key="record.id" class="hover:bg-slate-50/50 transition-colors">
-              <td class="px-5 py-4 text-slate-400 font-medium">{{ (currentPage - 1) * pageSize + index + 1 }}</td>
-              <td class="px-5 py-4">
-                <div class="flex items-center gap-3">
-                  <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-slate-100 to-slate-200 flex items-center justify-center">
+              <td class="px-3 sm:px-5 py-3 sm:py-4 text-slate-400 font-medium">{{ (currentPage - 1) * pageSize + index + 1 }}</td>
+              <td class="px-3 sm:px-5 py-3 sm:py-4">
+                <div class="flex items-center gap-2 sm:gap-3">
+                  <div class="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-gradient-to-br from-slate-100 to-slate-200 flex items-center justify-center flex-shrink-0">
                     <User class="w-4 h-4 text-slate-500" />
                   </div>
-                  <span class="font-medium text-slate-800">{{ record.student_name || 'Noma\'lum' }}</span>
+                  <span class="font-medium text-slate-800 whitespace-nowrap">{{ record.student_name || 'Noma\'lum' }}</span>
                 </div>
               </td>
-              <td class="px-5 py-4 text-slate-600">{{ getGroupName(record) }}</td>
-              <td class="px-5 py-4 text-slate-600">{{ formatDate(record.date) }}</td>
-              <td class="px-5 py-4 text-slate-600">{{ record.subject || '-' }}</td>
-              <td class="px-5 py-4 text-slate-600">{{ record.lesson_number || '-' }}</td>
+              <td class="px-3 sm:px-5 py-3 sm:py-4 text-slate-600 whitespace-nowrap">{{ getGroupName(record) }}</td>
+              <td class="px-3 sm:px-5 py-3 sm:py-4 text-slate-600 whitespace-nowrap">{{ formatDate(record.date) }}</td>
+              <td class="px-3 sm:px-5 py-3 sm:py-4 text-slate-600 whitespace-nowrap">{{ record.subject || '-' }}</td>
+              <td class="px-3 sm:px-5 py-3 sm:py-4 text-slate-600">{{ record.lesson_number || '-' }}</td>
               <td class="px-5 py-4">
                 <span :class="getStatusClasses(record.status)" class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium">
                   {{ getStatusEmoji(record.status) }} {{ getStatusText(record.status) }}
@@ -223,11 +223,11 @@
       </div>
 
       <!-- Pagination -->
-      <div v-if="totalPages > 1" class="flex items-center justify-between px-5 py-4 border-t border-slate-100">
+      <div v-if="totalPages > 1" class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 px-4 sm:px-5 py-3 sm:py-4 border-t border-slate-100">
         <p class="text-sm text-slate-500">
           Jami {{ totalRecords }} ta yozuv, {{ currentPage }}/{{ totalPages }} sahifa
         </p>
-        <div class="flex items-center gap-2">
+        <div class="flex items-center gap-1 sm:gap-2 flex-wrap">
           <button @click="changePage(currentPage - 1)" :disabled="currentPage === 1" class="px-3 py-2 rounded-lg text-sm border border-slate-200 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
             <ChevronLeft class="w-4 h-4" />
           </button>

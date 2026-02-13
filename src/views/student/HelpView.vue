@@ -2,8 +2,8 @@
   <div class="space-y-6">
     <!-- Header -->
     <div>
-      <h1 class="text-2xl font-bold text-slate-800">{{ $t('common.help') }}</h1>
-      <p class="text-slate-500">{{ $t('common.help') }}</p>
+      <h1 class="text-xl sm:text-2xl font-bold text-slate-800">{{ $t('common.help') }}</h1>
+      <p class="text-sm text-slate-500">{{ $t('common.help') }}</p>
     </div>
 
     <!-- Search -->
@@ -266,23 +266,23 @@ import api from '@/services/api'
 import { useLanguageStore } from '@/stores/language'
 import { useToastStore } from '@/stores/toast'
 import {
-  Book,
-  BookOpen,
-  Calendar,
-  ChevronDown,
-  Download, ExternalLink,
-  HelpCircle,
-  MessageCircle,
-  Paperclip,
-  Phone,
-  Play,
-  Search,
-  Send,
-  Settings,
-  ThumbsDown,
-  ThumbsUp,
-  User,
-  X
+    Book,
+    BookOpen,
+    Calendar,
+    ChevronDown,
+    Download, ExternalLink,
+    HelpCircle,
+    MessageCircle,
+    Paperclip,
+    Phone,
+    Play,
+    Search,
+    Send,
+    Settings,
+    ThumbsDown,
+    ThumbsUp,
+    User,
+    X
 } from 'lucide-vue-next'
 import { computed, onMounted, ref } from 'vue'
 

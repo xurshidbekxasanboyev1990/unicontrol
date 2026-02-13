@@ -72,9 +72,9 @@
           </div>
           <div 
             class="rounded-lg p-3"
-            :class="'bg-' + card.color + '-100'"
+            :class="cardColorMap[card.color]?.bg || 'bg-blue-100'"
           >
-            <component :is="card.icon" :size="24" :class="'text-' + card.color + '-600'" />
+            <component :is="card.icon" :size="24" :class="cardColorMap[card.color]?.text || 'text-blue-600'" />
           </div>
         </div>
         <div class="mt-3 flex items-center gap-2">
@@ -394,6 +394,13 @@ const loadAnalyticsData = async () => {
 onMounted(() => {
   loadAnalyticsData()
 })
+
+const cardColorMap = {
+  green: { bg: 'bg-green-100', text: 'text-green-600' },
+  red: { bg: 'bg-red-100', text: 'text-red-600' },
+  yellow: { bg: 'bg-yellow-100', text: 'text-yellow-600' },
+  blue: { bg: 'bg-blue-100', text: 'text-blue-600' }
+}
 
 const summaryCards = computed(() => [
   {

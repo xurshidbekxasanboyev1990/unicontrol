@@ -78,7 +78,7 @@ class UniControlAPI:
         """
         result = await self._request(
             "GET", 
-            "/api/v1/telegram/groups/search",
+            "/telegram/groups/search",
             params={"q": query}
         )
         return result.get("items", []) if result else []
@@ -87,13 +87,13 @@ class UniControlAPI:
         """Get group by exact code."""
         result = await self._request(
             "GET",
-            f"/api/v1/telegram/groups/code/{code}"
+            f"/telegram/groups/code/{code}"
         )
         return result
     
     async def get_group(self, group_id: int) -> Optional[Dict[str, Any]]:
         """Get group by ID"""
-        return await self._request("GET", f"/api/v1/telegram/groups/code/{group_id}")
+        return await self._request("GET", f"/telegram/groups/code/{group_id}")
     
     # ==================== Attendance API (via /telegram) ====================
     
@@ -112,7 +112,7 @@ class UniControlAPI:
         
         result = await self._request(
             "GET",
-            f"/api/v1/telegram/attendance/group/{group_id}",
+            f"/telegram/attendance/group/{group_id}",
             params=params
         )
         return result.get("items", []) if result else []
@@ -137,7 +137,7 @@ class UniControlAPI:
         
         result = await self._request(
             "GET",
-            f"/api/v1/telegram/attendance/student/{student_id}",
+            f"/telegram/attendance/student/{student_id}",
             params=params
         )
         return result.get("items", []) if result else []
@@ -150,7 +150,7 @@ class UniControlAPI:
         """Get attendance records updated since a specific time."""
         result = await self._request(
             "GET",
-            f"/api/v1/telegram/attendance/group/{group_id}/updates",
+            f"/telegram/attendance/group/{group_id}/updates",
             params={"since": since.isoformat()}
         )
         return result.get("items", []) if result else []
@@ -164,7 +164,7 @@ class UniControlAPI:
         """
         return await self._request(
             "GET",
-            f"/api/v1/telegram/bot-check-subscription/{group_id}"
+            f"/telegram/bot-check-subscription/{group_id}"
         )
 
     # ==================== Bot Specific API ====================
@@ -179,7 +179,7 @@ class UniControlAPI:
         """Register Telegram chat for attendance notifications."""
         result = await self._request(
             "POST",
-            "/api/v1/telegram/register",
+            "/telegram/register",
             json={
                 "chat_id": chat_id,
                 "group_code": group_code,
@@ -193,7 +193,7 @@ class UniControlAPI:
         """Unregister Telegram chat"""
         result = await self._request(
             "DELETE",
-            f"/api/v1/telegram/unregister/{chat_id}"
+            f"/telegram/unregister/{chat_id}"
         )
         return result is not None
     
@@ -206,7 +206,7 @@ class UniControlAPI:
         """Verify student identity for personal attendance access."""
         result = await self._request(
             "POST",
-            "/api/v1/telegram/verify",
+            "/telegram/verify",
             json={
                 "telegram_id": telegram_id,
                 "student_id": student_id,

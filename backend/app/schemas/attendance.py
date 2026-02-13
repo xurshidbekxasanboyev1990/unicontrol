@@ -75,7 +75,7 @@ class AttendanceResponse(BaseModel):
             created = attendance.created_at
             # Ensure both are tz-aware for comparison
             if created and (not hasattr(created, 'tzinfo') or created.tzinfo is None):
-                created = created.replace(tzinfo=TASHKENT_TZ)
+                created = TASHKENT_TZ.localize(created)
             try:
                 time_since = now - created
                 resp.is_editable = time_since <= timedelta(hours=24)

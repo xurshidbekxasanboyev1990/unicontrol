@@ -22,10 +22,10 @@
 
     <template v-else>
       <!-- Header -->
-      <div class="flex items-center justify-between">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
-          <h1 class="text-2xl font-bold text-slate-800">{{ $t('ai.title') }}</h1>
-          <p class="text-slate-500">{{ $t('ai.recommendations') }}</p>
+          <h1 class="text-xl sm:text-2xl font-bold text-slate-800">{{ $t('ai.title') }}</h1>
+          <p class="text-sm text-slate-500">{{ $t('ai.recommendations') }}</p>
         </div>
         <button 
           @click="refreshAnalysis"
@@ -49,18 +49,18 @@
         </div>
       </div>
       
-      <div class="mt-6 grid grid-cols-3 gap-4">
-        <div class="rounded-xl bg-white/10 p-4 backdrop-blur text-center">
-          <p class="text-3xl font-bold">{{ stats.rate }}%</p>
-          <p class="text-sm text-violet-200">Davomat</p>
+      <div class="mt-6 grid grid-cols-3 gap-2 sm:gap-4">
+        <div class="rounded-xl bg-white/10 p-3 sm:p-4 backdrop-blur text-center">
+          <p class="text-xl sm:text-3xl font-bold">{{ stats.rate }}%</p>
+          <p class="text-xs sm:text-sm text-violet-200">Davomat</p>
         </div>
-        <div class="rounded-xl bg-white/10 p-4 backdrop-blur text-center">
-          <p class="text-3xl font-bold">{{ stats.present }}</p>
-          <p class="text-sm text-violet-200">Kelgan dars</p>
+        <div class="rounded-xl bg-white/10 p-3 sm:p-4 backdrop-blur text-center">
+          <p class="text-xl sm:text-3xl font-bold">{{ stats.present }}</p>
+          <p class="text-xs sm:text-sm text-violet-200">Kelgan dars</p>
         </div>
-        <div class="rounded-xl bg-white/10 p-4 backdrop-blur text-center">
-          <p class="text-3xl font-bold">{{ stats.absent }}</p>
-          <p class="text-sm text-violet-200">Qoldirilgan</p>
+        <div class="rounded-xl bg-white/10 p-3 sm:p-4 backdrop-blur text-center">
+          <p class="text-xl sm:text-3xl font-bold">{{ stats.absent }}</p>
+          <p class="text-xs sm:text-sm text-violet-200">Qoldirilgan</p>
         </div>
       </div>
     </div>
@@ -154,7 +154,7 @@
       </div>
     </div>
 
-    <!-- AI Tavsiyalar -->
+    <!-- AI Tavsiyalar (from real API) -->
     <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
       <div class="mb-4 flex items-center gap-3">
         <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-violet-100">
@@ -162,21 +162,79 @@
         </div>
         <div>
           <h3 class="font-semibold text-slate-800">AI Tavsiyalari</h3>
-          <p class="text-sm text-slate-500">Shaxsiy tavsiyalar</p>
+          <p class="text-sm text-slate-500">OpenAI tomonidan tayyorlangan shaxsiy tavsiyalar</p>
         </div>
       </div>
       
-      <div class="space-y-3">
+      <!-- AI Loading -->
+      <div v-if="aiLoading" class="py-8 text-center">
+        <Loader2 class="w-6 h-6 animate-spin text-violet-500 mx-auto mb-2" />
+        <p class="text-sm text-slate-500">AI tahlil qilmoqda...</p>
+      </div>
+
+      <!-- AI Error -->
+      <div v-else-if="aiError" class="py-4 text-center">
+        <AlertTriangle class="w-6 h-6 text-amber-500 mx-auto mb-2" />
+        <p class="text-sm text-slate-500">{{ aiError }}</p>
+        <button @click="loadAIAnalysis" class="mt-2 text-sm text-violet-600 hover:underline">Qayta urinish</button>
+      </div>
+
+      <!-- AI Results -->
+      <div v-else class="space-y-3">
+        <!-- Strengths -->
         <div 
-          v-for="(tip, index) in aiTips" 
-          :key="index"
-          class="flex items-start gap-3 rounded-xl p-4 transition-all"
-          :class="tip.bgClass"
+          v-for="(strength, index) in aiStrengths" 
+          :key="'s-' + index"
+          class="flex items-start gap-3 rounded-xl p-4 bg-emerald-50"
         >
-          <component :is="tip.icon" :size="20" :class="tip.iconClass" class="mt-0.5 flex-shrink-0" />
+          <CheckCircle :size="20" class="text-emerald-600 mt-0.5 flex-shrink-0" />
           <div>
-            <p class="font-medium" :class="tip.titleClass">{{ tip.title }}</p>
-            <p class="mt-1 text-sm" :class="tip.textClass">{{ tip.text }}</p>
+            <p class="font-medium text-emerald-800">Kuchli tomon</p>
+            <p class="mt-1 text-sm text-emerald-600">{{ strength }}</p>
+          </div>
+        </div>
+
+        <!-- Areas for improvement -->
+        <div 
+          v-for="(area, index) in aiAreas" 
+          :key="'a-' + index"
+          class="flex items-start gap-3 rounded-xl p-4 bg-amber-50"
+        >
+          <AlertTriangle :size="20" class="text-amber-600 mt-0.5 flex-shrink-0" />
+          <div>
+            <p class="font-medium text-amber-800">Yaxshilash kerak</p>
+            <p class="mt-1 text-sm text-amber-600">{{ area }}</p>
+          </div>
+        </div>
+
+        <!-- Recommendations -->
+        <div 
+          v-for="(rec, index) in aiRecommendations" 
+          :key="'r-' + index"
+          class="flex items-start gap-3 rounded-xl p-4 bg-violet-50"
+        >
+          <Lightbulb :size="20" class="text-violet-600 mt-0.5 flex-shrink-0" />
+          <div>
+            <p class="font-medium text-violet-800">Tavsiya {{ index + 1 }}</p>
+            <p class="mt-1 text-sm text-violet-600">{{ rec }}</p>
+          </div>
+        </div>
+
+        <!-- Risk Level -->
+        <div v-if="aiRiskLevel" class="flex items-center gap-3 rounded-xl p-4" :class="riskBgClass">
+          <Target :size="20" :class="riskTextClass" class="flex-shrink-0" />
+          <div>
+            <p class="font-medium" :class="riskTextClass">Xavf darajasi: {{ riskLabel }}</p>
+            <p v-if="aiPrediction" class="mt-1 text-sm" :class="riskSubTextClass">{{ aiPrediction }}</p>
+          </div>
+        </div>
+
+        <!-- Motivation (from recommendations endpoint) -->
+        <div v-if="aiMotivation" class="flex items-start gap-3 rounded-xl p-4 bg-indigo-50">
+          <Sparkles :size="20" class="text-indigo-600 mt-0.5 flex-shrink-0" />
+          <div>
+            <p class="font-medium text-indigo-800">Motivatsiya</p>
+            <p class="mt-1 text-sm text-indigo-600">{{ aiMotivation }}</p>
           </div>
         </div>
       </div>
@@ -212,6 +270,65 @@
         </div>
       </div>
     </div>
+
+    <!-- AI Chat -->
+    <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+      <div class="mb-4 flex items-center gap-3">
+        <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-violet-500 to-indigo-600">
+          <Sparkles :size="24" class="text-white" />
+        </div>
+        <div>
+          <h3 class="font-semibold text-slate-800">AI Yordamchi</h3>
+          <p class="text-sm text-slate-500">Savol bering - AI javob beradi</p>
+        </div>
+      </div>
+
+      <!-- Chat Messages -->
+      <div v-if="chatMessages.length" class="space-y-3 mb-4 max-h-64 overflow-y-auto">
+        <div v-for="(msg, i) in chatMessages" :key="i" :class="msg.role === 'user' ? 'text-right' : 'text-left'">
+          <div :class="[
+            'inline-block max-w-[80%] rounded-2xl px-4 py-2.5 text-sm',
+            msg.role === 'user' ? 'bg-violet-500 text-white rounded-br-md' : 'bg-slate-100 text-slate-700 rounded-bl-md'
+          ]">
+            {{ msg.content }}
+          </div>
+        </div>
+        <div v-if="chatLoading" class="text-left">
+          <div class="inline-block bg-slate-100 rounded-2xl rounded-bl-md px-4 py-2.5">
+            <Loader2 class="w-4 h-4 animate-spin text-violet-500" />
+          </div>
+        </div>
+      </div>
+
+      <!-- Chat Input -->
+      <div class="flex gap-2">
+        <input 
+          v-model="chatInput"
+          @keyup.enter="sendChat"
+          placeholder="Savolingizni yozing..."
+          class="flex-1 rounded-xl border border-slate-200 px-4 py-2.5 text-sm focus:border-violet-400 focus:outline-none focus:ring-2 focus:ring-violet-100"
+        />
+        <button 
+          @click="sendChat"
+          :disabled="!chatInput.trim() || chatLoading"
+          class="rounded-xl bg-violet-500 px-4 py-2.5 text-white hover:bg-violet-600 disabled:opacity-50 transition-colors"
+        >
+          <RefreshCw v-if="chatLoading" :size="18" class="animate-spin" />
+          <span v-else class="text-sm font-medium">Yuborish</span>
+        </button>
+      </div>
+
+      <!-- Suggestions -->
+      <div v-if="chatSuggestions.length" class="mt-3 flex flex-wrap gap-2">
+        <button 
+          v-for="(s, i) in chatSuggestions" :key="i"
+          @click="chatInput = s; sendChat()"
+          class="text-xs px-3 py-1.5 bg-violet-50 text-violet-600 rounded-full hover:bg-violet-100 transition-colors"
+        >
+          {{ s }}
+        </button>
+      </div>
+    </div>
     </template>
   </div>
 </template>
@@ -220,11 +337,10 @@
 /**
  * AIAnalysisView.vue - AI Tahlil sahifasi
  * 
- * BU YERDA BALL TIZIMI YO'Q!
- * Faqat:
- * - Davomat tahlili
- * - Faollik tahlili  
- * - AI tavsiyalari
+ * Real OpenAI integration:
+ * - Davomat tahlili (real data from API)
+ * - AI tavsiyalari (from OpenAI)
+ * - AI Chat
  * - Trend va statistika
  */
 
@@ -234,7 +350,6 @@ import {
     AlertTriangle,
     BarChart3,
     BookOpen,
-    Calendar,
     CheckCircle,
     Clock,
     Lightbulb,
@@ -245,7 +360,7 @@ import {
     TrendingUp,
     XCircle
 } from 'lucide-vue-next'
-import { computed, markRaw, onMounted, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import api from '../../services/api'
 
 const authStore = useAuthStore()
@@ -257,34 +372,127 @@ const isAnalyzing = ref(false)
 const records = ref([])
 const student = ref(null)
 
+// AI state
+const aiLoading = ref(false)
+const aiError = ref(null)
+const aiStrengths = ref([])
+const aiAreas = ref([])
+const aiRecommendations = ref([])
+const aiRiskLevel = ref(null)
+const aiPrediction = ref(null)
+const aiMotivation = ref(null)
+const aiSummary = ref('')
+
+// Chat state
+const chatMessages = ref([])
+const chatInput = ref('')
+const chatLoading = ref(false)
+const chatSuggestions = ref([])
+
 // Load data from API
 const loadAnalysisData = async () => {
   loading.value = true
   error.value = null
   
   try {
-    // Get current user profile
     const profile = await api.getMe()
     student.value = profile
     
-    // Get attendance records
     const attendanceResponse = await api.getStudentAttendance(profile.id)
     records.value = (attendanceResponse.items || attendanceResponse || []).map(r => ({
       id: r.id,
       studentId: r.student_id,
-      subject: r.subject || r.lesson_name || 'Noma\'lum',
+      subject: r.subject || r.lesson_name || "Noma'lum",
       status: r.status,
       date: r.date
     }))
+    
+    // Load AI analysis in parallel (non-blocking)
+    loadAIAnalysis()
   } catch (e) {
     console.error('Error loading analysis data:', e)
-    error.value = 'Ma\'lumotlarni yuklashda xatolik'
+    error.value = "Ma'lumotlarni yuklashda xatolik"
   } finally {
     loading.value = false
   }
 }
 
-// Statistika
+// Load AI analysis from OpenAI
+const loadAIAnalysis = async () => {
+  if (!student.value?.id) return
+  
+  aiLoading.value = true
+  aiError.value = null
+  
+  try {
+    // Call both endpoints in parallel
+    const [analysis, recs] = await Promise.all([
+      api.aiAnalyzeStudent({ student_id: student.value.id }).catch(e => {
+        console.error('AI analyze error:', e)
+        return null
+      }),
+      api.aiStudentRecommendations(student.value.id).catch(e => {
+        console.error('AI recommendations error:', e)
+        return null
+      })
+    ])
+    
+    if (analysis) {
+      aiSummary.value = analysis.summary || ''
+      aiStrengths.value = analysis.strengths || []
+      aiAreas.value = analysis.areas_for_improvement || []
+      aiRecommendations.value = analysis.recommendations || []
+      aiRiskLevel.value = analysis.risk_level || null
+      aiPrediction.value = analysis.predicted_performance || null
+    }
+    
+    if (recs) {
+      aiMotivation.value = recs.motivation || null
+      // Merge recommendations if analysis didn't return them
+      if (!aiRecommendations.value.length && recs.recommendations) {
+        aiRecommendations.value = recs.recommendations.map(r => typeof r === 'object' ? r.title || r.description : r)
+      }
+    }
+    
+    if (!analysis && !recs) {
+      aiError.value = 'AI tahlil xizmati vaqtincha ishlamayapti'
+    }
+  } catch (e) {
+    console.error('AI analysis error:', e)
+    aiError.value = e?.detail || 'AI tahlil qilishda xatolik'
+  } finally {
+    aiLoading.value = false
+  }
+}
+
+// AI Chat
+const sendChat = async () => {
+  const msg = chatInput.value.trim()
+  if (!msg || chatLoading.value) return
+  
+  chatMessages.value.push({ role: 'user', content: msg })
+  chatInput.value = ''
+  chatLoading.value = true
+  chatSuggestions.value = []
+  
+  try {
+    const history = chatMessages.value.slice(-6).map(m => ({ role: m.role, content: m.content }))
+    const result = await api.aiChat({
+      message: msg,
+      context: `Talaba: ${student.value?.name || ''}, Davomat: ${stats.value.rate}%`,
+      conversation_history: history.slice(0, -1) // exclude current message
+    })
+    
+    chatMessages.value.push({ role: 'assistant', content: result.response })
+    chatSuggestions.value = result.suggestions || []
+  } catch (e) {
+    chatMessages.value.push({ role: 'assistant', content: 'Xatolik yuz berdi. Qayta urinib ko\'ring.' })
+  } finally {
+    chatLoading.value = false
+  }
+}
+
+// Statistika (from real attendance data)
 const stats = computed(() => {
   const total = records.value.length || 1
   const present = records.value.filter(r => r.status === 'present').length
@@ -309,101 +517,70 @@ const subjectStats = computed(() => {
   }).sort((a, b) => b.rate - a.rate)
 })
 
-// Haftalik data
-const weeklyData = ref([
-  { label: '1-hafta', rate: 85 },
-  { label: '2-hafta', rate: 90 },
-  { label: '3-hafta', rate: 78 },
-  { label: '4-hafta', rate: stats.value.rate }
-])
+// Weekly data computed from real attendance records
+const weeklyData = computed(() => {
+  const now = new Date()
+  const weeks = []
+  for (let w = 3; w >= 0; w--) {
+    const weekStart = new Date(now)
+    weekStart.setDate(now.getDate() - (w * 7 + now.getDay()))
+    const weekEnd = new Date(weekStart)
+    weekEnd.setDate(weekStart.getDate() + 6)
+    
+    const weekRecords = records.value.filter(r => {
+      const d = new Date(r.date)
+      return d >= weekStart && d <= weekEnd
+    })
+    
+    const total = weekRecords.length || 1
+    const attended = weekRecords.filter(r => r.status === 'present' || r.status === 'late').length
+    const rate = Math.round((attended / total) * 100)
+    
+    weeks.push({ label: `${4 - w}-hafta`, rate: weekRecords.length ? rate : 0 })
+  }
+  return weeks
+})
 
-// AI xulosa sarlavhasi
+// AI summary title (uses AI data if available, fallback to computed)
 const aiSummaryTitle = computed(() => {
+  if (aiSummary.value) {
+    if (stats.value.rate >= 90) return "Ajoyib natija! 🎉"
+    if (stats.value.rate >= 75) return "Yaxshi davom etyapsiz! 👍"
+    if (stats.value.rate >= 60) return "Yaxshilash imkoniyati bor 📈"
+    return "E'tibor qarating! ⚠️"
+  }
   if (stats.value.rate >= 90) return "Ajoyib natija! 🎉"
   if (stats.value.rate >= 75) return "Yaxshi davom etyapsiz! 👍"
   if (stats.value.rate >= 60) return "Yaxshilash imkoniyati bor 📈"
   return "E'tibor qarating! ⚠️"
 })
 
-// AI xulosa matni
+// AI summary text (uses AI data if available)
 const aiSummaryText = computed(() => {
-  if (stats.value.rate >= 90) {
-    return `Tabriklaymiz! Sizning davomatingiz ${stats.value.rate}% ni tashkil etadi. Bu juda yaxshi ko'rsatkich. Shu yo'lda davom eting va darslarga muntazam qatnashishda davom eting.`
-  }
-  if (stats.value.rate >= 75) {
-    return `Sizning davomatingiz ${stats.value.rate}% - yaxshi natija. Ammo ${stats.value.absent} ta dars qoldirgansiz. Agar davomatni 90% dan yuqori ushlab tursangiz, yanada yaxshi bo'ladi.`
-  }
-  if (stats.value.rate >= 60) {
-    return `Davomatingiz ${stats.value.rate}% - o'rtacha daraja. ${stats.value.absent} ta dars qoldirilgan. Darslarni o'tkazib yubormaslikka harakat qiling, bu akademik natijalaringizga ta'sir qilishi mumkin.`
-  }
-  return `Ogohlantirish! Davomatingiz ${stats.value.rate}% - bu past ko'rsatkich. ${stats.value.absent} ta dars qoldirgansiz. Dekanat bilan bog'lanishingiz va vaziyatni yaxshilashingiz tavsiya etiladi.`
+  if (aiSummary.value) return aiSummary.value
+  // Fallback
+  return `Sizning davomatingiz ${stats.value.rate}% ni tashkil etadi. AI tahlil yuklanmoqda...`
 })
 
-// AI tavsiyalar
-const aiTips = computed(() => {
-  const tips = []
-  
-  if (stats.value.rate >= 90) {
-    tips.push({
-      icon: markRaw(Target),
-      title: "Maqsadga erishing",
-      text: "Siz a'lo ko'rsatkichga erishdingiz. Bu natijani saqlab qoling va boshqalarga namuna bo'ling.",
-      bgClass: "bg-emerald-50",
-      iconClass: "text-emerald-600",
-      titleClass: "text-emerald-800",
-      textClass: "text-emerald-600"
-    })
-  }
-  
-  if (stats.value.absent > 0) {
-    tips.push({
-      icon: markRaw(AlertTriangle),
-      title: "Qoldirilgan darslar",
-      text: `${stats.value.absent} ta dars qoldirgansiz. Imkon qadar darslarga qatnashing.`,
-      bgClass: "bg-amber-50",
-      iconClass: "text-amber-600",
-      titleClass: "text-amber-800",
-      textClass: "text-amber-600"
-    })
-  }
-  
-  if (stats.value.late > 0) {
-    tips.push({
-      icon: markRaw(Clock),
-      title: "Kechikishlar",
-      text: `${stats.value.late} marta kechikgansiz. Vaqtida kelishga harakat qiling.`,
-      bgClass: "bg-blue-50",
-      iconClass: "text-blue-600",
-      titleClass: "text-blue-800",
-      textClass: "text-blue-600"
-    })
-  }
-  
-  // Eng past fan
-  const lowestSubject = subjectStats.value[subjectStats.value.length - 1]
-  if (lowestSubject && lowestSubject.rate < 80) {
-    tips.push({
-      icon: markRaw(BookOpen),
-      title: `${lowestSubject.name} faniga e'tibor`,
-      text: `Bu fanda davomatingiz ${lowestSubject.rate}%. Darslarni o'tkazib yubormaslikka harakat qiling.`,
-      bgClass: "bg-rose-50",
-      iconClass: "text-rose-600",
-      titleClass: "text-rose-800",
-      textClass: "text-rose-600"
-    })
-  }
-  
-  tips.push({
-    icon: markRaw(Calendar),
-    title: "Muntazamlik muhim",
-    text: "Har kuni darslarga qatnashish bilim olishning eng yaxshi yo'li. Dars jadvalingizni kuzatib boring.",
-    bgClass: "bg-indigo-50",
-    iconClass: "text-indigo-600",
-    titleClass: "text-indigo-800",
-    textClass: "text-indigo-600"
-  })
-  
-  return tips
+// Risk level helpers
+const riskLabel = computed(() => {
+  const map = { low: 'Past ✅', medium: "O'rta ⚠️", high: 'Yuqori 🔴' }
+  return map[aiRiskLevel.value] || aiRiskLevel.value
+})
+
+const riskBgClass = computed(() => {
+  const map = { low: 'bg-emerald-50', medium: 'bg-amber-50', high: 'bg-rose-50' }
+  return map[aiRiskLevel.value] || 'bg-slate-50'
+})
+
+const riskTextClass = computed(() => {
+  const map = { low: 'text-emerald-700', medium: 'text-amber-700', high: 'text-rose-700' }
+  return map[aiRiskLevel.value] || 'text-slate-700'
+})
+
+const riskSubTextClass = computed(() => {
+  const map = { low: 'text-emerald-600', medium: 'text-amber-600', high: 'text-rose-600' }
+  return map[aiRiskLevel.value] || 'text-slate-600'
 })
 
 // Rang funksiyalari

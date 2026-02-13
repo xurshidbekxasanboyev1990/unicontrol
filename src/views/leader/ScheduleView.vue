@@ -25,10 +25,10 @@
     <!-- Main Content -->
     <template v-else>
       <!-- Header with View Toggle -->
-      <div class="flex items-center justify-between">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
-          <h1 class="text-2xl font-bold text-slate-800">{{ $t('schedule.title') }}</h1>
-          <p class="text-slate-500">{{ groupName }} guruh jadvali</p>
+          <h1 class="text-xl sm:text-2xl font-bold text-slate-800">{{ $t('schedule.title') }}</h1>
+          <p class="text-sm text-slate-500">{{ groupName }} guruh jadvali</p>
         </div>
         <div class="flex items-center gap-3">
           <button 
@@ -234,15 +234,15 @@
 
 <script setup>
 import {
-  AlertCircle,
-  CalendarDays,
-  CheckCircle,
-  Clock,
-  Coffee,
-  MapPin,
-  RefreshCw,
-  User,
-  X
+    AlertCircle,
+    CalendarDays,
+    CheckCircle,
+    Clock,
+    Coffee,
+    MapPin,
+    RefreshCw,
+    User,
+    X
 } from 'lucide-vue-next'
 import { computed, onMounted, ref } from 'vue'
 import api from '../../services/api'

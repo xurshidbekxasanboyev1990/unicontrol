@@ -25,14 +25,14 @@
     <!-- Main Content -->
     <template v-else>
       <!-- Welcome Header -->
-      <div class="bg-gradient-to-br from-amber-500 via-orange-500 to-red-500 rounded-2xl p-6 text-white">
-        <div class="flex items-center justify-between">
-          <div>
-            <h1 class="text-2xl font-bold flex items-center gap-2">
-              <Crown class="w-7 h-7" />
+      <div class="bg-gradient-to-br from-amber-500 via-orange-500 to-red-500 rounded-2xl p-4 sm:p-6 text-white">
+        <div class="flex items-center justify-between gap-3">
+          <div class="min-w-0">
+            <h1 class="text-xl sm:text-2xl font-bold flex items-center gap-2">
+              <Crown class="w-6 h-6 sm:w-7 sm:h-7" />
               Super Admin Panel
             </h1>
-            <p class="text-amber-100 mt-1">Tizimni to'liq boshqarish va monitoring</p>
+            <p class="text-amber-100 mt-1 text-sm sm:text-base">Tizimni to'liq boshqarish va monitoring</p>
           </div>
           <div class="flex items-center gap-3">
             <div class="text-right text-sm">
@@ -56,19 +56,19 @@
       </div>
 
       <!-- Main Stats Cards - Row 1 -->
-      <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         <!-- Total Users -->
-        <div class="bg-white rounded-2xl border border-slate-200 p-5 hover:shadow-md transition-shadow">
+        <div class="bg-white rounded-2xl border border-slate-200 p-3 sm:p-5 hover:shadow-md transition-shadow">
           <div class="flex items-center justify-between">
             <div>
-              <p class="text-3xl font-bold text-slate-800">{{ formatNumber(stats.totalUsers) }}</p>
-              <p class="text-sm text-slate-500 mt-1">Jami foydalanuvchilar</p>
+              <p class="text-xl sm:text-3xl font-bold text-slate-800">{{ formatNumber(stats.totalUsers) }}</p>
+              <p class="text-xs sm:text-sm text-slate-500 mt-1">Jami foydalanuvchilar</p>
             </div>
-            <div class="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
-              <UsersRound class="w-6 h-6 text-blue-600" />
+            <div class="w-10 h-10 sm:w-12 sm:h-12 bg-blue-100 rounded-xl flex items-center justify-center">
+              <UsersRound class="w-5 h-5 sm:w-6 sm:h-6 text-blue-600" />
             </div>
           </div>
-          <div class="mt-3 flex items-center gap-1 text-xs">
+          <div class="mt-2 sm:mt-3 flex items-center gap-1 text-xs">
             <TrendingUp v-if="stats.newUsersWeek > 0" class="w-3.5 h-3.5 text-emerald-500" />
             <span class="text-emerald-600 font-medium">+{{ stats.newUsersWeek }}</span>
             <span class="text-slate-400">bu hafta</span>
@@ -76,28 +76,28 @@
         </div>
 
         <!-- Total Students -->
-        <div class="bg-white rounded-2xl border border-slate-200 p-5 hover:shadow-md transition-shadow">
+        <div class="bg-white rounded-2xl border border-slate-200 p-3 sm:p-5 hover:shadow-md transition-shadow">
           <div class="flex items-center justify-between">
             <div>
-              <p class="text-3xl font-bold text-violet-600">{{ formatNumber(stats.totalStudents) }}</p>
-              <p class="text-sm text-slate-500 mt-1">Talabalar</p>
+              <p class="text-xl sm:text-3xl font-bold text-violet-600">{{ formatNumber(stats.totalStudents) }}</p>
+              <p class="text-xs sm:text-sm text-slate-500 mt-1">Talabalar</p>
             </div>
-            <div class="w-12 h-12 bg-violet-100 rounded-xl flex items-center justify-center">
-              <GraduationCap class="w-6 h-6 text-violet-600" />
+            <div class="w-10 h-10 sm:w-12 sm:h-12 bg-violet-100 rounded-xl flex items-center justify-center">
+              <GraduationCap class="w-5 h-5 sm:w-6 sm:h-6 text-violet-600" />
             </div>
           </div>
-          <div class="mt-3 flex items-center gap-1 text-xs">
+          <div class="mt-2 sm:mt-3 flex items-center gap-1 text-xs">
             <span class="text-slate-500">Faol:</span>
             <span class="text-violet-600 font-medium">{{ formatNumber(stats.activeStudents) }}</span>
           </div>
         </div>
 
         <!-- Total Groups -->
-        <div class="bg-white rounded-2xl border border-slate-200 p-5 hover:shadow-md transition-shadow">
+        <div class="bg-white rounded-2xl border border-slate-200 p-3 sm:p-5 hover:shadow-md transition-shadow">
           <div class="flex items-center justify-between">
             <div>
-              <p class="text-3xl font-bold text-emerald-600">{{ formatNumber(stats.totalGroups) }}</p>
-              <p class="text-sm text-slate-500 mt-1">Guruhlar</p>
+              <p class="text-xl sm:text-3xl font-bold text-emerald-600">{{ formatNumber(stats.totalGroups) }}</p>
+              <p class="text-xs sm:text-sm text-slate-500 mt-1">Guruhlar</p>
             </div>
             <div class="w-12 h-12 bg-emerald-100 rounded-xl flex items-center justify-center">
               <Layers class="w-6 h-6 text-emerald-600" />

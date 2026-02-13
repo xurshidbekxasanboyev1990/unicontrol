@@ -2,8 +2,8 @@
 // Use relative /api/v1 so requests go through nginx proxy (same-origin, no CORS)
 const API_BASE_URL = import.meta.env.VITE_API_URL || '/api/v1'
 
-// Inactivity timeout - 30 daqiqa (production)
-const INACTIVITY_TIMEOUT = 30 * 60 * 1000 // 30 daqiqa
+// Inactivity timeout - 24 soat (production) - uzoq vaqtdan keyin ham ishlashi kerak
+const INACTIVITY_TIMEOUT = 24 * 60 * 60 * 1000 // 24 soat
 const ACTIVITY_CHECK_INTERVAL = 60 * 1000 // Har 1 daqiqada tekshirish
 
 // URLSearchParams uchun undefined/null qiymatlarni tozalash
@@ -137,7 +137,7 @@ class ApiService {
         if (!timestamp) return true
 
         const tokenAge = Date.now() - parseInt(timestamp)
-        const tokenLifetime = 30 * 60 * 1000 // 30 daqiqa (backend bilan mos)
+        const tokenLifetime = 480 * 60 * 1000 // 480 daqiqa = 8 soat (backend ACCESS_TOKEN_EXPIRE_MINUTES bilan mos)
 
         return tokenAge > (tokenLifetime - this.tokenRefreshThreshold)
     }
@@ -175,6 +175,7 @@ class ApiService {
 
         const url = `${this.baseUrl}${endpoint}`
         const isBlob = options.responseType === 'blob'
+        const isFormData = options.body instanceof FormData
         const config = {
             headers: this.getHeaders(options.auth !== false),
             ...options
@@ -183,8 +184,12 @@ class ApiService {
         // Remove custom options so fetch doesn't complain
         delete config.responseType
         delete config.auth
+        delete config.isFormData
 
-        if (config.body && typeof config.body === 'object') {
+        // FormData: let browser set Content-Type with boundary; don't stringify
+        if (isFormData) {
+            delete config.headers['Content-Type']
+        } else if (config.body && typeof config.body === 'object') {
             config.body = JSON.stringify(config.body)
         }
 
@@ -532,6 +537,11 @@ class ApiService {
         })
     }
 
+    // ===== BIRTHDAYS =====
+    async getUpcomingBirthdays(params = {}) {
+        return this.request(`/students/birthdays/upcoming${buildQuery(params)}`)
+    }
+
     // ===== NOTIFICATIONS =====
     async getNotifications(params = {}) {
         return this.request(`/notifications${buildQuery(params)}`)
@@ -600,6 +610,33 @@ class ApiService {
             throw new Error('Export failed')
         }
 
+        return response.blob()
+    }
+
+    async importSchedulesFromExcel(file, academicYear = '2025-2026', semester = 2, clearExisting = true) {
+        const formData = new FormData()
+        formData.append('file', file)
+        formData.append('academic_year', academicYear)
+        formData.append('semester', semester.toString())
+        formData.append('clear_existing', clearExisting.toString())
+
+        const token = this.getToken()
+        const response = await fetch(`${this.baseUrl}/excel/import/schedules`, {
+            method: 'POST',
+            headers: token ? { 'Authorization': `Bearer ${token}` } : {},
+            body: formData
+        })
+        return this.handleResponse(response)
+    }
+
+    async downloadExcelTemplate(type) {
+        const token = this.getToken()
+        const response = await fetch(`${this.baseUrl}/excel/templates/${type}`, {
+            headers: token ? { 'Authorization': `Bearer ${token}` } : {}
+        })
+        if (!response.ok) {
+            throw new Error('Template download failed')
+        }
         return response.blob()
     }
 
@@ -1296,6 +1333,113 @@ class ApiService {
 
     async getReceiptUrl(paymentId) {
         return `${this.baseUrl}/subscriptions/receipt/${paymentId}`
+    }
+
+    // ===== AI =====
+
+    async aiAnalyzeStudent(data) {
+        return this.request('/ai/analyze/student', { method: 'POST', body: data })
+    }
+
+    async aiAnalyzeGroup(data) {
+        return this.request('/ai/analyze/group', { method: 'POST', body: data })
+    }
+
+    async aiPredictAttendance(data) {
+        return this.request('/ai/predict/attendance', { method: 'POST', body: data })
+    }
+
+    async aiChat(data) {
+        return this.request('/ai/chat', { method: 'POST', body: data })
+    }
+
+    async aiSummarizeReport(data) {
+        return this.request('/ai/summarize/report', { method: 'POST', body: data })
+    }
+
+    async aiDashboardInsights() {
+        return this.request('/ai/insights/dashboard')
+    }
+
+    async aiStudentRecommendations(studentId) {
+        return this.request(`/ai/recommendations/${studentId}`)
+    }
+
+    async aiGenerateNotificationText(data) {
+        return this.request('/ai/generate/notification-text', { method: 'POST', body: data })
+    }
+
+    async aiHealthCheck() {
+        return this.request('/ai/health')
+    }
+
+    // ===== CONTRACTS (Kontrakt ma'lumotlari) =====
+    async getContracts(params = {}) {
+        return this.request(`/contracts${buildQuery(params)}`)
+    }
+
+    async getContract(id) {
+        return this.request(`/contracts/${id}`)
+    }
+
+    async createContract(data) {
+        return this.request('/contracts', { method: 'POST', body: data })
+    }
+
+    async updateContract(id, data) {
+        return this.request(`/contracts/${id}`, { method: 'PUT', body: data })
+    }
+
+    async deleteContract(id) {
+        return this.request(`/contracts/${id}`, { method: 'DELETE' })
+    }
+
+    async getContractStatistics(params = {}) {
+        return this.request(`/contracts/statistics${buildQuery(params)}`)
+    }
+
+    async getContractAcademicYears() {
+        return this.request('/contracts/academic-years')
+    }
+
+    async getContractFilters() {
+        return this.request('/contracts/filters')
+    }
+
+    async importContracts(file, academicYear = '2025-2026', updateExisting = true) {
+        const formData = new FormData()
+        formData.append('file', file)
+        formData.append('academic_year', academicYear)
+        formData.append('update_existing', updateExisting)
+
+        const token = this.getToken()
+        const response = await fetch(`${this.baseUrl}/contracts/import`, {
+            method: 'POST',
+            headers: token ? { 'Authorization': `Bearer ${token}` } : {},
+            body: formData
+        })
+        return this.handleResponse(response)
+    }
+
+    async exportContracts(params = {}) {
+        const token = this.getToken()
+        const response = await fetch(`${this.baseUrl}/contracts/export/excel${buildQuery(params)}`, {
+            headers: token ? { 'Authorization': `Bearer ${token}` } : {}
+        })
+        if (!response.ok) throw new Error('Export failed')
+        return response.blob()
+    }
+
+    async deleteContractsByYear(academicYear) {
+        return this.request(`/contracts/year/${academicYear}`, { method: 'DELETE' })
+    }
+
+    async getMyContract(academicYear = '2025-2026') {
+        return this.request(`/contracts/my?academic_year=${academicYear}`)
+    }
+
+    async getGroupContracts(groupId, params = {}) {
+        return this.request(`/contracts/group/${groupId}${buildQuery(params)}`)
     }
 }
 

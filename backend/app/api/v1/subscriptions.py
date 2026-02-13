@@ -115,7 +115,7 @@ def _plan_to_response(plan: SubscriptionPlan) -> dict:
     if plan.features:
         try:
             features = json.loads(plan.features)
-        except:
+        except (json.JSONDecodeError, TypeError):
             features = []
     return {
         "id": plan.id,

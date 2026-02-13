@@ -24,66 +24,66 @@
     </div>
 
     <!-- Summary Cards -->
-    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
-      <div class="bg-white rounded-2xl border border-slate-200 p-5">
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+      <div class="bg-white rounded-2xl border border-slate-200 p-4 sm:p-5">
         <div class="flex items-center justify-between">
           <div>
-            <p class="text-3xl font-bold text-emerald-600">{{ overallAttendance }}%</p>
-            <p class="text-sm text-slate-500 mt-1">{{ $t('reports.totalAttendance') }}</p>
+            <p class="text-xl sm:text-3xl font-bold text-emerald-600">{{ overallAttendance }}%</p>
+            <p class="text-xs sm:text-sm text-slate-500 mt-1">{{ $t('reports.totalAttendance') }}</p>
           </div>
-          <div class="w-12 h-12 bg-emerald-100 rounded-xl flex items-center justify-center">
-            <TrendingUp class="w-6 h-6 text-emerald-600" />
+          <div class="w-10 h-10 sm:w-12 sm:h-12 bg-emerald-100 rounded-xl flex items-center justify-center">
+            <TrendingUp class="w-5 h-5 sm:w-6 sm:h-6 text-emerald-600" />
           </div>
         </div>
-        <div class="mt-3 flex items-center gap-1 text-sm">
-          <ArrowUp class="w-4 h-4 text-emerald-500" />
+        <div class="mt-2 sm:mt-3 flex items-center gap-1 text-xs sm:text-sm">
+          <ArrowUp class="w-3 h-3 sm:w-4 sm:h-4 text-emerald-500" />
           <span class="text-emerald-600 font-medium">+2.5%</span>
-          <span class="text-slate-400">{{ $t('reports.comparedLastMonth') }}</span>
+          <span class="text-slate-400 hidden sm:inline">{{ $t('reports.comparedLastMonth') }}</span>
         </div>
       </div>
 
-      <div class="bg-white rounded-2xl border border-slate-200 p-5">
+      <div class="bg-white rounded-2xl border border-slate-200 p-4 sm:p-5">
         <div class="flex items-center justify-between">
           <div>
-            <p class="text-3xl font-bold text-blue-600">{{ totalLessons }}</p>
-            <p class="text-sm text-slate-500 mt-1">{{ $t('reports.totalLessons') }}</p>
+            <p class="text-xl sm:text-3xl font-bold text-blue-600">{{ totalLessons }}</p>
+            <p class="text-xs sm:text-sm text-slate-500 mt-1">{{ $t('reports.totalLessons') }}</p>
           </div>
-          <div class="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
-            <BookOpen class="w-6 h-6 text-blue-600" />
-          </div>
-        </div>
-      </div>
-
-      <div class="bg-white rounded-2xl border border-slate-200 p-5">
-        <div class="flex items-center justify-between">
-          <div>
-            <p class="text-3xl font-bold text-violet-600">{{ excellentStudents }}</p>
-            <p class="text-sm text-slate-500 mt-1">{{ $t('reports.excellentStudents') }}</p>
-          </div>
-          <div class="w-12 h-12 bg-violet-100 rounded-xl flex items-center justify-center">
-            <Award class="w-6 h-6 text-violet-600" />
+          <div class="w-10 h-10 sm:w-12 sm:h-12 bg-blue-100 rounded-xl flex items-center justify-center">
+            <BookOpen class="w-5 h-5 sm:w-6 sm:h-6 text-blue-600" />
           </div>
         </div>
       </div>
 
-      <div class="bg-white rounded-2xl border border-slate-200 p-5">
+      <div class="bg-white rounded-2xl border border-slate-200 p-4 sm:p-5">
         <div class="flex items-center justify-between">
           <div>
-            <p class="text-3xl font-bold text-rose-600">{{ lowAttendanceCount }}</p>
-            <p class="text-sm text-slate-500 mt-1">{{ $t('reports.warnings') }}</p>
+            <p class="text-xl sm:text-3xl font-bold text-violet-600">{{ excellentStudents }}</p>
+            <p class="text-xs sm:text-sm text-slate-500 mt-1">{{ $t('reports.excellentStudents') }}</p>
           </div>
-          <div class="w-12 h-12 bg-rose-100 rounded-xl flex items-center justify-center">
-            <AlertTriangle class="w-6 h-6 text-rose-600" />
+          <div class="w-10 h-10 sm:w-12 sm:h-12 bg-violet-100 rounded-xl flex items-center justify-center">
+            <Award class="w-5 h-5 sm:w-6 sm:h-6 text-violet-600" />
+          </div>
+        </div>
+      </div>
+
+      <div class="bg-white rounded-2xl border border-slate-200 p-4 sm:p-5">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-xl sm:text-3xl font-bold text-rose-600">{{ lowAttendanceCount }}</p>
+            <p class="text-xs sm:text-sm text-slate-500 mt-1">{{ $t('reports.warnings') }}</p>
+          </div>
+          <div class="w-10 h-10 sm:w-12 sm:h-12 bg-rose-100 rounded-xl flex items-center justify-center">
+            <AlertTriangle class="w-5 h-5 sm:w-6 sm:h-6 text-rose-600" />
           </div>
         </div>
       </div>
     </div>
 
     <!-- Tabs: Statistics | Pending Reports -->
-    <div class="flex gap-2 border-b border-slate-200 pb-0">
+    <div class="flex gap-2 border-b border-slate-200 pb-0 overflow-x-auto">
       <button
         @click="activeTab = 'stats'"
-        class="px-5 py-3 text-sm font-medium transition-colors border-b-2 -mb-px"
+        class="px-4 sm:px-5 py-3 text-sm font-medium transition-colors border-b-2 -mb-px whitespace-nowrap"
         :class="activeTab === 'stats' ? 'border-violet-500 text-violet-600' : 'border-transparent text-slate-500 hover:text-slate-700'"
       >
         Statistika
@@ -356,7 +356,7 @@
                 <td class="p-4">
                   <div class="flex items-center gap-1">
                     <button 
-                      v-if="report.status === 'pending'"
+                      v-if="report.status !== 'approved'"
                       @click="approveReport(report)"
                       class="p-2 rounded-lg text-emerald-600 hover:bg-emerald-50 transition-colors"
                       title="Tasdiqlash"
@@ -364,7 +364,7 @@
                       <Check class="w-4 h-4" />
                     </button>
                     <button 
-                      v-if="report.status === 'pending'"
+                      v-if="report.status !== 'rejected'"
                       @click="openRejectModal(report)"
                       class="p-2 rounded-lg text-rose-600 hover:bg-rose-50 transition-colors"
                       title="Rad etish"

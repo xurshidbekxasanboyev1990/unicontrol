@@ -2,8 +2,8 @@
   <div class="space-y-6">
     <!-- Header -->
     <div>
-      <h1 class="text-2xl font-bold text-slate-800">{{ $t('notifications.title') }}</h1>
-      <p class="text-slate-500">{{ $t('notifications.broadcast') }}</p>
+      <h1 class="text-xl sm:text-2xl font-bold text-slate-800">{{ $t('notifications.title') }}</h1>
+      <p class="text-sm text-slate-500">{{ $t('notifications.broadcast') }}</p>
     </div>
 
     <!-- Compose New -->
@@ -85,7 +85,7 @@
     <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden">
       <div class="p-6 border-b border-slate-100 flex items-center justify-between">
         <h2 class="text-lg font-semibold text-slate-800">Barcha e'lonlar</h2>
-        <span class="text-sm text-slate-500">{{ dataStore.notifications.length }} ta</span>
+        <span class="text-sm text-slate-500">{{ notifications.length }} ta</span>
       </div>
 
       <div class="divide-y divide-slate-100">
@@ -128,7 +128,7 @@
         </div>
       </div>
 
-      <div v-if="dataStore.notifications.length === 0" class="p-12 text-center">
+      <div v-if="notifications.length === 0" class="p-12 text-center">
         <BellOff class="w-12 h-12 text-slate-300 mx-auto mb-4" />
         <p class="text-slate-500">Hali e'lon yo'q</p>
       </div>

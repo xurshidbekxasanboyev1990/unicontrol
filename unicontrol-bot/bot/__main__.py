@@ -19,6 +19,7 @@ from bot.middlewares import (
     SubscriptionCheckMiddleware
 )
 from bot.scheduler import AttendanceNotifier
+from bot.scheduler import BirthdayNotifier
 
 # Configure logging
 logging.basicConfig(
@@ -110,6 +111,9 @@ async def main():
     # Create attendance notifier
     notifier = AttendanceNotifier(bot)
     
+    # Create birthday notifier
+    birthday_notifier = BirthdayNotifier(bot)
+    
     # Initialize database before polling
     await init_db()
     logger.info("Database initialized")
@@ -117,6 +121,10 @@ async def main():
     # Start attendance notifier
     await notifier.start()
     logger.info("Attendance notifier started")
+    
+    # Start birthday notifier
+    await birthday_notifier.start()
+    logger.info("Birthday notifier started")
     
     # Get bot info
     bot_info = await bot.get_me()
@@ -133,6 +141,8 @@ async def main():
     finally:
         # Stop notifier
         await notifier.stop()
+        # Stop birthday notifier
+        await birthday_notifier.stop()
         # Close bot session
         await bot.session.close()
         logger.info("Bot stopped")

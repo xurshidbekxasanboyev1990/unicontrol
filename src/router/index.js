@@ -55,6 +55,7 @@ import StudentTournaments from '../views/student/TournamentsView.vue'
 // Leader views
 import LeaderAnalytics from '../views/leader/AnalyticsView.vue'
 import LeaderAttendance from '../views/leader/AttendanceView.vue'
+import LeaderContracts from '../views/leader/ContractsView.vue'
 import LeaderDashboard from '../views/leader/DashboardView.vue'
 import LeaderFileManager from '../views/leader/FileManagerView.vue'
 import LeaderNotifications from '../views/leader/NotificationsView.vue'
@@ -66,6 +67,7 @@ import LeaderSubscription from '../views/leader/SubscriptionView.vue'
 // Admin views
 import AdminAttendance from '../views/admin/AttendanceView.vue'
 import AdminClubs from '../views/admin/ClubsView.vue'
+import AdminContracts from '../views/admin/ContractsView.vue'
 import AdminDashboard from '../views/admin/DashboardView.vue'
 import AdminGroups from '../views/admin/GroupsView.vue'
 import AdminNotifications from '../views/admin/NotificationsView.vue'
@@ -77,6 +79,7 @@ import AdminUsers from '../views/admin/UsersView.vue'
 
 // Super Admin views
 import SuperAdmins from '../views/super/AdminsView.vue'
+import SuperContracts from '../views/super/ContractsView.vue'
 import SuperDashboard from '../views/super/DashboardView.vue'
 import SuperLandingSettings from '../views/super/LandingSettingsView.vue'
 import SuperLogs from '../views/super/LogsView.vue'
@@ -90,6 +93,7 @@ import SuperUsers from '../views/super/UsersView.vue'
 // Market views
 import MarketAdminView from '../views/shared/MarketAdminView.vue'
 import MarketView from '../views/shared/MarketView.vue'
+import QuizView from '../views/shared/QuizView.vue'
 
 const routes = [
   {
@@ -125,7 +129,8 @@ const routes = [
       { path: 'canteen', name: 'student-canteen', component: StudentCanteen },
       { path: 'tournaments', name: 'student-tournaments', component: StudentTournaments },
       { path: 'subscription', name: 'student-subscription', component: LeaderSubscription },
-      { path: 'market', name: 'student-market', component: MarketView }
+      { path: 'market', name: 'student-market', component: MarketView },
+      { path: 'quizzes', name: 'student-quizzes', component: QuizView }
     ]
   },
 
@@ -139,6 +144,7 @@ const routes = [
       { path: 'dashboard', name: 'leader-dashboard', component: LeaderDashboard },
       { path: 'attendance', name: 'leader-attendance', component: LeaderAttendance },
       { path: 'students', name: 'leader-students', component: LeaderStudents },
+      { path: 'contracts', name: 'leader-contracts', component: LeaderContracts },
       { path: 'schedule', name: 'leader-schedule', component: LeaderSchedule },
       { path: 'reports', name: 'leader-reports', component: LeaderReports },
       { path: 'notifications', name: 'leader-notifications', component: LeaderNotifications },
@@ -148,7 +154,8 @@ const routes = [
       { path: 'profile', name: 'leader-profile', component: StudentProfile },
       { path: 'settings', name: 'leader-settings', component: StudentSettings },
       { path: 'help', name: 'leader-help', component: StudentHelp },
-      { path: 'market', name: 'leader-market', component: MarketView }
+      { path: 'market', name: 'leader-market', component: MarketView },
+      { path: 'quizzes', name: 'leader-quizzes', component: QuizView }
     ]
   },
 
@@ -164,6 +171,7 @@ const routes = [
       { path: 'students', name: 'admin-students', component: AdminStudents },
       { path: 'groups', name: 'admin-groups', component: AdminGroups },
       { path: 'users', name: 'admin-users', component: AdminUsers },
+      { path: 'contracts', name: 'admin-contracts', component: AdminContracts },
       { path: 'reports', name: 'admin-reports', component: AdminReports },
       { path: 'notifications', name: 'admin-notifications', component: AdminNotifications },
       { path: 'clubs', name: 'admin-clubs', component: AdminClubs },
@@ -197,6 +205,7 @@ const routes = [
       { path: 'telegram-bot', name: 'super-telegram-bot', component: SuperTelegramBot },
       { path: 'sheets-schedule', name: 'super-sheets-schedule', component: SuperSheetsSchedule },
       { path: 'users', name: 'super-users', component: SuperUsers },
+      { path: 'contracts', name: 'super-contracts', component: SuperContracts },
       { path: 'profile', name: 'super-profile', component: StudentProfile },
       { path: 'help', name: 'super-help', component: StudentHelp },
       { path: 'market', name: 'super-market', component: MarketAdminView }

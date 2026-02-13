@@ -23,7 +23,7 @@ from app.schemas.tournament import (
     TournamentRegister,
     TournamentRegistrationResponse,
 )
-from app.core.dependencies import get_current_active_user
+from app.core.dependencies import get_current_active_user, require_admin
 from app.config import today_tashkent
 
 router = APIRouter()
@@ -119,7 +119,7 @@ async def get_my_registrations(
 async def create_tournament(
     data: TournamentCreate,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_active_user)
+    current_user: User = Depends(require_admin)
 ):
     """Yangi musobaqa yaratish"""
     tournament = Tournament(**data.model_dump())
@@ -158,7 +158,7 @@ async def update_tournament(
     tournament_id: int,
     data: TournamentUpdate,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_active_user)
+    current_user: User = Depends(require_admin)
 ):
     """Musobaqani yangilash"""
     result = await db.execute(select(Tournament).where(Tournament.id == tournament_id))
@@ -178,7 +178,7 @@ async def update_tournament(
 async def delete_tournament(
     tournament_id: int,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_active_user)
+    current_user: User = Depends(require_admin)
 ):
     """Musobaqani o'chirish"""
     result = await db.execute(select(Tournament).where(Tournament.id == tournament_id))
@@ -195,7 +195,7 @@ async def delete_tournament(
 async def toggle_tournament_status(
     tournament_id: int,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_active_user)
+    current_user: User = Depends(require_admin)
 ):
     """Musobaqa statusini o'zgartirish"""
     result = await db.execute(select(Tournament).where(Tournament.id == tournament_id))
@@ -245,6 +245,21 @@ async def register_for_tournament(
     if tournament.max_participants and current_count >= tournament.max_participants:
         raise HTTPException(status_code=400, detail="Musobaqada joy qolmadi")
     
+    # Validate student exists
+    student_check = await db.execute(
+        select(Student).where(Student.id == data.student_id)
+    )
+    if not student_check.scalar_one_or_none():
+        # Try to find student by user_id (frontend may send user.id instead of student.id)
+        student_by_user = await db.execute(
+            select(Student).where(Student.user_id == data.student_id)
+        )
+        found_student = student_by_user.scalar_one_or_none()
+        if found_student:
+            data.student_id = found_student.id
+        else:
+            raise HTTPException(status_code=400, detail="Talaba topilmadi. Faqat talabalar turnirga ro'yxatdan o'tishi mumkin.")
+    
     # Check existing
     existing = await db.execute(
         select(TournamentRegistration).where(
@@ -292,7 +307,7 @@ async def update_registration_status(
     registration_id: int,
     new_status: str = Query(..., alias="status"),
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_active_user)
+    current_user: User = Depends(require_admin)
 ):
     """Ro'yxatdan o'tish statusini yangilash (tasdiqlash/rad etish)"""
     # Check tournament
@@ -363,14 +378,28 @@ async def update_registration_status(
     }
 
 
-@router.delete("/{tournament_id}/unregister")
+@router.post("/{tournament_id}/unregister")
 async def unregister_from_tournament(
     tournament_id: int,
-    student_id: int = Query(...),
+    data: TournamentRegister,
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_active_user)
 ):
     """Musobaqadan ro'yxatdan chiqish"""
+    student_id = data.student_id
+    
+    # Also try user_id -> student_id mapping
+    student_check = await db.execute(
+        select(Student).where(Student.id == student_id)
+    )
+    if not student_check.scalar_one_or_none():
+        student_by_user = await db.execute(
+            select(Student).where(Student.user_id == student_id)
+        )
+        found_student = student_by_user.scalar_one_or_none()
+        if found_student:
+            student_id = found_student.id
+    
     result = await db.execute(
         select(TournamentRegistration).where(
             TournamentRegistration.tournament_id == tournament_id,

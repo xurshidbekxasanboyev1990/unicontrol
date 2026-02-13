@@ -398,7 +398,7 @@ async def get_superadmin_dashboard(
     )
     
     # ===== New users this week =====
-    week_start_dt = datetime.combine(week_start, datetime.min.time()).replace(tzinfo=TASHKENT_TZ)
+    week_start_dt = TASHKENT_TZ.localize(datetime.combine(week_start, datetime.min.time()))
     new_users_week = await db.execute(
         select(func.count(User.id)).where(User.created_at >= week_start_dt)
     )

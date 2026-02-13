@@ -27,8 +27,8 @@ class Tournament(Base):
     status = Column(String(50), default='upcoming')  # upcoming, active, completed, cancelled
     is_active = Column(Boolean, default=True)
     
-    created_at = Column(DateTime, default=lambda: datetime.now(TASHKENT_TZ))
-    updated_at = Column(DateTime, default=lambda: datetime.now(TASHKENT_TZ), onupdate=lambda: datetime.now(TASHKENT_TZ))
+    created_at = Column(DateTime, default=lambda: datetime.now(TASHKENT_TZ).replace(tzinfo=None))
+    updated_at = Column(DateTime, default=lambda: datetime.now(TASHKENT_TZ).replace(tzinfo=None), onupdate=lambda: datetime.now(TASHKENT_TZ).replace(tzinfo=None))
     
     # Relationships
     registrations = relationship("TournamentRegistration", back_populates="tournament", cascade="all, delete-orphan")
@@ -41,7 +41,7 @@ class TournamentRegistration(Base):
     id = Column(Integer, primary_key=True, index=True)
     tournament_id = Column(Integer, ForeignKey("tournaments.id", ondelete="CASCADE"), nullable=False, index=True)
     student_id = Column(Integer, ForeignKey("students.id", ondelete="CASCADE"), nullable=False, index=True)
-    registered_at = Column(DateTime, default=lambda: datetime.now(TASHKENT_TZ))
+    registered_at = Column(DateTime, default=lambda: datetime.now(TASHKENT_TZ).replace(tzinfo=None))
     status = Column(String(50), default='registered')  # registered, confirmed, cancelled
     position = Column(Integer, nullable=True)  # Yakuniy o'rin
     score = Column(Integer, nullable=True)  # Ball

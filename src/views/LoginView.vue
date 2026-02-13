@@ -56,14 +56,14 @@
             <GraduationCap class="w-10 h-10 text-white" />
           </div>
         </div>
-        <h1 class="text-4xl font-bold text-white mb-3 tracking-tight">Uni Control</h1>
-        <p class="text-slate-400 text-lg">{{ t('login.subtitle') }}</p>
+        <h1 class="text-3xl sm:text-4xl font-bold text-white mb-3 tracking-tight">Uni Control</h1>
+        <p class="text-slate-400 text-base sm:text-lg">{{ t('login.subtitle') }}</p>
       </div>
 
       <!-- Card -->
       <div class="relative">
         <div class="absolute inset-0 bg-gradient-to-br from-white/10 to-white/5 rounded-3xl blur-xl"></div>
-        <div class="relative bg-white/[0.07] backdrop-blur-2xl border border-white/10 rounded-3xl p-8 shadow-2xl">
+        <div class="relative bg-white/[0.07] backdrop-blur-2xl border border-white/10 rounded-3xl p-5 sm:p-8 shadow-2xl">
           <form @submit.prevent="handleLogin" class="space-y-6">
             <!-- Error Alert -->
             <Transition name="shake">
@@ -243,22 +243,22 @@
 
 <script setup>
 import {
-    AlertCircle,
-    ArrowLeft,
-    ArrowRight,
-    Check,
-    Crown,
-    Eye,
-    EyeOff,
-    GraduationCap,
-    Loader2,
-    Lock,
-    LogIn,
-    Shield,
-    ShieldAlert,
-    User,
-    UserCircle,
-    Users
+  AlertCircle,
+  ArrowLeft,
+  ArrowRight,
+  Check,
+  Crown,
+  Eye,
+  EyeOff,
+  GraduationCap,
+  Loader2,
+  Lock,
+  LogIn,
+  Shield,
+  ShieldAlert,
+  User,
+  UserCircle,
+  Users
 } from 'lucide-vue-next'
 import { markRaw, ref } from 'vue'
 import { useRouter } from 'vue-router'
@@ -291,16 +291,16 @@ const goToHome = () => {
 
 const demoAccounts = [
   { 
-    username: 'ST-2024-001', 
-    password: '123456', 
+    username: '519231100736', 
+    password: '12345678', 
     labelKey: 'roles.student', 
     icon: markRaw(UserCircle), 
     bgClass: 'bg-gradient-to-br from-blue-500 to-blue-600',
     glowClass: 'bg-blue-500/10'
   },
   { 
-    username: 'ST-2024-002', 
-    password: '123456', 
+    username: '519251107043', 
+    password: '12345678', 
     labelKey: 'roles.leader', 
     icon: markRaw(Users), 
     bgClass: 'bg-gradient-to-br from-amber-500 to-orange-600',
@@ -308,15 +308,15 @@ const demoAccounts = [
   },
   { 
     username: 'admin', 
-    password: '123', 
+    password: 'admin123', 
     labelKey: 'roles.admin', 
     icon: markRaw(Shield), 
     bgClass: 'bg-gradient-to-br from-violet-500 to-purple-600',
     glowClass: 'bg-violet-500/10'
   },
   { 
-    username: 'super', 
-    password: '123', 
+    username: 'superadmin', 
+    password: 'superadmin123', 
     labelKey: 'roles.superadmin', 
     icon: markRaw(Crown), 
     bgClass: 'bg-gradient-to-br from-rose-500 to-pink-600',

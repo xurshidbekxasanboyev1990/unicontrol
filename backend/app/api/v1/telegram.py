@@ -681,3 +681,121 @@ async def bot_check_subscription(
         "plan_type": None,
         "message": "Bu guruh uchun obuna topilmadi. Bot xizmatidan foydalanish uchun Plus yoki undan yuqori obuna kerak."
     }
+
+
+# ==================== Birthday API for Bot ====================
+
+@router.get("/birthdays/today")
+async def get_todays_birthdays(
+    group_id: Optional[int] = None,
+    db: AsyncSession = Depends(get_db),
+    _: bool = Depends(verify_bot_token)
+):
+    """
+    Get students with birthdays today.
+    Bot calls this at 6:00 AM to send birthday messages.
+    Returns list of students with their group info.
+    """
+    from app.config import TASHKENT_TZ
+    from datetime import datetime as dt
+    
+    today = dt.now(TASHKENT_TZ).date()
+    
+    query = select(Student).where(Student.birth_date.isnot(None))
+    if group_id:
+        query = query.where(Student.group_id == group_id)
+    
+    result = await db.execute(query)
+    students = result.scalars().all()
+    
+    birthday_students = []
+    for student in students:
+        if not student.birth_date:
+            continue
+        try:
+            bday = student.birth_date
+            if bday.month == today.month and bday.day == today.day:
+                # Get group info
+                group_result = await db.execute(
+                    select(Group).where(Group.id == student.group_id)
+                )
+                group = group_result.scalar_one_or_none()
+                
+                age = today.year - bday.year
+                
+                birthday_students.append({
+                    "student_id": student.id,
+                    "user_id": student.user_id,
+                    "name": student.name or student.full_name or "Noma'lum",
+                    "birth_date": bday.isoformat(),
+                    "age": age,
+                    "group_id": student.group_id,
+                    "group_code": group.code if group else None,
+                    "group_name": group.name if group else None,
+                    "student_code": student.student_id,
+                    "phone": student.phone,
+                })
+        except Exception as e:
+            logger.warning(f"Birthday check error for student {student.id}: {e}")
+            continue
+    
+    return {"birthdays": birthday_students, "date": today.isoformat(), "count": len(birthday_students)}
+
+
+@router.post("/birthdays/notify")
+async def create_birthday_notification(
+    data: dict,
+    db: AsyncSession = Depends(get_db),
+    _: bool = Depends(verify_bot_token)
+):
+    """
+    Create a system notification for a birthday student.
+    Called by the Telegram bot after sending birthday messages.
+    Deduplicates: only one birthday notification per user per day.
+    """
+    from app.models.notification import Notification, NotificationType, NotificationPriority
+    from datetime import datetime as dt
+    from app.config import TASHKENT_TZ
+    from sqlalchemy import and_, func
+    
+    user_id = data.get("user_id")
+    student_name = data.get("student_name", "Talaba")
+    age = data.get("age", 0)
+    
+    if not user_id:
+        raise HTTPException(status_code=400, detail="user_id is required")
+    
+    # Check if birthday notification already sent today
+    today = dt.now(TASHKENT_TZ).date()
+    existing = await db.execute(
+        select(Notification).where(
+            and_(
+                Notification.user_id == user_id,
+                Notification.title == "🎂 Tug'ilgan kuningiz muborak!",
+                func.date(Notification.created_at) == today
+            )
+        ).limit(1)
+    )
+    if existing.scalar_one_or_none():
+        return {"success": True, "notification_id": None, "already_sent": True}
+    
+    message = (
+        f"🎉 Hurmatli {student_name}!\n\n"
+        f"Tug'ilgan kuningiz muborak bo'lsin! O'qishlaringizda yuqori natijalar, "
+        f"hayotingizda katta imkoniyatlar va atrofingizda doimo yaxshi insonlar bo'lishini tilaymiz.\n\n"
+        f"KUAF va Unicontrol jamoasi sizga yorqin kelajak va yangi marralarni zabt etishda "
+        f"ulkan zafarlar tilaydi!\n\n"
+        f"Yangi {age} yoshingiz muborak bo'lsin! 🎂✨"
+    )
+    
+    notification = Notification(
+        user_id=user_id,
+        title="🎂 Tug'ilgan kuningiz muborak!",
+        message=message,
+        type=NotificationType.INFO,
+        priority=NotificationPriority.HIGH,
+    )
+    db.add(notification)
+    await db.commit()
+    
+    return {"success": True, "notification_id": notification.id}

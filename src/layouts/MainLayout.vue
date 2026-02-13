@@ -266,7 +266,9 @@ import {
     ChevronDown,
     ChevronRight,
     ClipboardCheck,
+    ClipboardList,
     CreditCard,
+    FileSpreadsheet,
     FileText,
     FolderOpen,
     GraduationCap,
@@ -381,6 +383,11 @@ const currentPageTitle = computed(() => {
     'super-subscriptions': () => t('layout.subscriptions'),
     'super-telegram-bot': () => t('layout.telegramBot'),
     'super-sheets-schedule': () => t('layout.sheetsSchedule'),
+    'super-contracts': () => t('layout.contracts'),
+    'admin-contracts': () => t('layout.contracts'),
+    'leader-contracts': () => t('layout.contracts'),
+    'student-quizzes': () => t('layout.quizzes'),
+    'leader-quizzes': () => t('layout.quizzes'),
     'student-subscription': () => t('layout.subscription'),
     'leader-subscription': () => t('layout.subscription'),
   }
@@ -409,6 +416,7 @@ const menuSections = computed(() => {
         { path: '/student/tournaments', label: t('layout.tournaments'), icon: markRaw(Trophy) },
         { path: '/student/canteen', label: t('layout.canteen'), icon: markRaw(UtensilsCrossed) },
         { path: '/student/market', label: t('layout.market'), icon: markRaw(Store) },
+        { path: '/student/quizzes', label: t('layout.quizzes'), icon: markRaw(ClipboardList) },
         { path: '/student/subscription', label: t('layout.subscription'), icon: markRaw(CreditCard) },
         { path: '/student/notifications', label: t('layout.notifications'), icon: markRaw(Bell), badge: dataStore.unreadCount > 0 ? String(dataStore.unreadCount) : null }
       ]
@@ -429,7 +437,8 @@ const menuSections = computed(() => {
       items: [
         { path: '/leader/dashboard', label: t('layout.dashboard'), icon: markRaw(LayoutDashboard) },
         { path: '/leader/attendance', label: t('layout.takeAttendance'), icon: markRaw(ClipboardCheck) },
-        { path: '/leader/students', label: t('layout.students'), icon: markRaw(Users) }
+        { path: '/leader/students', label: t('layout.students'), icon: markRaw(Users) },
+        { path: '/leader/contracts', label: t('layout.contracts'), icon: markRaw(FileSpreadsheet) }
       ]
     })
     sections.push({
@@ -440,6 +449,7 @@ const menuSections = computed(() => {
         { path: '/leader/analytics', label: t('layout.analytics'), icon: markRaw(BarChart3) },
         { path: '/leader/files', label: t('layout.files'), icon: markRaw(FolderOpen) },
         { path: '/leader/market', label: t('layout.market'), icon: markRaw(Store) },
+        { path: '/leader/quizzes', label: t('layout.quizzes'), icon: markRaw(ClipboardList) },
         { path: '/leader/subscription', label: t('layout.subscription'), icon: markRaw(CreditCard) },
         { path: '/leader/notifications', label: t('layout.notifications'), icon: markRaw(Send), badge: dataStore.unreadCount > 0 ? String(dataStore.unreadCount) : null }
       ]
@@ -465,7 +475,8 @@ const menuSections = computed(() => {
         { path: '/admin/users', label: t('layout.users'), icon: markRaw(Shield) },
         { path: '/admin/clubs', label: t('layout.clubs'), icon: markRaw(Palette) },
         { path: '/admin/tournaments', label: t('layout.tournaments'), icon: markRaw(Trophy) },
-        { path: '/admin/subjects', label: t('layout.subjects'), icon: markRaw(BookOpen) }
+        { path: '/admin/subjects', label: t('layout.subjects'), icon: markRaw(BookOpen) },
+        { path: '/admin/contracts', label: t('layout.contracts'), icon: markRaw(FileSpreadsheet) }
       ]
     })
     sections.push({
@@ -503,6 +514,7 @@ const menuSections = computed(() => {
       items: [
         { path: '/super/students', label: t('layout.students'), icon: markRaw(Users) },
         { path: '/super/groups', label: t('layout.groups'), icon: markRaw(Building2) },
+        { path: '/super/contracts', label: t('layout.contracts'), icon: markRaw(FileSpreadsheet) },
         { path: '/super/tournaments', label: t('layout.tournaments'), icon: markRaw(Trophy) },
         { path: '/super/reports', label: t('layout.reports'), icon: markRaw(BarChart3) },
         { path: '/super/notifications', label: t('layout.notifications'), icon: markRaw(Send), badge: dataStore.unreadCount > 0 ? String(dataStore.unreadCount) : null },

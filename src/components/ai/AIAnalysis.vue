@@ -36,10 +36,19 @@
       </div>
     </div>
 
+    <!-- Error State -->
+    <div v-else-if="errorMsg" class="relative py-8 text-center">
+      <AlertTriangle class="w-10 h-10 text-amber-500 mx-auto mb-3" />
+      <p class="text-slate-600">{{ errorMsg }}</p>
+      <button @click="refreshAnalysis" class="mt-3 px-4 py-2 bg-violet-100 text-violet-600 rounded-xl text-sm hover:bg-violet-200 transition-colors">
+        Qayta urinish
+      </button>
+    </div>
+
     <!-- Analysis Content -->
     <div v-else class="relative space-y-6">
-      <!-- Summary Cards -->
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <!-- Summary Cards (metrics) -->
+      <div v-if="metrics.length" class="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div 
           v-for="(metric, index) in metrics"
           :key="index"
@@ -47,25 +56,21 @@
         >
           <div class="flex items-center justify-between mb-2">
             <span class="text-sm text-slate-500">{{ metric.label }}</span>
-            <component :is="metric.icon" :class="['w-5 h-5', metric.color]" />
+            <component :is="getMetricIcon(metric.type)" :class="['w-5 h-5', getMetricColor(metric.type)]" />
           </div>
           <p class="text-2xl font-bold text-slate-800">{{ metric.value }}</p>
-          <div class="mt-2 flex items-center gap-1">
+          <div v-if="metric.trend !== undefined" class="mt-2 flex items-center gap-1">
             <TrendingUp v-if="metric.trend > 0" class="w-4 h-4 text-emerald-500" />
             <TrendingDown v-else class="w-4 h-4 text-rose-500" />
-            <span :class="[
-              'text-sm font-medium',
-              metric.trend > 0 ? 'text-emerald-600' : 'text-rose-600'
-            ]">
+            <span :class="['text-sm font-medium', metric.trend > 0 ? 'text-emerald-600' : 'text-rose-600']">
               {{ Math.abs(metric.trend) }}%
             </span>
-            <span class="text-xs text-slate-400">o'tgan oyga nisbatan</span>
           </div>
         </div>
       </div>
 
       <!-- AI Insights -->
-      <div class="bg-white/60 backdrop-blur-sm rounded-2xl p-5 border border-white/80">
+      <div v-if="insights.length" class="bg-white/60 backdrop-blur-sm rounded-2xl p-5 border border-white/80">
         <div class="flex items-center gap-2 mb-4">
           <Brain class="w-5 h-5 text-violet-500" />
           <h3 class="font-semibold text-slate-800">AI Xulosalari</h3>
@@ -77,28 +82,28 @@
             :key="index"
             class="flex items-start gap-3 p-3 rounded-xl hover:bg-white/50 transition-colors"
           >
-            <div :class="[
-              'flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center',
-              getInsightTypeClass(insight.type)
-            ]">
+            <div :class="['flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center', getInsightTypeClass(insight.type)]">
               <component :is="getInsightIcon(insight.type)" class="w-4 h-4" />
             </div>
             <div>
               <p class="text-sm font-medium text-slate-700">{{ insight.title }}</p>
               <p class="text-sm text-slate-500 mt-0.5">{{ insight.description }}</p>
-              <button 
-                v-if="insight.action"
-                class="mt-2 text-xs font-medium text-violet-600 hover:text-violet-700"
-              >
-                {{ insight.action }} →
-              </button>
             </div>
           </div>
         </div>
       </div>
 
+      <!-- Summary Text -->
+      <div v-if="summaryText" class="bg-white/60 backdrop-blur-sm rounded-2xl p-5 border border-white/80">
+        <div class="flex items-center gap-2 mb-3">
+          <Sparkles class="w-5 h-5 text-violet-500" />
+          <h3 class="font-semibold text-slate-800">Xulosa</h3>
+        </div>
+        <p class="text-slate-600 leading-relaxed">{{ summaryText }}</p>
+      </div>
+
       <!-- Recommendations -->
-      <div class="bg-white/60 backdrop-blur-sm rounded-2xl p-5 border border-white/80">
+      <div v-if="recommendations.length" class="bg-white/60 backdrop-blur-sm rounded-2xl p-5 border border-white/80">
         <div class="flex items-center gap-2 mb-4">
           <Lightbulb class="w-5 h-5 text-amber-500" />
           <h3 class="font-semibold text-slate-800">Tavsiyalar</h3>
@@ -114,8 +119,8 @@
               <span class="text-amber-600 text-sm font-bold">{{ index + 1 }}</span>
             </div>
             <div>
-              <p class="text-sm font-medium text-slate-700">{{ rec.title }}</p>
-              <p class="text-xs text-slate-500 mt-1">{{ rec.description }}</p>
+              <p class="text-sm font-medium text-slate-700">{{ rec.title || rec }}</p>
+              <p v-if="rec.description" class="text-xs text-slate-500 mt-1">{{ rec.description }}</p>
               <div v-if="rec.priority" class="mt-2">
                 <span :class="[
                   'inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium',
@@ -123,7 +128,7 @@
                   rec.priority === 'medium' ? 'bg-orange-100 text-orange-700' :
                   'bg-slate-100 text-slate-600'
                 ]">
-                  {{ rec.priority === 'high' ? 'Muhim' : rec.priority === 'medium' ? 'O\'rta' : 'Past' }}
+                  {{ rec.priority === 'high' ? 'Muhim' : rec.priority === 'medium' ? "O'rta" : 'Past' }}
                 </span>
               </div>
             </div>
@@ -131,8 +136,8 @@
         </div>
       </div>
 
-      <!-- Predictions (if available) -->
-      <div v-if="predictions.length > 0" class="bg-white/60 backdrop-blur-sm rounded-2xl p-5 border border-white/80">
+      <!-- Predictions -->
+      <div v-if="predictions.length" class="bg-white/60 backdrop-blur-sm rounded-2xl p-5 border border-white/80">
         <div class="flex items-center gap-2 mb-4">
           <Activity class="w-5 h-5 text-blue-500" />
           <h3 class="font-semibold text-slate-800">Bashoratlar</h3>
@@ -146,16 +151,16 @@
           >
             <div class="flex items-center gap-3">
               <div class="w-10 h-10 rounded-xl bg-blue-100 flex items-center justify-center">
-                <component :is="pred.icon" class="w-5 h-5 text-blue-600" />
+                <Calendar class="w-5 h-5 text-blue-600" />
               </div>
               <div>
-                <p class="text-sm font-medium text-slate-700">{{ pred.title }}</p>
-                <p class="text-xs text-slate-500">{{ pred.description }}</p>
+                <p class="text-sm font-medium text-slate-700">{{ pred.day || pred.title }}</p>
+                <p class="text-xs text-slate-500">{{ pred.reason || pred.description }}</p>
               </div>
             </div>
             <div class="text-right">
-              <p class="text-lg font-bold text-blue-600">{{ pred.value }}</p>
-              <p class="text-xs text-slate-400">{{ pred.confidence }}% ishonch</p>
+              <p class="text-lg font-bold text-blue-600">{{ pred.predicted_rate || pred.value }}%</p>
+              <p v-if="pred.confidence" class="text-xs text-slate-400">{{ pred.confidence }}% ishonch</p>
             </div>
           </div>
         </div>
@@ -165,240 +170,167 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
 import {
-  Sparkles, RefreshCw, Loader2, TrendingUp, TrendingDown, Brain, Lightbulb,
-  Activity, AlertTriangle, CheckCircle, Info, Clock, Users, BookOpen,
-  Target, Award, BarChart3, Calendar
+    Activity, AlertTriangle,
+    Award,
+    Brain,
+    Calendar,
+    CheckCircle, Info,
+    Lightbulb,
+    Loader2,
+    RefreshCw,
+    Sparkles,
+    TrendingDown,
+    TrendingUp
 } from 'lucide-vue-next'
+import { onMounted, ref } from 'vue'
+import api from '../../services/api'
 
 const props = defineProps({
-  title: {
-    type: String,
-    default: 'Umumiy tahlil'
-  },
+  title: { type: String, default: 'Umumiy tahlil' },
   type: {
     type: String,
-    default: 'student', // student, leader, admin
+    default: 'student',
     validator: (value) => ['student', 'leader', 'admin'].includes(value)
-  }
+  },
+  studentId: { type: Number, default: null },
+  groupId: { type: Number, default: null }
 })
 
 const isLoading = ref(true)
+const errorMsg = ref(null)
 const metrics = ref([])
 const insights = ref([])
 const recommendations = ref([])
 const predictions = ref([])
+const summaryText = ref('')
 
-function loadData() {
+async function loadData() {
   isLoading.value = true
+  errorMsg.value = null
   
-  // Simulate API call
-  setTimeout(() => {
-    if (props.type === 'student') {
-      loadStudentData()
-    } else if (props.type === 'leader') {
-      loadLeaderData()
+  try {
+    if (props.type === 'student' && props.studentId) {
+      await loadStudentData()
+    } else if (props.type === 'leader' && props.groupId) {
+      await loadLeaderData()
+    } else if (props.type === 'admin') {
+      await loadAdminData()
     } else {
-      loadAdminData()
+      // Fallback: dashboard insights
+      await loadAdminData()
     }
+  } catch (e) {
+    console.error('AI Analysis error:', e)
+    errorMsg.value = e?.detail || e?.message || 'AI tahlil qilishda xatolik yuz berdi'
+  } finally {
     isLoading.value = false
-  }, 1500)
+  }
 }
 
-function loadStudentData() {
+async function loadStudentData() {
+  // Parallel: analysis + recommendations + prediction
+  const [analysis, recs, prediction] = await Promise.all([
+    api.aiAnalyzeStudent({ student_id: props.studentId }),
+    api.aiStudentRecommendations(props.studentId).catch(() => null),
+    api.aiPredictAttendance({ student_id: props.studentId, days_ahead: 7 }).catch(() => null)
+  ])
+  
+  summaryText.value = analysis.summary || ''
+  
+  // Risk level as metric
+  const riskMap = { low: 'Past', medium: "O'rta", high: 'Yuqori' }
   metrics.value = [
-    { label: 'Davomat foizi', value: '87%', icon: CheckCircle, color: 'text-emerald-500', trend: 5 },
-    { label: 'O\'rtacha baho', value: '4.2', icon: Award, color: 'text-amber-500', trend: 3 },
-    { label: 'Darslar soni', value: '156', icon: BookOpen, color: 'text-blue-500', trend: 0 }
+    { label: 'Xavf darajasi', value: riskMap[analysis.risk_level] || analysis.risk_level, type: analysis.risk_level === 'low' ? 'attendance' : 'warning' },
+  ]
+  
+  if (analysis.context_data?.attendance) {
+    const att = analysis.context_data.attendance
+    metrics.value.push(
+      { label: 'Davomat', value: att.rate + '%', type: 'attendance', trend: null },
+      { label: 'Kelgan / Jami', value: `${att.present}/${att.total}`, type: 'info' }
+    )
+  }
+  
+  // Strengths & areas as insights
+  insights.value = [
+    ...(analysis.strengths || []).map(s => ({ type: 'positive', title: s, description: '' })),
+    ...(analysis.areas_for_improvement || []).map(s => ({ type: 'warning', title: s, description: '' }))
+  ]
+  
+  // Recommendations
+  if (recs) {
+    recommendations.value = (recs.recommendations || []).map(r => typeof r === 'string' ? { title: r } : r)
+  } else {
+    recommendations.value = (analysis.recommendations || []).map(r => typeof r === 'string' ? { title: r } : r)
+  }
+  
+  // Predictions
+  if (prediction && prediction.predictions) {
+    predictions.value = prediction.predictions
+  }
+}
+
+async function loadLeaderData() {
+  const [groupAnalysis, prediction] = await Promise.all([
+    api.aiAnalyzeGroup({ group_id: props.groupId }),
+    api.aiPredictAttendance({ group_id: props.groupId, days_ahead: 7 }).catch(() => null)
+  ])
+  
+  summaryText.value = groupAnalysis.summary || ''
+  
+  metrics.value = [
+    { label: 'O\'rtacha davomat', value: groupAnalysis.average_attendance + '%', type: 'attendance' },
+    { label: 'Yaxshi talabalar', value: (groupAnalysis.top_performers || []).length, type: 'info' },
+    { label: 'Xavf zonasi', value: (groupAnalysis.at_risk_students || []).length, type: 'warning' }
   ]
   
   insights.value = [
-    {
-      type: 'positive',
-      title: 'Davomat yaxshilandi',
-      description: 'Oxirgi oyda davomatingiz 5% ga oshdi. Davom eting!',
-    },
-    {
-      type: 'warning',
-      title: 'Matematika darslari',
-      description: 'Matematika fanidan 3 ta darsni qoldirgansiz. Bu baholashga ta\'sir qilishi mumkin.',
-      action: 'Jadvalga qarang'
-    },
-    {
-      type: 'info',
-      title: 'Guruh o\'rtachasi bilan taqqoslash',
-      description: 'Sizning davomatingiz guruh o\'rtachasidan 12% yuqori.',
-    }
+    ...(groupAnalysis.trends || []).map(t => ({ type: 'info', title: t, description: '' })),
+    ...(groupAnalysis.top_performers || []).slice(0, 3).map(s => ({ type: 'positive', title: `${s.name}: ${s.rate}%`, description: 'Yaxshi davomat' })),
+    ...(groupAnalysis.at_risk_students || []).slice(0, 3).map(s => ({ type: 'negative', title: `${s.name}: ${s.rate}%`, description: 'Past davomat - diqqat talab qiladi' }))
   ]
   
-  recommendations.value = [
-    {
-      title: 'Matematika darslariga e\'tibor bering',
-      description: 'Qolgan darslarniy qoplash uchun o\'qituvchi bilan gaplashing',
-      priority: 'high'
-    },
-    {
-      title: 'Sport to\'garak',
-      description: 'Faolligingizni oshirish uchun sport to\'garakka yoziling',
-      priority: 'low'
-    }
-  ]
+  recommendations.value = (groupAnalysis.recommendations || []).map(r => typeof r === 'string' ? { title: r } : r)
   
-  predictions.value = [
-    {
-      icon: Target,
-      title: 'Semestr oxirigacha davomat',
-      description: 'Shu tezlikda davom etsangiz',
-      value: '89%',
-      confidence: 85
-    }
-  ]
+  if (prediction && prediction.predictions) {
+    predictions.value = prediction.predictions
+  }
 }
 
-function loadLeaderData() {
-  metrics.value = [
-    { label: 'Guruh davomati', value: '82%', icon: Users, color: 'text-emerald-500', trend: 2 },
-    { label: 'Hisobotlar soni', value: '12', icon: BarChart3, color: 'text-blue-500', trend: 8 },
-    { label: 'Faol talabalar', value: '24/28', icon: Activity, color: 'text-violet-500', trend: 4 }
-  ]
+async function loadAdminData() {
+  const dashInsights = await api.aiDashboardInsights()
   
-  insights.value = [
-    {
-      type: 'positive',
-      title: 'Guruh faolligi yuqori',
-      description: '85% talabalar oxirgi haftada barcha darslarga qatnashdi',
-    },
-    {
-      type: 'warning',
-      title: 'Diqqat talab qiluvchi talabalar',
-      description: '4 ta talabaning davomati 70% dan past. Ular bilan suhbat o\'tkazing.',
-      action: 'Ro\'yxatni ko\'rish'
-    },
-    {
-      type: 'info',
-      title: 'Eng faol kun',
-      description: 'Dushanba kuni eng yuqori davomat kuzatiladi (94%)',
-    },
-    {
-      type: 'negative',
-      title: 'Juma kuni past davomat',
-      description: 'Juma kunlari davomat 15% ga tushadi. Sababini aniqlang.',
-      action: 'Statistikani ko\'rish'
-    }
-  ]
+  summaryText.value = dashInsights.summary || ''
   
-  recommendations.value = [
-    {
-      title: 'Past davomatli talabalar bilan suhbat',
-      description: 'Aliyev J., Karimova N., va 2 ta boshqa talaba bilan gaplashing',
-      priority: 'high'
-    },
-    {
-      title: 'Oylik hisobotni tayyorlang',
-      description: 'Fevral oyi hisoboti 3 kun ichida topshirilishi kerak',
-      priority: 'medium'
-    },
-    {
-      title: 'Guruh yig\'ilishi',
-      description: 'Haftalik guruh yig\'ilishi o\'tkazish tavsiya etiladi',
-      priority: 'low'
-    }
-  ]
+  metrics.value = (dashInsights.metrics || []).map(m => ({
+    label: m.label,
+    value: m.value,
+    type: m.type || 'info',
+    trend: m.trend
+  }))
   
-  predictions.value = [
-    {
-      icon: Users,
-      title: 'Semestr davomati bashorati',
-      description: 'Guruh davomati',
-      value: '84%',
-      confidence: 78
-    },
-    {
-      icon: Award,
-      title: 'A\'lochi talabalar soni',
-      description: 'Semestr oxirida kutilmoqda',
-      value: '8',
-      confidence: 72
-    }
-  ]
-}
-
-function loadAdminData() {
-  metrics.value = [
-    { label: 'Umumiy davomat', value: '79%', icon: Users, color: 'text-emerald-500', trend: -2 },
-    { label: 'Faol guruhlar', value: '45/52', icon: Activity, color: 'text-blue-500', trend: 5 },
-    { label: 'Hisobotlar', value: '156', icon: BarChart3, color: 'text-violet-500', trend: 12 }
-  ]
+  insights.value = (dashInsights.insights || []).map(i => ({
+    type: i.type || 'info',
+    title: i.title,
+    description: i.description
+  }))
   
-  insights.value = [
-    {
-      type: 'positive',
-      title: 'Eng faol fakultet',
-      description: 'Iqtisodiyot fakulteti 91% davomat bilan yetakchilik qilmoqda',
-    },
-    {
-      type: 'negative',
-      title: 'Muammoli guruhlar',
-      description: '7 ta guruhda davomat 65% dan past. Sardorlar bilan suhbat talab etiladi.',
-      action: 'Ro\'yxatni ko\'rish'
-    },
-    {
-      type: 'warning',
-      title: 'Hisobotlar kechikmoqda',
-      description: '12 ta guruh sardori yanvar oyi hisobotini topshirmagan',
-      action: 'Bildirishnoma yuborish'
-    },
-    {
-      type: 'info',
-      title: 'O\'sish tendensiyasi',
-      description: 'Oxirgi 3 oyda umumiy davomat 8% ga oshdi',
-    }
-  ]
-  
-  recommendations.value = [
-    {
-      title: 'Kechikkan hisobotlar',
-      description: '12 ta guruh sardoriga eslatma yuboring',
-      priority: 'high'
-    },
-    {
-      title: 'Past davomatli guruhlar',
-      description: 'Muammoli guruhlar ro\'yxatini ko\'rib chiqing va chora ko\'ring',
-      priority: 'high'
-    },
-    {
-      title: 'Oylik yig\'ilish',
-      description: 'Fakultet sardorlari bilan yig\'ilish o\'tkazing',
-      priority: 'medium'
-    },
-    {
-      title: 'Mukofotlash tizimi',
-      description: 'Eng faol guruhlarni mukofotlash dasturini ko\'rib chiqing',
-      priority: 'low'
-    }
-  ]
-  
-  predictions.value = [
-    {
-      icon: Calendar,
-      title: 'Keyingi oy bashorati',
-      description: 'Kutilayotgan davomat',
-      value: '81%',
-      confidence: 82
-    },
-    {
-      icon: AlertTriangle,
-      title: 'Risk guruhlari',
-      description: 'Past davomatga tushishi mumkin',
-      value: '4',
-      confidence: 68
-    }
-  ]
+  recommendations.value = (dashInsights.recommendations || []).map(r => typeof r === 'string' ? { title: r } : r)
 }
 
 function refreshAnalysis() {
   loadData()
+}
+
+function getMetricIcon(type) {
+  const map = { attendance: CheckCircle, warning: AlertTriangle, info: Info, performance: Award }
+  return map[type] || Info
+}
+
+function getMetricColor(type) {
+  const map = { attendance: 'text-emerald-500', warning: 'text-amber-500', info: 'text-blue-500', performance: 'text-violet-500' }
+  return map[type] || 'text-blue-500'
 }
 
 function getInsightTypeClass(type) {
@@ -412,12 +344,7 @@ function getInsightTypeClass(type) {
 }
 
 function getInsightIcon(type) {
-  const icons = {
-    positive: CheckCircle,
-    warning: AlertTriangle,
-    negative: AlertTriangle,
-    info: Info
-  }
+  const icons = { positive: CheckCircle, warning: AlertTriangle, negative: AlertTriangle, info: Info }
   return icons[type] || Info
 }
 

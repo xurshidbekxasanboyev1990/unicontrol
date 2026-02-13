@@ -7,9 +7,11 @@ Author: UniControl Team
 Version: 1.0.0
 """
 
-from typing import Optional
+from datetime import date, timedelta
+from typing import Optional, List
 from decimal import Decimal
 from fastapi import APIRouter, Depends, Query, status
+from sqlalchemy import extract, and_, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import get_db
@@ -24,6 +26,8 @@ from app.schemas.student import (
 )
 from app.core.dependencies import get_current_active_user, require_leader, require_admin
 from app.models.user import User
+from app.models.student import Student
+from app.config import TASHKENT_TZ
 
 router = APIRouter()
 
@@ -221,3 +225,83 @@ async def get_group_students(
     service = StudentService(db)
     students = await service.get_group_students(group_id)
     return [StudentResponse.model_validate(s) for s in students]
+
+
+@router.get("/birthdays/upcoming")
+async def get_upcoming_birthdays(
+    group_id: Optional[int] = Query(None, description="Filter by group"),
+    days: int = Query(7, description="How many days ahead to check"),
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_active_user)
+):
+    """
+    Get students with birthdays today, tomorrow, and upcoming days.
+    Returns students grouped by: today, tomorrow, upcoming.
+    """
+    from datetime import datetime
+    now = datetime.now(TASHKENT_TZ)
+    today = now.date()
+    
+    results = {"today": [], "tomorrow": [], "upcoming": []}
+    
+    # Build base query
+    query = select(Student).where(Student.birth_date.isnot(None))
+    if group_id:
+        query = query.where(Student.group_id == group_id)
+    
+    result = await db.execute(query)
+    students = result.scalars().all()
+    
+    for student in students:
+        if not student.birth_date:
+            continue
+        
+        bday_this_year = student.birth_date.replace(year=today.year)
+        # Handle leap year edge case
+        try:
+            bday_this_year = student.birth_date.replace(year=today.year)
+        except ValueError:
+            # Feb 29 in non-leap year
+            bday_this_year = date(today.year, 2, 28)
+        
+        delta = (bday_this_year - today).days
+        
+        # If birthday already passed this year, check next year
+        if delta < 0:
+            try:
+                bday_this_year = student.birth_date.replace(year=today.year + 1)
+            except ValueError:
+                bday_this_year = date(today.year + 1, 2, 28)
+            delta = (bday_this_year - today).days
+        
+        if delta > days:
+            continue
+        
+        age = today.year - student.birth_date.year
+        if delta > 0:
+            age = bday_this_year.year - student.birth_date.year
+        
+        student_data = {
+            "id": student.id,
+            "name": student.name or student.full_name or "Ism kiritilmagan",
+            "student_id": student.student_id,
+            "group_id": student.group_id,
+            "birth_date": student.birth_date.isoformat(),
+            "user_id": student.user_id,
+            "age": age,
+            "days_until": delta,
+            "avatar": student.avatar
+        }
+        
+        if delta == 0:
+            results["today"].append(student_data)
+        elif delta == 1:
+            results["tomorrow"].append(student_data)
+        else:
+            student_data["birthday_date"] = bday_this_year.isoformat()
+            results["upcoming"].append(student_data)
+    
+    # Sort upcoming by days_until
+    results["upcoming"].sort(key=lambda x: x["days_until"])
+    
+    return results

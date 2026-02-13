@@ -16,7 +16,7 @@ from app.schemas.subject import (
     SubjectResponse,
     SubjectListResponse,
 )
-from app.core.dependencies import get_current_active_user
+from app.core.dependencies import get_current_active_user, require_admin
 
 router = APIRouter()
 
@@ -58,7 +58,7 @@ async def get_subjects(
 async def create_subject(
     data: SubjectCreate,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_active_user)
+    current_user: User = Depends(require_admin)
 ):
     """Yangi fan yaratish"""
     # Check unique code
@@ -92,7 +92,7 @@ async def update_subject(
     subject_id: int,
     data: SubjectUpdate,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_active_user)
+    current_user: User = Depends(require_admin)
 ):
     """Fanni yangilash"""
     result = await db.execute(select(Subject).where(Subject.id == subject_id))
@@ -118,7 +118,7 @@ async def update_subject(
 async def delete_subject(
     subject_id: int,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_active_user)
+    current_user: User = Depends(require_admin)
 ):
     """Fanni o'chirish"""
     result = await db.execute(select(Subject).where(Subject.id == subject_id))

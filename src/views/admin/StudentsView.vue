@@ -45,15 +45,15 @@
     <!-- Students Table -->
     <div v-else class="bg-white rounded-2xl border border-slate-200 overflow-hidden">
       <div class="overflow-x-auto">
-        <table class="w-full">
+        <table class="w-full min-w-[700px]">
           <thead>
             <tr class="border-b border-slate-100 bg-slate-50">
-              <th class="text-left p-4 font-semibold text-slate-600">{{ $t('students.student') }}</th>
-              <th class="text-left p-4 font-semibold text-slate-600">ID</th>
-              <th class="text-left p-4 font-semibold text-slate-600">{{ $t('students.group') }}</th>
-              <th class="text-left p-4 font-semibold text-slate-600">{{ $t('common.phone') }}</th>
-              <th class="text-left p-4 font-semibold text-slate-600">{{ $t('students.contract') }}</th>
-              <th class="text-right p-4 font-semibold text-slate-600">{{ $t('common.actions') }}</th>
+              <th class="text-left p-3 sm:p-4 font-semibold text-slate-600 whitespace-nowrap">{{ $t('students.student') }}</th>
+              <th class="text-left p-3 sm:p-4 font-semibold text-slate-600 whitespace-nowrap">ID</th>
+              <th class="text-left p-3 sm:p-4 font-semibold text-slate-600 whitespace-nowrap">{{ $t('students.group') }}</th>
+              <th class="text-left p-3 sm:p-4 font-semibold text-slate-600 whitespace-nowrap">{{ $t('common.phone') }}</th>
+              <th class="text-left p-3 sm:p-4 font-semibold text-slate-600 whitespace-nowrap">{{ $t('students.contract') }}</th>
+              <th class="text-right p-3 sm:p-4 font-semibold text-slate-600 whitespace-nowrap">{{ $t('common.actions') }}</th>
             </tr>
           </thead>
           <tbody class="divide-y divide-slate-100">
@@ -108,7 +108,7 @@
       </div>
 
       <!-- Pagination -->
-      <div v-if="totalPages > 1 && !searchQuery" class="p-4 border-t border-slate-100 flex items-center justify-between">
+      <div v-if="totalPages > 1 && !searchQuery" class="p-3 sm:p-4 border-t border-slate-100 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
         <div class="text-sm text-slate-500">
           {{ (currentPage - 1) * pageSize + 1 }} - {{ Math.min(currentPage * pageSize, totalItems) }} / {{ totalItems }}
         </div>
@@ -294,16 +294,16 @@
 
 <script setup>
 import {
-  AlertTriangle,
-  ChevronLeft,
-  ChevronRight,
-  Loader2,
-  Pencil,
-  Search,
-  Trash2,
-  UserPlus,
-  UserX,
-  X
+    AlertTriangle,
+    ChevronLeft,
+    ChevronRight,
+    Loader2,
+    Pencil,
+    Search,
+    Trash2,
+    UserPlus,
+    UserX,
+    X
 } from 'lucide-vue-next'
 import { computed, onMounted, reactive, ref, watch } from 'vue'
 import api from '../../services/api'

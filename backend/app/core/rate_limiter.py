@@ -23,9 +23,14 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
     """
 
     async def dispatch(self, request: Request, call_next) -> Response:
-        # Skip rate limiting for health checks and docs
+        # Skip rate limiting for health checks, docs, and heavy upload endpoints
         path = request.url.path
         if path in ("/health", "/docs", "/redoc", "/openapi.json"):
+            return await call_next(request)
+        
+        # Skip rate limiting for file upload/export endpoints (they are slow by nature)
+        skip_paths = ("/api/v1/contracts/import", "/api/v1/contracts/export")
+        if any(path.startswith(sp) for sp in skip_paths):
             return await call_next(request)
 
         client_ip = request.client.host if request.client else "unknown"

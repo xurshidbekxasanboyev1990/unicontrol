@@ -50,15 +50,18 @@ def _build_response(report) -> ReportResponse:
     # Safe access to relationships (may not be loaded in async context)
     try:
         group_name = report.group.name if report.group else None
-    except Exception:
+    except Exception as e:
+        logger.debug(f"Could not access report.group: {e}")
         group_name = None
     try:
         created_by_name = report.created_by_user.full_name if report.created_by_user else None
-    except Exception:
+    except Exception as e:
+        logger.debug(f"Could not access report.created_by_user: {e}")
         created_by_name = None
     try:
         approved_by_name = report.approved_by_user.full_name if report.approved_by_user else None
-    except Exception:
+    except Exception as e:
+        logger.debug(f"Could not access report.approved_by_user: {e}")
         approved_by_name = None
 
     data = {
@@ -251,6 +254,39 @@ async def generate_report(
 
 
 # ──────────────────────────────────────────────
+# STATISTICS (must be before /{report_id} to avoid route shadowing)
+# ──────────────────────────────────────────────
+@router.get("/stats/summary")
+async def get_report_stats(
+    start_date: Optional[date] = None,
+    end_date: Optional[date] = None,
+    group_id: Optional[int] = None,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(require_leader),
+):
+    """
+    Get report statistics.
+    
+    - Leader: own group stats only
+    - Admin: faculty-wide stats (with optional group filter)
+    - Superadmin: system-wide stats
+    """
+    service = ReportService(db)
+
+    # Leader faqat o'z guruhi statistikasini ko'radi
+    if current_user.role == UserRole.LEADER:
+        stats = await service.get_report_stats(
+            start_date, end_date, created_by=current_user.id
+        )
+    else:
+        stats = await service.get_report_stats(
+            start_date, end_date, group_id=group_id
+        )
+
+    return stats
+
+
+# ──────────────────────────────────────────────
 # REPORT TYPES (available for current role)
 # ──────────────────────────────────────────────
 @router.get("/types")
@@ -440,11 +476,6 @@ async def approve_report(
     if not report:
         raise NotFoundException("Report not found")
 
-    if report.status not in (ReportStatus.PENDING, ReportStatus.COMPLETED):
-        raise ForbiddenException(
-            "Faqat kutilayotgan yoki tayyor hisobotlarni tasdiqlash mumkin"
-        )
-
     report = await service.update_status(report_id, ReportStatus.APPROVED, current_user.id)
     logger.info(
         f"Report approved: id={report_id} by admin={current_user.id}"
@@ -467,47 +498,8 @@ async def reject_report(
     if not report:
         raise NotFoundException("Report not found")
 
-    if report.status not in (ReportStatus.PENDING, ReportStatus.COMPLETED):
-        raise ForbiddenException(
-            "Faqat kutilayotgan yoki tayyor hisobotlarni rad etish mumkin"
-        )
-
     report = await service.update_status(report_id, ReportStatus.REJECTED, current_user.id, reason)
     logger.info(
         f"Report rejected: id={report_id} reason='{reason}' by admin={current_user.id}"
     )
     return _build_response(report)
-
-
-# ──────────────────────────────────────────────
-# STATISTICS
-# ──────────────────────────────────────────────
-@router.get("/stats/summary")
-async def get_report_stats(
-    start_date: Optional[date] = None,
-    end_date: Optional[date] = None,
-    group_id: Optional[int] = None,
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(require_leader),
-):
-    """
-    Get report statistics.
-    
-    - Leader: own group stats only
-    - Admin: faculty-wide stats (with optional group filter)
-    - Superadmin: system-wide stats
-    """
-    service = ReportService(db)
-
-    # Leader faqat o'z guruhi statistikasini ko'radi
-    if current_user.role == UserRole.LEADER:
-        # Leader's group_id — user modeldan olish (agar mavjud bo'lsa)
-        stats = await service.get_report_stats(
-            start_date, end_date, created_by=current_user.id
-        )
-    else:
-        stats = await service.get_report_stats(
-            start_date, end_date, group_id=group_id
-        )
-
-    return stats

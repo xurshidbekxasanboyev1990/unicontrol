@@ -8,10 +8,10 @@
 
     <template v-else>
       <!-- Header -->
-      <div class="flex items-center justify-between">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
-          <h1 class="text-2xl font-bold text-slate-800">{{ $t('subscription.title') }}</h1>
-          <p class="text-slate-500">{{ $t('subscription.groupSubscription') }}</p>
+          <h1 class="text-xl sm:text-2xl font-bold text-slate-800">{{ $t('subscription.title') }}</h1>
+          <p class="text-sm text-slate-500">{{ $t('subscription.groupSubscription') }}</p>
         </div>
         <div v-if="groupName" class="text-right">
           <p class="text-sm text-slate-500">{{ $t('subscription.group') }}</p>

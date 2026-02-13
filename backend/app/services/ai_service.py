@@ -1,163 +1,731 @@
 """
 UniControl - AI Service
 =======================
-Handles AI analysis using OpenAI API.
+Handles AI analysis using OpenAI API (GPT-4o-mini).
+Full integration: student analysis, group analysis, chat, predictions, etc.
 
 Author: UniControl Team
-Version: 1.0.0
+Version: 2.0.0
 """
 
 import json
-from datetime import datetime, date
+from datetime import datetime, date, timedelta
 from typing import Optional, List, Dict, Any
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, func
+from sqlalchemy import select, func, and_, or_
 from sqlalchemy.orm import joinedload
 import openai
+from loguru import logger
 
-from app.config import settings, now_tashkent
+from app.config import settings, now_tashkent, today_tashkent
 from app.models.student import Student
+from app.models.user import User
+from app.models.group import Group
 from app.models.attendance import Attendance, AttendanceStatus
 from app.models.report import Report, ReportType, ReportStatus
-from app.schemas.report import AIAnalysisRequest, AIAnalysisResponse
-from app.core.exceptions import BadRequestException, ExternalAPIException
+from app.core.exceptions import BadRequestException, ExternalAPIException, NotFoundException
 
 
 class AIService:
-    """AI analysis service using OpenAI."""
+    """AI analysis service using OpenAI GPT-4o-mini."""
     
     def __init__(self, db: AsyncSession):
         self.db = db
-        self.client = openai.AsyncOpenAI(api_key=settings.OPENAI_API_KEY)
+        if settings.OPENAI_API_KEY:
+            self.client = openai.AsyncOpenAI(api_key=settings.OPENAI_API_KEY)
+        else:
+            self.client = None
     
-    async def analyze(
+    def _check_api_key(self):
+        """Ensure API key is configured."""
+        if not self.client:
+            raise BadRequestException("OpenAI API kaliti sozlanmagan. .env faylida OPENAI_API_KEY ni belgilang.")
+    
+    async def _call_openai(
         self,
-        request: AIAnalysisRequest,
-        user_id: int
-    ) -> AIAnalysisResponse:
-        """
-        Perform AI analysis based on request.
+        system_prompt: str,
+        user_prompt: str,
+        max_tokens: int = 2000,
+        temperature: float = 0.7,
+        response_format: str = None
+    ) -> tuple:
+        """Call OpenAI API and return (content, tokens_used)."""
+        self._check_api_key()
         
-        Args:
-            request: Analysis request
-            user_id: User performing the analysis
-            
-        Returns:
-            AI analysis response
-        """
-        start_time = now_tashkent()
-        
-        # Gather context data
-        context_data = await self._gather_context(request)
-        
-        # Build prompt
-        system_prompt = self._build_system_prompt(request.context_type)
-        user_prompt = self._build_user_prompt(request, context_data)
-        
-        # Call OpenAI API
         try:
-            response = await self.client.chat.completions.create(
-                model=settings.OPENAI_MODEL,
-                messages=[
+            kwargs = {
+                "model": settings.OPENAI_MODEL,
+                "messages": [
                     {"role": "system", "content": system_prompt},
                     {"role": "user", "content": user_prompt}
                 ],
-                temperature=0.7,
-                max_tokens=2000,
-            )
+                "temperature": temperature,
+                "max_tokens": max_tokens,
+            }
             
-            result = response.choices[0].message.content
-            tokens_used = response.usage.total_tokens
+            if response_format == "json":
+                kwargs["response_format"] = {"type": "json_object"}
+            
+            response = await self.client.chat.completions.create(**kwargs)
+            
+            content = response.choices[0].message.content
+            tokens = response.usage.total_tokens
+            
+            return content, tokens
             
         except openai.APIError as e:
+            logger.error(f"OpenAI API error: {e}")
             raise ExternalAPIException("OpenAI", str(e))
+        except Exception as e:
+            logger.error(f"OpenAI call failed: {e}")
+            raise ExternalAPIException("OpenAI", f"Kutilmagan xatolik: {str(e)}")
+
+    # =========================================
+    # STUDENT ANALYSIS
+    # =========================================
+    async def analyze_student(
+        self,
+        student_id: int,
+        include_attendance: bool = True,
+        include_grades: bool = True,
+        include_behavior: bool = True
+    ) -> Dict[str, Any]:
+        """Analyze a student's performance using AI."""
         
-        # Parse recommendations if requested
-        recommendations = None
-        if request.include_recommendations:
-            recommendations = self._extract_recommendations(result)
-        
-        # Save to database as report
-        report = Report(
-            name=f"AI Analysis - {request.context_type}",
-            description=request.prompt[:200],
-            report_type=ReportType.AI_ANALYSIS,
-            status=ReportStatus.COMPLETED,
-            created_by=user_id,
-            date_from=request.date_from,
-            date_to=request.date_to,
-            group_id=request.group_id,
-            ai_prompt=request.prompt,
-            ai_result=result,
-            ai_model=settings.OPENAI_MODEL,
-            ai_tokens_used=tokens_used,
-            started_at=start_time,
-            completed_at=now_tashkent(),
+        result = await self.db.execute(
+            select(Student).options(joinedload(Student.group), joinedload(Student.user))
+            .where(Student.id == student_id)
         )
+        student = result.unique().scalar_one_or_none()
+        if not student:
+            raise NotFoundException(f"Talaba #{student_id} topilmadi")
         
-        self.db.add(report)
-        await self.db.commit()
-        await self.db.refresh(report)
-        
-        processing_time = (now_tashkent() - start_time).total_seconds()
-        
-        return AIAnalysisResponse(
-            id=report.id,
-            prompt=request.prompt,
-            result=result,
-            recommendations=recommendations,
-            context_data=context_data,
-            model_used=settings.OPENAI_MODEL,
-            tokens_used=tokens_used,
-            processing_time=processing_time,
-            created_at=report.created_at,
-        )
-    
-    async def _gather_context(self, request: AIAnalysisRequest) -> Dict[str, Any]:
-        """Gather relevant data for context."""
         context = {}
         
-        if request.context_type == "attendance":
-            context = await self._get_attendance_context(
-                request.group_id,
-                request.student_id,
-                request.date_from,
-                request.date_to
+        if include_attendance:
+            date_from = today_tashkent() - timedelta(days=90)
+            att_result = await self.db.execute(
+                select(Attendance)
+                .where(Attendance.student_id == student_id)
+                .where(Attendance.date >= date_from)
+                .order_by(Attendance.date.desc())
             )
-        elif request.context_type == "payment":
-            context = await self._get_payment_context(
-                request.group_id,
-                request.student_id
-            )
-        elif request.context_type == "performance":
-            context = await self._get_performance_context(
-                request.group_id,
-                request.student_id,
-                request.date_from,
-                request.date_to
-            )
+            attendances = att_result.scalars().all()
+            
+            total = len(attendances)
+            present = sum(1 for a in attendances if a.status == AttendanceStatus.PRESENT)
+            absent = sum(1 for a in attendances if a.status == AttendanceStatus.ABSENT)
+            late = sum(1 for a in attendances if a.status == AttendanceStatus.LATE)
+            excused = sum(1 for a in attendances if a.status == AttendanceStatus.EXCUSED)
+            
+            context["attendance"] = {
+                "total": total,
+                "present": present,
+                "absent": absent,
+                "late": late,
+                "excused": excused,
+                "rate": round(present / total * 100, 1) if total > 0 else 0,
+                "period_days": 90
+            }
         
-        return context
-    
-    async def _get_attendance_context(
+        student_name = student.user.name if student.user else f"Student #{student_id}"
+        group_name = student.group.name if student.group else "N/A"
+        
+        context["student"] = {
+            "name": student_name,
+            "group": group_name,
+            "is_active": student.is_active,
+        }
+        
+        system_prompt = """Sen UniControl o'quv markazi boshqaruv tizimining AI tahlilchisisiz.
+Talaba haqida berilgan ma'lumotlarni tahlil qilib, JSON formatda javob ber.
+
+JSON format:
+{
+    "summary": "Talaba haqida umumiy xulosa (2-3 gap)",
+    "strengths": ["Kuchli tomon 1", "Kuchli tomon 2"],
+    "areas_for_improvement": ["Yaxshilash kerak 1", "Yaxshilash kerak 2"],
+    "recommendations": ["Tavsiya 1", "Tavsiya 2", "Tavsiya 3"],
+    "risk_level": "low|medium|high",
+    "predicted_performance": "Bashorat matni"
+}
+
+O'zbek tilida javob ber. Aniq va foydali tavsiyalar ber."""
+
+        user_prompt = f"""Talaba tahlili:
+
+Talaba: {student_name}
+Guruh: {group_name}
+
+Ma'lumotlar:
+{json.dumps(context, indent=2, ensure_ascii=False)}
+
+Bu talabani tahlil qilib, JSON formatda natija ber."""
+
+        content, tokens = await self._call_openai(
+            system_prompt, user_prompt,
+            max_tokens=1500, temperature=0.6,
+            response_format="json"
+        )
+        
+        try:
+            result_data = json.loads(content)
+        except json.JSONDecodeError:
+            result_data = {
+                "summary": content,
+                "strengths": [],
+                "areas_for_improvement": [],
+                "recommendations": [],
+                "risk_level": "medium",
+                "predicted_performance": None
+            }
+        
+        return {
+            "student_id": student_id,
+            "summary": result_data.get("summary", ""),
+            "strengths": result_data.get("strengths", []),
+            "areas_for_improvement": result_data.get("areas_for_improvement", []),
+            "recommendations": result_data.get("recommendations", []),
+            "risk_level": result_data.get("risk_level", "medium"),
+            "predicted_performance": result_data.get("predicted_performance"),
+            "tokens_used": tokens,
+            "context_data": context
+        }
+
+    # =========================================
+    # GROUP ANALYSIS
+    # =========================================
+    async def analyze_group(
         self,
-        group_id: Optional[int],
-        student_id: Optional[int],
-        date_from: Optional[date],
-        date_to: Optional[date]
+        group_id: int,
+        semester: Optional[int] = None,
+        include_attendance: bool = True,
+        include_performance: bool = True
     ) -> Dict[str, Any]:
-        """Get attendance context data."""
-        query = select(Attendance)
+        """Analyze a group's performance using AI."""
+        
+        group_result = await self.db.execute(
+            select(Group).where(Group.id == group_id)
+        )
+        group = group_result.scalar_one_or_none()
+        if not group:
+            raise NotFoundException(f"Guruh #{group_id} topilmadi")
+        
+        students_result = await self.db.execute(
+            select(Student).options(joinedload(Student.user))
+            .where(Student.group_id == group_id)
+        )
+        students = students_result.unique().scalars().all()
+        
+        context = {
+            "group": {"name": group.name, "total_students": len(students)},
+        }
+        
+        if include_attendance:
+            date_from = today_tashkent() - timedelta(days=30)
+            top_performers = []
+            at_risk = []
+            total_rate = 0
+            
+            for s in students:
+                att_result = await self.db.execute(
+                    select(Attendance)
+                    .where(Attendance.student_id == s.id)
+                    .where(Attendance.date >= date_from)
+                )
+                atts = att_result.scalars().all()
+                total = len(atts)
+                present = sum(1 for a in atts if a.status == AttendanceStatus.PRESENT)
+                rate = round(present / total * 100, 1) if total > 0 else 0
+                total_rate += rate
+                
+                name = s.user.name if s.user else f"#{s.id}"
+                student_info = {"name": name, "rate": rate}
+                
+                if rate >= 90:
+                    top_performers.append(student_info)
+                if rate < 70:
+                    at_risk.append(student_info)
+            
+            avg_rate = round(total_rate / len(students), 1) if students else 0
+            context["average_attendance"] = avg_rate
+            context["top_performers"] = sorted(top_performers, key=lambda x: x["rate"], reverse=True)[:5]
+            context["at_risk_students"] = sorted(at_risk, key=lambda x: x["rate"])[:5]
+        
+        system_prompt = """Sen UniControl o'quv markazi boshqaruv tizimining AI tahlilchisisiz.
+Guruh haqida berilgan ma'lumotlarni tahlil qilib, JSON formatda javob ber.
+
+JSON format:
+{
+    "summary": "Guruh haqida umumiy xulosa (2-3 gap)",
+    "average_attendance": 85.5,
+    "top_performers": [{"name": "Ism", "rate": 95.0}],
+    "at_risk_students": [{"name": "Ism", "rate": 55.0}],
+    "trends": ["Trend 1", "Trend 2"],
+    "recommendations": ["Tavsiya 1", "Tavsiya 2"]
+}
+
+O'zbek tilida javob ber."""
+
+        user_prompt = f"""Guruh tahlili:
+
+Guruh: {group.name}
+Talabalar soni: {len(students)}
+
+Ma'lumotlar:
+{json.dumps(context, indent=2, ensure_ascii=False)}
+
+Bu guruhni tahlil qilib, JSON formatda natija ber."""
+
+        content, tokens = await self._call_openai(
+            system_prompt, user_prompt,
+            max_tokens=1500, temperature=0.6,
+            response_format="json"
+        )
+        
+        try:
+            result_data = json.loads(content)
+        except json.JSONDecodeError:
+            result_data = {
+                "summary": content,
+                "average_attendance": context.get("average_attendance", 0),
+                "top_performers": context.get("top_performers", []),
+                "at_risk_students": context.get("at_risk_students", []),
+                "trends": [],
+                "recommendations": []
+            }
+        
+        return {
+            "group_id": group_id,
+            "summary": result_data.get("summary", ""),
+            "average_attendance": result_data.get("average_attendance", 0),
+            "top_performers": result_data.get("top_performers", []),
+            "at_risk_students": result_data.get("at_risk_students", []),
+            "trends": result_data.get("trends", []),
+            "recommendations": result_data.get("recommendations", []),
+            "tokens_used": tokens
+        }
+
+    # =========================================
+    # ATTENDANCE PREDICTION
+    # =========================================
+    async def predict_attendance(
+        self,
+        student_id: Optional[int] = None,
+        group_id: Optional[int] = None,
+        days_ahead: int = 7
+    ) -> Dict[str, Any]:
+        """Predict attendance patterns using AI."""
+        
+        date_from = today_tashkent() - timedelta(days=60)
+        query = select(Attendance).where(Attendance.date >= date_from)
         
         if student_id:
             query = query.where(Attendance.student_id == student_id)
         elif group_id:
             query = query.join(Student).where(Student.group_id == group_id)
         
-        if date_from:
-            query = query.where(Attendance.date >= date_from)
-        if date_to:
-            query = query.where(Attendance.date <= date_to)
+        result = await self.db.execute(query.order_by(Attendance.date))
+        attendances = result.scalars().all()
+        
+        total = len(attendances)
+        present = sum(1 for a in attendances if a.status == AttendanceStatus.PRESENT)
+        absent = sum(1 for a in attendances if a.status == AttendanceStatus.ABSENT)
+        late = sum(1 for a in attendances if a.status == AttendanceStatus.LATE)
+        
+        current_rate = round(present / total * 100, 1) if total > 0 else 0
+        
+        weekly = {}
+        for a in attendances:
+            week_day = a.date.strftime("%A")
+            if week_day not in weekly:
+                weekly[week_day] = {"total": 0, "present": 0}
+            weekly[week_day]["total"] += 1
+            if a.status == AttendanceStatus.PRESENT:
+                weekly[week_day]["present"] += 1
+        
+        weekly_rates = {}
+        for day, data in weekly.items():
+            weekly_rates[day] = round(data["present"] / data["total"] * 100, 1) if data["total"] > 0 else 0
+        
+        system_prompt = """Sen davomat bashorat qiluvchi AI tizimisiz. Berilgan tarixiy ma'lumotlardan foydalanib bashorat qil.
+
+JSON format:
+{
+    "predictions": [{"day": "Dushanba", "predicted_rate": 85, "reason": "Sabab"}],
+    "confidence": 75,
+    "factors": ["Omil 1", "Omil 2"],
+    "overall_prediction": "Umumiy bashorat matni"
+}
+
+O'zbek tilida javob ber."""
+
+        user_prompt = f"""Davomat bashorati:
+
+Hozirgi davomat: {current_rate}%
+Tarixiy ma'lumotlar (60 kun): {total} yozuv
+Kelgan: {present}, Kelmagan: {absent}, Kechikkan: {late}
+Hafta kunlari bo'yicha: {json.dumps(weekly_rates, ensure_ascii=False)}
+
+{days_ahead} kun oldinga bashorat qil. JSON formatda javob ber."""
+
+        content, tokens = await self._call_openai(
+            system_prompt, user_prompt,
+            max_tokens=1000, temperature=0.5,
+            response_format="json"
+        )
+        
+        try:
+            result_data = json.loads(content)
+        except json.JSONDecodeError:
+            result_data = {
+                "predictions": [],
+                "confidence": 50,
+                "factors": ["Ma'lumot yetarli emas"],
+                "overall_prediction": content
+            }
+        
+        return {
+            "predictions": result_data.get("predictions", []),
+            "confidence": result_data.get("confidence", 50),
+            "factors": result_data.get("factors", []),
+            "overall_prediction": result_data.get("overall_prediction", ""),
+            "tokens_used": tokens
+        }
+
+    # =========================================
+    # AI CHAT
+    # =========================================
+    async def chat(
+        self,
+        message: str,
+        context: Optional[str] = None,
+        conversation_history: Optional[List[Dict]] = None,
+        user_role: str = "student"
+    ) -> Dict[str, Any]:
+        """Chat with AI assistant."""
+        
+        self._check_api_key()
+        
+        role_desc = {
+            "student": "talaba",
+            "leader": "guruh sardori",
+            "admin": "administrator",
+            "superadmin": "bosh administrator"
+        }
+        
+        system_prompt = f"""Sen UniControl o'quv markazi boshqaruv tizimining AI yordamchisisiz.
+Foydalanuvchi roli: {role_desc.get(user_role, user_role)}
+
+Vazifalaring:
+- O'quv markazi bilan bog'liq savollarga javob berish
+- Davomat, o'qish, guruh boshqaruvi haqida maslahat berish
+- Talabalar va o'qituvchilarga yordam berish
+- O'zbek tilida samimiy va professional javob berish
+- Qisqa va aniq javob berish (5-6 gap)
+
+Agar savol o'quv markazi bilan bog'liq bo'lmasa, muloyimlik bilan buni ayt.
+Har javob oxirida 2-3 ta tegishli qo'shimcha savol taklif qil."""
+
+        messages = [{"role": "system", "content": system_prompt}]
+        
+        if context:
+            messages.append({"role": "user", "content": f"Kontekst: {context}"})
+            messages.append({"role": "assistant", "content": "Tushundim, shu kontekstda yordam beraman."})
+        
+        if conversation_history:
+            for msg in conversation_history[-6:]:
+                messages.append({
+                    "role": msg.get("role", "user"),
+                    "content": msg.get("content", "")
+                })
+        
+        messages.append({"role": "user", "content": message})
+        
+        try:
+            response = await self.client.chat.completions.create(
+                model=settings.OPENAI_MODEL,
+                messages=messages,
+                temperature=0.7,
+                max_tokens=1000,
+            )
+            
+            reply = response.choices[0].message.content
+            tokens = response.usage.total_tokens
+            
+        except openai.APIError as e:
+            raise ExternalAPIException("OpenAI", str(e))
+        
+        suggestions = []
+        lines = reply.split("\n")
+        for line in lines:
+            line = line.strip()
+            if line.startswith("- ") or line.startswith("• ") or (len(line) > 3 and line[0].isdigit() and line[1] in '.):'):
+                clean = line.lstrip("0123456789.-•) ").strip()
+                if clean and "?" in clean:
+                    suggestions.append(clean)
+        
+        return {
+            "response": reply,
+            "suggestions": suggestions[:5],
+            "tokens_used": tokens
+        }
+
+    # =========================================
+    # REPORT SUMMARY
+    # =========================================
+    async def summarize_report(
+        self,
+        report_id: int,
+        language: str = "uz"
+    ) -> Dict[str, Any]:
+        """Summarize a report using AI."""
+        
+        result = await self.db.execute(
+            select(Report).where(Report.id == report_id)
+        )
+        report = result.scalar_one_or_none()
+        if not report:
+            raise NotFoundException(f"Hisobot #{report_id} topilmadi")
+        
+        lang_map = {"uz": "O'zbek", "ru": "Rus", "en": "Ingliz"}
+        lang_name = lang_map.get(language, "O'zbek")
+        
+        system_prompt = f"""Sen hisobotlarni xulosa qiluvchi AI yordamchisisiz.
+{lang_name} tilida javob ber.
+
+JSON format:
+{{
+    "summary": "Qisqa xulosa (2-3 gap)",
+    "key_points": ["Asosiy nuqta 1", "Asosiy nuqta 2"],
+    "action_items": ["Qilish kerak 1", "Qilish kerak 2"]
+}}"""
+
+        user_prompt = f"""Hisobot:
+Nomi: {report.name}
+Turi: {report.report_type.value if report.report_type else 'umumiy'}
+Tavsif: {report.description or 'Tavsif yoq'}
+Sana: {report.date_from} - {report.date_to}
+Status: {report.status.value if report.status else 'nomalum'}
+
+Xulosa qil. JSON formatda javob ber."""
+
+        content, tokens = await self._call_openai(
+            system_prompt, user_prompt,
+            max_tokens=800, temperature=0.5,
+            response_format="json"
+        )
+        
+        try:
+            result_data = json.loads(content)
+        except json.JSONDecodeError:
+            result_data = {"summary": content, "key_points": [], "action_items": []}
+        
+        return {
+            "summary": result_data.get("summary", ""),
+            "key_points": result_data.get("key_points", []),
+            "action_items": result_data.get("action_items", []),
+            "tokens_used": tokens
+        }
+
+    # =========================================
+    # DASHBOARD INSIGHTS
+    # =========================================
+    async def get_dashboard_insights(
+        self,
+        user_id: int,
+        user_role: str
+    ) -> Dict[str, Any]:
+        """Get AI-generated insights for dashboard."""
+        
+        today = today_tashkent()
+        date_30 = today - timedelta(days=30)
+        
+        total_students_r = await self.db.execute(
+            select(func.count(Student.id)).where(Student.is_active == True)
+        )
+        total_students = total_students_r.scalar() or 0
+        
+        att_result = await self.db.execute(
+            select(Attendance).where(Attendance.date >= date_30)
+        )
+        attendances = att_result.scalars().all()
+        total_att = len(attendances)
+        present_att = sum(1 for a in attendances if a.status == AttendanceStatus.PRESENT)
+        overall_rate = round(present_att / total_att * 100, 1) if total_att > 0 else 0
+        
+        groups_r = await self.db.execute(select(func.count(Group.id)))
+        total_groups = groups_r.scalar() or 0
+        
+        context = {
+            "total_students": total_students,
+            "total_groups": total_groups,
+            "overall_attendance_rate": overall_rate,
+            "total_attendance_records": total_att,
+            "date_range": f"{date_30} - {today}",
+            "user_role": user_role
+        }
+        
+        system_prompt = """Sen UniControl dashboard uchun insight generatsiya qiluvchi AI siz.
+Berilgan statistikadan foydali xulosalar chiqar.
+
+JSON format:
+{
+    "insights": [
+        {"type": "positive", "title": "Sarlavha", "description": "Tavsif", "action": null}
+    ],
+    "metrics": [
+        {"label": "Metrika nomi", "value": "85%", "trend": 5, "type": "attendance"}
+    ],
+    "recommendations": [
+        {"title": "Tavsiya", "description": "Batafsil", "priority": "high"}
+    ],
+    "summary": "Umumiy holat"
+}
+
+type qiymatlari: positive, warning, negative, info
+priority: high, medium, low
+O'zbek tilida, qisqa javob ber."""
+
+        user_prompt = f"""Dashboard insight:
+
+{json.dumps(context, indent=2, ensure_ascii=False)}
+
+JSON formatda insight va tavsiyalar ber."""
+
+        content, tokens = await self._call_openai(
+            system_prompt, user_prompt,
+            max_tokens=1500, temperature=0.6,
+            response_format="json"
+        )
+        
+        try:
+            result_data = json.loads(content)
+        except json.JSONDecodeError:
+            result_data = {
+                "insights": [{"type": "info", "title": "Tahlil", "description": content}],
+                "metrics": [],
+                "recommendations": [],
+                "summary": content
+            }
+        
+        result_data["tokens_used"] = tokens
+        result_data["generated_at"] = now_tashkent().isoformat()
+        return result_data
+
+    # =========================================
+    # STUDENT RECOMMENDATIONS
+    # =========================================
+    async def get_recommendations(self, student_id: int) -> Dict[str, Any]:
+        """Get AI recommendations for a student."""
+        
+        result = await self.db.execute(
+            select(Student).options(joinedload(Student.user), joinedload(Student.group))
+            .where(Student.id == student_id)
+        )
+        student = result.unique().scalar_one_or_none()
+        if not student:
+            raise NotFoundException(f"Talaba #{student_id} topilmadi")
+        
+        date_from = today_tashkent() - timedelta(days=30)
+        att_result = await self.db.execute(
+            select(Attendance)
+            .where(Attendance.student_id == student_id)
+            .where(Attendance.date >= date_from)
+        )
+        attendances = att_result.scalars().all()
+        total = len(attendances)
+        present = sum(1 for a in attendances if a.status == AttendanceStatus.PRESENT)
+        absent = sum(1 for a in attendances if a.status == AttendanceStatus.ABSENT)
+        rate = round(present / total * 100, 1) if total > 0 else 0
+        
+        student_name = student.user.name if student.user else f"#{student_id}"
+        
+        system_prompt = """Sen talabaga shaxsiy tavsiyalar beruvchi AI yordamchisiz.
+
+JSON format:
+{
+    "recommendations": [
+        {"title": "Tavsiya", "description": "Batafsil", "priority": "high", "category": "attendance"}
+    ],
+    "motivation": "Motivatsion matn",
+    "goals": ["Maqsad 1", "Maqsad 2"]
+}
+
+category: attendance, study, social, health
+O'zbek tilida, samimiy va motivatsion tarzda javob ber."""
+
+        user_prompt = f"""Talaba: {student_name}
+Guruh: {student.group.name if student.group else 'N/A'}
+Oxirgi 30 kun davomati: {rate}% ({present}/{total} kelgan, {absent} kelmagan)
+
+Shaxsiy tavsiyalar ber. JSON formatda."""
+
+        content, tokens = await self._call_openai(
+            system_prompt, user_prompt,
+            max_tokens=1000, temperature=0.7,
+            response_format="json"
+        )
+        
+        try:
+            result_data = json.loads(content)
+        except json.JSONDecodeError:
+            result_data = {
+                "recommendations": [{"title": "Davomatni yaxshilang", "description": content, "priority": "medium", "category": "attendance"}],
+                "motivation": "", "goals": []
+            }
+        
+        result_data["student_id"] = student_id
+        result_data["current_rate"] = rate
+        result_data["tokens_used"] = tokens
+        return result_data
+
+    # =========================================
+    # GENERATE NOTIFICATION TEXT
+    # =========================================
+    async def generate_notification_text(self, context: str, tone: str = "formal") -> Dict[str, Any]:
+        """Generate notification text using AI."""
+        
+        tone_map = {"formal": "Rasmiy va professional", "friendly": "Samimiy va do'stona", "urgent": "Tezkor va jiddiy"}
+        tone_desc = tone_map.get(tone, "Rasmiy")
+        
+        system_prompt = f"""Sen xabar matnlarini yozuvchi AI siz.
+Stil: {tone_desc}
+O'zbek tilida yoz. Qisqa va aniq bo'l.
+
+JSON format:
+{{
+    "title": "Xabar sarlavhasi",
+    "message": "Xabar matni",
+    "variants": [{{"title": "Variant 2 sarlavha", "message": "Variant 2 matn"}}]
+}}"""
+
+        user_prompt = f"""Kontekst: {context}\n\n3 xil variant ber. JSON formatda."""
+
+        content, tokens = await self._call_openai(
+            system_prompt, user_prompt,
+            max_tokens=800, temperature=0.8,
+            response_format="json"
+        )
+        
+        try:
+            result_data = json.loads(content)
+        except json.JSONDecodeError:
+            result_data = {"title": "Bildirishnoma", "message": content, "variants": []}
+        
+        result_data["tokens_used"] = tokens
+        return result_data
+
+    # =========================================
+    # QUICK INSIGHTS (no OpenAI - statistics only)
+    # =========================================
+    async def get_quick_insights(self, group_id: Optional[int] = None) -> Dict[str, Any]:
+        """Get quick insights without OpenAI call."""
+        
+        date_from = today_tashkent() - timedelta(days=30)
+        query = select(Attendance).where(Attendance.date >= date_from)
+        if group_id:
+            query = query.join(Student).where(Student.group_id == group_id)
         
         result = await self.db.execute(query)
         attendances = result.scalars().all()
@@ -166,203 +734,52 @@ class AIService:
         present = sum(1 for a in attendances if a.status == AttendanceStatus.PRESENT)
         absent = sum(1 for a in attendances if a.status == AttendanceStatus.ABSENT)
         late = sum(1 for a in attendances if a.status == AttendanceStatus.LATE)
-        excused = sum(1 for a in attendances if a.status == AttendanceStatus.EXCUSED)
-        
-        return {
-            "total_records": total,
-            "present": present,
-            "absent": absent,
-            "late": late,
-            "excused": excused,
-            "attendance_rate": round(present / total * 100, 1) if total > 0 else 0,
-            "absence_rate": round(absent / total * 100, 1) if total > 0 else 0,
-            "late_rate": round(late / total * 100, 1) if total > 0 else 0,
-            "period": f"{date_from or 'start'} - {date_to or 'now'}",
-        }
-    
-    async def _get_payment_context(
-        self,
-        group_id: Optional[int],
-        student_id: Optional[int]
-    ) -> Dict[str, Any]:
-        """Get payment context data."""
-        query = select(Student).where(Student.is_active == True)
-        
-        if student_id:
-            query = query.where(Student.id == student_id)
-        elif group_id:
-            query = query.where(Student.group_id == group_id)
-        
-        result = await self.db.execute(query)
-        students = result.scalars().all()
-        
-        total_contract = sum(float(s.contract_amount) for s in students)
-        total_paid = sum(float(s.contract_paid) for s in students)
-        total_debt = total_contract - total_paid
-        
-        debtors = [s for s in students if not s.is_contract_paid]
-        fully_paid = [s for s in students if s.is_contract_paid]
-        
-        return {
-            "total_students": len(students),
-            "total_contract": total_contract,
-            "total_paid": total_paid,
-            "total_debt": total_debt,
-            "payment_rate": round(total_paid / total_contract * 100, 1) if total_contract > 0 else 0,
-            "debtors_count": len(debtors),
-            "fully_paid_count": len(fully_paid),
-            "average_debt": round(total_debt / len(debtors), 0) if debtors else 0,
-        }
-    
-    async def _get_performance_context(
-        self,
-        group_id: Optional[int],
-        student_id: Optional[int],
-        date_from: Optional[date],
-        date_to: Optional[date]
-    ) -> Dict[str, Any]:
-        """Get combined performance context."""
-        attendance = await self._get_attendance_context(group_id, student_id, date_from, date_to)
-        payment = await self._get_payment_context(group_id, student_id)
-        
-        return {
-            "attendance": attendance,
-            "payment": payment,
-        }
-    
-    def _build_system_prompt(self, context_type: str) -> str:
-        """Build system prompt based on context type."""
-        base_prompt = """Siz UniControl - universitetlar uchun boshqaruv tizimining 
-AI tahlil yordamchisisiz. Sizning vazifangiz:
-1. Berilgan ma'lumotlarni tahlil qilish
-2. Aniq va foydali xulosalar chiqarish
-3. Amaliy tavsiyalar berish
-4. O'zbek tilida javob berish
-
-"""
-        
-        context_prompts = {
-            "attendance": """Siz davomat ma'lumotlarini tahlil qilasiz. 
-E'tibor bering: 
-- Umumiy davomat darajasi
-- Kech qolish tendensiyalari
-- Sababsiz qatnashmaslik
-- Haftalik/oylik o'zgarishlar""",
-            
-            "payment": """Siz to'lov ma'lumotlarini tahlil qilasiz.
-E'tibor bering:
-- To'lov foizi
-- Qarzdorlar soni va ulushi
-- O'rtacha qarz miqdori
-- To'lov tendensiyalari""",
-            
-            "performance": """Siz talabalarning umumiy ko'rsatkichlarini tahlil qilasiz.
-E'tibor bering:
-- Davomat va to'lov o'rtasidagi bog'liqlik
-- Xavf ostidagi talabalar
-- Guruh ko'rsatkichlari
-- Yaxshilanish imkoniyatlari""",
-            
-            "general": """Siz umumiy ma'lumotlarni tahlil qilasiz."""
-        }
-        
-        return base_prompt + context_prompts.get(context_type, context_prompts["general"])
-    
-    def _build_user_prompt(
-        self,
-        request: AIAnalysisRequest,
-        context_data: Dict[str, Any]
-    ) -> str:
-        """Build user prompt with context."""
-        prompt = f"""Foydalanuvchi so'rovi: {request.prompt}
-
-Mavjud ma'lumotlar:
-{json.dumps(context_data, indent=2, ensure_ascii=False)}
-
-Iltimos, yuqoridagi ma'lumotlarni tahlil qiling va so'rovga javob bering.
-"""
-        
-        if request.include_recommendations:
-            prompt += "\n\nTavsiyalar bo'limini ham qo'shing."
-        
-        return prompt
-    
-    def _extract_recommendations(self, result: str) -> List[str]:
-        """Extract recommendations from AI result."""
-        recommendations = []
-        
-        # Try to find numbered recommendations
-        lines = result.split("\n")
-        in_recommendations = False
-        
-        for line in lines:
-            line = line.strip()
-            
-            if any(word in line.lower() for word in ["tavsiya", "recommendation", "maslahat"]):
-                in_recommendations = True
-                continue
-            
-            if in_recommendations and line:
-                # Check if it's a numbered item
-                if line[0].isdigit() or line.startswith("-") or line.startswith("•"):
-                    clean_line = line.lstrip("0123456789.-•) ").strip()
-                    if clean_line:
-                        recommendations.append(clean_line)
-                elif not line[0].isalpha():
-                    continue
-                else:
-                    # End of recommendations section
-                    if len(recommendations) > 0:
-                        break
-        
-        return recommendations[:10]  # Limit to 10 recommendations
-    
-    async def get_quick_insights(
-        self,
-        group_id: Optional[int] = None
-    ) -> Dict[str, Any]:
-        """Get quick AI insights without full analysis."""
-        # Gather basic stats
-        attendance_context = await self._get_attendance_context(
-            group_id, None, None, None
-        )
-        payment_context = await self._get_payment_context(group_id, None)
+        rate = round(present / total * 100, 1) if total > 0 else 0
+        late_rate = round(late / total * 100, 1) if total > 0 else 0
         
         insights = []
+        if rate < 80:
+            insights.append({"type": "warning", "title": "Past davomat", "message": f"Davomat: {rate}%", "recommendation": "Talabalar bilan suhbat o'tkazing"})
+        elif rate >= 90:
+            insights.append({"type": "positive", "title": "A'lo davomat", "message": f"Davomat: {rate}%", "recommendation": "Davom eting!"})
         
-        # Attendance insights
-        if attendance_context["attendance_rate"] < 80:
-            insights.append({
-                "type": "warning",
-                "message": f"Davomat darajasi past: {attendance_context['attendance_rate']}%",
-                "recommendation": "Talabalar bilan individual suhbatlar o'tkazing"
-            })
-        
-        if attendance_context["late_rate"] > 10:
-            insights.append({
-                "type": "info",
-                "message": f"Kech qolish darajasi: {attendance_context['late_rate']}%",
-                "recommendation": "Dars vaqtlari haqida eslatma yuboring"
-            })
-        
-        # Payment insights
-        if payment_context["payment_rate"] < 70:
-            insights.append({
-                "type": "warning",
-                "message": f"To'lov darajasi past: {payment_context['payment_rate']}%",
-                "recommendation": "Qarzdorlarga to'lov eslatmalari yuboring"
-            })
-        
-        if payment_context["debtors_count"] > 0:
-            insights.append({
-                "type": "info",
-                "message": f"Qarzdorlar soni: {payment_context['debtors_count']}",
-                "recommendation": f"O'rtacha qarz: {payment_context['average_debt']:,.0f} so'm"
-            })
+        if late_rate > 10:
+            insights.append({"type": "info", "title": "Kechikishlar", "message": f"Kech qolish: {late_rate}%", "recommendation": "Eslatma yuboring"})
         
         return {
-            "attendance": attendance_context,
-            "payment": payment_context,
+            "attendance": {"total": total, "present": present, "absent": absent, "late": late, "rate": rate, "late_rate": late_rate},
             "insights": insights,
             "generated_at": now_tashkent().isoformat(),
         }
+
+    # =========================================
+    # HEALTH CHECK
+    # =========================================
+    async def health_check(self) -> Dict[str, Any]:
+        """Check AI service health."""
+        status = {
+            "service": "ai",
+            "api_key_configured": bool(settings.OPENAI_API_KEY),
+            "model": settings.OPENAI_MODEL,
+            "status": "unknown"
+        }
+        
+        if not settings.OPENAI_API_KEY:
+            status["status"] = "no_api_key"
+            status["message"] = "OpenAI API kaliti sozlanmagan"
+            return status
+        
+        try:
+            response = await self.client.chat.completions.create(
+                model=settings.OPENAI_MODEL,
+                messages=[{"role": "user", "content": "Salom, 1+1=?"}],
+                max_tokens=10,
+            )
+            status["status"] = "healthy"
+            status["message"] = "OpenAI API ishlayapti"
+            status["test_tokens"] = response.usage.total_tokens
+        except Exception as e:
+            status["status"] = "error"
+            status["message"] = str(e)
+        
+        return status

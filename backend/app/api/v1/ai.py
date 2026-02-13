@@ -8,7 +8,7 @@ Version: 1.0.0
 """
 
 from typing import Optional
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from pydantic import BaseModel, Field
@@ -286,10 +286,15 @@ async def get_student_recommendations(
     return await service.get_recommendations(student_id)
 
 
+class NotificationTextRequest(BaseModel):
+    """Request for notification text generation."""
+    context: str
+    tone: str = "formal"  # formal, friendly, urgent
+
+
 @router.post("/generate/notification-text")
 async def generate_notification_text(
-    context: str = Query(...),
-    tone: str = Query("formal", enum=["formal", "friendly", "urgent"]),
+    request: NotificationTextRequest,
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(require_leader)
 ):
@@ -299,7 +304,7 @@ async def generate_notification_text(
     Requires leader role or higher.
     """
     service = AIService(db)
-    return await service.generate_notification_text(context, tone)
+    return await service.generate_notification_text(request.context, request.tone)
 
 
 @router.get("/health")

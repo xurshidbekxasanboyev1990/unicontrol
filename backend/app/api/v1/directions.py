@@ -18,7 +18,7 @@ from app.schemas.subject import (
     DirectionListResponse,
     DirectionSubjectUpdate,
 )
-from app.core.dependencies import get_current_active_user
+from app.core.dependencies import get_current_active_user, require_admin
 
 router = APIRouter()
 
@@ -63,7 +63,7 @@ async def get_directions(
 async def create_direction(
     data: DirectionCreate,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_active_user)
+    current_user: User = Depends(require_admin)
 ):
     """Yangi yo'nalish yaratish"""
     # Check unique code
@@ -97,7 +97,7 @@ async def update_direction(
     direction_id: int,
     data: DirectionUpdate,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_active_user)
+    current_user: User = Depends(require_admin)
 ):
     """Yo'nalishni yangilash"""
     result = await db.execute(select(Direction).where(Direction.id == direction_id))
@@ -123,7 +123,7 @@ async def update_direction(
 async def delete_direction(
     direction_id: int,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_active_user)
+    current_user: User = Depends(require_admin)
 ):
     """Yo'nalishni o'chirish"""
     result = await db.execute(select(Direction).where(Direction.id == direction_id))
@@ -140,7 +140,7 @@ async def delete_direction(
 async def toggle_direction_status(
     direction_id: int,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_active_user)
+    current_user: User = Depends(require_admin)
 ):
     """Yo'nalish statusini o'zgartirish"""
     result = await db.execute(select(Direction).where(Direction.id == direction_id))
@@ -159,7 +159,7 @@ async def update_direction_subjects(
     direction_id: int,
     data: DirectionSubjectUpdate,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_active_user)
+    current_user: User = Depends(require_admin)
 ):
     """Yo'nalish fanlarini yangilash"""
     result = await db.execute(select(Direction).where(Direction.id == direction_id))

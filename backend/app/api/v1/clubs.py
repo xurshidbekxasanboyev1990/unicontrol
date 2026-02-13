@@ -18,7 +18,7 @@ from app.schemas.club import (
     ClubMemberCreate,
     ClubMemberResponse,
 )
-from app.core.dependencies import get_current_active_user
+from app.core.dependencies import get_current_active_user, require_admin
 
 router = APIRouter()
 
@@ -64,7 +64,7 @@ async def get_clubs(
 async def create_club(
     data: ClubCreate,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_active_user)
+    current_user: User = Depends(require_admin)
 ):
     """Yangi to'garak yaratish"""
     club = Club(**data.model_dump())
@@ -93,7 +93,7 @@ async def update_club(
     club_id: int,
     data: ClubUpdate,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_active_user)
+    current_user: User = Depends(require_admin)
 ):
     """To'garakni yangilash"""
     result = await db.execute(select(Club).where(Club.id == club_id))
@@ -113,7 +113,7 @@ async def update_club(
 async def delete_club(
     club_id: int,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_active_user)
+    current_user: User = Depends(require_admin)
 ):
     """To'garakni o'chirish"""
     result = await db.execute(select(Club).where(Club.id == club_id))
@@ -130,7 +130,7 @@ async def delete_club(
 async def toggle_club_status(
     club_id: int,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_active_user)
+    current_user: User = Depends(require_admin)
 ):
     """To'garak statusini o'zgartirish"""
     result = await db.execute(select(Club).where(Club.id == club_id))

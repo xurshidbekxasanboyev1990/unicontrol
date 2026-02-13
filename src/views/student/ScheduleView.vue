@@ -3,8 +3,8 @@
     <!-- Header -->
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
       <div>
-        <h1 class="text-2xl font-bold text-slate-800">{{ $t('schedule.title') }}</h1>
-        <p class="text-slate-500 mt-1">{{ $t('schedule.weekSchedule') }}</p>
+        <h1 class="text-xl sm:text-2xl font-bold text-slate-800">{{ $t('schedule.title') }}</h1>
+        <p class="text-sm text-slate-500 mt-1">{{ $t('schedule.weekSchedule') }}</p>
       </div>
       <div class="flex items-center gap-2 bg-white rounded-xl p-1 border border-slate-200 shadow-sm">
         <button

@@ -109,6 +109,8 @@ class AIAnalysisRequest(BaseModel):
 
 class AIAnalysisResponse(BaseModel):
     """Schema for AI analysis response."""
+    model_config = {"protected_namespaces": ()}
+    
     id: int
     prompt: str
     result: str

@@ -22,10 +22,10 @@
 
     <template v-else>
     <!-- Header -->
-    <div class="flex items-center justify-between">
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
       <div>
-        <h1 class="text-2xl font-bold text-slate-800">{{ $t('common.help') }}</h1>
-        <p class="text-slate-500">{{ $t('help.faqManageDesc') }}</p>
+        <h1 class="text-xl sm:text-2xl font-bold text-slate-800">{{ $t('common.help') }}</h1>
+        <p class="text-sm text-slate-500">{{ $t('help.faqManageDesc') }}</p>
       </div>
       <button 
         @click="openAddFaqModal"

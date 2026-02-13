@@ -1,58 +1,159 @@
 <template>
   <div class="space-y-6">
-    <!-- Birthday Card (agar ertaga tug'ilgan kun bo'lsa) -->
+    <!-- Birthday Cards (bugungi va ertangi tug'ilgan kunlar) -->
     <div 
-      v-if="tomorrowBirthdays.length > 0"
+      v-if="todayBirthdays.length > 0 || tomorrowBirthdays.length > 0"
       class="relative overflow-hidden rounded-2xl bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 p-6 text-white shadow-lg"
     >
       <div class="absolute -right-6 -top-6 h-32 w-32 rounded-full bg-white/10"></div>
       <div class="absolute -bottom-8 -left-8 h-40 w-40 rounded-full bg-white/10"></div>
       
       <div class="relative">
-        <div class="flex items-center gap-3 mb-4">
-          <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-white/20 backdrop-blur">
-            <Cake :size="24" />
+        <!-- Bugungi tug'ilgan kunlar -->
+        <div v-if="todayBirthdays.length > 0" class="mb-4">
+          <div class="flex items-center gap-3 mb-4">
+            <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-white/20 backdrop-blur">
+              <Cake :size="24" />
+            </div>
+            <div>
+              <h3 class="text-lg font-bold">🎉 {{ $t('dashboard.todayBirthday') }}</h3>
+              <p class="text-sm text-white/80">{{ todayDateFormatted }}</p>
+            </div>
           </div>
-          <div>
-            <h3 class="text-lg font-bold">🎂 {{ $t('dashboard.tomorrowBirthday') }}</h3>
-            <p class="text-sm text-white/80">{{ tomorrowDateFormatted }}</p>
+          
+          <div class="space-y-3">
+            <div 
+              v-for="student in todayBirthdays" 
+              :key="'today-' + student.id"
+              class="flex items-center gap-4 rounded-xl bg-white/15 p-4 backdrop-blur border border-white/20"
+            >
+              <div class="relative flex h-14 w-14 items-center justify-center rounded-xl bg-white/20 text-2xl font-bold">
+                {{ student.name.charAt(0) }}
+                <span class="absolute -top-1 -right-1 text-lg">🎂</span>
+              </div>
+              <div class="flex-1 min-w-0">
+                <p class="font-semibold text-lg truncate">{{ student.name }}</p>
+                <p class="text-sm text-white/80">
+                  {{ formatBirthDate(student.birth_date) }} • {{ student.age }} {{ $t('dashboard.yearsOld') }}
+                </p>
+              </div>
+              <div class="flex flex-row sm:flex-col gap-2 flex-shrink-0">
+                <button 
+                  @click="sendCongratulation(student)"
+                  :disabled="congratsSending[student.id]"
+                  class="flex items-center gap-1.5 rounded-lg bg-white/20 px-2.5 sm:px-3 py-1.5 text-xs font-medium backdrop-blur transition-all hover:bg-white/30 disabled:opacity-50"
+                >
+                  <Gift :size="14" />
+                  <span class="hidden sm:inline">{{ congratsSent[student.id] ? '✓ Yuborildi' : $t('dashboard.congratulate') }}</span>
+                  <span class="sm:hidden">{{ congratsSent[student.id] ? '✓' : '🎉' }}</span>
+                </button>
+                <button 
+                  @click="openMessageModal(student)"
+                  class="flex items-center gap-1.5 rounded-lg bg-white px-2.5 sm:px-3 py-1.5 text-xs font-medium text-purple-600 transition-all hover:bg-white/90"
+                >
+                  <Send :size="14" />
+                  <span class="hidden sm:inline">{{ $t('dashboard.sendMessage') }}</span>
+                  <span class="sm:hidden">✉️</span>
+                </button>
+              </div>
+            </div>
           </div>
         </div>
         
-        <div class="space-y-3">
-          <div 
-            v-for="student in tomorrowBirthdays" 
-            :key="student.id"
-            class="flex items-center gap-4 rounded-xl bg-white/10 p-4 backdrop-blur"
-          >
-            <div class="flex h-14 w-14 items-center justify-center rounded-xl bg-white/20 text-2xl font-bold">
-              {{ student.name.charAt(0) }}
+        <!-- Ertangi tug'ilgan kunlar -->
+        <div v-if="tomorrowBirthdays.length > 0" :class="{ 'mt-6 pt-6 border-t border-white/20': todayBirthdays.length > 0 }">
+          <div class="flex items-center gap-3 mb-4">
+            <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-white/20 backdrop-blur">
+              <Calendar :size="24" />
             </div>
-            <div class="flex-1">
-              <p class="font-semibold text-lg">{{ student.name }}</p>
-              <p class="text-sm text-white/80">
-                {{ student.birthDate }} {{ $t('dashboard.bornInYear') }}
-              </p>
-            </div>
-            <div class="text-right">
-              <p class="text-3xl font-bold">{{ calculateAge(student.birthDate) }}</p>
-              <p class="text-xs text-white/70">{{ $t('dashboard.willTurn') }}</p>
+            <div>
+              <h3 class="text-lg font-bold">🎂 {{ $t('dashboard.tomorrowBirthday') }}</h3>
+              <p class="text-sm text-white/80">{{ tomorrowDateFormatted }}</p>
             </div>
           </div>
-        </div>
-        
-        <div class="mt-4 flex gap-3">
-          <button class="flex items-center gap-2 rounded-xl bg-white/20 px-4 py-2 text-sm font-medium backdrop-blur transition-all hover:bg-white/30">
-            <Gift :size="18" />
-            {{ $t('dashboard.congratulate') }}
-          </button>
-          <button class="flex items-center gap-2 rounded-xl bg-white px-4 py-2 text-sm font-medium text-purple-600 transition-all hover:bg-white/90">
-            <Send :size="18" />
-            {{ $t('dashboard.sendMessage') }}
-          </button>
+          
+          <div class="space-y-3">
+            <div 
+              v-for="student in tomorrowBirthdays" 
+              :key="'tmrw-' + student.id"
+              class="flex items-center gap-4 rounded-xl bg-white/10 p-4 backdrop-blur"
+            >
+              <div class="flex h-14 w-14 items-center justify-center rounded-xl bg-white/20 text-2xl font-bold">
+                {{ student.name.charAt(0) }}
+              </div>
+              <div class="flex-1 min-w-0">
+                <p class="font-semibold text-lg truncate">{{ student.name }}</p>
+                <p class="text-sm text-white/80">
+                  {{ formatBirthDate(student.birth_date) }} • {{ student.age }} {{ $t('dashboard.willTurn') }}
+                </p>
+              </div>
+              <div class="flex flex-col gap-2">
+                <button 
+                  @click="sendCongratulation(student)"
+                  :disabled="congratsSending[student.id]"
+                  class="flex items-center gap-1.5 rounded-lg bg-white/20 px-3 py-1.5 text-xs font-medium backdrop-blur transition-all hover:bg-white/30 disabled:opacity-50"
+                >
+                  <Gift :size="14" />
+                  {{ congratsSent[student.id] ? '✓ Yuborildi' : $t('dashboard.congratulate') }}
+                </button>
+                <button 
+                  @click="openMessageModal(student)"
+                  class="flex items-center gap-1.5 rounded-lg bg-white px-3 py-1.5 text-xs font-medium text-purple-600 transition-all hover:bg-white/90"
+                >
+                  <Send :size="14" />
+                  {{ $t('dashboard.sendMessage') }}
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
+
+    <!-- Birthday Message Modal -->
+    <Teleport to="body">
+      <div 
+        v-if="showMessageModal" 
+        class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm"
+        @click.self="showMessageModal = false"
+      >
+        <div class="mx-4 w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl">
+          <div class="flex items-center gap-3 mb-4">
+            <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-purple-100">
+              <Gift :size="24" class="text-purple-600" />
+            </div>
+            <div>
+              <h3 class="text-lg font-bold text-slate-800">{{ $t('dashboard.sendBirthdayMessage') }}</h3>
+              <p class="text-sm text-slate-500">{{ messageTarget?.name }}</p>
+            </div>
+          </div>
+          
+          <textarea
+            v-model="customMessage"
+            :placeholder="$t('dashboard.birthdayMessagePlaceholder')"
+            class="w-full rounded-xl border border-slate-200 p-3 text-sm text-slate-700 focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-500/20 resize-none"
+            rows="4"
+          ></textarea>
+          
+          <div class="mt-4 flex gap-3 justify-end">
+            <button 
+              @click="showMessageModal = false"
+              class="rounded-xl border border-slate-200 px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50"
+            >
+              {{ $t('common.cancel') }}
+            </button>
+            <button 
+              @click="sendCustomMessage"
+              :disabled="!customMessage.trim() || sendingMessage"
+              class="flex items-center gap-2 rounded-xl bg-purple-600 px-4 py-2 text-sm font-medium text-white hover:bg-purple-700 disabled:opacity-50"
+            >
+              <Send :size="16" />
+              {{ sendingMessage ? 'Yuborilmoqda...' : $t('dashboard.sendMessage') }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </Teleport>
 
     <!-- Header -->
     <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -69,13 +170,13 @@
     </div>
 
     <!-- Stats Row -->
-    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+    <div class="grid grid-cols-1 gap-3 sm:gap-4 sm:grid-cols-2 lg:grid-cols-4">
       <!-- Davomat foizi -->
-      <div class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+      <div class="rounded-xl border border-slate-200 bg-white p-4 sm:p-5 shadow-sm">
         <div class="flex items-start justify-between">
           <div>
             <p class="text-sm text-slate-500">{{ $t('dashboard.attendancePercentage') }}</p>
-            <p class="mt-1 text-3xl font-bold text-slate-800">{{ attendanceRate }}%</p>
+            <p class="mt-1 text-2xl sm:text-3xl font-bold text-slate-800">{{ attendanceRate }}%</p>
             <p class="mt-1 text-xs text-slate-400">{{ $t('dashboard.thisMonth') }}</p>
           </div>
           <div class="rounded-lg bg-green-100 p-2.5">
@@ -259,14 +360,14 @@ import api from '@/services/api'
 import { useAuthStore } from '@/stores/auth'
 import { useDataStore } from '@/stores/data'
 import {
-    BookOpen,
-    Cake,
-    Calendar,
-    CheckCircle,
-    Gift, Send,
-    TrendingUp,
-    Users,
-    XCircle, Zap
+  BookOpen,
+  Cake,
+  Calendar,
+  CheckCircle,
+  Gift, Send,
+  TrendingUp,
+  Users,
+  XCircle, Zap
 } from 'lucide-vue-next'
 import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
@@ -283,6 +384,14 @@ const groupStudentsList = ref([])
 const scheduleList = ref([])
 const attendanceToday = ref([])
 
+// Birthday state
+const birthdayData = ref({ today: [], tomorrow: [], upcoming: [] })
+const congratsSending = ref({})
+const congratsSent = ref({})
+const showMessageModal = ref(false)
+const messageTarget = ref(null)
+const customMessage = ref('')
+const sendingMessage = ref(false)
 // Load dashboard data
 async function loadDashboard() {
   loading.value = true
@@ -364,6 +473,18 @@ async function loadDashboard() {
       } catch (e) {
         console.warn('Could not load today attendance')
       }
+      
+      // Tug'ilgan kunlarni yuklash (API orqali)
+      try {
+        const bdayResp = await api.getUpcomingBirthdays({ group_id: groupId, days: 7 })
+        birthdayData.value = {
+          today: bdayResp.today || [],
+          tomorrow: bdayResp.tomorrow || [],
+          upcoming: bdayResp.upcoming || []
+        }
+      } catch (e) {
+        console.warn('Could not load birthdays:', e.message)
+      }
     }
   } catch (e) {
     console.error('Dashboard load error:', e)
@@ -395,28 +516,15 @@ const currentGroup = computed(() => {
 
 const groupStudents = computed(() => groupStudentsList.value)
 
-// Ertangi tug'ilgan kunlar
-const tomorrowBirthdays = computed(() => {
-  const tomorrow = new Date()
-  tomorrow.setDate(tomorrow.getDate() + 1)
-  const tomorrowDay = tomorrow.getDate()
-  const tomorrowMonth = tomorrow.getMonth() + 1
-  
-  return groupStudents.value.filter(student => {
-    if (!student.birthDate) return false
-    let day, month
-    if (student.birthDate.includes('.')) {
-      const parts = student.birthDate.split('.')
-      day = parseInt(parts[0])
-      month = parseInt(parts[1])
-    } else if (student.birthDate.includes('-')) {
-      const parts = student.birthDate.split('-')
-      month = parseInt(parts[1])
-      day = parseInt(parts[2])
-    } else {
-      return false
-    }
-    return day === tomorrowDay && month === tomorrowMonth
+// Tug'ilgan kunlar (API-dan)
+const todayBirthdays = computed(() => birthdayData.value.today)
+const tomorrowBirthdays = computed(() => birthdayData.value.tomorrow)
+
+const todayDateFormatted = computed(() => {
+  return new Date().toLocaleDateString('uz-UZ', { 
+    day: 'numeric', 
+    month: 'long', 
+    year: 'numeric' 
   })
 })
 
@@ -430,19 +538,67 @@ const tomorrowDateFormatted = computed(() => {
   })
 })
 
-function calculateAge(birthDate) {
-  if (!birthDate) return 0
-  let year
-  if (birthDate.includes('.')) {
-    year = parseInt(birthDate.split('.')[2])
-  } else if (birthDate.includes('-')) {
-    year = parseInt(birthDate.split('-')[0])
-  } else {
-    return 0
+function formatBirthDate(dateStr) {
+  if (!dateStr) return ''
+  try {
+    const d = new Date(dateStr)
+    return d.toLocaleDateString('uz-UZ', { day: 'numeric', month: 'long', year: 'numeric' })
+  } catch {
+    return dateStr
   }
-  const tomorrow = new Date()
-  tomorrow.setDate(tomorrow.getDate() + 1)
-  return tomorrow.getFullYear() - year
+}
+
+// Birthday tabrik yuborish
+async function sendCongratulation(student) {
+  congratsSending.value[student.id] = true
+  try {
+    const message = `🎂🎉 Hurmatli ${student.name}!\n\nTug'ilgan kuningiz muborak bo'lsin! Sizga baxt, sog'lik va muvaffaqiyatlar tilaymiz!\n\nHurmat bilan, ${authStore.user?.name || 'Guruh rahbari'}`
+    
+    await api.createNotification({
+      user_id: student.user_id,
+      title: "🎂 Tug'ilgan kun tabrigi!",
+      message: message,
+      type: 'info',
+      priority: 'high'
+    })
+    
+    congratsSent.value[student.id] = true
+  } catch (e) {
+    console.error('Tabrik yuborishda xatolik:', e)
+    alert('Tabrik yuborishda xatolik: ' + (e.message || 'Noma\'lum xatolik'))
+  } finally {
+    congratsSending.value[student.id] = false
+  }
+}
+
+function openMessageModal(student) {
+  messageTarget.value = student
+  customMessage.value = `Hurmatli ${student.name}!\n\nTug'ilgan kuningiz muborak! 🎂🎉\n\n`
+  showMessageModal.value = true
+}
+
+async function sendCustomMessage() {
+  if (!customMessage.value.trim() || !messageTarget.value) return
+  sendingMessage.value = true
+  try {
+    await api.createNotification({
+      user_id: messageTarget.value.user_id,
+      title: "🎂 Tug'ilgan kun xabari",
+      message: customMessage.value.trim(),
+      type: 'info',
+      priority: 'high'
+    })
+    
+    congratsSent.value[messageTarget.value.id] = true
+    showMessageModal.value = false
+    customMessage.value = ''
+    messageTarget.value = null
+  } catch (e) {
+    console.error('Xabar yuborishda xatolik:', e)
+    alert('Xabar yuborishda xatolik: ' + (e.message || 'Noma\'lum xatolik'))
+  } finally {
+    sendingMessage.value = false
+  }
 }
 
 const todayLessons = computed(() => {

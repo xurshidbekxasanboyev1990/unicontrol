@@ -1124,3 +1124,22 @@ async def callback_admin_close(callback: CallbackQuery):
     """Close admin panel"""
     await callback.message.delete()
     await callback.answer()
+
+
+# ==================== Birthday Test Command ====================
+
+@router.message(Command("birthday_test"))
+async def cmd_birthday_test(message: Message, bot: Bot):
+    """Force send birthday greetings now (admin only)"""
+    if not is_admin(message.from_user.id):
+        await message.answer("⛔️ Sizda admin huquqi yo'q.")
+        return
+    
+    from bot.scheduler.birthday_notifier import BirthdayNotifier
+    
+    await message.answer("🎂 Tug'ilgan kun tabriklarini yuborish boshlandi...")
+    
+    notifier = BirthdayNotifier(bot)
+    await notifier.send_now()
+    
+    await message.answer("✅ Tug'ilgan kun tabriklari yuborildi!")

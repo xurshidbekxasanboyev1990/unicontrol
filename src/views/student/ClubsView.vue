@@ -1,14 +1,14 @@
 <template>
   <div class="space-y-6">
     <!-- Header -->
-    <div class="bg-gradient-to-br from-violet-500 via-purple-500 to-indigo-600 rounded-2xl p-6 text-white">
+    <div class="bg-gradient-to-br from-violet-500 via-purple-500 to-indigo-600 rounded-2xl p-4 sm:p-6 text-white">
       <div class="flex items-center justify-between">
         <div>
-          <h1 class="text-2xl font-bold">{{ $t('clubs.title') }}</h1>
-          <p class="text-violet-100 mt-1">{{ $t('clubs.description') }}</p>
+          <h1 class="text-xl sm:text-2xl font-bold">{{ $t('clubs.title') }}</h1>
+          <p class="text-sm text-violet-100 mt-1">{{ $t('clubs.description') }}</p>
         </div>
-        <div class="w-14 h-14 bg-white/20 backdrop-blur rounded-2xl flex items-center justify-center">
-          <BookOpen class="w-7 h-7" />
+        <div class="w-12 h-12 sm:w-14 sm:h-14 bg-white/20 backdrop-blur rounded-2xl flex items-center justify-center">
+          <BookOpen class="w-6 h-6 sm:w-7 sm:h-7" />
         </div>
       </div>
     </div>
@@ -125,17 +125,17 @@
 
 <script setup>
 import {
-  BookOpen,
-  Calculator,
-  Clock,
-  Code,
-  Dumbbell,
-  Globe,
-  Layers,
-  Lightbulb,
-  MapPin,
-  Palette,
-  Phone
+    BookOpen,
+    Calculator,
+    Clock,
+    Code,
+    Dumbbell,
+    Globe,
+    Layers,
+    Lightbulb,
+    MapPin,
+    Palette,
+    Phone
 } from 'lucide-vue-next'
 import { computed, markRaw, onMounted, ref } from 'vue'
 import { useDataStore } from '../../stores/data'

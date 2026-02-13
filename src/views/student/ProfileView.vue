@@ -1,10 +1,10 @@
 <template>
   <div class="space-y-6">
     <!-- Profile Header -->
-    <div class="bg-gradient-to-r from-emerald-500 to-teal-600 rounded-2xl p-6 text-white">
-      <div class="flex flex-col sm:flex-row items-center gap-6">
+    <div class="bg-gradient-to-r from-emerald-500 to-teal-600 rounded-2xl p-4 sm:p-6 text-white">
+      <div class="flex flex-col sm:flex-row items-center gap-4 sm:gap-6">
         <div class="relative">
-          <div class="w-24 h-24 rounded-2xl bg-white/20 backdrop-blur flex items-center justify-center text-4xl font-bold">
+          <div class="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl bg-white/20 backdrop-blur flex items-center justify-center text-3xl sm:text-4xl font-bold">
             {{ student?.name?.charAt(0) || 'U' }}
           </div>
           <button class="absolute -bottom-2 -right-2 w-8 h-8 bg-white rounded-lg shadow-lg flex items-center justify-center text-emerald-600 hover:bg-emerald-50 transition-colors">
@@ -29,42 +29,75 @@
     <!-- Contract Status -->
     <div class="bg-white rounded-2xl border border-slate-200 p-6">
       <div class="flex items-center justify-between mb-4">
-        <h2 class="text-lg font-semibold text-slate-800">{{ $t('subscription.title') }}</h2>
+        <h2 class="text-lg font-semibold text-slate-800">{{ $t('profile.sectionContract') || 'Kontrakt ma\'lumotlari' }}</h2>
         <span 
           class="px-3 py-1 rounded-lg text-sm font-medium"
-          :class="contractPercent >= 100 ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'"
+          :class="contractPercent >= 100 ? 'bg-emerald-100 text-emerald-700' : contractPercent >= 50 ? 'bg-amber-100 text-amber-700' : 'bg-red-100 text-red-700'"
         >
           {{ contractPercent >= 100 ? $t('profile.fullyPaid') : $t('profile.partiallyPaid') }}
         </span>
       </div>
       
-      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
+      <!-- Main financial cards -->
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
         <div class="text-center p-4 bg-slate-50 rounded-xl">
-          <p class="text-2xl font-bold text-slate-800">{{ formatMoney(contractAmount) }}</p>
-          <p class="text-sm text-slate-500 mt-1">{{ $t('profile.contractLabel') }}</p>
+          <p class="text-xl font-bold text-slate-800">{{ formatContract(contractData?.contract_amount) }}</p>
+          <p class="text-xs text-slate-500 mt-1">{{ $t('profile.contractLabel') || 'Kontrakt summasi' }}</p>
         </div>
         <div class="text-center p-4 bg-emerald-50 rounded-xl">
-          <p class="text-2xl font-bold text-emerald-600">{{ formatMoney(student?.contractPaid || 0) }}</p>
-          <p class="text-sm text-slate-500 mt-1">{{ $t('profile.paidAmount') }}</p>
+          <p class="text-xl font-bold text-emerald-600">{{ formatContract(contractData?.total_paid) }}</p>
+          <p class="text-xs text-slate-500 mt-1">{{ $t('profile.paidAmount') || 'To\'langan' }}</p>
         </div>
         <div class="text-center p-4 bg-rose-50 rounded-xl">
-          <p class="text-2xl font-bold text-rose-600">{{ formatMoney(debt) }}</p>
-          <p class="text-sm text-slate-500 mt-1">{{ $t('profile.remainingAmount') }}</p>
+          <p class="text-xl font-bold text-rose-600">{{ formatContract(Math.abs(contractData?.debt_amount || 0)) }}</p>
+          <p class="text-xs text-slate-500 mt-1">{{ $t('profile.remainingAmount') || 'Qarz' }}</p>
+        </div>
+        <div class="text-center p-4 bg-purple-50 rounded-xl">
+          <p class="text-xl font-bold text-purple-600">{{ contractData?.grant_amount > 0 ? formatContract(contractData.grant_amount) : '—' }}</p>
+          <p class="text-xs text-slate-500 mt-1">Grant</p>
         </div>
       </div>
 
-      <div class="relative">
+      <!-- Progress bar -->
+      <div class="relative mb-4">
         <div class="h-3 bg-slate-100 rounded-full overflow-hidden">
           <div 
-            class="h-full bg-gradient-to-r from-emerald-500 to-teal-500 rounded-full transition-all duration-500"
+            class="h-full rounded-full transition-all duration-500"
+            :class="contractPercent >= 100 ? 'bg-gradient-to-r from-emerald-500 to-teal-500' : contractPercent >= 50 ? 'bg-gradient-to-r from-amber-500 to-orange-500' : 'bg-gradient-to-r from-red-500 to-rose-500'"
             :style="{ width: Math.min(contractPercent, 100) + '%' }"
           ></div>
         </div>
         <div class="flex justify-between mt-2 text-sm">
           <span class="text-slate-500">0%</span>
-          <span class="font-semibold text-emerald-600">{{ contractPercent }}%</span>
+          <span class="font-semibold" :class="contractPercent >= 100 ? 'text-emerald-600' : contractPercent >= 50 ? 'text-amber-600' : 'text-red-600'">{{ contractPercent }}%</span>
           <span class="text-slate-500">100%</span>
         </div>
+      </div>
+
+      <!-- Extra details -->
+      <div v-if="contractData" class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <div class="p-3 bg-slate-50 rounded-xl">
+          <p class="text-xs text-slate-500">{{ $t('profile.course') || 'Kurs' }}</p>
+          <p class="text-sm font-medium text-slate-800">{{ contractData.course || '—' }}</p>
+        </div>
+        <div class="p-3 bg-slate-50 rounded-xl">
+          <p class="text-xs text-slate-500">{{ $t('profile.educationForm') || 'Ta\'lim shakli' }}</p>
+          <p class="text-sm font-medium text-slate-800">{{ contractData.education_form || '—' }}</p>
+        </div>
+        <div class="p-3 bg-slate-50 rounded-xl">
+          <p class="text-xs text-slate-500">{{ $t('profile.direction') || 'Yo\'nalish' }}</p>
+          <p class="text-sm font-medium text-slate-800">{{ contractData.direction || '—' }}</p>
+        </div>
+        <div class="p-3 bg-slate-50 rounded-xl">
+          <p class="text-xs text-slate-500">{{ $t('profile.status') || 'Holat' }}</p>
+          <p class="text-sm font-medium" :class="contractData.student_status?.toLowerCase().includes('o\'qimoqda') ? 'text-emerald-700' : 'text-slate-800'">
+            {{ contractData.student_status || '—' }}
+          </p>
+        </div>
+      </div>
+      
+      <div v-if="!contractData && !loading" class="text-center py-4 text-slate-400 text-sm">
+        Kontrakt ma'lumotlari hali yuklanmagan
       </div>
     </div>
 
@@ -270,6 +303,7 @@ const loading = ref(true)
 const error = ref(null)
 const student = ref(null)
 const group = ref(null)
+const contractData = ref(null)
 
 // Load profile data
 const loadProfile = async () => {
@@ -289,6 +323,16 @@ const loadProfile = async () => {
     form.phone = response.phone || response.student_phone || ''
     form.address = response.address || ''
     form.commute = response.faculty || response.commute || ''
+    
+    // Load contract data from contracts table
+    try {
+      const contractResp = await api.getMyContract('2025-2026')
+      if (contractResp?.contract) {
+        contractData.value = contractResp.contract
+      }
+    } catch (e) {
+      console.log('Contract data not available:', e.message)
+    }
     
   } catch (e) {
     console.error('Error loading profile:', e)
@@ -319,15 +363,35 @@ const loadProfile = async () => {
   }
 }
 
-// Contract calculations
-const contractAmount = computed(() => student.value?.contract_amount || 0)
+// Contract calculations - use contractData from contracts table, fallback to student model
+const contractAmount = computed(() => {
+  if (contractData.value) return Number(contractData.value.contract_amount) || 0
+  return student.value?.contract_amount || 0
+})
 const debt = computed(() => {
+  if (contractData.value) return Math.abs(Number(contractData.value.debt_amount) || 0)
   return Math.max(0, contractAmount.value - (student.value?.contract_paid || 0))
 })
 const contractPercent = computed(() => {
+  if (contractData.value) {
+    const pct = contractData.value.payment_percentage
+    if (pct != null) return Math.round(pct * 100)
+  }
   if (!contractAmount.value || contractAmount.value === 0) return 100
-  return Math.round((student.value?.contract_paid || 0) / contractAmount.value * 100)
+  const paid = contractData.value ? Number(contractData.value.total_paid) : (student.value?.contract_paid || 0)
+  return Math.round(paid / contractAmount.value * 100)
 })
+
+const formatContract = (amount) => {
+  if (amount == null || amount === 0) return '0'
+  const num = Number(amount)
+  if (num === 0) return '0'
+  const absNum = Math.abs(num)
+  if (absNum >= 1_000_000_000) return (num / 1_000_000_000).toFixed(1) + ' mlrd'
+  if (absNum >= 1_000_000) return (num / 1_000_000).toFixed(1) + ' mln'
+  if (absNum >= 1_000) return Math.round(num / 1_000) + ' ming'
+  return num.toLocaleString('uz-UZ')
+}
 
 const form = reactive({
   phone: '',

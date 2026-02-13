@@ -209,12 +209,12 @@
          ======================================== -->
     <div 
       v-if="showCreateModal"
-      class="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/50 p-4 pt-10"
+      class="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/50 p-2 pt-4 sm:p-4 sm:pt-10"
       @click.self="showCreateModal = false"
     >
       <div class="w-full max-w-4xl rounded-2xl bg-white shadow-2xl">
         <!-- Modal Header -->
-        <div class="flex items-center justify-between border-b border-slate-200 p-6">
+        <div class="flex items-center justify-between border-b border-slate-200 p-4 sm:p-6">
           <div>
             <h2 class="text-xl font-bold text-slate-800">{{ $t('reports.createReport') }}</h2>
             <p class="text-sm text-slate-500">{{ currentGroup?.name }} - {{ getMonthLabel(newReport.month) }} {{ newReport.year }}</p>
@@ -228,14 +228,14 @@
         </div>
 
         <!-- Modal Body with Tabs -->
-        <div class="max-h-[70vh] overflow-y-auto p-6">
+        <div class="max-h-[70vh] overflow-y-auto p-4 sm:p-6">
           <!-- Section Tabs -->
-          <div class="mb-6 flex flex-wrap gap-2 border-b border-slate-200 pb-4">
+          <div class="mb-4 sm:mb-6 flex flex-wrap gap-1.5 sm:gap-2 border-b border-slate-200 pb-3 sm:pb-4 overflow-x-auto">
             <button
               v-for="section in reportSections"
               :key="section.id"
               @click="activeSection = section.id"
-              class="flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-all"
+              class="flex items-center gap-1.5 sm:gap-2 rounded-lg px-2.5 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-sm font-medium transition-all whitespace-nowrap"
               :class="activeSection === section.id
                 ? 'bg-emerald-500 text-white'
                 : 'bg-slate-100 text-slate-600 hover:bg-slate-200'"
@@ -259,22 +259,22 @@
             </div>
 
             <!-- Attendance Stats Grid -->
-            <div class="grid grid-cols-2 gap-4 sm:grid-cols-4">
-              <div class="rounded-xl border border-green-200 bg-green-50 p-4 text-center">
-                <p class="text-3xl font-bold text-green-600">{{ autoData.attendance.rate }}%</p>
-                <p class="text-sm text-green-600/70">{{ $t('reports.overallAttendance') }}</p>
+            <div class="grid grid-cols-2 gap-2 sm:gap-4 sm:grid-cols-4">
+              <div class="rounded-xl border border-green-200 bg-green-50 p-3 sm:p-4 text-center">
+                <p class="text-xl sm:text-3xl font-bold text-green-600">{{ autoData.attendance.rate }}%</p>
+                <p class="text-xs sm:text-sm text-green-600/70">{{ $t('reports.overallAttendance') }}</p>
               </div>
-              <div class="rounded-xl border border-blue-200 bg-blue-50 p-4 text-center">
-                <p class="text-3xl font-bold text-blue-600">{{ autoData.attendance.present }}</p>
-                <p class="text-sm text-blue-600/70">{{ $t('reports.attended') }}</p>
+              <div class="rounded-xl border border-blue-200 bg-blue-50 p-3 sm:p-4 text-center">
+                <p class="text-xl sm:text-3xl font-bold text-blue-600">{{ autoData.attendance.present }}</p>
+                <p class="text-xs sm:text-sm text-blue-600/70">{{ $t('reports.attended') }}</p>
               </div>
-              <div class="rounded-xl border border-orange-200 bg-orange-50 p-4 text-center">
-                <p class="text-3xl font-bold text-orange-600">{{ autoData.attendance.late }}</p>
-                <p class="text-sm text-orange-600/70">{{ $t('reports.late') }}</p>
+              <div class="rounded-xl border border-orange-200 bg-orange-50 p-3 sm:p-4 text-center">
+                <p class="text-xl sm:text-3xl font-bold text-orange-600">{{ autoData.attendance.late }}</p>
+                <p class="text-xs sm:text-sm text-orange-600/70">{{ $t('reports.late') }}</p>
               </div>
-              <div class="rounded-xl border border-red-200 bg-red-50 p-4 text-center">
-                <p class="text-3xl font-bold text-red-600">{{ autoData.attendance.absent }}</p>
-                <p class="text-sm text-red-600/70">{{ $t('reports.absentWithout') }}</p>
+              <div class="rounded-xl border border-red-200 bg-red-50 p-3 sm:p-4 text-center">
+                <p class="text-xl sm:text-3xl font-bold text-red-600">{{ autoData.attendance.absent }}</p>
+                <p class="text-xs sm:text-sm text-red-600/70">{{ $t('reports.absentWithout') }}</p>
               </div>
             </div>
 
@@ -287,44 +287,66 @@
                 <div 
                   v-for="student in autoData.studentsAttendance" 
                   :key="student.id"
-                  class="flex items-center justify-between px-4 py-3"
+                  class="px-4 py-3"
                 >
-                  <span class="text-slate-700">{{ student.name }}</span>
-                  <div class="flex items-center gap-4">
-                    <span class="text-sm text-green-600">{{ student.present }} {{ $t('reports.lessons') }}</span>
-                    <span class="text-sm text-red-600">{{ student.absent }} {{ $t('reports.absent') }}</span>
+                  <div class="flex items-center justify-between gap-2">
+                    <span class="text-sm font-medium text-slate-700 truncate min-w-0">{{ student.name }}</span>
                     <span 
-                      class="rounded-lg px-2 py-1 text-sm font-medium"
+                      class="flex-shrink-0 rounded-lg px-2 py-1 text-sm font-medium"
                       :class="student.rate >= 80 ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'"
                     >
                       {{ student.rate }}%
                     </span>
+                  </div>
+                  <div class="mt-1 flex items-center gap-3 text-xs">
+                    <span class="text-green-600">✅ {{ student.present }} {{ $t('reports.lessons') }}</span>
+                    <span class="text-red-600">❌ {{ student.absent }} {{ $t('reports.absent') }}</span>
                   </div>
                 </div>
               </div>
             </div>
           </div>
 
-          <!-- ============ KONTRAKT SECTION (Auto) ============ -->
+          <!-- ============ KONTRAKT SECTION (Auto - Real Data) ============ -->
           <div v-if="activeSection === 'contract'" class="space-y-4">
             <div class="flex items-center gap-2 rounded-xl bg-green-50 p-3 text-green-700">
               <CheckCircle :size="20" />
-              <span class="text-sm">{{ $t('reports.autoFilledNote') }}</span>
+              <span class="text-sm">{{ $t('reports.autoFilledNote') }} (Kontrakt bazasidan)</span>
             </div>
 
             <!-- Contract Stats -->
-            <div class="grid grid-cols-2 gap-4 sm:grid-cols-3">
-              <div class="rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-center">
-                <p class="text-3xl font-bold text-emerald-600">{{ autoData.contract.rate }}%</p>
-                <p class="text-sm text-emerald-600/70">{{ $t('reports.contractPaid') }}</p>
+            <div class="grid grid-cols-2 gap-2 sm:gap-3 sm:grid-cols-4">
+              <div class="rounded-xl border border-blue-200 bg-blue-50 p-3 sm:p-4 text-center">
+                <p class="text-sm sm:text-xl font-bold text-blue-600 truncate">{{ formatMoney(autoData.contract.total) }}</p>
+                <p class="text-[10px] sm:text-xs text-blue-600/70">Kontrakt summasi</p>
               </div>
-              <div class="rounded-xl border border-blue-200 bg-blue-50 p-4 text-center">
-                <p class="text-2xl font-bold text-blue-600">{{ formatMoney(autoData.contract.paid) }}</p>
-                <p class="text-sm text-blue-600/70">{{ $t('reports.paidAmount') }}</p>
+              <div class="rounded-xl border border-emerald-200 bg-emerald-50 p-3 sm:p-4 text-center">
+                <p class="text-sm sm:text-xl font-bold text-emerald-600 truncate">{{ formatMoney(autoData.contract.paid) }}</p>
+                <p class="text-[10px] sm:text-xs text-emerald-600/70">To'langan</p>
               </div>
-              <div class="rounded-xl border border-slate-200 bg-slate-50 p-4 text-center">
-                <p class="text-2xl font-bold text-slate-600">{{ formatMoney(autoData.contract.total) }}</p>
-                <p class="text-sm text-slate-600/70">{{ $t('reports.totalAmount') }}</p>
+              <div class="rounded-xl border border-red-200 bg-red-50 p-3 sm:p-4 text-center">
+                <p class="text-sm sm:text-xl font-bold text-red-600 truncate">{{ formatMoney(contractsData.stats ? Math.abs(Number(contractsData.stats.total_debt || 0)) : 0) }}</p>
+                <p class="text-[10px] sm:text-xs text-red-600/70">Qarzdorlik</p>
+              </div>
+              <div class="rounded-xl border border-purple-200 bg-purple-50 p-3 sm:p-4 text-center">
+                <p class="text-sm sm:text-xl font-bold text-purple-600 truncate">{{ formatMoney(contractsData.stats ? Number(contractsData.stats.total_grant_amount || 0) : 0) }}</p>
+                <p class="text-[10px] sm:text-xs text-purple-600/70">Grant</p>
+              </div>
+            </div>
+
+            <!-- Summary row -->
+            <div class="grid grid-cols-3 gap-2 sm:gap-3">
+              <div class="rounded-xl border border-emerald-100 bg-emerald-50 p-2.5 sm:p-3 text-center">
+                <p class="text-lg sm:text-2xl font-bold text-emerald-700">{{ contractsData.stats?.fully_paid_count || 0 }}</p>
+                <p class="text-[10px] sm:text-xs text-emerald-600">To'liq to'langan</p>
+              </div>
+              <div class="rounded-xl border border-red-100 bg-red-50 p-2.5 sm:p-3 text-center">
+                <p class="text-lg sm:text-2xl font-bold text-red-700">{{ contractsData.stats?.with_debt_count || 0 }}</p>
+                <p class="text-[10px] sm:text-xs text-red-600">Qarzdorlar</p>
+              </div>
+              <div class="rounded-xl border border-indigo-100 bg-indigo-50 p-2.5 sm:p-3 text-center">
+                <p class="text-lg sm:text-2xl font-bold text-indigo-700">{{ autoData.contract.rate }}%</p>
+                <p class="text-[10px] sm:text-xs text-indigo-600">O'rtacha to'lov</p>
               </div>
             </div>
 
@@ -337,11 +359,19 @@
                 <div 
                   v-for="student in autoData.studentsContract" 
                   :key="student.id"
-                  class="flex items-center justify-between px-4 py-3"
+                  class="px-4 py-3"
                 >
-                  <span class="text-slate-700">{{ student.name }}</span>
-                  <div class="flex items-center gap-4">
-                    <div class="w-32">
+                  <div class="flex items-center justify-between gap-2 mb-1">
+                    <span class="text-sm font-medium text-slate-700 truncate min-w-0">{{ student.name }}</span>
+                    <span 
+                      class="flex-shrink-0 text-sm font-semibold"
+                      :class="student.rate >= 100 ? 'text-emerald-600' : student.rate >= 50 ? 'text-blue-600' : 'text-red-600'"
+                    >
+                      {{ student.rate }}%
+                    </span>
+                  </div>
+                  <div class="flex items-center gap-2 sm:gap-3">
+                    <div class="flex-1 min-w-0">
                       <div class="h-2 overflow-hidden rounded-full bg-slate-200">
                         <div 
                           class="h-full rounded-full transition-all"
@@ -350,12 +380,10 @@
                         ></div>
                       </div>
                     </div>
-                    <span 
-                      class="w-16 text-right text-sm font-medium"
-                      :class="student.rate >= 100 ? 'text-emerald-600' : student.rate >= 50 ? 'text-blue-600' : 'text-red-600'"
-                    >
-                      {{ student.rate }}%
-                    </span>
+                  </div>
+                  <div class="mt-1.5 flex flex-wrap gap-x-3 gap-y-1 text-xs text-slate-500">
+                    <span>{{ formatMoney(student.paid) }} / {{ formatMoney(student.total) }}</span>
+                    <span v-if="student.grant > 0" class="text-purple-500">Grant: {{ formatMoney(student.grant) }}</span>
                   </div>
                 </div>
               </div>
@@ -540,7 +568,7 @@
                 <ImageIcon :size="18" class="text-blue-500" />
                 {{ $t('reports.imagesMax') }}
               </label>
-              <div class="grid grid-cols-2 gap-4 sm:grid-cols-5">
+              <div class="grid grid-cols-3 gap-2 sm:grid-cols-5 sm:gap-4">
                 <!-- Uploaded images preview -->
                 <div 
                   v-for="(img, index) in uploadedImages" 
@@ -670,7 +698,7 @@
         </div>
 
         <!-- Modal Footer -->
-        <div class="flex items-center justify-between border-t border-slate-200 p-6">
+        <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between border-t border-slate-200 p-4 sm:p-6">
           <div class="flex items-center gap-4">
             <span class="text-sm text-slate-500">
               <span class="font-medium text-emerald-600">{{ completedSections }}</span> / {{ reportSections.length }} {{ $t('reports.sectionsCompleted') }}
@@ -842,6 +870,7 @@ const loading = ref(false)
 const saving = ref(false)
 const groupInfo = ref(null)
 const groupStudentsList = ref([])
+const contractsData = ref({ items: [], stats: null })
 
 // File uploads
 const uploadedImages = ref([])
@@ -955,20 +984,26 @@ const autoData = computed(() => {
     }
   })
 
-  // Kontrakt statistikasi
-  const contractTotal = students.length * (currentGroup.value?.contractAmount || 0)
-  const contractPaid = students.reduce((sum, s) => sum + (s.contractPaid || 0), 0)
-  const contractRate = contractTotal > 0 ? Math.round((contractPaid / contractTotal) * 100) : 0
+  // Kontrakt statistikasi - REAL DATA from contracts API
+  const cStats = contractsData.value.stats
+  const contractTotal = cStats ? Number(cStats.total_contract_amount || 0) : 0
+  const contractPaid = cStats ? Number(cStats.total_paid || 0) : 0
+  const contractRate = cStats ? Math.round(cStats.payment_percentage || 0) : 0
 
-  // Talabalar kontrakt holati
-  const studentsContract = students.map(s => {
-    const groupContract = currentGroup.value?.contractAmount || 18411000
+  // Talabalar kontrakt holati - REAL DATA
+  const studentsContract = (contractsData.value.items || []).map(c => {
+    const amount = Number(c.contract_amount || 0)
+    const paid = Number(c.total_paid || 0)
+    const grant = Number(c.grant_amount || 0)
+    const debt = Math.abs(Number(c.debt_amount || 0))
     return {
-      id: s.id,
-      name: s.name,
-      paid: s.contractPaid || 0,
-      total: groupContract,
-      rate: Math.round(((s.contractPaid || 0) / groupContract) * 100)
+      id: c.student_id,
+      name: c.student_name || 'Noma\'lum',
+      paid: paid,
+      total: amount,
+      grant: grant,
+      debt: debt,
+      rate: amount > 0 ? Math.round((paid / amount) * 100) : 0
     }
   })
 
@@ -1011,6 +1046,19 @@ const loadGroupData = async () => {
         }
       } catch (e) {
         console.log('Students API not available')
+      }
+
+      // Load real contract data from contracts API
+      try {
+        const contractsResp = await api.getGroupContracts(groupInfo.value.id, { academic_year: '2025-2026', page_size: 200 })
+        if (contractsResp) {
+          contractsData.value = {
+            items: contractsResp.items || [],
+            stats: contractsResp.stats || null,
+          }
+        }
+      } catch (e) {
+        console.log('Contracts API not available:', e)
       }
     }
   } catch (e) {
@@ -1117,7 +1165,15 @@ const getMonthLabel = (month) => {
 
 // Pul formatini chiqarish
 const formatMoney = (amount) => {
-  return new Intl.NumberFormat('uz-UZ').format(amount) + ' so\'m'
+  if (amount == null || amount === 0) return '0 so\'m'
+  const num = Number(amount)
+  if (num === 0) return '0 so\'m'
+  const absNum = Math.abs(num)
+  const sign = num < 0 ? '-' : ''
+  if (absNum >= 1_000_000_000) return sign + (absNum / 1_000_000_000).toFixed(1) + ' mlrd'
+  if (absNum >= 1_000_000) return sign + (absNum / 1_000_000).toFixed(1) + ' mln'
+  if (absNum >= 1_000) return sign + (absNum / 1_000).toFixed(0) + ' ming'
+  return new Intl.NumberFormat('uz-UZ').format(num) + ' so\'m'
 }
 
 // Fayl hajmini formatlab chiqarish

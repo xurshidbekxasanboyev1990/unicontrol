@@ -1,41 +1,198 @@
 """
-UniControl - Excel Service
-==========================
-Handles Excel import/export operations.
+UniControl - Universal Excel Service v2
+========================================
+Handles ALL Excel import/export operations with UPSERT logic.
+- Kontingent import (students + users + groups) — UPSERT
+- Schedule import from Excel — UPSERT with fuzzy group matching
+- Attendance import — UPSERT
+- Students / Groups import — UPSERT
+- All exports (students, groups, attendance, payments, schedules, reports)
+
+Key principles:
+1. If record exists → UPDATE it
+2. If record is new → INSERT it
+3. If record was in DB but NOT in new file → optionally deactivate
+4. Fuzzy group matching to handle naming differences (KI-25-09 vs KI_25-09)
 
 Author: UniControl Team
-Version: 1.0.0
+Version: 2.0.0
 """
 
-import os
 import io
-from datetime import datetime, date
-from app.config import now_tashkent
+import re
+import logging
+from datetime import datetime, date, time as dt_time
 from decimal import Decimal
-from typing import Optional, List, Tuple, Dict, Any
+from typing import Optional, List, Dict, Any, Set
+from difflib import SequenceMatcher
+
 import pandas as pd
-from openpyxl import Workbook
+from openpyxl import Workbook, load_workbook
 from openpyxl.styles import Font, Alignment, Border, Side, PatternFill
-from openpyxl.utils.dataframe import dataframe_to_rows
+from openpyxl.utils import get_column_letter
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
+from sqlalchemy import select, delete, func, text
 from sqlalchemy.orm import joinedload
 
+from app.config import now_tashkent
 from app.models.student import Student
 from app.models.group import Group
 from app.models.attendance import Attendance, AttendanceStatus
-from app.schemas.report import ExcelImportResponse
+from app.models.schedule import Schedule, WeekDay, ScheduleType
 from app.core.exceptions import BadRequestException
 
+logger = logging.getLogger(__name__)
+
+
+# ═══════════════════════════════════════════════════════════════
+# HELPER: Fuzzy Group Name Matching
+# ═══════════════════════════════════════════════════════════════
+
+def normalize_group_name(name: str) -> str:
+    """Normalize group name for comparison: strip, upper, replace separators."""
+    n = name.strip().upper()
+    n = re.sub(r'[\s_\-]+', '-', n)   # unify separators to '-'
+    n = re.sub(r'\(.*?\)', '', n)      # remove parenthesized content
+    return n.strip('-').strip()
+
+
+def fuzzy_match_group(
+    name: str,
+    candidates: Dict[str, Any],
+    threshold: float = 0.75
+) -> Optional[str]:
+    """
+    Find best matching group name from candidates dict.
+    Returns the matched candidate key or None.
+    
+    Strategy:
+    1. Exact match (after normalization)
+    2. SequenceMatcher ratio >= threshold
+    """
+    norm = normalize_group_name(name)
+
+    # Build normalized lookup
+    norm_to_orig = {}
+    for c in candidates:
+        nc = normalize_group_name(c)
+        norm_to_orig[nc] = c
+
+    # Exact normalized match
+    if norm in norm_to_orig:
+        return norm_to_orig[norm]
+
+    # Fuzzy match
+    best_match = None
+    best_score = 0.0
+    for nc, orig in norm_to_orig.items():
+        score = SequenceMatcher(None, norm, nc).ratio()
+        if score > best_score and score >= threshold:
+            best_score = score
+            best_match = orig
+
+    return best_match
+
+
+def build_group_lookup(groups: list) -> Dict[str, Any]:
+    """Build a lookup dict: name → group object, with normalized variants."""
+    lookup = {}
+    for g in groups:
+        lookup[g.name] = g
+        lookup[g.name.upper()] = g
+        lookup[normalize_group_name(g.name)] = g
+    return lookup
+
+
+# ═══════════════════════════════════════════════════════════════
+# HELPER: Day / Time Parsing
+# ═══════════════════════════════════════════════════════════════
+
+DAY_MAP = {
+    # Uzbek
+    "dushanba": WeekDay.MONDAY, "du": WeekDay.MONDAY,
+    "seshanba": WeekDay.TUESDAY, "se": WeekDay.TUESDAY,
+    "chorshanba": WeekDay.WEDNESDAY, "cho": WeekDay.WEDNESDAY, "chor": WeekDay.WEDNESDAY,
+    "payshanba": WeekDay.THURSDAY, "pa": WeekDay.THURSDAY, "pay": WeekDay.THURSDAY,
+    "juma": WeekDay.FRIDAY, "ju": WeekDay.FRIDAY,
+    "shanba": WeekDay.SATURDAY, "sha": WeekDay.SATURDAY,
+    "yakshanba": WeekDay.SUNDAY, "yak": WeekDay.SUNDAY,
+    # Russian
+    "понедельник": WeekDay.MONDAY, "пн": WeekDay.MONDAY,
+    "вторник": WeekDay.TUESDAY, "вт": WeekDay.TUESDAY,
+    "среда": WeekDay.WEDNESDAY, "ср": WeekDay.WEDNESDAY,
+    "четверг": WeekDay.THURSDAY, "чт": WeekDay.THURSDAY,
+    "пятница": WeekDay.FRIDAY, "пт": WeekDay.FRIDAY,
+    "суббота": WeekDay.SATURDAY, "сб": WeekDay.SATURDAY,
+    "воскресенье": WeekDay.SUNDAY, "вс": WeekDay.SUNDAY,
+    # English
+    "monday": WeekDay.MONDAY, "mon": WeekDay.MONDAY,
+    "tuesday": WeekDay.TUESDAY, "tue": WeekDay.TUESDAY,
+    "wednesday": WeekDay.WEDNESDAY, "wed": WeekDay.WEDNESDAY,
+    "thursday": WeekDay.THURSDAY, "thu": WeekDay.THURSDAY,
+    "friday": WeekDay.FRIDAY, "fri": WeekDay.FRIDAY,
+    "saturday": WeekDay.SATURDAY, "sat": WeekDay.SATURDAY,
+    "sunday": WeekDay.SUNDAY, "sun": WeekDay.SUNDAY,
+    # Numbers
+    "1": WeekDay.MONDAY, "2": WeekDay.TUESDAY, "3": WeekDay.WEDNESDAY,
+    "4": WeekDay.THURSDAY, "5": WeekDay.FRIDAY, "6": WeekDay.SATURDAY,
+    "7": WeekDay.SUNDAY,
+}
+
+# Default lesson time slots (standard schedule)
+DEFAULT_TIME_SLOTS = {
+    1: ("08:30", "10:00"),
+    2: ("10:10", "11:40"),
+    3: ("12:20", "13:50"),
+    4: ("14:00", "15:30"),
+    5: ("15:40", "17:10"),
+    6: ("17:20", "18:50"),
+    7: ("19:00", "20:30"),
+}
+
+
+def parse_day(raw: Any) -> Optional[WeekDay]:
+    """Parse a day value (string/int) to WeekDay enum."""
+    if raw is None:
+        return None
+    s = str(raw).strip().lower()
+    return DAY_MAP.get(s)
+
+
+def parse_time(raw: Any) -> Optional[dt_time]:
+    """Parse time from various formats."""
+    if raw is None:
+        return None
+    if isinstance(raw, dt_time):
+        return raw
+    if isinstance(raw, datetime):
+        return raw.time()
+    s = str(raw).strip()
+    for fmt in ["%H:%M", "%H:%M:%S", "%H.%M", "%I:%M %p"]:
+        try:
+            return datetime.strptime(s, fmt).time()
+        except ValueError:
+            continue
+    # Try simple split
+    m = re.match(r'(\d{1,2})[:\.\-](\d{2})', s)
+    if m:
+        return dt_time(int(m.group(1)), int(m.group(2)))
+    return None
+
+
+# ═══════════════════════════════════════════════════════════════
+# MAIN SERVICE
+# ═══════════════════════════════════════════════════════════════
 
 class ExcelService:
-    """Excel import/export service."""
-    
+    """Universal Excel import/export service with UPSERT logic."""
+
     def __init__(self, db: AsyncSession):
         self.db = db
-    
-    # ==================== EXPORT ====================
-    
+
+    # ══════════════════════════════════════════════════════
+    # EXPORT METHODS
+    # ══════════════════════════════════════════════════════
+
     async def export_students(
         self,
         group_id: Optional[int] = None,
@@ -43,16 +200,13 @@ class ExcelService:
     ) -> io.BytesIO:
         """Export students to Excel."""
         query = select(Student).options(joinedload(Student.group))
-        
         if group_id:
             query = query.where(Student.group_id == group_id)
-        
         query = query.order_by(Student.name)
-        
+
         result = await self.db.execute(query)
         students = result.unique().scalars().all()
-        
-        # Prepare data
+
         data = []
         for s in students:
             row = {
@@ -68,7 +222,6 @@ class ExcelService:
                 "Qoldi": float(s.contract_remaining),
                 "Holati": "Faol" if s.is_active else "Nofaol",
             }
-            
             if include_all_columns:
                 row.update({
                     "Manzil": s.address or "",
@@ -79,13 +232,10 @@ class ExcelService:
                     "Bitirish sanasi": s.graduation_date.strftime("%d.%m.%Y") if s.graduation_date else "",
                     "Guruh lideri": "Ha" if s.is_leader else "Yo'q",
                 })
-            
             data.append(row)
-        
-        df = pd.DataFrame(data)
-        
-        return self._create_excel_file(df, "Talabalar ro'yxati")
-    
+
+        return self._create_excel_file(pd.DataFrame(data), "Talabalar ro'yxati")
+
     async def export_attendance(
         self,
         group_id: Optional[int] = None,
@@ -96,28 +246,23 @@ class ExcelService:
         query = select(Attendance).options(
             joinedload(Attendance.student).joinedload(Student.group)
         )
-        
         if group_id:
             query = query.join(Student).where(Student.group_id == group_id)
-        
         if date_from:
             query = query.where(Attendance.date >= date_from)
         if date_to:
             query = query.where(Attendance.date <= date_to)
-        
         query = query.order_by(Attendance.date.desc(), Attendance.student_id)
-        
+
         result = await self.db.execute(query)
         attendances = result.unique().scalars().all()
-        
-        # Prepare data
+
         status_map = {
             AttendanceStatus.PRESENT: "Keldi",
             AttendanceStatus.ABSENT: "Kelmadi",
             AttendanceStatus.LATE: "Kech qoldi",
             AttendanceStatus.EXCUSED: "Sababli",
         }
-        
         data = []
         for a in attendances:
             data.append({
@@ -130,27 +275,18 @@ class ExcelService:
                 "Para": a.lesson_number or "",
                 "Izoh": a.note or "",
             })
-        
-        df = pd.DataFrame(data)
-        
-        return self._create_excel_file(df, "Davomat")
-    
-    async def export_payments(
-        self,
-        group_id: Optional[int] = None
-    ) -> io.BytesIO:
+        return self._create_excel_file(pd.DataFrame(data), "Davomat")
+
+    async def export_payments(self, group_id: Optional[int] = None) -> io.BytesIO:
         """Export payment report to Excel."""
         query = select(Student).options(joinedload(Student.group))
-        
         if group_id:
             query = query.where(Student.group_id == group_id)
-        
-        query = query.where(Student.is_active == True)
-        query = query.order_by(Student.name)
-        
+        query = query.where(Student.is_active == True).order_by(Student.name)
+
         result = await self.db.execute(query)
         students = result.unique().scalars().all()
-        
+
         data = []
         for s in students:
             data.append({
@@ -163,133 +299,883 @@ class ExcelService:
                 "To'lov %": f"{s.contract_percentage:.1f}%",
                 "Holat": "To'liq to'langan" if s.is_contract_paid else "Qarzdor",
             })
-        
-        df = pd.DataFrame(data)
-        
-        return self._create_excel_file(df, "To'lovlar")
-    
-    def _create_excel_file(
-        self,
-        df: pd.DataFrame,
-        title: str
-    ) -> io.BytesIO:
+        return self._create_excel_file(pd.DataFrame(data), "To'lovlar")
+
+    async def export_groups(self) -> io.BytesIO:
+        """Export groups to Excel."""
+        query = select(Group).order_by(Group.name)
+        result = await self.db.execute(query)
+        groups = result.scalars().all()
+
+        count_query = select(
+            Student.group_id,
+            func.count(Student.id).label("cnt")
+        ).group_by(Student.group_id)
+        count_result = await self.db.execute(count_query)
+        counts = {row.group_id: row.cnt for row in count_result}
+
+        data = []
+        for g in groups:
+            data.append({
+                "ID": g.id,
+                "Nomi": g.name,
+                "Fakultet": g.faculty or "",
+                "Kurs": g.course_year or "",
+                "Talabalar soni": counts.get(g.id, 0),
+                "Faol": "Ha" if g.is_active else "Yo'q",
+            })
+        return self._create_excel_file(pd.DataFrame(data), "Guruhlar ro'yxati")
+
+    async def export_schedules(self, group_id: int) -> io.BytesIO:
+        """Export schedule for a group to Excel."""
+        query = (
+            select(Schedule)
+            .where(Schedule.group_id == group_id)
+            .order_by(Schedule.day_of_week, Schedule.lesson_number)
+        )
+        result = await self.db.execute(query)
+        schedules = result.scalars().all()
+
+        day_names = {
+            "monday": "Dushanba", "tuesday": "Seshanba", "wednesday": "Chorshanba",
+            "thursday": "Payshanba", "friday": "Juma", "saturday": "Shanba",
+            "sunday": "Yakshanba",
+        }
+        data = []
+        for s in schedules:
+            dv = s.day_of_week.value if s.day_of_week else ""
+            data.append({
+                "Kun": day_names.get(dv, dv),
+                "Para": s.lesson_number or "",
+                "Fan": s.subject or "",
+                "O'qituvchi": s.teacher_name or "",
+                "Xona": s.room or "",
+                "Vaqt": (
+                    f"{s.start_time.strftime('%H:%M') if s.start_time else ''}"
+                    f" - "
+                    f"{s.end_time.strftime('%H:%M') if s.end_time else ''}"
+                ),
+            })
+        return self._create_excel_file(pd.DataFrame(data), "Dars jadvali")
+
+    async def export_report(self, report_id: int) -> io.BytesIO:
+        """Export a single report data to Excel."""
+        from app.models.report import Report
+        result = await self.db.execute(select(Report).where(Report.id == report_id))
+        report = result.scalar_one_or_none()
+        if not report:
+            raise BadRequestException("Hisobot topilmadi")
+
+        data = [{
+            "ID": report.id,
+            "Turi": report.report_type.value if report.report_type else "",
+            "Nomi": report.name or "",
+            "Holati": report.status.value if report.status else "",
+            "Yaratilgan": report.created_at.strftime("%d.%m.%Y %H:%M") if report.created_at else "",
+        }]
+        return self._create_excel_file(pd.DataFrame(data), f"Hisobot #{report_id}")
+
+    # ══════════════════════════════════════════════════════
+    # STYLED EXCEL FILE CREATOR
+    # ══════════════════════════════════════════════════════
+
+    def _create_excel_file(self, df: pd.DataFrame, title: str) -> io.BytesIO:
         """Create styled Excel file from DataFrame."""
         output = io.BytesIO()
-        
         wb = Workbook()
         ws = wb.active
-        ws.title = title[:31]  # Max 31 chars for sheet name
-        
-        # Styles
+        ws.title = title[:31]
+
         header_font = Font(bold=True, color="FFFFFF")
         header_fill = PatternFill(start_color="4472C4", end_color="4472C4", fill_type="solid")
         header_alignment = Alignment(horizontal="center", vertical="center")
-        
         thin_border = Border(
-            left=Side(style='thin'),
-            right=Side(style='thin'),
-            top=Side(style='thin'),
-            bottom=Side(style='thin')
+            left=Side(style='thin'), right=Side(style='thin'),
+            top=Side(style='thin'), bottom=Side(style='thin')
         )
-        
-        # Add title
-        ws.merge_cells(start_row=1, start_column=1, end_row=1, end_column=len(df.columns))
+
+        ncols = max(len(df.columns), 1)
+        ws.merge_cells(start_row=1, start_column=1, end_row=1, end_column=ncols)
         ws.cell(1, 1, title)
         ws.cell(1, 1).font = Font(bold=True, size=14)
         ws.cell(1, 1).alignment = Alignment(horizontal="center")
-        
-        # Add date
-        ws.merge_cells(start_row=2, start_column=1, end_row=2, end_column=len(df.columns))
+
+        ws.merge_cells(start_row=2, start_column=1, end_row=2, end_column=ncols)
         ws.cell(2, 1, f"Sana: {now_tashkent().strftime('%d.%m.%Y %H:%M')}")
         ws.cell(2, 1).alignment = Alignment(horizontal="right")
-        
-        # Write headers
+
         for col_idx, col_name in enumerate(df.columns, 1):
             cell = ws.cell(4, col_idx, col_name)
             cell.font = header_font
             cell.fill = header_fill
             cell.alignment = header_alignment
             cell.border = thin_border
-        
-        # Write data
+
         for row_idx, row in enumerate(df.values, 5):
             for col_idx, value in enumerate(row, 1):
                 cell = ws.cell(row_idx, col_idx, value)
                 cell.border = thin_border
-                
-                # Number formatting
                 if isinstance(value, (int, float)):
                     cell.number_format = '#,##0'
-        
-        # Auto-adjust column widths
+
         for col_idx, col_name in enumerate(df.columns, 1):
             max_length = len(str(col_name))
-            for row in df[col_name]:
-                max_length = max(max_length, len(str(row)))
-            ws.column_dimensions[chr(64 + col_idx)].width = min(max_length + 2, 50)
-        
+            for val in df[col_name]:
+                max_length = max(max_length, len(str(val)))
+            ws.column_dimensions[get_column_letter(col_idx)].width = min(max_length + 2, 50)
+
         wb.save(output)
         output.seek(0)
-        
         return output
-    
-    # ==================== IMPORT ====================
-    
-    async def import_students(
+
+    # ══════════════════════════════════════════════════════
+    # TEMPLATES
+    # ══════════════════════════════════════════════════════
+
+    async def get_import_template(self, template_type: str) -> io.BytesIO:
+        """Get import template Excel file."""
+        templates = {
+            "students": {
+                "columns": [
+                    "F.I.O", "Telefon", "Email", "Tug'ilgan sana", "Jinsi",
+                    "Manzil", "Pasport", "JSHSHIR", "Guruh", "Kontrakt", "To'langan",
+                ],
+                "sample": [{
+                    "F.I.O": "Namuna Talaba", "Telefon": "+998901234567",
+                    "Email": "talaba@email.com", "Tug'ilgan sana": "01.01.2000",
+                    "Jinsi": "Erkak", "Manzil": "Toshkent sh.", "Pasport": "AA1234567",
+                    "JSHSHIR": "12345678901234", "Guruh": "101-guruh",
+                    "Kontrakt": 15000000, "To'langan": 5000000,
+                }],
+            },
+            "attendance": {
+                "columns": ["Talaba ID", "Sana", "Holat", "Kechikish", "Fan", "Izoh"],
+                "sample": [{
+                    "Talaba ID": "ST-2024-0001",
+                    "Sana": now_tashkent().strftime("%d.%m.%Y"),
+                    "Holat": "Keldi", "Kechikish": 0, "Fan": "Matematika", "Izoh": "",
+                }],
+            },
+            "groups": {
+                "columns": ["Nomi", "Fakultet", "Kurs"],
+                "sample": [{"Nomi": "KI-25-01", "Fakultet": "Informatika", "Kurs": 1}],
+            },
+            "schedules": {
+                "columns": [
+                    "Guruh", "Kun", "Para", "Fan", "O'qituvchi",
+                    "Xona", "Boshlanish", "Tugash",
+                ],
+                "sample": [{
+                    "Guruh": "KI-25-01", "Kun": "Dushanba", "Para": 1,
+                    "Fan": "Matematika", "O'qituvchi": "A.Aliyev", "Xona": "301",
+                    "Boshlanish": "08:30", "Tugash": "10:00",
+                }],
+            },
+        }
+
+        t = templates.get(template_type)
+        if not t:
+            raise BadRequestException(f"Noma'lum shablon turi: {template_type}")
+
+        df = pd.DataFrame(t["sample"], columns=t["columns"])
+        return self._create_excel_file(df, f"{template_type}_template")
+
+    # ══════════════════════════════════════════════════════
+    # IMPORT: KONTINGENT (Students + Users + Groups) — UPSERT
+    # ══════════════════════════════════════════════════════
+
+    async def import_kontingent(
         self,
-        file: io.BytesIO,
-        group_id: Optional[int] = None,
-        update_existing: bool = True
-    ) -> ExcelImportResponse:
-        """Import students from Excel."""
+        file_data: bytes,
+        update_existing: bool = True,
+        create_users: bool = True,
+        default_password: str = "12345678",
+        deactivate_missing: bool = False,
+    ) -> Dict[str, Any]:
+        """
+        Import students from Kontingent Excel file with FULL UPSERT logic.
+
+        - New students -> INSERT (+ create User account)
+        - Existing students (by student_id) -> UPDATE name, group, phone, passport, etc.
+        - Students in DB but NOT in file -> optionally deactivate
+        - New groups -> auto-create
+        - Group changes -> update student's group_id
+
+        Handles year-end scenarios: students move to new groups,
+        new kontingent file has updated group assignments.
+        """
+        from app.models.user import User, UserRole
+        from app.core.security import get_password_hash
+
+        wb = load_workbook(io.BytesIO(file_data), read_only=True, data_only=True)
+        ws = wb.active
+
+        # Pre-hash password once
+        hashed_password = get_password_hash(default_password)
+
+        # Load existing data in bulk
+        existing_students_result = await self.db.execute(
+            select(Student.id, Student.student_id, Student.name, Student.group_id, Student.is_active)
+        )
+        existing_students = {row.student_id: row for row in existing_students_result.fetchall()}
+        all_student_ids_in_db = set(existing_students.keys())
+
+        existing_users_result = await self.db.execute(select(User.login))
+        existing_user_logins = set(row[0] for row in existing_users_result.fetchall())
+
+        groups_result = await self.db.execute(select(Group))
+        db_groups = groups_result.scalars().all()
+        groups_cache = {g.name: g.id for g in db_groups}
+        groups_lookup = build_group_lookup(db_groups)
+
+        # Parse all rows (skip header rows — row 1 & 2)
+        rows = list(ws.iter_rows(min_row=3, values_only=True))
+
+        imported = 0
+        updated = 0
+        skipped = 0
+        failed = 0
+        groups_created = 0
+        users_created = 0
+        errors = []
+        student_ids_in_file: Set[str] = set()
+
+        # Batch collections
+        new_groups: Dict[str, Dict[str, Any]] = {}
+        student_upserts: List[Dict[str, Any]] = []
+        new_users: List[Dict[str, Any]] = []
+
+        for row_idx, row in enumerate(rows, start=3):
+            try:
+                if not row or len(row) < 2:
+                    continue
+
+                student_id = str(row[0] or "").strip()
+                full_name = str(row[1] or "").strip()
+                if not student_id or not full_name:
+                    continue
+
+                student_ids_in_file.add(student_id)
+
+                # Parse fields from kontingent columns
+                passport = str(row[3] or "").strip() if len(row) > 3 else ""
+                jshshir = str(row[4] or "").strip() if len(row) > 4 else ""
+                birth_date_raw = row[6] if len(row) > 6 else None
+                phone = str(row[7] or "").strip() if len(row) > 7 else ""
+                specialty_name = str(row[12] or "").strip() if len(row) > 12 else ""
+                course = row[13] if len(row) > 13 else None
+                group_name = str(row[14] or "").strip() if len(row) > 14 else ""
+
+                # Address fields
+                country = str(row[15] or "").strip() if len(row) > 15 else ""
+                region = str(row[16] or "").strip() if len(row) > 16 else ""
+                district = str(row[17] or "").strip() if len(row) > 17 else ""
+                address_detail = str(row[18] or "").strip() if len(row) > 18 else ""
+                full_living_address = str(row[22] or "").strip() if len(row) > 22 else ""
+                living_address = str(row[21] or "").strip() if len(row) > 21 else ""
+                commute = str(row[23] or "").strip() if len(row) > 23 else ""
+
+                address_parts = [p for p in [country, region, district, address_detail] if p]
+                full_address = ", ".join(address_parts) if address_parts else full_living_address or living_address
+
+                # Parse birth_date
+                parsed_birth_date = None
+                if birth_date_raw:
+                    if isinstance(birth_date_raw, datetime):
+                        parsed_birth_date = birth_date_raw.date()
+                    elif isinstance(birth_date_raw, date):
+                        parsed_birth_date = birth_date_raw
+                    elif isinstance(birth_date_raw, str):
+                        for fmt in ["%d.%m.%Y", "%Y-%m-%d", "%d/%m/%Y"]:
+                            try:
+                                parsed_birth_date = datetime.strptime(birth_date_raw.strip(), fmt).date()
+                                break
+                            except Exception:
+                                pass
+
+                # Parse course number
+                course_num = 1
+                if course:
+                    if isinstance(course, (int, float)):
+                        course_num = int(course)
+                    elif isinstance(course, str):
+                        match = re.search(r'(\d+)', str(course))
+                        if match:
+                            course_num = int(match.group(1))
+
+                # Resolve group — fuzzy match against existing DB groups
+                group_id = None
+                if group_name:
+                    # Exact cache hit
+                    if group_name in groups_cache:
+                        group_id = groups_cache[group_name]
+                    else:
+                        # Fuzzy match
+                        matched = fuzzy_match_group(group_name, {g.name: g for g in db_groups})
+                        if matched:
+                            group_id = groups_cache[matched]
+                        elif group_name not in new_groups:
+                            # Mark for creation
+                            new_groups[group_name] = {
+                                "name": group_name,
+                                "faculty": specialty_name or "Noma'lum",
+                                "course_year": course_num,
+                                "is_active": True,
+                            }
+                            groups_created += 1
+
+                # Determine UPSERT or INSERT
+                is_existing = student_id in existing_students
+
+                student_upserts.append({
+                    "student_id": student_id,
+                    "name": full_name,
+                    "phone": phone or None,
+                    "passport": passport or None,
+                    "jshshir": jshshir or None,
+                    "birth_date": parsed_birth_date,
+                    "address": full_address or None,
+                    "commute": commute or None,
+                    "group_name": group_name,
+                    "group_id": group_id,
+                    "is_active": True,
+                    "is_existing": is_existing,
+                })
+
+                if is_existing:
+                    updated += 1
+                else:
+                    imported += 1
+                    # Create user if needed
+                    if create_users and student_id not in existing_user_logins:
+                        new_users.append({
+                            "login": student_id,
+                            "password_hash": hashed_password,
+                            "name": full_name,
+                            "phone": phone or None,
+                            "role": UserRole.STUDENT,
+                            "is_active": True,
+                            "is_first_login": True,
+                        })
+                        existing_user_logins.add(student_id)
+                        users_created += 1
+
+            except Exception as e:
+                failed += 1
+                errors.append({
+                    "row": row_idx,
+                    "student_id": str(row[0] if row and len(row) > 0 else ""),
+                    "error": str(e)
+                })
+
+        wb.close()
+
+        # ── BATCH WRITE ──
+
+        # 1. Create new groups
+        if new_groups:
+            for gdata in new_groups.values():
+                g = Group(**gdata)
+                self.db.add(g)
+            await self.db.flush()
+            # Refresh cache
+            new_groups_result = await self.db.execute(select(Group.id, Group.name))
+            groups_cache = {row[1]: row[0] for row in new_groups_result.fetchall()}
+
+        # 2. Upsert students
+        for sdata in student_upserts:
+            # Resolve group_id for newly created groups
+            if sdata["group_id"] is None and sdata["group_name"]:
+                sdata["group_id"] = groups_cache.get(sdata["group_name"])
+
+            if sdata["is_existing"]:
+                # UPDATE existing student
+                update_fields: Dict[str, Any] = {
+                    "name": sdata["name"],
+                    "is_active": True,
+                }
+                if sdata["group_id"]:
+                    update_fields["group_id"] = sdata["group_id"]
+                if sdata["phone"]:
+                    update_fields["phone"] = sdata["phone"]
+                if sdata["passport"]:
+                    update_fields["passport"] = sdata["passport"]
+                if sdata["jshshir"]:
+                    update_fields["jshshir"] = sdata["jshshir"]
+                if sdata["birth_date"]:
+                    update_fields["birth_date"] = sdata["birth_date"]
+                if sdata["address"]:
+                    update_fields["address"] = sdata["address"]
+                if sdata["commute"]:
+                    update_fields["commute"] = sdata["commute"]
+
+                set_clause = ", ".join(f"{k} = :{k}" for k in update_fields)
+                update_fields["sid"] = sdata["student_id"]
+                await self.db.execute(
+                    text(f"UPDATE students SET {set_clause} WHERE student_id = :sid"),
+                    update_fields
+                )
+            else:
+                # INSERT new student
+                student = Student(
+                    student_id=sdata["student_id"],
+                    name=sdata["name"],
+                    phone=sdata["phone"],
+                    passport=sdata["passport"],
+                    jshshir=sdata["jshshir"],
+                    birth_date=sdata["birth_date"],
+                    address=sdata["address"],
+                    commute=sdata["commute"],
+                    group_id=sdata["group_id"],
+                    is_active=True,
+                    contract_amount=0,
+                    contract_paid=0,
+                )
+                self.db.add(student)
+
+        # 3. Create users
+        from app.models.user import User as UserModel, UserRole as UR
+        for udata in new_users:
+            user = UserModel(**udata)
+            self.db.add(user)
+
+        # 4. Deactivate missing students (if requested)
+        deactivated = 0
+        if deactivate_missing and student_ids_in_file:
+            missing_ids = all_student_ids_in_db - student_ids_in_file
+            if missing_ids:
+                await self.db.execute(
+                    text("UPDATE students SET is_active = false WHERE student_id = ANY(:ids)"),
+                    {"ids": list(missing_ids)}
+                )
+                deactivated = len(missing_ids)
+
+        await self.db.commit()
+
+        # 5. Link users to students
+        if new_users:
+            new_logins = [u["login"] for u in new_users]
+            users_result = await self.db.execute(
+                select(UserModel.id, UserModel.login).where(UserModel.login.in_(new_logins))
+            )
+            user_id_map = {row[1]: row[0] for row in users_result.fetchall()}
+
+            students_result = await self.db.execute(
+                select(Student.id, Student.student_id).where(Student.student_id.in_(new_logins))
+            )
+            for student_db_id, student_sid in students_result.fetchall():
+                if student_sid in user_id_map:
+                    await self.db.execute(
+                        text("UPDATE students SET user_id = :uid WHERE id = :sid"),
+                        {"uid": user_id_map[student_sid], "sid": student_db_id}
+                    )
+            await self.db.commit()
+
+        return {
+            "success": True,
+            "imported": imported,
+            "updated": updated,
+            "skipped": skipped,
+            "failed": failed,
+            "groups_created": groups_created,
+            "users_created": users_created,
+            "deactivated": deactivated,
+            "errors": errors[:50],
+            "message": (
+                f"Kontingent: {imported} ta yangi, {updated} ta yangilandi, "
+                f"{groups_created} ta guruh yaratildi, {users_created} ta foydalanuvchi yaratildi"
+                + (f", {deactivated} ta nofaol qilindi" if deactivated else "")
+            ),
+        }
+
+    # ══════════════════════════════════════════════════════
+    # IMPORT: SCHEDULE from Excel — UPSERT with fuzzy group matching
+    # ══════════════════════════════════════════════════════
+
+    async def import_schedules(
+        self,
+        file_data: bytes,
+        academic_year: str = "2025-2026",
+        semester: int = 2,
+        clear_existing: bool = True,
+    ) -> Dict[str, Any]:
+        """
+        Import schedules from Excel with UPSERT logic.
+
+        Supports two Excel formats:
+
+        FORMAT 1 - Flat table:
+        | Guruh | Kun | Para | Fan | O'qituvchi | Xona | Boshlanish | Tugash |
+
+        FORMAT 2 - Grid (Google Sheets style):
+        Groups as column headers, days as rows, lessons in cells.
+
+        Features:
+        - Fuzzy group name matching (KI-25-09 <-> KI_25-09)
+        - UPSERT: clears old schedules for matched groups, inserts new
+        - Reports unmatched groups so admin can fix
+        - Auto-detects format
+        """
         try:
-            df = pd.read_excel(file, engine='openpyxl')
+            wb = load_workbook(io.BytesIO(file_data), data_only=True)
         except Exception as e:
             raise BadRequestException(f"Excel faylni o'qib bo'lmadi: {str(e)}")
-        
-        # Column mapping
-        column_map = {
-            "F.I.O": "name",
-            "FIO": "name",
-            "Ism": "name",
-            "Telefon": "phone",
-            "Tel": "phone",
-            "Email": "email",
-            "Pochta": "email",
-            "Tug'ilgan sana": "birth_date",
-            "Tug'ilgan": "birth_date",
-            "Jinsi": "gender",
-            "Jins": "gender",
-            "Manzil": "address",
-            "Pasport": "passport",
-            "JSHSHIR": "jshshir",
-            "PINFL": "jshshir",
-            "Kontrakt": "contract_amount",
-            "Shartnoma": "contract_amount",
-            "To'langan": "contract_paid",
-            "Guruh": "group_name",
+
+        # Load groups from DB
+        groups_result = await self.db.execute(select(Group))
+        db_groups = groups_result.scalars().all()
+        group_name_to_id = {g.name: g.id for g in db_groups}
+        group_lookup = {g.name: g for g in db_groups}
+
+        all_records: List[Dict[str, Any]] = []
+        matched_groups: Set[str] = set()
+        unmatched_groups: Set[str] = set()
+        group_name_map: Dict[str, str] = {}  # sheet_name -> db_name
+
+        for ws in wb.worksheets:
+            records = self._parse_schedule_sheet(ws, group_lookup, group_name_map)
+            all_records.extend(records)
+
+        wb.close()
+
+        # Separate matched vs unmatched
+        for rec in all_records:
+            if rec.get("group_id"):
+                matched_groups.add(rec["db_group_name"])
+            else:
+                unmatched_groups.add(rec["sheet_group_name"])
+
+        # Clear existing schedules for matched groups
+        if clear_existing and matched_groups:
+            group_ids = [group_name_to_id[gn] for gn in matched_groups if gn in group_name_to_id]
+            if group_ids:
+                await self.db.execute(
+                    delete(Schedule).where(
+                        Schedule.group_id.in_(group_ids),
+                        Schedule.academic_year == academic_year,
+                        Schedule.semester == semester,
+                    )
+                )
+
+        # Insert new schedules
+        synced = 0
+        skipped = 0
+        errors: List[str] = []
+
+        for rec in all_records:
+            if not rec.get("group_id") or not rec.get("day") or not rec.get("subject"):
+                skipped += 1
+                continue
+
+            try:
+                start_time = rec.get("start_time")
+                end_time = rec.get("end_time")
+                lesson_num = rec.get("lesson_number", 1)
+
+                # Use default time slots if not provided
+                if not start_time or not end_time:
+                    slot = DEFAULT_TIME_SLOTS.get(lesson_num, DEFAULT_TIME_SLOTS[1])
+                    start_time = start_time or parse_time(slot[0])
+                    end_time = end_time or parse_time(slot[1])
+
+                schedule = Schedule(
+                    group_id=rec["group_id"],
+                    subject=rec["subject"],
+                    schedule_type=rec.get("schedule_type", ScheduleType.LECTURE),
+                    day_of_week=rec["day"],
+                    start_time=start_time,
+                    end_time=end_time,
+                    lesson_number=lesson_num,
+                    room=rec.get("room"),
+                    teacher_name=rec.get("teacher"),
+                    semester=semester,
+                    academic_year=academic_year,
+                    is_active=True,
+                )
+                self.db.add(schedule)
+                synced += 1
+
+            except Exception as e:
+                skipped += 1
+                errors.append(f"{rec.get('sheet_group_name', '?')}: {str(e)}")
+
+        await self.db.commit()
+
+        return {
+            "success": True,
+            "total_records": len(all_records),
+            "synced": synced,
+            "skipped": skipped,
+            "matched_groups": list(matched_groups),
+            "unmatched_groups": list(unmatched_groups),
+            "group_name_map": group_name_map,
+            "errors": errors[:20],
+            "message": (
+                f"Jadval: {synced} ta dars yuklandi, {skipped} ta o'tkazib yuborildi. "
+                f"{len(matched_groups)} ta guruh topildi, {len(unmatched_groups)} ta topilmadi."
+            ),
         }
-        
-        # Rename columns
+
+    def _parse_schedule_sheet(
+        self,
+        ws,
+        group_lookup: Dict[str, Any],
+        group_name_map: Dict[str, str],
+    ) -> List[Dict[str, Any]]:
+        """
+        Parse a single worksheet for schedule data.
+        Auto-detects format:
+        - If first row has 'Guruh' -> flat table format
+        - Otherwise -> Google Sheets grid format (groups as columns)
+        """
+        records: List[Dict[str, Any]] = []
+
+        # Read first row to detect format
+        header_row = []
+        for cell in ws[1]:
+            header_row.append(str(cell.value or "").strip().lower())
+
+        if any(kw in " ".join(header_row) for kw in ["guruh", "group", "fan", "subject", "kun", "day"]):
+            records = self._parse_flat_schedule(ws, group_lookup, group_name_map)
+        else:
+            records = self._parse_grid_schedule(ws, group_lookup, group_name_map)
+
+        return records
+
+    def _parse_flat_schedule(
+        self,
+        ws,
+        group_lookup: Dict[str, Any],
+        group_name_map: Dict[str, str],
+    ) -> List[Dict[str, Any]]:
+        """
+        Parse flat table format:
+        | Guruh | Kun | Para | Fan | O'qituvchi | Xona | Boshlanish | Tugash |
+        """
+        records: List[Dict[str, Any]] = []
+
+        # Map header columns
+        headers: Dict[str, int] = {}
+        for col_idx, cell in enumerate(ws[1], 1):
+            val = str(cell.value or "").strip().lower()
+            if val in ("guruh", "group", "guruh nomi"):
+                headers["group"] = col_idx
+            elif val in ("kun", "day", "hafta kuni"):
+                headers["day"] = col_idx
+            elif val in ("para", "lesson", "dars"):
+                headers["lesson"] = col_idx
+            elif val in ("fan", "subject", "fan nomi"):
+                headers["subject"] = col_idx
+            elif val in ("o'qituvchi", "teacher", "ustoz", "oqituvchi"):
+                headers["teacher"] = col_idx
+            elif val in ("xona", "room", "auditoriya"):
+                headers["room"] = col_idx
+            elif val in ("boshlanish", "start", "boshi"):
+                headers["start"] = col_idx
+            elif val in ("tugash", "end", "oxiri"):
+                headers["end"] = col_idx
+            elif val in ("tur", "type"):
+                headers["type"] = col_idx
+
+        if "group" not in headers or "subject" not in headers:
+            return records
+
+        type_map = {
+            "ma'ruza": ScheduleType.LECTURE, "lecture": ScheduleType.LECTURE,
+            "amaliy": ScheduleType.PRACTICE, "practice": ScheduleType.PRACTICE,
+            "laboratoriya": ScheduleType.LAB, "lab": ScheduleType.LAB,
+            "seminar": ScheduleType.SEMINAR,
+        }
+
+        for row_idx in range(2, ws.max_row + 1):
+            group_val = ws.cell(row_idx, headers["group"]).value
+            if not group_val:
+                continue
+
+            group_name = str(group_val).strip()
+            subject_val = ws.cell(row_idx, headers.get("subject", 0)).value if "subject" in headers else None
+            subject = str(subject_val or "").strip()
+            if not subject:
+                continue
+
+            # Resolve group
+            group_id = None
+            db_group_name = None
+            matched = fuzzy_match_group(group_name, group_lookup)
+            if matched:
+                group_id = group_lookup[matched].id
+                db_group_name = matched
+                group_name_map[group_name] = matched
+
+            day = parse_day(ws.cell(row_idx, headers["day"]).value) if "day" in headers else None
+            lesson_num = None
+            if "lesson" in headers:
+                lv = ws.cell(row_idx, headers["lesson"]).value
+                if lv is not None:
+                    try:
+                        lesson_num = int(float(str(lv)))
+                    except (ValueError, TypeError):
+                        pass
+
+            start_time = parse_time(ws.cell(row_idx, headers["start"]).value) if "start" in headers else None
+            end_time = parse_time(ws.cell(row_idx, headers["end"]).value) if "end" in headers else None
+
+            teacher = str(ws.cell(row_idx, headers["teacher"]).value or "").strip() if "teacher" in headers else None
+            room = str(ws.cell(row_idx, headers["room"]).value or "").strip() if "room" in headers else None
+
+            stype = ScheduleType.LECTURE
+            if "type" in headers:
+                tval = str(ws.cell(row_idx, headers["type"]).value or "").strip().lower()
+                stype = type_map.get(tval, ScheduleType.LECTURE)
+
+            records.append({
+                "sheet_group_name": group_name,
+                "db_group_name": db_group_name,
+                "group_id": group_id,
+                "day": day,
+                "lesson_number": lesson_num or 1,
+                "subject": subject,
+                "teacher": teacher,
+                "room": room,
+                "start_time": start_time,
+                "end_time": end_time,
+                "schedule_type": stype,
+            })
+
+        return records
+
+    def _parse_grid_schedule(
+        self,
+        ws,
+        group_lookup: Dict[str, Any],
+        group_name_map: Dict[str, str],
+    ) -> List[Dict[str, Any]]:
+        """
+        Parse Google Sheets grid format where:
+        - Row 1: group names as column headers (starting from col 3+)
+        - Column 1: Day of week
+        - Column 2: Lesson number / time
+        - Cells: "Subject\\nTeacher\\nRoom" or just "Subject"
+        """
+        records: List[Dict[str, Any]] = []
+
+        # Detect group columns (row 1, col 3+)
+        group_cols: Dict[int, tuple] = {}
+        for col_idx in range(1, ws.max_column + 1):
+            val = ws.cell(1, col_idx).value
+            if not val:
+                continue
+            name = str(val).strip()
+            # Skip day/time headers
+            if name.lower() in ("kun", "day", "para", "vaqt", "time", "", "hafta kuni"):
+                continue
+
+            matched = fuzzy_match_group(name, group_lookup)
+            if matched:
+                group_cols[col_idx] = (name, group_lookup[matched].id, matched)
+                group_name_map[name] = matched
+            else:
+                group_cols[col_idx] = (name, None, None)
+
+        if not group_cols:
+            return records
+
+        # Parse rows
+        current_day = None
+        for row_idx in range(2, ws.max_row + 1):
+            # Check if col 1 has a day
+            day_val = ws.cell(row_idx, 1).value
+            if day_val:
+                d = parse_day(day_val)
+                if d:
+                    current_day = d
+
+            # Check lesson number in col 2
+            lesson_val = ws.cell(row_idx, 2).value
+            lesson_num = None
+            if lesson_val is not None:
+                try:
+                    lesson_num = int(float(str(lesson_val)))
+                except (ValueError, TypeError):
+                    pass
+
+            if not current_day:
+                continue
+
+            # Parse each group column
+            for col_idx, (sheet_name, gid, db_name) in group_cols.items():
+                cell_val = ws.cell(row_idx, col_idx).value
+                if not cell_val:
+                    continue
+
+                lines = str(cell_val).strip().split("\n")
+                subject = lines[0].strip() if lines else ""
+                teacher = lines[1].strip() if len(lines) > 1 else None
+                room = lines[2].strip() if len(lines) > 2 else None
+
+                if not subject or subject == "-":
+                    continue
+
+                records.append({
+                    "sheet_group_name": sheet_name,
+                    "db_group_name": db_name,
+                    "group_id": gid,
+                    "day": current_day,
+                    "lesson_number": lesson_num or 1,
+                    "subject": subject,
+                    "teacher": teacher,
+                    "room": room,
+                    "start_time": None,
+                    "end_time": None,
+                    "schedule_type": ScheduleType.LECTURE,
+                })
+
+        return records
+
+    # ══════════════════════════════════════════════════════
+    # IMPORT: STUDENTS (simple)
+    # ══════════════════════════════════════════════════════
+
+    async def import_students(
+        self,
+        file_data: bytes,
+        group_id: Optional[int] = None,
+        update_existing: bool = True,
+    ) -> Dict[str, Any]:
+        """Import students from Excel — UPSERT by JSHSHIR or student_id."""
+        try:
+            df = pd.read_excel(io.BytesIO(file_data), engine='openpyxl')
+        except Exception as e:
+            raise BadRequestException(f"Excel faylni o'qib bo'lmadi: {str(e)}")
+
+        column_map = {
+            "F.I.O": "name", "FIO": "name", "Ism": "name",
+            "Telefon": "phone", "Tel": "phone",
+            "Email": "email", "Pochta": "email",
+            "Tug'ilgan sana": "birth_date", "Tug'ilgan": "birth_date",
+            "Jinsi": "gender", "Jins": "gender",
+            "Manzil": "address", "Pasport": "passport",
+            "JSHSHIR": "jshshir", "PINFL": "jshshir",
+            "Kontrakt": "contract_amount", "Shartnoma": "contract_amount",
+            "To'langan": "contract_paid", "Guruh": "group_name",
+        }
         df = df.rename(columns={k: v for k, v in column_map.items() if k in df.columns})
-        
+
         total = len(df)
         imported = 0
         updated = 0
         skipped = 0
         failed = 0
         errors = []
-        
+
         for idx, row in df.iterrows():
             try:
-                # Validate required fields
                 name = str(row.get("name", "")).strip()
                 if not name:
                     skipped += 1
                     continue
-                
-                # Parse data
-                student_data = {
+
+                student_data: Dict[str, Any] = {
                     "name": name,
                     "phone": str(row.get("phone", "")).strip() or None,
                     "email": str(row.get("email", "")).strip() or None,
@@ -298,7 +1184,7 @@ class ExcelService:
                     "address": str(row.get("address", "")).strip() or None,
                     "group_id": group_id,
                 }
-                
+
                 # Parse birth_date
                 birth_date = row.get("birth_date")
                 if pd.notna(birth_date):
@@ -311,50 +1197,44 @@ class ExcelService:
                                 pass
                     elif isinstance(birth_date, datetime):
                         student_data["birth_date"] = birth_date.date()
-                
+
                 # Parse gender
                 gender = str(row.get("gender", "")).strip().lower()
-                if gender in ["erkak", "male", "m", "э"]:
+                if gender in ["erkak", "male", "m"]:
                     student_data["gender"] = "male"
-                elif gender in ["ayol", "female", "f", "а"]:
+                elif gender in ["ayol", "female", "f"]:
                     student_data["gender"] = "female"
-                
+
                 # Parse contract
                 contract = row.get("contract_amount", 0)
                 if pd.notna(contract):
                     student_data["contract_amount"] = Decimal(str(contract))
-                
                 paid = row.get("contract_paid", 0)
                 if pd.notna(paid):
                     student_data["contract_paid"] = Decimal(str(paid))
-                
+
                 # Resolve group
                 group_name = str(row.get("group_name", "")).strip()
                 if group_name and not group_id:
-                    group_result = await self.db.execute(
-                        select(Group).where(Group.name == group_name)
-                    )
+                    group_result = await self.db.execute(select(Group).where(Group.name == group_name))
                     group = group_result.scalar_one_or_none()
                     if group:
                         student_data["group_id"] = group.id
-                
-                # Check if student exists (by JSHSHIR or name+phone)
+
+                # UPSERT by JSHSHIR
                 existing = None
                 if student_data.get("jshshir"):
                     result = await self.db.execute(
                         select(Student).where(Student.jshshir == student_data["jshshir"])
                     )
                     existing = result.scalar_one_or_none()
-                
+
                 if existing and update_existing:
-                    # Update existing
                     for key, value in student_data.items():
                         if value is not None:
                             setattr(existing, key, value)
                     updated += 1
                 elif not existing:
-                    # Create new
-                    # Generate student_id
                     year = now_tashkent().year
                     prefix = f"ST-{year}-"
                     max_result = await self.db.execute(
@@ -364,106 +1244,77 @@ class ExcelService:
                         .limit(1)
                     )
                     max_id = max_result.scalar()
-                    if max_id:
-                        num = int(max_id.split("-")[-1]) + 1
-                    else:
-                        num = 1
-                    
+                    num = int(max_id.split("-")[-1]) + 1 if max_id else 1
                     student_data["student_id"] = f"{prefix}{num:04d}"
-                    
+
                     student = Student(**student_data)
                     self.db.add(student)
                     imported += 1
                 else:
                     skipped += 1
-                
+
             except Exception as e:
                 failed += 1
-                errors.append({
-                    "row": idx + 2,
-                    "name": str(row.get("name", "")),
-                    "error": str(e)
-                })
-        
+                errors.append({"row": idx + 2, "name": str(row.get("name", "")), "error": str(e)})
+
         await self.db.commit()
-        
-        return ExcelImportResponse(
-            total_rows=total,
-            imported_count=imported,
-            updated_count=updated,
-            skipped_count=skipped,
-            failed_count=failed,
-            errors=errors
-        )
-    
+        return {
+            "success": True,
+            "total": total,
+            "imported": imported,
+            "updated": updated,
+            "skipped": skipped,
+            "failed": failed,
+            "errors": errors[:50],
+        }
+
+    # ══════════════════════════════════════════════════════
+    # IMPORT: GROUPS
+    # ══════════════════════════════════════════════════════
+
     async def import_groups(
         self,
         file_data: bytes,
-        update_existing: bool = False
-    ) -> dict:
-        """Import groups from Excel file."""
+        update_existing: bool = True,
+    ) -> Dict[str, Any]:
+        """Import groups from Excel — UPSERT by name."""
         try:
             df = pd.read_excel(io.BytesIO(file_data), engine='openpyxl')
         except Exception as e:
             raise BadRequestException(f"Excel faylni o'qib bo'lmadi: {str(e)}")
-        
-        # Column mapping
+
         column_map = {
-            "Guruh kodi": "name",
-            "Guruh nomi": "name",
-            "Guruh": "name",
-            "Kod": "name",
-            "Name": "name",
-            "Fakultet": "faculty",
-            "Faculty": "faculty",
-            "Yo'nalish": "faculty",
-            "Kurs": "course_year",
-            "Course": "course_year",
-            "Bosqich": "course_year",
-            "Kontrakt": "contract_amount",
-            "Shartnoma summasi": "contract_amount",
-            "Contract": "contract_amount",
+            "Guruh kodi": "name", "Guruh nomi": "name", "Guruh": "name",
+            "Kod": "name", "Name": "name", "Nomi": "name",
+            "Fakultet": "faculty", "Faculty": "faculty", "Yo'nalish": "faculty",
+            "Kurs": "course_year", "Course": "course_year", "Bosqich": "course_year",
+            "Kontrakt": "contract_amount", "Shartnoma summasi": "contract_amount",
         }
-        
-        # Rename columns
         df = df.rename(columns={k: v for k, v in column_map.items() if k in df.columns})
-        
+
         total = len(df)
         imported = 0
         updated = 0
         skipped = 0
         failed = 0
         errors = []
-        
+
         for idx, row in df.iterrows():
             try:
                 name = str(row.get("name", "")).strip()
                 if not name:
                     skipped += 1
                     continue
-                
+
                 faculty = str(row.get("faculty", "")).strip() or "Noma'lum"
-                
-                # Parse course_year
                 course_year = row.get("course_year", 1)
-                if pd.isna(course_year):
-                    course_year = 1
-                else:
-                    course_year = int(course_year)
-                
-                # Parse contract_amount
+                course_year = 1 if pd.isna(course_year) else int(course_year)
                 contract_amount = row.get("contract_amount", 0)
-                if pd.isna(contract_amount):
-                    contract_amount = 0
-                else:
-                    contract_amount = Decimal(str(contract_amount))
-                
-                # Check existing
-                result = await self.db.execute(
-                    select(Group).where(Group.name == name)
-                )
+                contract_amount = Decimal("0") if pd.isna(contract_amount) else Decimal(str(contract_amount))
+
+                result = await self.db.execute(select(Group).where(Group.name == name))
                 existing = result.scalar_one_or_none()
-                
+
                 if existing:
                     if update_existing:
                         existing.faculty = faculty
@@ -474,307 +1325,119 @@ class ExcelService:
                         skipped += 1
                 else:
                     group = Group(
-                        name=name,
-                        faculty=faculty,
-                        course_year=course_year,
-                        contract_amount=contract_amount,
-                        is_active=True
+                        name=name, faculty=faculty, course_year=course_year,
+                        contract_amount=contract_amount, is_active=True,
                     )
                     self.db.add(group)
                     imported += 1
-                    
+
             except Exception as e:
                 failed += 1
-                errors.append({
-                    "row": idx + 2,
-                    "name": str(row.get("name", "")),
-                    "error": str(e)
-                })
-        
+                errors.append({"row": idx + 2, "name": str(row.get("name", "")), "error": str(e)})
+
         await self.db.commit()
-        
         return {
-            "success": True,
-            "total": total,
-            "imported": imported,
-            "updated": updated,
-            "skipped": skipped,
-            "failed": failed,
-            "errors": errors
+            "success": True, "total": total, "imported": imported,
+            "updated": updated, "skipped": skipped, "failed": failed,
+            "errors": errors[:50],
         }
 
-    async def get_import_template(self, template_type: str) -> io.BytesIO:
-        """Get import template Excel file."""
-        if template_type == "students":
-            columns = [
-                "F.I.O", "Telefon", "Email", "Tug'ilgan sana", "Jinsi",
-                "Manzil", "Pasport", "JSHSHIR", "Guruh", "Kontrakt", "To'langan"
-            ]
-            sample_data = [{
-                "F.I.O": "Namuna Talaba",
-                "Telefon": "+998901234567",
-                "Email": "talaba@email.com",
-                "Tug'ilgan sana": "01.01.2000",
-                "Jinsi": "Erkak",
-                "Manzil": "Toshkent sh.",
-                "Pasport": "AA1234567",
-                "JSHSHIR": "12345678901234",
-                "Guruh": "101-guruh",
-                "Kontrakt": 15000000,
-                "To'langan": 5000000,
-            }]
-        elif template_type == "attendance":
-            columns = ["Talaba ID", "Sana", "Holat", "Kechikish", "Fan", "Izoh"]
-            sample_data = [{
-                "Talaba ID": "ST-2024-0001",
-                "Sana": now_tashkent().strftime("%d.%m.%Y"),
-                "Holat": "Keldi",
-                "Kechikish": 0,
-                "Fan": "Matematika",
-                "Izoh": "",
-            }]
-        else:
-            raise BadRequestException(f"Unknown template type: {template_type}")
-        
-        df = pd.DataFrame(sample_data, columns=columns)
-        
-        return self._create_excel_file(df, f"{template_type}_template")
+    # ══════════════════════════════════════════════════════
+    # IMPORT: ATTENDANCE
+    # ══════════════════════════════════════════════════════
 
-    async def import_kontingent(
+    async def import_attendance(
         self,
         file_data: bytes,
-        update_existing: bool = False,
-        create_users: bool = True,
-        default_password: str = "12345678"
+        group_id: int,
+        attendance_date: date,
     ) -> Dict[str, Any]:
-        """
-        Import students from Kontingent Excel file.
-        OPTIMIZED: Batch insert for speed - can handle 20,000+ students in seconds.
-        """
-        from openpyxl import load_workbook
-        from app.models.user import User, UserRole
-        from app.core.security import get_password_hash
-        import re
-        
-        # Load workbook with read_only for speed
-        wb = load_workbook(io.BytesIO(file_data), read_only=True, data_only=True)
-        ws = wb.active
-        
-        # Pre-hash the default password once (expensive operation)
-        hashed_password = get_password_hash(default_password)
-        
-        # Load existing data in bulk for fast lookups
-        existing_students_result = await self.db.execute(select(Student.student_id))
-        existing_student_ids = set(row[0] for row in existing_students_result.fetchall())
-        
-        existing_users_result = await self.db.execute(select(User.login))
-        existing_user_logins = set(row[0] for row in existing_users_result.fetchall())
-        
-        existing_groups_result = await self.db.execute(select(Group.id, Group.name))
-        groups_cache = {row[1]: row[0] for row in existing_groups_result.fetchall()}
-        
-        # Collect all data first (in memory)
-        students_to_create = []
-        users_to_create = []
-        groups_to_create = {}  # name -> group_data
-        student_user_links = []  # [(student_id, user_login), ...]
-        
+        """Import attendance from Excel — UPSERT by student + date."""
+        try:
+            df = pd.read_excel(io.BytesIO(file_data), engine='openpyxl')
+        except Exception as e:
+            raise BadRequestException(f"Excel faylni o'qib bo'lmadi: {str(e)}")
+
+        column_map = {
+            "Talaba ID": "student_id", "ID": "student_id",
+            "F.I.O": "name", "FIO": "name", "Ism": "name",
+            "Holat": "status", "Status": "status",
+            "Izoh": "note", "Note": "note", "Sabab": "note",
+        }
+        df = df.rename(columns={k: v for k, v in column_map.items() if k in df.columns})
+
+        status_map = {
+            "keldi": AttendanceStatus.PRESENT, "present": AttendanceStatus.PRESENT,
+            "bor": AttendanceStatus.PRESENT, "+": AttendanceStatus.PRESENT,
+            "kelmadi": AttendanceStatus.ABSENT, "absent": AttendanceStatus.ABSENT,
+            "yo'q": AttendanceStatus.ABSENT, "-": AttendanceStatus.ABSENT,
+            "kech": AttendanceStatus.LATE, "late": AttendanceStatus.LATE,
+            "kech qoldi": AttendanceStatus.LATE,
+            "sababli": AttendanceStatus.EXCUSED, "excused": AttendanceStatus.EXCUSED,
+        }
+
+        # Load group students
+        students_result = await self.db.execute(
+            select(Student).where(Student.group_id == group_id)
+        )
+        students = students_result.scalars().all()
+        student_by_id = {s.student_id: s for s in students}
+        student_by_name = {s.name.upper(): s for s in students}
+
         imported = 0
-        updated = 0
-        skipped = 0
         failed = 0
         errors = []
-        users_created = 0
-        
-        # Read all rows at once
-        rows = list(ws.iter_rows(min_row=3, values_only=True))
-        
-        for row_idx, row in enumerate(rows, start=3):
+
+        for idx, row in df.iterrows():
             try:
-                if not row or len(row) < 2:
+                # Find student
+                student = None
+                sid = str(row.get("student_id", "")).strip()
+                if sid and sid in student_by_id:
+                    student = student_by_id[sid]
+                else:
+                    name = str(row.get("name", "")).strip().upper()
+                    if name in student_by_name:
+                        student = student_by_name[name]
+
+                if not student:
+                    failed += 1
+                    errors.append({"row": idx + 2, "error": "Talaba topilmadi"})
                     continue
-                    
-                # Read cell values (by index, 0-based)
-                student_id = str(row[0] or "").strip()
-                full_name = str(row[1] or "").strip()
-                
-                # Skip empty rows
-                if not student_id or not full_name:
-                    continue
-                
-                # Check if already exists
-                if student_id in existing_student_ids:
-                    skipped += 1
-                    continue
-                
-                # Parse all fields
-                passport = str(row[3] or "").strip() if len(row) > 3 else ""
-                jshshir = str(row[4] or "").strip() if len(row) > 4 else ""
-                birth_date = row[6] if len(row) > 6 else None
-                phone = str(row[7] or "").strip() if len(row) > 7 else ""
-                specialty_name = str(row[12] or "").strip() if len(row) > 12 else ""
-                course = row[13] if len(row) > 13 else None
-                group_name = str(row[14] or "").strip() if len(row) > 14 else ""
-                
-                # Address columns
-                country = str(row[15] or "").strip() if len(row) > 15 else ""
-                region = str(row[16] or "").strip() if len(row) > 16 else ""
-                district = str(row[17] or "").strip() if len(row) > 17 else ""
-                address_detail = str(row[18] or "").strip() if len(row) > 18 else ""
-                full_living_address = str(row[22] or "").strip() if len(row) > 22 else ""
-                living_address = str(row[21] or "").strip() if len(row) > 21 else ""
-                commute = str(row[23] or "").strip() if len(row) > 23 else ""
-                
-                # Build address
-                address_parts = [p for p in [country, region, district, address_detail] if p]
-                full_address = ", ".join(address_parts) if address_parts else full_living_address or living_address
-                
-                # Parse birth_date
-                parsed_birth_date = None
-                if birth_date:
-                    if isinstance(birth_date, datetime):
-                        parsed_birth_date = birth_date.date()
-                    elif isinstance(birth_date, date):
-                        parsed_birth_date = birth_date
-                    elif isinstance(birth_date, str):
-                        for fmt in ["%d.%m.%Y", "%Y-%m-%d", "%d/%m/%Y"]:
-                            try:
-                                parsed_birth_date = datetime.strptime(birth_date, fmt).date()
-                                break
-                            except Exception:
-                                pass  # Expected: trying multiple date formats
-                
-                # Parse course
-                course_num = 1
-                if course:
-                    if isinstance(course, (int, float)):
-                        course_num = int(course)
-                    elif isinstance(course, str):
-                        match = re.search(r'(\d+)', str(course))
-                        if match:
-                            course_num = int(match.group(1))
-                
-                # Handle group - check cache first
-                group_id = None
-                if group_name:
-                    if group_name in groups_cache:
-                        group_id = groups_cache[group_name]
-                    elif group_name in groups_to_create:
-                        group_id = f"__new__{group_name}"  # Placeholder
-                    else:
-                        # Mark for creation
-                        groups_to_create[group_name] = {
-                            "name": group_name,
-                            "faculty": specialty_name or "Unknown",
-                            "course_year": course_num,
-                            "is_active": True
-                        }
-                        group_id = f"__new__{group_name}"  # Placeholder
-                
-                # Add student to batch
-                students_to_create.append({
-                    "student_id": student_id,
-                    "name": full_name,
-                    "phone": phone or None,
-                    "passport": passport or None,
-                    "jshshir": jshshir or None,
-                    "birth_date": parsed_birth_date,
-                    "address": full_address or None,
-                    "commute": commute or None,
-                    "group_id": group_id,  # Will be resolved after groups created
-                    "is_active": True,
-                    "contract_amount": 0,
-                    "contract_paid": 0
-                })
-                existing_student_ids.add(student_id)
+
+                status_str = str(row.get("status", "")).strip().lower()
+                status = status_map.get(status_str, AttendanceStatus.PRESENT)
+                note = str(row.get("note", "")).strip() or None
+
+                # UPSERT attendance
+                existing = await self.db.execute(
+                    select(Attendance).where(
+                        Attendance.student_id == student.id,
+                        Attendance.date == attendance_date,
+                    )
+                )
+                att = existing.scalar_one_or_none()
+
+                if att:
+                    att.status = status
+                    att.note = note
+                else:
+                    att = Attendance(
+                        student_id=student.id,
+                        date=attendance_date,
+                        status=status,
+                        note=note,
+                    )
+                    self.db.add(att)
+
                 imported += 1
-                
-                # Add user to batch
-                if create_users and student_id not in existing_user_logins:
-                    users_to_create.append({
-                        "login": student_id,
-                        "password_hash": hashed_password,
-                        "name": full_name,
-                        "phone": phone or None,
-                        "role": UserRole.STUDENT,
-                        "is_active": True,
-                        "is_first_login": True
-                    })
-                    student_user_links.append(student_id)
-                    existing_user_logins.add(student_id)
-                    users_created += 1
-                    
+
             except Exception as e:
                 failed += 1
-                errors.append({
-                    "row": row_idx,
-                    "student_id": str(row[0] if row and len(row) > 0 else ""),
-                    "name": str(row[1] if row and len(row) > 1 else ""),
-                    "error": str(e)
-                })
-        
-        wb.close()
-        
-        # Now batch insert everything
-        
-        # 1. Create all new groups first
-        if groups_to_create:
-            for group_data in groups_to_create.values():
-                group = Group(**group_data)
-                self.db.add(group)
-            await self.db.flush()
-            
-            # Refresh groups cache
-            groups_result = await self.db.execute(select(Group.id, Group.name))
-            groups_cache = {row[1]: row[0] for row in groups_result.fetchall()}
-        
-        # 2. Resolve group_id placeholders and create students
-        for student_data in students_to_create:
-            group_id = student_data["group_id"]
-            if isinstance(group_id, str) and group_id.startswith("__new__"):
-                group_name = group_id[7:]  # Remove "__new__" prefix
-                student_data["group_id"] = groups_cache.get(group_name)
-            
-            student = Student(**student_data)
-            self.db.add(student)
-        
-        # 3. Create all users
-        for user_data in users_to_create:
-            user = User(**user_data)
-            self.db.add(user)
-        
-        # 4. Commit everything at once
+                errors.append({"row": idx + 2, "error": str(e)})
+
         await self.db.commit()
-        
-        # 5. Link users to students (optional, can be done in bulk later)
-        if student_user_links:
-            # Get all created users and students
-            users_result = await self.db.execute(
-                select(User.id, User.login).where(User.login.in_(student_user_links))
-            )
-            user_id_map = {row[1]: row[0] for row in users_result.fetchall()}
-            
-            students_result = await self.db.execute(
-                select(Student.id, Student.student_id).where(Student.student_id.in_(student_user_links))
-            )
-            
-            for student_id, student_sid in students_result.fetchall():
-                if student_sid in user_id_map:
-                    await self.db.execute(
-                        Student.__table__.update()
-                        .where(Student.id == student_id)
-                        .values(user_id=user_id_map[student_sid])
-                    )
-            
-            await self.db.commit()
-        
         return {
-            "success": True,
-            "imported": imported,
-            "updated": updated,
-            "skipped": skipped,
-            "failed": failed,
-            "users_created": users_created,
-            "errors": errors[:50],  # Limit errors to 50
-            "message": f"Kontingentdan {imported} ta yangi talaba import qilindi, {updated} ta yangilandi, {users_created} ta foydalanuvchi yaratildi."
+            "success": True, "imported": imported, "failed": failed,
+            "errors": errors[:50],
         }

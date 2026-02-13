@@ -279,7 +279,7 @@ async def update_attendance(
         # Ensure both are tz-aware for comparison
         if created and (not hasattr(created, 'tzinfo') or created.tzinfo is None):
             from app.config import TASHKENT_TZ
-            created = created.replace(tzinfo=TASHKENT_TZ)
+            created = TASHKENT_TZ.localize(created)
         time_since_creation = now - created
         if time_since_creation > timedelta(hours=24):
             from fastapi import HTTPException as HTTPErr

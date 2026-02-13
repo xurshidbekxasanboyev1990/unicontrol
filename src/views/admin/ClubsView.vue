@@ -1,10 +1,10 @@
 <template>
   <div class="space-y-6">
     <!-- Header -->
-    <div class="flex items-center justify-between flex-wrap gap-4">
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
       <div>
-        <h1 class="text-2xl font-bold text-slate-800">{{ $t('clubs.title') }}</h1>
-        <p class="text-slate-500">{{ dataStore.clubs.length }} {{ $t('clubs.title') }}</p>
+        <h1 class="text-xl sm:text-2xl font-bold text-slate-800">{{ $t('clubs.title') }}</h1>
+        <p class="text-sm text-slate-500">{{ dataStore.clubs.length }} {{ $t('clubs.title') }}</p>
       </div>
       <button 
         @click="openModal()"
@@ -306,23 +306,23 @@
 
 <script setup>
 import {
-  AlertTriangle,
-  Banknote,
-  BookOpen,
-  Calculator,
-  Clock,
-  Code,
-  Dumbbell,
-  Globe,
-  Loader2,
-  MapPin,
-  Palette,
-  Pencil,
-  Phone,
-  Plus,
-  Power,
-  Trash2,
-  X
+    AlertTriangle,
+    Banknote,
+    BookOpen,
+    Calculator,
+    Clock,
+    Code,
+    Dumbbell,
+    Globe,
+    Loader2,
+    MapPin,
+    Palette,
+    Pencil,
+    Phone,
+    Plus,
+    Power,
+    Trash2,
+    X
 } from 'lucide-vue-next'
 import { computed, markRaw, onMounted, reactive, ref } from 'vue'
 import { useDataStore } from '../../stores/data'

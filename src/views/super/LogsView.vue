@@ -22,13 +22,13 @@
 
     <template v-else>
       <!-- Header -->
-      <div class="flex items-center justify-between">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 class="text-2xl font-bold text-slate-800">{{ $t('logs.title') }}</h1>
-          <p class="text-slate-500">Barcha faoliyatlar tarixi</p>
+          <h1 class="text-xl sm:text-2xl font-bold text-slate-800">{{ $t('logs.title') }}</h1>
+          <p class="text-sm text-slate-500">Barcha faoliyatlar tarixi</p>
         </div>
-        <div class="flex items-center gap-3">
-          <select v-model="filterType" @change="loadLogs" class="px-4 py-2 rounded-xl border border-slate-200 focus:border-amber-500 outline-none">
+        <div class="flex items-center gap-2 sm:gap-3">
+          <select v-model="filterType" @change="loadLogs" class="flex-1 sm:flex-none px-3 sm:px-4 py-2 rounded-xl border border-slate-200 focus:border-amber-500 outline-none text-sm">
             <option value="">Barcha turlar</option>
             <option value="auth">Autentifikatsiya</option>
             <option value="crud">CRUD amallar</option>
@@ -96,7 +96,7 @@
     <!-- Logs Table -->
     <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden">
       <div class="overflow-x-auto">
-        <table class="w-full">
+        <table class="w-full min-w-[700px]">
           <thead>
             <tr class="border-b border-slate-100 bg-slate-50">
               <th class="text-left p-4 font-semibold text-slate-600">Vaqt</th>
@@ -148,9 +148,9 @@
       </div>
 
       <!-- Pagination -->
-      <div class="p-4 border-t border-slate-100 flex items-center justify-between">
+      <div class="p-3 sm:p-4 border-t border-slate-100 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
         <p class="text-sm text-slate-500">{{ filteredLogs.length }} ta yozuvdan {{ Math.min(20, filteredLogs.length) }} tasi ko'rsatilmoqda</p>
-        <div class="flex items-center gap-2">
+        <div class="flex items-center gap-1 sm:gap-2 flex-wrap">
           <button class="px-3 py-1.5 rounded-lg border border-slate-200 text-sm text-slate-600 hover:bg-slate-50 disabled:opacity-50" disabled>
             <ChevronLeft class="w-4 h-4" />
           </button>

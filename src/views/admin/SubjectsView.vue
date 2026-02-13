@@ -324,9 +324,9 @@
                     />
                     <div :class="[
                       'w-8 h-8 rounded-lg flex items-center justify-center',
-                      `bg-${subject.color}-100`
+                      'bg-emerald-100'
                     ]">
-                      <component :is="getSubjectIcon(subject.icon)" :class="`w-4 h-4 text-${subject.color}-500`" />
+                      <component :is="getSubjectIcon(subject.icon)" class="w-4 h-4 text-emerald-500" />
                     </div>
                     <span class="text-sm font-medium text-slate-700 flex-1">{{ subject.name }}</span>
                     <button

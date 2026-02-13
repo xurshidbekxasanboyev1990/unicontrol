@@ -396,7 +396,7 @@ class ReportService:
                         column_letter = cell.column_letter
                     if cell.value:
                         max_length = max(max_length, len(str(cell.value)))
-                except:
+                except Exception:
                     pass
             if column_letter:
                 ws.column_dimensions[column_letter].width = min(max_length + 4, 40)

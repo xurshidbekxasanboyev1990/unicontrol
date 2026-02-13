@@ -1,51 +1,51 @@
 <template>
   <div class="space-y-6">
     <!-- Stats Overview -->
-    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
-      <div class="bg-white rounded-2xl border border-slate-200 p-5">
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+      <div class="bg-white rounded-2xl border border-slate-200 p-3 sm:p-5">
         <div class="flex items-center justify-between">
           <div>
-            <p class="text-3xl font-bold text-slate-800">{{ stats.total }}</p>
-            <p class="text-sm text-slate-500 mt-1">{{ $t('attendance.title') }}</p>
+            <p class="text-xl sm:text-3xl font-bold text-slate-800">{{ stats.total }}</p>
+            <p class="text-xs sm:text-sm text-slate-500 mt-1">{{ $t('attendance.title') }}</p>
           </div>
-          <div class="w-12 h-12 bg-slate-100 rounded-xl flex items-center justify-center">
-            <CalendarDays class="w-6 h-6 text-slate-600" />
+          <div class="w-10 h-10 sm:w-12 sm:h-12 bg-slate-100 rounded-xl flex items-center justify-center">
+            <CalendarDays class="w-5 h-5 sm:w-6 sm:h-6 text-slate-600" />
           </div>
         </div>
       </div>
 
-      <div class="bg-white rounded-2xl border border-slate-200 p-5">
+      <div class="bg-white rounded-2xl border border-slate-200 p-3 sm:p-5">
         <div class="flex items-center justify-between">
           <div>
-            <p class="text-3xl font-bold text-emerald-600">{{ stats.present }}</p>
-            <p class="text-sm text-slate-500 mt-1">{{ $t('attendance.present') }}</p>
+            <p class="text-xl sm:text-3xl font-bold text-emerald-600">{{ stats.present }}</p>
+            <p class="text-xs sm:text-sm text-slate-500 mt-1">{{ $t('attendance.present') }}</p>
           </div>
-          <div class="w-12 h-12 bg-emerald-100 rounded-xl flex items-center justify-center">
-            <CheckCircle class="w-6 h-6 text-emerald-600" />
+          <div class="w-10 h-10 sm:w-12 sm:h-12 bg-emerald-100 rounded-xl flex items-center justify-center">
+            <CheckCircle class="w-5 h-5 sm:w-6 sm:h-6 text-emerald-600" />
           </div>
         </div>
       </div>
 
-      <div class="bg-white rounded-2xl border border-slate-200 p-5">
+      <div class="bg-white rounded-2xl border border-slate-200 p-3 sm:p-5">
         <div class="flex items-center justify-between">
           <div>
-            <p class="text-3xl font-bold text-amber-600">{{ stats.late }}</p>
-            <p class="text-sm text-slate-500 mt-1">{{ $t('attendance.late') }}</p>
+            <p class="text-xl sm:text-3xl font-bold text-amber-600">{{ stats.late }}</p>
+            <p class="text-xs sm:text-sm text-slate-500 mt-1">{{ $t('attendance.late') }}</p>
           </div>
-          <div class="w-12 h-12 bg-amber-100 rounded-xl flex items-center justify-center">
-            <Clock class="w-6 h-6 text-amber-600" />
+          <div class="w-10 h-10 sm:w-12 sm:h-12 bg-amber-100 rounded-xl flex items-center justify-center">
+            <Clock class="w-5 h-5 sm:w-6 sm:h-6 text-amber-600" />
           </div>
         </div>
       </div>
 
-      <div class="bg-white rounded-2xl border border-slate-200 p-5">
+      <div class="bg-white rounded-2xl border border-slate-200 p-3 sm:p-5">
         <div class="flex items-center justify-between">
           <div>
-            <p class="text-3xl font-bold text-rose-600">{{ stats.absent }}</p>
-            <p class="text-sm text-slate-500 mt-1">{{ $t('attendance.absent') }}</p>
+            <p class="text-xl sm:text-3xl font-bold text-rose-600">{{ stats.absent }}</p>
+            <p class="text-xs sm:text-sm text-slate-500 mt-1">{{ $t('attendance.absent') }}</p>
           </div>
-          <div class="w-12 h-12 bg-rose-100 rounded-xl flex items-center justify-center">
-            <XCircle class="w-6 h-6 text-rose-600" />
+          <div class="w-10 h-10 sm:w-12 sm:h-12 bg-rose-100 rounded-xl flex items-center justify-center">
+            <XCircle class="w-5 h-5 sm:w-6 sm:h-6 text-rose-600" />
           </div>
         </div>
       </div>

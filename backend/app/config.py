@@ -80,7 +80,7 @@ class Settings(BaseSettings):
     # ====================
     # CORS
     # ====================
-    CORS_ORIGINS: str = 'http://localhost:5173,http://localhost:5174,http://127.0.0.1:5173,http://127.0.0.1:5174,http://localhost:3000,http://127.0.0.1:3000'
+    CORS_ORIGINS: str = 'http://localhost:5173,http://localhost:5174,http://127.0.0.1:5173,http://127.0.0.1:5174,http://localhost:3000,http://127.0.0.1:3000,http://192.168.213.3:5173,http://192.168.213.3:8000,http://192.168.213.3'
     CORS_ALLOW_CREDENTIALS: bool = True
     
     @field_validator("CORS_ORIGINS", mode="before")
@@ -104,7 +104,7 @@ class Settings(BaseSettings):
     # OPENAI API
     # ====================
     OPENAI_API_KEY: Optional[str] = None
-    OPENAI_MODEL: str = "gpt-4-turbo-preview"
+    OPENAI_MODEL: str = "gpt-4o-mini"
     OPENAI_MAX_TOKENS: int = 2000
     OPENAI_TEMPERATURE: float = 0.7
     
@@ -151,7 +151,7 @@ class Settings(BaseSettings):
     # ====================
     # RATE LIMITING
     # ====================
-    RATE_LIMIT_PER_MINUTE: int = 60
+    RATE_LIMIT_PER_MINUTE: int = 200
     RATE_LIMIT_PER_HOUR: int = 1000
     
     # ====================

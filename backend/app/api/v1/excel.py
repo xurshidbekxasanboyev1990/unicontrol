@@ -30,7 +30,7 @@ async def import_excel(
     file: UploadFile = File(...),
     type: str = Form("auto"),
     group_id: Optional[int] = Form(None),
-    update_existing: bool = Form(False),
+    update_existing: bool = Form(True),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(require_admin)
 ):
@@ -68,7 +68,7 @@ async def import_excel(
                 type = "groups"
             else:
                 type = "kontingent"  # Default to kontingent
-        except:
+        except Exception:
             type = "kontingent"
     
     if type == "kontingent":
@@ -229,37 +229,38 @@ async def import_attendance(
 @router.post("/import/schedules")
 async def import_schedules(
     file: UploadFile = File(...),
-    group_id: int = Form(...),
-    semester: int = Form(...),
-    academic_year: str = Form(...),
+    semester: int = Form(2),
+    academic_year: str = Form("2025-2026"),
+    clear_existing: bool = Form(True),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(require_admin)
 ):
     """
-    Import schedules from Excel file.
+    Import schedules from Excel file with fuzzy group matching.
     
     Requires admin role.
     
-    Excel format:
-    - Column A: Subject Name
-    - Column B: Day of Week (1-7)
-    - Column C: Start Time (HH:MM)
-    - Column D: End Time (HH:MM)
-    - Column E: Room
-    - Column F: Teacher Name (optional)
+    Supports two formats:
+    1. Flat table: Guruh | Kun | Para | Fan | O'qituvchi | Xona | Boshlanish | Tugash
+    2. Grid: Groups as columns, days as rows, lessons in cells
+    
+    Features:
+    - Fuzzy group name matching (KI-25-09 <-> KI_25-09)
+    - Auto-detects format
+    - Clears old schedules for matched groups (optional)
     """
     service = ExcelService(db)
     
     if not file.filename.endswith(('.xlsx', '.xls')):
         from app.core.exceptions import BadRequestException
-        raise BadRequestException("Invalid file type. Please upload an Excel file.")
+        raise BadRequestException("Faqat Excel fayl (.xlsx, .xls) yuklay olasiz.")
     
     contents = await file.read()
     result = await service.import_schedules(
         file_data=contents,
-        group_id=group_id,
+        academic_year=academic_year,
         semester=semester,
-        academic_year=academic_year
+        clear_existing=clear_existing,
     )
     
     return result
@@ -268,8 +269,9 @@ async def import_schedules(
 @router.post("/import/kontingent")
 async def import_kontingent(
     file: UploadFile = File(...),
-    update_existing: bool = Form(False),
+    update_existing: bool = Form(True),
     create_users: bool = Form(True),
+    deactivate_missing: bool = Form(False),
     default_password: Optional[str] = Form(None),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(require_superadmin)
@@ -314,7 +316,8 @@ async def import_kontingent(
         file_data=contents,
         update_existing=update_existing,
         create_users=create_users,
-        default_password=default_password
+        default_password=default_password,
+        deactivate_missing=deactivate_missing,
     )
     
     return result
@@ -324,7 +327,6 @@ async def import_kontingent(
 @router.get("/export/students")
 async def export_students(
     group_id: Optional[int] = None,
-    is_active: Optional[bool] = None,
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(require_leader)
 ):
@@ -335,12 +337,11 @@ async def export_students(
     """
     service = ExcelService(db)
     file_data = await service.export_students(
-        group_id=group_id,
-        is_active=is_active
+        group_id=group_id
     )
     
     return StreamingResponse(
-        io.BytesIO(file_data),
+        file_data,
         media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         headers={
             "Content-Disposition": "attachment; filename=students.xlsx"
@@ -361,13 +362,10 @@ async def export_groups(
     Requires admin role.
     """
     service = ExcelService(db)
-    file_data = await service.export_groups(
-        faculty=faculty,
-        course=course
-    )
+    file_data = await service.export_groups()
     
     return StreamingResponse(
-        io.BytesIO(file_data),
+        file_data,
         media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         headers={
             "Content-Disposition": "attachment; filename=groups.xlsx"
@@ -378,8 +376,8 @@ async def export_groups(
 @router.get("/export/attendance")
 async def export_attendance(
     group_id: int = Query(...),
-    start_date: date = Query(...),
-    end_date: date = Query(...),
+    date_from: date = Query(...),
+    date_to: date = Query(...),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(require_leader)
 ):
@@ -391,15 +389,15 @@ async def export_attendance(
     service = ExcelService(db)
     file_data = await service.export_attendance(
         group_id=group_id,
-        start_date=start_date,
-        end_date=end_date
+        date_from=date_from,
+        date_to=date_to
     )
     
     return StreamingResponse(
-        io.BytesIO(file_data),
+        file_data,
         media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         headers={
-            "Content-Disposition": f"attachment; filename=attendance_{start_date}_{end_date}.xlsx"
+            "Content-Disposition": f"attachment; filename=attendance_{date_from}_{date_to}.xlsx"
         }
     )
 
@@ -418,12 +416,11 @@ async def export_schedules(
     """
     service = ExcelService(db)
     file_data = await service.export_schedules(
-        group_id=group_id,
-        semester=semester
+        group_id=group_id
     )
     
     return StreamingResponse(
-        io.BytesIO(file_data),
+        file_data,
         media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         headers={
             "Content-Disposition": "attachment; filename=schedule.xlsx"
@@ -443,13 +440,13 @@ async def export_report(
     Requires leader role or higher.
     """
     service = ExcelService(db)
-    file_data, filename = await service.export_report(report_id)
+    file_data = await service.export_report(report_id)
     
     return StreamingResponse(
-        io.BytesIO(file_data),
+        file_data,
         media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         headers={
-            "Content-Disposition": f"attachment; filename={filename}"
+            "Content-Disposition": f"attachment; filename=report_{report_id}.xlsx"
         }
     )
 
@@ -457,16 +454,17 @@ async def export_report(
 # Template Downloads
 @router.get("/templates/students")
 async def download_students_template(
+    db: AsyncSession = Depends(get_db),
     current_user: User = Depends(require_admin)
 ):
     """
     Download students import template.
     """
-    service = ExcelService(None)
-    file_data = service.generate_students_template()
+    service = ExcelService(db)
+    file_data = await service.get_import_template("students")
     
     return StreamingResponse(
-        io.BytesIO(file_data),
+        file_data,
         media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         headers={
             "Content-Disposition": "attachment; filename=students_template.xlsx"
@@ -476,16 +474,17 @@ async def download_students_template(
 
 @router.get("/templates/groups")
 async def download_groups_template(
+    db: AsyncSession = Depends(get_db),
     current_user: User = Depends(require_admin)
 ):
     """
     Download groups import template.
     """
-    service = ExcelService(None)
-    file_data = service.generate_groups_template()
+    service = ExcelService(db)
+    file_data = await service.get_import_template("groups")
     
     return StreamingResponse(
-        io.BytesIO(file_data),
+        file_data,
         media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         headers={
             "Content-Disposition": "attachment; filename=groups_template.xlsx"
@@ -495,18 +494,17 @@ async def download_groups_template(
 
 @router.get("/templates/attendance")
 async def download_attendance_template(
-    group_id: int = Query(...),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(require_leader)
 ):
     """
-    Download attendance import template pre-filled with students.
+    Download attendance import template.
     """
     service = ExcelService(db)
-    file_data = await service.generate_attendance_template(group_id)
+    file_data = await service.get_import_template("attendance")
     
     return StreamingResponse(
-        io.BytesIO(file_data),
+        file_data,
         media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         headers={
             "Content-Disposition": "attachment; filename=attendance_template.xlsx"
@@ -516,16 +514,17 @@ async def download_attendance_template(
 
 @router.get("/templates/schedules")
 async def download_schedules_template(
+    db: AsyncSession = Depends(get_db),
     current_user: User = Depends(require_admin)
 ):
     """
     Download schedules import template.
     """
-    service = ExcelService(None)
-    file_data = service.generate_schedules_template()
+    service = ExcelService(db)
+    file_data = await service.get_import_template("schedules")
     
     return StreamingResponse(
-        io.BytesIO(file_data),
+        file_data,
         media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         headers={
             "Content-Disposition": "attachment; filename=schedules_template.xlsx"

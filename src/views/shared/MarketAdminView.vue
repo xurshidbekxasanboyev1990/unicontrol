@@ -201,12 +201,12 @@
         </div>
         <div class="text-right">
           <p class="text-lg font-bold text-emerald-600">{{ formatPrice(payout.amount) }}</p>
-          <div v-if="payout.status === 'pending'" class="flex gap-2 mt-2">
-            <button @click="processPayout(payout.id, 'completed')"
+          <div v-if="payout.status !== 'completed' && payout.status !== 'rejected'" class="flex gap-2 mt-2">
+            <button v-if="payout.status !== 'completed'" @click="processPayout(payout.id, 'completed')"
               class="bg-gradient-to-r from-emerald-500 to-emerald-600 text-white px-3 py-1.5 rounded-lg text-xs font-medium hover:from-emerald-600 hover:to-emerald-700 shadow-sm transition-all">
               ✅ {{ $t('market.approvePayout') }}
             </button>
-            <button @click="processPayout(payout.id, 'rejected')"
+            <button v-if="payout.status !== 'rejected'" @click="processPayout(payout.id, 'rejected')"
               class="border border-rose-200 text-rose-600 px-3 py-1.5 rounded-lg text-xs font-medium hover:bg-rose-50 transition-colors">
               ❌ {{ $t('market.rejectPayout') }}
             </button>

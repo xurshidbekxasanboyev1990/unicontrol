@@ -48,6 +48,8 @@ from app.models.canteen import (
 from app.models.club import Club, ClubMember
 from app.models.subject import Subject, Direction, DirectionSubject
 from app.models.tournament import Tournament, TournamentRegistration
+from app.models.contract import Contract
+from app.models.quiz import QuizSet, QuizCard, QuizResult
 from app.models.market import (
     UserMarketProfile,
     ServiceListing,
@@ -138,6 +140,12 @@ __all__ = [
     # Tournament
     "Tournament",
     "TournamentRegistration",
+    # Contract
+    "Contract",
+    # Quiz
+    "QuizSet",
+    "QuizCard",
+    "QuizResult",
     # Market
     "UserMarketProfile",
     "ServiceListing",

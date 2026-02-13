@@ -3,8 +3,8 @@
     <!-- Page Header -->
     <div class="flex items-center justify-between">
       <div>
-        <h1 class="text-2xl font-bold text-slate-800">{{ $t('importData.title') }}</h1>
-        <p class="text-slate-500 mt-1">Excel yoki CSV fayllardan ma'lumotlarni yuklash</p>
+        <h1 class="text-xl sm:text-2xl font-bold text-slate-800">{{ $t('importData.title') }}</h1>
+        <p class="text-sm text-slate-500 mt-1">Excel yoki CSV fayllardan ma'lumotlarni yuklash</p>
       </div>
     </div>
 

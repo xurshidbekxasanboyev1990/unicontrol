@@ -3,8 +3,8 @@
     <!-- Header -->
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
       <div>
-        <h1 class="text-2xl font-bold text-slate-800">{{ $t('attendance.takeAttendance') }}</h1>
-        <p class="text-slate-500">{{ $t('attendance.writeForLesson') }}</p>
+        <h1 class="text-xl sm:text-2xl font-bold text-slate-800">{{ $t('attendance.takeAttendance') }}</h1>
+        <p class="text-sm text-slate-500">{{ $t('attendance.writeForLesson') }}</p>
       </div>
       <div class="flex flex-wrap items-center gap-3">
         <select v-model="selectedDate" class="px-4 py-2.5 rounded-xl border border-slate-200 bg-white focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 outline-none transition-all">
@@ -177,48 +177,48 @@
         </div>
 
         <!-- Quick Stats -->
-        <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          <div class="bg-gradient-to-br from-emerald-50 to-emerald-100/50 rounded-2xl p-5 border border-emerald-200/50">
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+          <div class="bg-gradient-to-br from-emerald-50 to-emerald-100/50 rounded-2xl p-3 sm:p-5 border border-emerald-200/50">
             <div class="flex items-center justify-between">
               <div>
-                <p class="text-3xl font-bold text-emerald-600">{{ presentCount }}</p>
-                <p class="text-sm text-emerald-700 font-medium">{{ $t('attendance.present') }}</p>
+                <p class="text-xl sm:text-3xl font-bold text-emerald-600">{{ presentCount }}</p>
+                <p class="text-xs sm:text-sm text-emerald-700 font-medium">{{ $t('attendance.present') }}</p>
               </div>
-              <div class="w-12 h-12 bg-emerald-500/20 rounded-xl flex items-center justify-center">
-                <CheckCircle class="w-6 h-6 text-emerald-600" />
+              <div class="w-10 h-10 sm:w-12 sm:h-12 bg-emerald-500/20 rounded-xl flex items-center justify-center">
+                <CheckCircle class="w-5 h-5 sm:w-6 sm:h-6 text-emerald-600" />
               </div>
             </div>
           </div>
-          <div class="bg-gradient-to-br from-amber-50 to-amber-100/50 rounded-2xl p-5 border border-amber-200/50">
+          <div class="bg-gradient-to-br from-amber-50 to-amber-100/50 rounded-2xl p-3 sm:p-5 border border-amber-200/50">
             <div class="flex items-center justify-between">
               <div>
-                <p class="text-3xl font-bold text-amber-600">{{ lateCount }}</p>
-                <p class="text-sm text-amber-700 font-medium">{{ $t('attendance.late') }}</p>
+                <p class="text-xl sm:text-3xl font-bold text-amber-600">{{ lateCount }}</p>
+                <p class="text-xs sm:text-sm text-amber-700 font-medium">{{ $t('attendance.late') }}</p>
               </div>
-              <div class="w-12 h-12 bg-amber-500/20 rounded-xl flex items-center justify-center">
-                <Clock class="w-6 h-6 text-amber-600" />
+              <div class="w-10 h-10 sm:w-12 sm:h-12 bg-amber-500/20 rounded-xl flex items-center justify-center">
+                <Clock class="w-5 h-5 sm:w-6 sm:h-6 text-amber-600" />
               </div>
             </div>
           </div>
-          <div class="bg-gradient-to-br from-rose-50 to-rose-100/50 rounded-2xl p-5 border border-rose-200/50">
+          <div class="bg-gradient-to-br from-rose-50 to-rose-100/50 rounded-2xl p-3 sm:p-5 border border-rose-200/50">
             <div class="flex items-center justify-between">
               <div>
-                <p class="text-3xl font-bold text-rose-600">{{ absentCount }}</p>
-                <p class="text-sm text-rose-700 font-medium">{{ $t('attendance.absent') }}</p>
+                <p class="text-xl sm:text-3xl font-bold text-rose-600">{{ absentCount }}</p>
+                <p class="text-xs sm:text-sm text-rose-700 font-medium">{{ $t('attendance.absent') }}</p>
               </div>
-              <div class="w-12 h-12 bg-rose-500/20 rounded-xl flex items-center justify-center">
-                <XCircle class="w-6 h-6 text-rose-600" />
+              <div class="w-10 h-10 sm:w-12 sm:h-12 bg-rose-500/20 rounded-xl flex items-center justify-center">
+                <XCircle class="w-5 h-5 sm:w-6 sm:h-6 text-rose-600" />
               </div>
             </div>
           </div>
-          <div class="bg-gradient-to-br from-blue-50 to-blue-100/50 rounded-2xl p-5 border border-blue-200/50">
+          <div class="bg-gradient-to-br from-blue-50 to-blue-100/50 rounded-2xl p-3 sm:p-5 border border-blue-200/50">
             <div class="flex items-center justify-between">
               <div>
-                <p class="text-3xl font-bold text-blue-600">{{ excusedCount }}</p>
-                <p class="text-sm text-blue-700 font-medium">{{ $t('attendance.excused') }}</p>
+                <p class="text-xl sm:text-3xl font-bold text-blue-600">{{ excusedCount }}</p>
+                <p class="text-xs sm:text-sm text-blue-700 font-medium">{{ $t('attendance.excused') }}</p>
               </div>
-              <div class="w-12 h-12 bg-blue-500/20 rounded-xl flex items-center justify-center">
-                <FileText class="w-6 h-6 text-blue-600" />
+              <div class="w-10 h-10 sm:w-12 sm:h-12 bg-blue-500/20 rounded-xl flex items-center justify-center">
+                <FileText class="w-5 h-5 sm:w-6 sm:h-6 text-blue-600" />
               </div>
             </div>
           </div>

@@ -10,7 +10,7 @@
             <div class="w-10 h-10 bg-white/20 backdrop-blur rounded-xl flex items-center justify-center">
               <Sheet class="w-6 h-6" />
             </div>
-            <span class="text-sm font-medium text-white/70">Google Sheets</span>
+            <span class="text-sm font-medium text-white/70">{{ $t('sheets.title') }}</span>
           </div>
           <h1 class="text-2xl md:text-3xl font-bold">{{ $t('sheets.title') }}</h1>
           <p class="text-white/80 mt-1 max-w-xl text-sm">{{ $t('sheets.subtitle') }}</p>
@@ -542,6 +542,185 @@
         </div>
       </div>
     </div>
+
+    <!-- ===================== EXCEL IMPORT TAB ===================== -->
+    <div v-if="activeTab === 'excel'" class="space-y-5">
+      <!-- Excel Import Card -->
+      <div class="bg-white rounded-2xl border border-slate-200 p-6 space-y-5">
+        <div class="flex items-center gap-3 mb-2">
+          <div class="w-10 h-10 bg-gradient-to-br from-emerald-400 to-teal-500 rounded-xl flex items-center justify-center">
+            <Upload class="w-5 h-5 text-white" />
+          </div>
+          <div>
+            <h3 class="font-bold text-slate-800">Excel orqali jadval yuklash</h3>
+            <p class="text-sm text-slate-400">Excel fayldan dars jadvalini yuklab, bazaga saqlash</p>
+          </div>
+        </div>
+
+        <!-- File Upload -->
+        <div class="border-2 border-dashed rounded-2xl p-8 text-center transition-all"
+          :class="excelFile ? 'border-emerald-300 bg-emerald-50' : 'border-slate-200 hover:border-indigo-300 bg-slate-50'"
+          @dragover.prevent @drop.prevent="handleDrop">
+          <input type="file" ref="excelInput" accept=".xlsx,.xls" class="hidden" @change="handleFileSelect" />
+          <div v-if="!excelFile" class="space-y-3">
+            <div class="w-16 h-16 bg-slate-100 rounded-2xl flex items-center justify-center mx-auto">
+              <Upload class="w-8 h-8 text-slate-400" />
+            </div>
+            <div>
+              <button @click="$refs.excelInput.click()" class="text-indigo-600 font-medium hover:text-indigo-800 transition-colors">
+                Fayl tanlash
+              </button>
+              <span class="text-slate-400 text-sm"> yoki bu yerga tashlang</span>
+            </div>
+            <p class="text-xs text-slate-400">Faqat .xlsx va .xls fayllar</p>
+          </div>
+          <div v-else class="flex items-center justify-center gap-3">
+            <FileSpreadsheet class="w-8 h-8 text-emerald-500" />
+            <div class="text-left">
+              <p class="font-medium text-slate-800 text-sm">{{ excelFile.name }}</p>
+              <p class="text-xs text-slate-400">{{ (excelFile.size / 1024).toFixed(1) }} KB</p>
+            </div>
+            <button @click="excelFile = null" class="ml-4 w-8 h-8 bg-red-100 rounded-lg flex items-center justify-center text-red-500 hover:bg-red-200 transition-all">
+              <X class="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+
+        <!-- Settings -->
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div>
+            <label class="text-sm font-medium text-slate-700 mb-1 block">O'quv yili</label>
+            <input v-model="excelForm.academic_year" type="text" class="w-full border border-slate-200 rounded-xl px-3 py-2.5 text-sm focus:ring-2 focus:ring-indigo-500" />
+          </div>
+          <div>
+            <label class="text-sm font-medium text-slate-700 mb-1 block">Semestr</label>
+            <select v-model.number="excelForm.semester" class="w-full border border-slate-200 rounded-xl px-3 py-2.5 text-sm focus:ring-2 focus:ring-indigo-500">
+              <option :value="1">1-semestr</option>
+              <option :value="2">2-semestr</option>
+            </select>
+          </div>
+          <div class="flex items-end">
+            <div class="flex items-center gap-3 pb-2">
+              <input v-model="excelForm.clear_existing" type="checkbox" id="excelClearExisting" class="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500" />
+              <label for="excelClearExisting" class="text-sm text-slate-600">Eskisini tozalash</label>
+            </div>
+          </div>
+        </div>
+
+        <!-- Download Template -->
+        <div class="flex items-center justify-between bg-slate-50 rounded-xl p-3">
+          <div class="flex items-center gap-2 text-sm text-slate-600">
+            <Download class="w-4 h-4" />
+            <span>Shablon faylni yuklab oling</span>
+          </div>
+          <button @click="downloadTemplate" class="text-indigo-600 text-sm font-medium hover:text-indigo-800 transition-colors">
+            Yuklab olish
+          </button>
+        </div>
+
+        <!-- Import Button -->
+        <button @click="importExcelSchedule" :disabled="!excelFile || excelImporting"
+          class="w-full bg-gradient-to-r from-emerald-500 to-teal-500 text-white py-3 rounded-xl text-sm font-bold shadow-lg shadow-emerald-500/25 hover:shadow-xl transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed">
+          <div v-if="excelImporting" class="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+          <Upload v-else class="w-4 h-4" />
+          {{ excelImporting ? 'Yuklanmoqda...' : 'Jadval yuklash' }}
+        </button>
+
+        <!-- Import Result -->
+        <div v-if="excelImportResult" class="rounded-xl p-4 space-y-3" :class="excelImportResult.success ? 'bg-emerald-50 border border-emerald-200' : 'bg-red-50 border border-red-200'">
+          <div class="flex items-center gap-2">
+            <CheckCircle2 v-if="excelImportResult.success" class="w-5 h-5 text-emerald-500" />
+            <AlertCircle v-else class="w-5 h-5 text-red-500" />
+            <p class="font-semibold text-sm" :class="excelImportResult.success ? 'text-emerald-700' : 'text-red-700'">
+              {{ excelImportResult.message }}
+            </p>
+          </div>
+
+          <!-- Stats -->
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <div class="bg-white rounded-lg p-2.5 text-center">
+              <p class="text-xs text-slate-500">Jami</p>
+              <p class="text-lg font-bold text-slate-800">{{ excelImportResult.total_records || 0 }}</p>
+            </div>
+            <div class="bg-white rounded-lg p-2.5 text-center">
+              <p class="text-xs text-emerald-500">Yuklandi</p>
+              <p class="text-lg font-bold text-emerald-600">{{ excelImportResult.synced || 0 }}</p>
+            </div>
+            <div class="bg-white rounded-lg p-2.5 text-center">
+              <p class="text-xs text-amber-500">O'tkazildi</p>
+              <p class="text-lg font-bold text-amber-600">{{ excelImportResult.skipped || 0 }}</p>
+            </div>
+            <div class="bg-white rounded-lg p-2.5 text-center">
+              <p class="text-xs text-slate-500">Guruhlar</p>
+              <p class="text-lg font-bold text-indigo-600">{{ (excelImportResult.matched_groups || []).length }}</p>
+            </div>
+          </div>
+
+          <!-- Matched Groups -->
+          <div v-if="excelImportResult.matched_groups?.length" class="space-y-1">
+            <p class="text-xs font-medium text-emerald-700">✅ Topilgan guruhlar:</p>
+            <div class="flex flex-wrap gap-1">
+              <span v-for="g in excelImportResult.matched_groups" :key="g" class="bg-emerald-100 text-emerald-700 text-[10px] px-1.5 py-0.5 rounded font-mono">{{ g }}</span>
+            </div>
+          </div>
+
+          <!-- Unmatched Groups -->
+          <div v-if="excelImportResult.unmatched_groups?.length" class="space-y-1">
+            <p class="text-xs font-medium text-amber-700">⚠️ Topilmagan guruhlar:</p>
+            <div class="flex flex-wrap gap-1">
+              <span v-for="g in excelImportResult.unmatched_groups" :key="g" class="bg-amber-100 text-amber-700 text-[10px] px-1.5 py-0.5 rounded font-mono">{{ g }}</span>
+            </div>
+          </div>
+
+          <!-- Fuzzy Matches -->
+          <div v-if="excelImportResult.group_name_map && Object.keys(excelImportResult.group_name_map).some(k => k !== excelImportResult.group_name_map[k])">
+            <p class="text-xs font-medium text-blue-700 mb-1">🔄 Avtomatik moslashtirish:</p>
+            <div class="flex flex-wrap gap-1">
+              <span v-for="(dbName, sheetName) in excelImportResult.group_name_map" :key="sheetName" v-show="sheetName !== dbName"
+                class="bg-blue-50 text-blue-600 text-[10px] px-1.5 py-0.5 rounded font-mono">
+                {{ sheetName }} → {{ dbName }}
+              </span>
+            </div>
+          </div>
+
+          <!-- Errors -->
+          <div v-if="excelImportResult.errors?.length" class="space-y-1">
+            <p class="text-xs font-medium text-red-700">❌ Xatoliklar:</p>
+            <div class="max-h-32 overflow-y-auto space-y-1">
+              <p v-for="(err, i) in excelImportResult.errors.slice(0, 10)" :key="i" class="text-[10px] text-red-600 font-mono bg-red-50 rounded px-2 py-1">{{ err }}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Format Info Card -->
+      <div class="bg-white rounded-2xl border border-slate-200 p-6">
+        <h3 class="font-bold text-slate-800 mb-3 flex items-center gap-2">
+          <AlertCircle class="w-5 h-5 text-indigo-500" />
+          Excel fayl formati
+        </h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div class="bg-indigo-50 rounded-xl p-4">
+            <h4 class="text-sm font-bold text-indigo-800 mb-2">Format 1: Jadval</h4>
+            <p class="text-xs text-indigo-600 mb-2">Har bir qator bitta dars:</p>
+            <div class="bg-white rounded-lg p-2 text-[10px] font-mono text-slate-600 space-y-0.5">
+              <p class="font-bold">Guruh | Kun | Para | Fan | O'qituvchi | Xona | Boshlanish | Tugash</p>
+              <p>PI-23-01 | Dushanba | 1 | Matematika | A.Aliyev | 301 | 08:30 | 10:00</p>
+            </div>
+          </div>
+          <div class="bg-purple-50 rounded-xl p-4">
+            <h4 class="text-sm font-bold text-purple-800 mb-2">Format 2: Setka</h4>
+            <p class="text-xs text-purple-600 mb-2">Guruhlar ustun, kunlar qator:</p>
+            <div class="bg-white rounded-lg p-2 text-[10px] font-mono text-slate-600 space-y-0.5">
+              <p class="font-bold">Kun | Para | PI-23-01 | PI-24-01</p>
+              <p>Dushanba | 1 | Matematika | Fizika</p>
+            </div>
+          </div>
+        </div>
+        <p class="text-xs text-slate-400 mt-3">💡 Guruh nomlari bazadagi nomlar bilan avtomatik moslashtiriladi (masalan: PI_23_01 → PI-23-01)</p>
+      </div>
+    </div>
+
   </div>
 </template>
 
@@ -561,6 +740,7 @@ import {
     RefreshCw,
     Sheet,
     Table2,
+    Upload,
     Users,
     X,
 } from 'lucide-vue-next'
@@ -594,7 +774,19 @@ const syncForm = ref({
   clear_existing: true,
 })
 
+// Excel import state
+const excelFile = ref(null)
+const excelInput = ref(null)
+const excelImporting = ref(false)
+const excelImportResult = ref(null)
+const excelForm = ref({
+  academic_year: '2025-2026',
+  semester: 2,
+  clear_existing: true,
+})
+
 const tabs = computed(() => [
+  { value: 'excel', label: 'Excel import', icon: markRaw(Upload) },
   { value: 'overview', label: t('sheets.overview'), icon: markRaw(Layers) },
   { value: 'detail', label: t('sheets.sheetView'), icon: markRaw(FileSpreadsheet) },
   { value: 'sync', label: t('sheets.syncTab'), icon: markRaw(Download) },
@@ -771,7 +963,59 @@ async function executeSync() {
   }
 }
 
+// ============ Excel Import Methods ============
+
+function handleFileSelect(event) {
+  const file = event.target.files[0]
+  if (file) excelFile.value = file
+}
+
+function handleDrop(event) {
+  const file = event.dataTransfer.files[0]
+  if (file && (file.name.endsWith('.xlsx') || file.name.endsWith('.xls'))) {
+    excelFile.value = file
+  }
+}
+
+async function downloadTemplate() {
+  try {
+    const blob = await api.downloadExcelTemplate('schedules')
+    const url = window.URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = 'jadval_shablon.xlsx'
+    a.click()
+    window.URL.revokeObjectURL(url)
+  } catch (e) {
+    console.error('Error downloading template:', e)
+  }
+}
+
+async function importExcelSchedule() {
+  if (!excelFile.value) return
+  excelImporting.value = true
+  excelImportResult.value = null
+  try {
+    excelImportResult.value = await api.importSchedulesFromExcel(
+      excelFile.value,
+      excelForm.value.academic_year,
+      excelForm.value.semester,
+      excelForm.value.clear_existing
+    )
+    // Refresh DB stats
+    try {
+      dbStats.value = await api.request('/sheets/db-stats')
+    } catch (_) {}
+  } catch (e) {
+    console.error('Error importing Excel schedule:', e)
+    excelImportResult.value = { success: false, message: e.message || "Xatolik yuz berdi", errors: [e.message] }
+  } finally {
+    excelImporting.value = false
+  }
+}
+
 onMounted(() => {
+  activeTab.value = 'excel'
   loadSummary()
 })
 </script>

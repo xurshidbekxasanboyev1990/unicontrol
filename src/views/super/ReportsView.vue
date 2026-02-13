@@ -24,73 +24,73 @@
     </div>
 
     <!-- Summary Cards -->
-    <div class="grid grid-cols-2 lg:grid-cols-5 gap-4">
-      <div class="bg-white rounded-2xl border border-slate-200 p-5">
+    <div class="grid grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4">
+      <div class="bg-white rounded-2xl border border-slate-200 p-4 sm:p-5">
         <div class="flex items-center justify-between">
           <div>
-            <p class="text-3xl font-bold text-violet-600">{{ reportStats.total }}</p>
-            <p class="text-sm text-slate-500 mt-1">Jami hisobotlar</p>
+            <p class="text-xl sm:text-3xl font-bold text-violet-600">{{ reportStats.total }}</p>
+            <p class="text-xs sm:text-sm text-slate-500 mt-1">Jami hisobotlar</p>
           </div>
-          <div class="w-12 h-12 bg-violet-100 rounded-xl flex items-center justify-center">
-            <FileText class="w-6 h-6 text-violet-600" />
+          <div class="w-10 h-10 sm:w-12 sm:h-12 bg-violet-100 rounded-xl flex items-center justify-center">
+            <FileText class="w-5 h-5 sm:w-6 sm:h-6 text-violet-600" />
           </div>
         </div>
       </div>
 
-      <div class="bg-white rounded-2xl border border-slate-200 p-5">
+      <div class="bg-white rounded-2xl border border-slate-200 p-4 sm:p-5">
         <div class="flex items-center justify-between">
           <div>
-            <p class="text-3xl font-bold text-amber-600">{{ reportStats.by_status?.pending || 0 }}</p>
-            <p class="text-sm text-slate-500 mt-1">Kutilayotgan</p>
+            <p class="text-xl sm:text-3xl font-bold text-amber-600">{{ reportStats.by_status?.pending || 0 }}</p>
+            <p class="text-xs sm:text-sm text-slate-500 mt-1">Kutilayotgan</p>
           </div>
-          <div class="w-12 h-12 bg-amber-100 rounded-xl flex items-center justify-center">
-            <Clock class="w-6 h-6 text-amber-600" />
+          <div class="w-10 h-10 sm:w-12 sm:h-12 bg-amber-100 rounded-xl flex items-center justify-center">
+            <Clock class="w-5 h-5 sm:w-6 sm:h-6 text-amber-600" />
           </div>
         </div>
       </div>
 
-      <div class="bg-white rounded-2xl border border-slate-200 p-5">
+      <div class="bg-white rounded-2xl border border-slate-200 p-4 sm:p-5">
         <div class="flex items-center justify-between">
           <div>
-            <p class="text-3xl font-bold text-emerald-600">{{ reportStats.by_status?.approved || 0 }}</p>
-            <p class="text-sm text-slate-500 mt-1">Tasdiqlangan</p>
+            <p class="text-xl sm:text-3xl font-bold text-emerald-600">{{ reportStats.by_status?.approved || 0 }}</p>
+            <p class="text-xs sm:text-sm text-slate-500 mt-1">Tasdiqlangan</p>
           </div>
-          <div class="w-12 h-12 bg-emerald-100 rounded-xl flex items-center justify-center">
-            <CheckCircle class="w-6 h-6 text-emerald-600" />
+          <div class="w-10 h-10 sm:w-12 sm:h-12 bg-emerald-100 rounded-xl flex items-center justify-center">
+            <CheckCircle class="w-5 h-5 sm:w-6 sm:h-6 text-emerald-600" />
           </div>
         </div>
       </div>
 
-      <div class="bg-white rounded-2xl border border-slate-200 p-5">
+      <div class="bg-white rounded-2xl border border-slate-200 p-4 sm:p-5">
         <div class="flex items-center justify-between">
           <div>
-            <p class="text-3xl font-bold text-rose-600">{{ reportStats.by_status?.rejected || 0 }}</p>
-            <p class="text-sm text-slate-500 mt-1">Rad etilgan</p>
+            <p class="text-xl sm:text-3xl font-bold text-rose-600">{{ reportStats.by_status?.rejected || 0 }}</p>
+            <p class="text-xs sm:text-sm text-slate-500 mt-1">Rad etilgan</p>
           </div>
-          <div class="w-12 h-12 bg-rose-100 rounded-xl flex items-center justify-center">
-            <XCircle class="w-6 h-6 text-rose-600" />
+          <div class="w-10 h-10 sm:w-12 sm:h-12 bg-rose-100 rounded-xl flex items-center justify-center">
+            <XCircle class="w-5 h-5 sm:w-6 sm:h-6 text-rose-600" />
           </div>
         </div>
       </div>
 
-      <div class="bg-white rounded-2xl border border-slate-200 p-5">
+      <div class="bg-white rounded-2xl border border-slate-200 p-4 sm:p-5">
         <div class="flex items-center justify-between">
           <div>
-            <p class="text-3xl font-bold text-blue-600">{{ reportStats.approval_rate }}%</p>
-            <p class="text-sm text-slate-500 mt-1">Tasdiqlash foizi</p>
+            <p class="text-xl sm:text-3xl font-bold text-blue-600">{{ reportStats.approval_rate }}%</p>
+            <p class="text-xs sm:text-sm text-slate-500 mt-1">Tasdiqlash foizi</p>
           </div>
-          <div class="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
-            <TrendingUp class="w-6 h-6 text-blue-600" />
+          <div class="w-10 h-10 sm:w-12 sm:h-12 bg-blue-100 rounded-xl flex items-center justify-center">
+            <TrendingUp class="w-5 h-5 sm:w-6 sm:h-6 text-blue-600" />
           </div>
         </div>
       </div>
     </div>
 
     <!-- Tabs -->
-    <div class="flex gap-2 border-b border-slate-200 pb-0">
+    <div class="flex gap-2 border-b border-slate-200 pb-0 overflow-x-auto">
       <button
         @click="activeTab = 'all'"
-        class="px-5 py-3 text-sm font-medium transition-colors border-b-2 -mb-px"
+        class="px-4 sm:px-5 py-3 text-sm font-medium transition-colors border-b-2 -mb-px whitespace-nowrap"
         :class="activeTab === 'all' ? 'border-violet-500 text-violet-600' : 'border-transparent text-slate-500 hover:text-slate-700'"
       >
         Barcha hisobotlar
@@ -145,7 +145,7 @@
       <!-- Reports table -->
       <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden">
         <div class="overflow-x-auto">
-          <table class="w-full">
+          <table class="w-full min-w-[700px]">
             <thead>
               <tr class="border-b border-slate-100 bg-slate-50">
                 <th class="text-left p-4 font-semibold text-slate-600 text-sm">ID</th>
@@ -182,7 +182,7 @@
                 <td class="p-4">
                   <div class="flex items-center gap-1">
                     <button 
-                      v-if="report.status === 'pending'"
+                      v-if="report.status !== 'approved'"
                       @click="approveReport(report)"
                       class="p-2 rounded-lg text-emerald-600 hover:bg-emerald-50 transition-colors"
                       title="Tasdiqlash"
@@ -190,7 +190,7 @@
                       <Check class="w-4 h-4" />
                     </button>
                     <button 
-                      v-if="report.status === 'pending'"
+                      v-if="report.status !== 'rejected'"
                       @click="openRejectModal(report)"
                       class="p-2 rounded-lg text-rose-600 hover:bg-rose-50 transition-colors"
                       title="Rad etish"
@@ -225,9 +225,9 @@
         </div>
 
         <!-- Pagination -->
-        <div v-if="totalPages > 1" class="flex items-center justify-between p-4 border-t border-slate-100">
+        <div v-if="totalPages > 1" class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 p-4 border-t border-slate-100">
           <span class="text-sm text-slate-500">Jami: {{ totalReports }}</span>
-          <div class="flex gap-1">
+          <div class="flex gap-1 flex-wrap">
             <button 
               v-for="p in totalPages" :key="p"
               @click="currentPage = p; loadReports()"
@@ -263,22 +263,22 @@
 
         <div class="bg-white rounded-2xl border border-slate-200 p-6">
           <h2 class="text-lg font-semibold text-slate-800 mb-4">Status taqsimoti</h2>
-          <div class="grid grid-cols-2 gap-4">
-            <div class="rounded-xl bg-amber-50 p-4 text-center">
-              <p class="text-3xl font-bold text-amber-600">{{ reportStats.by_status?.pending || 0 }}</p>
-              <p class="text-sm text-amber-600/70">Kutilayotgan</p>
+          <div class="grid grid-cols-2 gap-3 sm:gap-4">
+            <div class="rounded-xl bg-amber-50 p-3 sm:p-4 text-center">
+              <p class="text-xl sm:text-3xl font-bold text-amber-600">{{ reportStats.by_status?.pending || 0 }}</p>
+              <p class="text-xs sm:text-sm text-amber-600/70">Kutilayotgan</p>
             </div>
-            <div class="rounded-xl bg-emerald-50 p-4 text-center">
-              <p class="text-3xl font-bold text-emerald-600">{{ reportStats.by_status?.approved || 0 }}</p>
-              <p class="text-sm text-emerald-600/70">Tasdiqlangan</p>
+            <div class="rounded-xl bg-emerald-50 p-3 sm:p-4 text-center">
+              <p class="text-xl sm:text-3xl font-bold text-emerald-600">{{ reportStats.by_status?.approved || 0 }}</p>
+              <p class="text-xs sm:text-sm text-emerald-600/70">Tasdiqlangan</p>
             </div>
-            <div class="rounded-xl bg-rose-50 p-4 text-center">
-              <p class="text-3xl font-bold text-rose-600">{{ reportStats.by_status?.rejected || 0 }}</p>
-              <p class="text-sm text-rose-600/70">Rad etilgan</p>
+            <div class="rounded-xl bg-rose-50 p-3 sm:p-4 text-center">
+              <p class="text-xl sm:text-3xl font-bold text-rose-600">{{ reportStats.by_status?.rejected || 0 }}</p>
+              <p class="text-xs sm:text-sm text-rose-600/70">Rad etilgan</p>
             </div>
-            <div class="rounded-xl bg-blue-50 p-4 text-center">
-              <p class="text-3xl font-bold text-blue-600">{{ reportStats.by_status?.completed || 0 }}</p>
-              <p class="text-sm text-blue-600/70">Tayyor</p>
+            <div class="rounded-xl bg-blue-50 p-3 sm:p-4 text-center">
+              <p class="text-xl sm:text-3xl font-bold text-blue-600">{{ reportStats.by_status?.completed || 0 }}</p>
+              <p class="text-xs sm:text-sm text-blue-600/70">Tayyor</p>
             </div>
           </div>
         </div>
