@@ -90,11 +90,11 @@ import SuperTelegramBot from '../views/super/TelegramBotView.vue'
 import SuperUsers from '../views/super/UsersView.vue'
 
 // Market views
+import AIAnalysisView from '../views/shared/AIAnalysisView.vue'
+import CreditModuleView from '../views/shared/CreditModuleView.vue'
 import MarketAdminView from '../views/shared/MarketAdminView.vue'
 import MarketView from '../views/shared/MarketView.vue'
 import QuizView from '../views/shared/QuizView.vue'
-import AIAnalysisView from '../views/shared/AIAnalysisView.vue'
-import CreditModuleView from '../views/shared/CreditModuleView.vue'
 
 const routes = [
   {

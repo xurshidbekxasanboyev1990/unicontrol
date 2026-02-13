@@ -520,22 +520,22 @@
  */
 
 import {
-  AlertCircle,
-  ArrowRight,
-  BookOpen,
-  CheckCircle,
-  Clock,
-  Coffee,
-  FileText,
-  Loader2,
-  Lock,
-  MapPin,
-  MessageSquare,
-  RotateCcw,
-  Save,
-  Timer,
-  User,
-  XCircle
+    AlertCircle,
+    ArrowRight,
+    BookOpen,
+    CheckCircle,
+    Clock,
+    Coffee,
+    FileText,
+    Loader2,
+    Lock,
+    MapPin,
+    MessageSquare,
+    RotateCcw,
+    Save,
+    Timer,
+    User,
+    XCircle
 } from 'lucide-vue-next'
 import { computed, onMounted, reactive, ref, watch } from 'vue'
 import api from '../../services/api'

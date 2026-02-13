@@ -629,28 +629,28 @@ import { useAuthStore } from '@/stores/auth'
 import { useLanguageStore } from '@/stores/language'
 import { useToastStore } from '@/stores/toast'
 import {
-  Activity,
-  AlertTriangle,
-  Award,
-  BarChart3,
-  BookOpen,
-  Brain,
-  Calendar,
-  CheckCircle,
-  Clock,
-  Info,
-  Lightbulb,
-  Loader2,
-  MessageCircle,
-  Minus,
-  RefreshCw,
-  Send,
-  Sparkles,
-  Target,
-  TrendingDown,
-  TrendingUp,
-  Users as UsersIcon,
-  XCircle
+    Activity,
+    AlertTriangle,
+    Award,
+    BarChart3,
+    BookOpen,
+    Brain,
+    Calendar,
+    CheckCircle,
+    Clock,
+    Info,
+    Lightbulb,
+    Loader2,
+    MessageCircle,
+    Minus,
+    RefreshCw,
+    Send,
+    Sparkles,
+    Target,
+    TrendingDown,
+    TrendingUp,
+    Users as UsersIcon,
+    XCircle
 } from 'lucide-vue-next'
 import { computed, nextTick, onMounted, ref, watch } from 'vue'
 import api from '../../services/api'
@@ -829,7 +829,8 @@ async function initData() {
 
     // Load attendance data based on role
     if (isStudentRole.value) {
-      const attResp = await api.getStudentAttendance(profile.value.id)
+      const studentDbId = profile.value.student_db_id || profile.value.id
+      const attResp = await api.getStudentAttendance(studentDbId)
       records.value = (attResp.items || attResp || []).map(r => ({
         id: r.id,
         studentId: r.student_id,
@@ -951,9 +952,10 @@ async function loadAIAnalysis() {
   try {
     if (isStudentRole.value && profile.value?.id) {
       // Student: analyze student + recommendations
+      const studentDbId = profile.value.student_db_id || profile.value.id
       const [analysis, recs] = await Promise.all([
-        api.aiAnalyzeStudent({ student_id: profile.value.id }).catch(() => null),
-        api.aiStudentRecommendations(profile.value.id).catch(() => null)
+        api.aiAnalyzeStudent({ student_id: studentDbId }).catch(() => null),
+        api.aiStudentRecommendations(studentDbId).catch(() => null)
       ])
 
       if (analysis) {
@@ -1091,7 +1093,7 @@ async function loadPredictions() {
   try {
     const body = { days_ahead: 7 }
     if (isStudentRole.value && profile.value?.id) {
-      body.student_id = profile.value.id
+      body.student_id = profile.value.student_db_id || profile.value.id
     } else if (groupId.value) {
       body.group_id = groupId.value
     }

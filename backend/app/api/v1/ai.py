@@ -8,7 +8,7 @@ Version: 1.0.0
 """
 
 from typing import Optional
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from pydantic import BaseModel, Field
@@ -17,7 +17,7 @@ from loguru import logger
 from app.database import get_db
 from app.services.ai_service import AIService
 from app.core.dependencies import get_current_active_user, require_leader
-from app.models.user import User
+from app.models.user import User, UserRole
 from app.models.student import Student
 from app.models.notification import Notification, NotificationType, NotificationPriority
 
@@ -107,13 +107,22 @@ class ReportSummaryResponse(BaseModel):
 async def analyze_student(
     request: StudentAnalysisRequest,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(require_leader)
+    current_user: User = Depends(get_current_active_user)
 ):
     """
     Analyze a student's performance using AI.
     
-    Requires leader role or higher.
+    Students can only analyze themselves. Leaders and above can analyze any student.
     """
+    # Students can only analyze themselves
+    if current_user.role == UserRole.STUDENT:
+        student_result = await db.execute(
+            select(Student).where(Student.user_id == current_user.id)
+        )
+        own_student = student_result.scalar_one_or_none()
+        if not own_student or own_student.id != request.student_id:
+            raise HTTPException(status_code=403, detail="Students can only analyze their own data")
+    
     service = AIService(db)
     result = await service.analyze_student(
         student_id=request.student_id,
@@ -206,13 +215,25 @@ async def analyze_group(
 async def predict_attendance(
     request: AttendancePredictionRequest,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(require_leader)
+    current_user: User = Depends(get_current_active_user)
 ):
     """
     Predict attendance patterns using AI.
     
-    Requires leader role or higher.
+    Students can only predict their own attendance.
     """
+    # Students can only predict their own attendance
+    if current_user.role == UserRole.STUDENT:
+        if request.student_id:
+            student_result = await db.execute(
+                select(Student).where(Student.user_id == current_user.id)
+            )
+            own_student = student_result.scalar_one_or_none()
+            if not own_student or own_student.id != request.student_id:
+                raise HTTPException(status_code=403, detail="Students can only predict their own attendance")
+        elif request.group_id:
+            raise HTTPException(status_code=403, detail="Students cannot predict group attendance")
+    
     service = AIService(db)
     return await service.predict_attendance(
         student_id=request.student_id,
@@ -260,12 +281,12 @@ async def summarize_report(
 @router.get("/insights/dashboard")
 async def get_dashboard_insights(
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(require_leader)
+    current_user: User = Depends(get_current_active_user)
 ):
     """
     Get AI-generated insights for dashboard.
     
-    Requires leader role or higher.
+    All authenticated users can get insights for their role.
     """
     service = AIService(db)
     return await service.get_dashboard_insights(current_user.id, current_user.role.value)
@@ -275,13 +296,22 @@ async def get_dashboard_insights(
 async def get_student_recommendations(
     student_id: int,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(require_leader)
+    current_user: User = Depends(get_current_active_user)
 ):
     """
     Get AI recommendations for a student.
     
-    Requires leader role or higher.
+    Students can only get their own recommendations.
     """
+    # Students can only get their own recommendations
+    if current_user.role == UserRole.STUDENT:
+        student_result = await db.execute(
+            select(Student).where(Student.user_id == current_user.id)
+        )
+        own_student = student_result.scalar_one_or_none()
+        if not own_student or own_student.id != student_id:
+            raise HTTPException(status_code=403, detail="Students can only view their own recommendations")
+    
     service = AIService(db)
     return await service.get_recommendations(student_id)
 

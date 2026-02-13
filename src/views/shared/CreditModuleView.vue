@@ -401,18 +401,18 @@
 
 <script setup>
 import {
-  Award,
-  BarChart3,
-  BookOpen,
-  Calculator,
-  GraduationCap,
-  Info,
-  Plus,
-  RotateCcw,
-  Save,
-  Sparkles,
-  Target,
-  Trash2
+    Award,
+    BarChart3,
+    BookOpen,
+    Calculator,
+    GraduationCap,
+    Info,
+    Plus,
+    RotateCcw,
+    Save,
+    Sparkles,
+    Target,
+    Trash2
 } from 'lucide-vue-next'
 import { computed, onMounted, ref, watch } from 'vue'
 import { useLanguageStore } from '../../stores/language'

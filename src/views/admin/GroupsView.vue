@@ -653,27 +653,27 @@
  * CRUD operatsiyalari, sardor tayinlash
  */
 import {
-  AlertCircle,
-  AlertTriangle,
-  Check,
-  ChevronLeft,
-  ChevronRight,
-  CreditCard,
-  Crown,
-  FileSpreadsheet,
-  FolderPlus,
-  Info,
-  Layers,
-  Loader2,
-  Pencil,
-  Power,
-  RefreshCw,
-  Search,
-  Trash2,
-  TrendingUp,
-  Users,
-  X,
-  Zap
+    AlertCircle,
+    AlertTriangle,
+    Check,
+    ChevronLeft,
+    ChevronRight,
+    CreditCard,
+    Crown,
+    FileSpreadsheet,
+    FolderPlus,
+    Info,
+    Layers,
+    Loader2,
+    Pencil,
+    Power,
+    RefreshCw,
+    Search,
+    Trash2,
+    TrendingUp,
+    Users,
+    X,
+    Zap
 } from 'lucide-vue-next'
 import { computed, onMounted, reactive, ref, watch } from 'vue'
 import api from '../../services/api'

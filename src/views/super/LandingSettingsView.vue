@@ -438,16 +438,16 @@
  * Real API bilan ishlaydi: GET/PUT /landing
  */
 import {
-  BarChart3, Bell, BookOpen, Brain, Calendar,
-  ExternalLink, Github, Globe, Info, LayoutGrid,
-  Linkedin, Mail, MapPin, Pencil, Phone, Plus,
-  RefreshCw, Save, Send, Share2, Shield, ShieldCheck,
-  Sparkles, Trash2, UserPlus, Users, X, Zap
+    BarChart3, Bell, BookOpen, Brain, Calendar,
+    ExternalLink, Github, Globe, Info, LayoutGrid,
+    Linkedin, Mail, MapPin, Pencil, Phone, Plus,
+    RefreshCw, Save, Send, Share2, Shield, ShieldCheck,
+    Sparkles, Trash2, UserPlus, Users, X, Zap
 } from 'lucide-vue-next'
 import { computed, markRaw, onMounted, reactive, ref } from 'vue'
 import api from '../../services/api'
-import { useToastStore } from '../../stores/toast'
 import { useLanguageStore } from '../../stores/language'
+import { useToastStore } from '../../stores/toast'
 
 const toast = useToastStore()
 const langStore = useLanguageStore()
