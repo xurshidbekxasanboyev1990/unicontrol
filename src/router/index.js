@@ -39,7 +39,6 @@ import LandingView from '../views/LandingView.vue'
 import LoginView from '../views/LoginView.vue'
 
 // Student views
-import StudentAIAnalysis from '../views/student/AIAnalysisView.vue'
 import StudentAttendance from '../views/student/AttendanceView.vue'
 import StudentCanteen from '../views/student/CanteenView.vue'
 import StudentClubs from '../views/student/ClubsView.vue'
@@ -94,6 +93,7 @@ import SuperUsers from '../views/super/UsersView.vue'
 import MarketAdminView from '../views/shared/MarketAdminView.vue'
 import MarketView from '../views/shared/MarketView.vue'
 import QuizView from '../views/shared/QuizView.vue'
+import AIAnalysisView from '../views/shared/AIAnalysisView.vue'
 import CreditModuleView from '../views/shared/CreditModuleView.vue'
 
 const routes = [
@@ -121,7 +121,7 @@ const routes = [
       { path: 'schedule', name: 'student-schedule', component: StudentSchedule },
       { path: 'attendance', name: 'student-attendance', component: StudentAttendance },
       { path: 'library', name: 'student-library', component: StudentLibrary },
-      { path: 'ai-analysis', name: 'student-ai-analysis', component: StudentAIAnalysis },
+      { path: 'ai-analysis', name: 'student-ai-analysis', component: AIAnalysisView },
       { path: 'notifications', name: 'student-notifications', component: StudentNotifications },
       { path: 'profile', name: 'student-profile', component: StudentProfile },
       { path: 'settings', name: 'student-settings', component: StudentSettings },
@@ -158,6 +158,7 @@ const routes = [
       { path: 'help', name: 'leader-help', component: StudentHelp },
       { path: 'market', name: 'leader-market', component: MarketView },
       { path: 'quizzes', name: 'leader-quizzes', component: QuizView },
+      { path: 'ai-analysis', name: 'leader-ai-analysis', component: AIAnalysisView },
       { path: 'credit-module', name: 'leader-credit-module', component: CreditModuleView }
     ]
   },
@@ -183,6 +184,7 @@ const routes = [
       { path: 'profile', name: 'admin-profile', component: StudentProfile },
       { path: 'settings', name: 'admin-settings', component: StudentSettings },
       { path: 'help', name: 'admin-help', component: StudentHelp },
+      { path: 'ai-analysis', name: 'admin-ai-analysis', component: AIAnalysisView },
       { path: 'credit-module', name: 'admin-credit-module', component: CreditModuleView }
     ]
   },
@@ -213,6 +215,7 @@ const routes = [
       { path: 'profile', name: 'super-profile', component: StudentProfile },
       { path: 'help', name: 'super-help', component: StudentHelp },
       { path: 'market', name: 'super-market', component: MarketAdminView },
+      { path: 'ai-analysis', name: 'super-ai-analysis', component: AIAnalysisView },
       { path: 'credit-module', name: 'super-credit-module', component: CreditModuleView }
     ]
   },

@@ -395,6 +395,9 @@ const currentPageTitle = computed(() => {
     'leader-credit-module': () => t('layout.creditModule'),
     'admin-credit-module': () => t('layout.creditModule'),
     'super-credit-module': () => t('layout.creditModule'),
+    'leader-ai-analysis': () => t('layout.aiAnalysis'),
+    'admin-ai-analysis': () => t('layout.aiAnalysis'),
+    'super-ai-analysis': () => t('layout.aiAnalysis'),
   }
   const fn = titles[route.name]
   return fn ? fn() : t('layout.controlPanel')
@@ -453,6 +456,7 @@ const menuSections = computed(() => {
         { path: '/leader/schedule', label: t('layout.schedule'), icon: markRaw(Calendar) },
         { path: '/leader/reports', label: t('layout.reports'), icon: markRaw(FileText) },
         { path: '/leader/analytics', label: t('layout.analytics'), icon: markRaw(BarChart3) },
+        { path: '/leader/ai-analysis', label: t('layout.aiAnalysis'), icon: markRaw(Brain) },
         { path: '/leader/files', label: t('layout.files'), icon: markRaw(FolderOpen) },
         { path: '/leader/market', label: t('layout.market'), icon: markRaw(Store) },
         { path: '/leader/quizzes', label: t('layout.quizzes'), icon: markRaw(ClipboardList) },
@@ -484,6 +488,7 @@ const menuSections = computed(() => {
         { path: '/admin/tournaments', label: t('layout.tournaments'), icon: markRaw(Trophy) },
         { path: '/admin/subjects', label: t('layout.subjects'), icon: markRaw(BookOpen) },
         { path: '/admin/contracts', label: t('layout.contracts'), icon: markRaw(FileSpreadsheet) },
+        { path: '/admin/ai-analysis', label: t('layout.aiAnalysis'), icon: markRaw(Brain) },
         { path: '/admin/credit-module', label: t('layout.creditModule'), icon: markRaw(Calculator) }
       ]
     })
@@ -530,6 +535,7 @@ const menuSections = computed(() => {
         { path: '/super/market', label: t('layout.market'), icon: markRaw(Store) },
         { path: '/super/telegram-bot', label: t('layout.telegramBot'), icon: markRaw(Bot) },
         { path: '/super/sheets-schedule', label: t('layout.sheetsSchedule'), icon: markRaw(Calendar) },
+        { path: '/super/ai-analysis', label: t('layout.aiAnalysis'), icon: markRaw(Brain) },
         { path: '/super/credit-module', label: t('layout.creditModule'), icon: markRaw(Calculator) }
       ]
     })
