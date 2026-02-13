@@ -262,6 +262,7 @@ import {
     Bot,
     Brain,
     Building2,
+    Calculator,
     Calendar,
     ChevronDown,
     ChevronRight,
@@ -390,6 +391,10 @@ const currentPageTitle = computed(() => {
     'leader-quizzes': () => t('layout.quizzes'),
     'student-subscription': () => t('layout.subscription'),
     'leader-subscription': () => t('layout.subscription'),
+    'student-credit-module': () => t('layout.creditModule'),
+    'leader-credit-module': () => t('layout.creditModule'),
+    'admin-credit-module': () => t('layout.creditModule'),
+    'super-credit-module': () => t('layout.creditModule'),
   }
   const fn = titles[route.name]
   return fn ? fn() : t('layout.controlPanel')
@@ -417,6 +422,7 @@ const menuSections = computed(() => {
         { path: '/student/canteen', label: t('layout.canteen'), icon: markRaw(UtensilsCrossed) },
         { path: '/student/market', label: t('layout.market'), icon: markRaw(Store) },
         { path: '/student/quizzes', label: t('layout.quizzes'), icon: markRaw(ClipboardList) },
+        { path: '/student/credit-module', label: t('layout.creditModule'), icon: markRaw(Calculator) },
         { path: '/student/subscription', label: t('layout.subscription'), icon: markRaw(CreditCard) },
         { path: '/student/notifications', label: t('layout.notifications'), icon: markRaw(Bell), badge: dataStore.unreadCount > 0 ? String(dataStore.unreadCount) : null }
       ]
@@ -450,6 +456,7 @@ const menuSections = computed(() => {
         { path: '/leader/files', label: t('layout.files'), icon: markRaw(FolderOpen) },
         { path: '/leader/market', label: t('layout.market'), icon: markRaw(Store) },
         { path: '/leader/quizzes', label: t('layout.quizzes'), icon: markRaw(ClipboardList) },
+        { path: '/leader/credit-module', label: t('layout.creditModule'), icon: markRaw(Calculator) },
         { path: '/leader/subscription', label: t('layout.subscription'), icon: markRaw(CreditCard) },
         { path: '/leader/notifications', label: t('layout.notifications'), icon: markRaw(Send), badge: dataStore.unreadCount > 0 ? String(dataStore.unreadCount) : null }
       ]
@@ -476,7 +483,8 @@ const menuSections = computed(() => {
         { path: '/admin/clubs', label: t('layout.clubs'), icon: markRaw(Palette) },
         { path: '/admin/tournaments', label: t('layout.tournaments'), icon: markRaw(Trophy) },
         { path: '/admin/subjects', label: t('layout.subjects'), icon: markRaw(BookOpen) },
-        { path: '/admin/contracts', label: t('layout.contracts'), icon: markRaw(FileSpreadsheet) }
+        { path: '/admin/contracts', label: t('layout.contracts'), icon: markRaw(FileSpreadsheet) },
+        { path: '/admin/credit-module', label: t('layout.creditModule'), icon: markRaw(Calculator) }
       ]
     })
     sections.push({
@@ -521,7 +529,8 @@ const menuSections = computed(() => {
         { path: '/super/subscriptions', label: t('layout.subscriptions'), icon: markRaw(CreditCard) },
         { path: '/super/market', label: t('layout.market'), icon: markRaw(Store) },
         { path: '/super/telegram-bot', label: t('layout.telegramBot'), icon: markRaw(Bot) },
-        { path: '/super/sheets-schedule', label: t('layout.sheetsSchedule'), icon: markRaw(Calendar) }
+        { path: '/super/sheets-schedule', label: t('layout.sheetsSchedule'), icon: markRaw(Calendar) },
+        { path: '/super/credit-module', label: t('layout.creditModule'), icon: markRaw(Calculator) }
       ]
     })
     sections.push({

@@ -94,6 +94,7 @@ import SuperUsers from '../views/super/UsersView.vue'
 import MarketAdminView from '../views/shared/MarketAdminView.vue'
 import MarketView from '../views/shared/MarketView.vue'
 import QuizView from '../views/shared/QuizView.vue'
+import CreditModuleView from '../views/shared/CreditModuleView.vue'
 
 const routes = [
   {
@@ -130,7 +131,8 @@ const routes = [
       { path: 'tournaments', name: 'student-tournaments', component: StudentTournaments },
       { path: 'subscription', name: 'student-subscription', component: LeaderSubscription },
       { path: 'market', name: 'student-market', component: MarketView },
-      { path: 'quizzes', name: 'student-quizzes', component: QuizView }
+      { path: 'quizzes', name: 'student-quizzes', component: QuizView },
+      { path: 'credit-module', name: 'student-credit-module', component: CreditModuleView }
     ]
   },
 
@@ -155,7 +157,8 @@ const routes = [
       { path: 'settings', name: 'leader-settings', component: StudentSettings },
       { path: 'help', name: 'leader-help', component: StudentHelp },
       { path: 'market', name: 'leader-market', component: MarketView },
-      { path: 'quizzes', name: 'leader-quizzes', component: QuizView }
+      { path: 'quizzes', name: 'leader-quizzes', component: QuizView },
+      { path: 'credit-module', name: 'leader-credit-module', component: CreditModuleView }
     ]
   },
 
@@ -179,7 +182,8 @@ const routes = [
       { path: 'subjects', name: 'admin-subjects', component: AdminSubjects },
       { path: 'profile', name: 'admin-profile', component: StudentProfile },
       { path: 'settings', name: 'admin-settings', component: StudentSettings },
-      { path: 'help', name: 'admin-help', component: StudentHelp }
+      { path: 'help', name: 'admin-help', component: StudentHelp },
+      { path: 'credit-module', name: 'admin-credit-module', component: CreditModuleView }
     ]
   },
 
@@ -208,7 +212,8 @@ const routes = [
       { path: 'contracts', name: 'super-contracts', component: SuperContracts },
       { path: 'profile', name: 'super-profile', component: StudentProfile },
       { path: 'help', name: 'super-help', component: StudentHelp },
-      { path: 'market', name: 'super-market', component: MarketAdminView }
+      { path: 'market', name: 'super-market', component: MarketAdminView },
+      { path: 'credit-module', name: 'super-credit-module', component: CreditModuleView }
     ]
   },
 
