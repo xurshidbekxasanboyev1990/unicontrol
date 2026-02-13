@@ -11,14 +11,14 @@
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
       <div>
         <h1 class="text-xl sm:text-2xl font-bold text-slate-800">{{ $t('admins.title') }}</h1>
-        <p class="text-sm text-slate-500">{{ admins.length }} ta admin</p>
+        <p class="text-sm text-slate-500">{{ admins.length }} {{ $t('admins.adminCount') }}</p>
       </div>
       <button 
         @click="openModal()"
         class="w-full sm:w-auto px-4 py-2.5 bg-amber-500 text-white rounded-xl font-medium hover:bg-amber-600 transition-colors flex items-center justify-center gap-2"
       >
         <UserPlus class="w-5 h-5" />
-        Yangi admin
+        {{ $t('admins.newAdmin') }}
       </button>
     </div>
 
@@ -60,21 +60,21 @@
           <div class="flex items-center justify-between text-sm">
             <span class="text-slate-500 flex items-center gap-2">
               <Calendar class="w-4 h-4" />
-              Qo'shilgan
+              {{ $t('admins.addedDate') }}
             </span>
             <span class="text-slate-700">{{ formatDate(admin.createdAt) }}</span>
           </div>
           <div class="flex items-center justify-between text-sm">
             <span class="text-slate-500 flex items-center gap-2">
               <Activity class="w-4 h-4" />
-              Holat
+              {{ $t('common.status') }}
             </span>
             <span 
               class="flex items-center gap-1 font-medium"
               :class="admin.active ? 'text-emerald-600' : 'text-slate-400'"
             >
               <span class="w-2 h-2 rounded-full" :class="admin.active ? 'bg-emerald-500' : 'bg-slate-300'"></span>
-              {{ admin.active ? 'Faol' : 'Nofaol' }}
+              {{ admin.active ? $t('common.active') : $t('common.inactive') }}
             </span>
           </div>
         </div>
@@ -85,7 +85,7 @@
             class="flex-1 px-3 py-2 bg-slate-100 text-slate-700 rounded-xl text-sm font-medium hover:bg-slate-200 transition-colors flex items-center justify-center gap-2"
           >
             <Pencil class="w-4 h-4" />
-            Tahrirlash
+            {{ $t('common.edit') }}
           </button>
           <button 
             v-if="admin.role !== 'super'"
@@ -117,7 +117,7 @@
         <div class="bg-white rounded-2xl max-w-2xl w-full my-8">
           <div class="p-6 border-b border-slate-100 flex items-center justify-between">
             <h2 class="text-lg font-semibold text-slate-800">
-              {{ editingAdmin ? 'Adminni tahrirlash' : 'Yangi admin qo\'shish' }}
+              {{ editingAdmin ? $t('admins.editAdmin') : $t('admins.newAdmin') }}
             </h2>
             <button @click="showModal = false" class="p-2 hover:bg-slate-100 rounded-lg transition-colors">
               <X class="w-5 h-5 text-slate-500" />
@@ -129,11 +129,11 @@
             <div class="space-y-4">
               <h3 class="text-sm font-semibold text-slate-600 uppercase tracking-wide flex items-center gap-2">
                 <User class="w-4 h-4" />
-                Asosiy ma'lumotlar
+                {{ $t('admins.basicInfo') }}
               </h3>
               <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label class="block text-sm font-medium text-slate-700 mb-2">F.I.O</label>
+                  <label class="block text-sm font-medium text-slate-700 mb-2">{{ $t('users.fullName') }}</label>
                   <input 
                     v-model="form.name"
                     type="text"
@@ -163,7 +163,7 @@
                   />
                 </div>
                 <div v-if="!editingAdmin">
-                  <label class="block text-sm font-medium text-slate-700 mb-2">Parol</label>
+                  <label class="block text-sm font-medium text-slate-700 mb-2">{{ $t('admins.password') }}</label>
                   <input 
                     v-model="form.password"
                     type="password"
@@ -181,7 +181,7 @@
                     id="active"
                     class="w-5 h-5 rounded border-slate-300 text-amber-500 focus:ring-amber-500"
                   />
-                  <label for="active" class="text-sm text-slate-700">Faol holat</label>
+                  <label for="active" class="text-sm text-slate-700">{{ $t('common.active') }}</label>
                 </div>
                 <div class="flex items-center gap-3">
                   <input 
@@ -200,14 +200,14 @@
               <div class="flex items-center justify-between">
                 <h3 class="text-sm font-semibold text-slate-600 uppercase tracking-wide flex items-center gap-2">
                   <ShieldCheck class="w-4 h-4" />
-                  Ruxsatlar
+                  {{ $t('admins.permissions') }}
                 </h3>
                 <button 
                   type="button"
                   @click="toggleAllPermissions"
                   class="text-xs text-amber-600 hover:text-amber-700 font-medium"
                 >
-                  {{ allPermissionsEnabled ? 'Barchasini o\'chirish' : 'Barchasini yoqish' }}
+                  {{ allPermissionsEnabled ? $t('admins.disableAll') : $t('admins.enableAll') }}
                 </button>
               </div>
 
@@ -235,7 +235,7 @@
                           @change="toggleGroupPermissions(group, $event)"
                           class="w-4 h-4 rounded border-slate-300 text-amber-500 focus:ring-amber-500"
                         />
-                        <span class="text-xs text-slate-500">Hammasi</span>
+                        <span class="text-xs text-slate-500">{{ $t('common.all') }}</span>
                       </label>
                       <ChevronDown 
                         :class="['w-5 h-5 text-slate-400 transition-transform', group.expanded && 'rotate-180']" 
@@ -277,7 +277,7 @@
             <div v-else class="bg-amber-50 border border-amber-200 rounded-xl p-4">
               <div class="flex items-center gap-3 text-amber-700">
                 <Crown class="w-5 h-5" />
-                <p class="text-sm font-medium">Super Admin barcha ruxsatlarga ega bo'ladi</p>
+                <p class="text-sm font-medium">{{ $t('admins.superAdminAllPermissions') }}</p>
               </div>
             </div>
 
@@ -287,14 +287,14 @@
                 @click="showModal = false"
                 class="flex-1 px-4 py-3 border border-slate-200 text-slate-700 rounded-xl font-medium hover:bg-slate-50 transition-colors"
               >
-                Bekor qilish
+                {{ $t('common.cancel') }}
               </button>
               <button 
                 type="submit"
                 class="flex-1 px-4 py-3 bg-amber-500 text-white rounded-xl font-medium hover:bg-amber-600 transition-colors flex items-center justify-center gap-2"
               >
                 <Save class="w-5 h-5" />
-                Saqlash
+                {{ $t('common.save') }}
               </button>
             </div>
           </form>
@@ -320,22 +320,22 @@
           <div class="w-16 h-16 bg-rose-100 rounded-full flex items-center justify-center mx-auto mb-4">
             <AlertTriangle class="w-8 h-8 text-rose-500" />
           </div>
-          <h3 class="text-lg font-semibold text-slate-800 mb-2">O'chirishni tasdiqlang</h3>
+          <h3 class="text-lg font-semibold text-slate-800 mb-2">{{ $t('admins.confirmDelete') }}</h3>
           <p class="text-slate-500 mb-6">
-            {{ deletingAdmin?.name }} adminini o'chirmoqchimisiz?
+            {{ deletingAdmin?.name }} {{ $t('admins.deleteConfirmMsg') }}
           </p>
           <div class="flex gap-3">
             <button 
               @click="showDeleteConfirm = false"
               class="flex-1 px-4 py-3 border border-slate-200 text-slate-700 rounded-xl font-medium hover:bg-slate-50 transition-colors"
             >
-              Bekor qilish
+              {{ $t('common.cancel') }}
             </button>
             <button 
               @click="deleteAdmin"
               class="flex-1 px-4 py-3 bg-rose-500 text-white rounded-xl font-medium hover:bg-rose-600 transition-colors"
             >
-              O'chirish
+              {{ $t('common.delete') }}
             </button>
           </div>
         </div>

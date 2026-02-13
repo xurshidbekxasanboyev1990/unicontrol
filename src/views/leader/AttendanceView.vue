@@ -19,7 +19,7 @@
     <div v-if="loading" class="flex items-center justify-center py-20">
       <div class="text-center">
         <Loader2 class="w-10 h-10 text-emerald-500 animate-spin mx-auto mb-4" />
-        <p class="text-slate-500">Yuklanmoqda...</p>
+        <p class="text-slate-500">{{ $t('common.loading') }}</p>
       </div>
     </div>
 
@@ -33,7 +33,7 @@
                 <BookOpen class="w-5 h-5 text-emerald-600" />
               </div>
               <div>
-                <h2 class="font-semibold text-slate-800">{{ selectedDayName }} — Darslar</h2>
+                <h2 class="font-semibold text-slate-800">{{ selectedDayName }} — {{ $t('attendance.lessons') }}</h2>
                 <p class="text-sm text-slate-500">{{ todayLessons.length }} ta dars jadvaldagilar</p>
               </div>
             </div>
@@ -42,8 +42,8 @@
 
         <div v-if="todayLessons.length === 0" class="p-8 text-center">
           <Coffee class="w-12 h-12 text-slate-300 mx-auto mb-3" />
-          <p class="text-slate-500 font-medium">Bu kunda dars yo'q</p>
-          <p class="text-sm text-slate-400 mt-1">Jadvalda bu kunga dars qo'yilmagan</p>
+          <p class="text-slate-500 font-medium">{{ $t('attendance.noLessonToday') }}</p>
+          <p class="text-sm text-slate-400 mt-1">{{ $t('attendance.noLessonDesc') }}</p>
         </div>
 
         <div v-else class="divide-y divide-slate-100">
@@ -83,14 +83,14 @@
             <div class="flex-shrink-0">
               <div v-if="lessonAttendanceSaved[lesson.id]" class="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-100 text-emerald-700 rounded-lg text-xs font-medium">
                 <CheckCircle class="w-3.5 h-3.5" />
-                Saqlangan
+                {{ $t('attendance.saved') }}
               </div>
               <div v-else-if="selectedLesson?.id === lesson.id" class="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-500 text-white rounded-lg text-xs font-medium">
                 <CheckCircle class="w-3.5 h-3.5" />
-                Tanlangan
+                {{ $t('attendance.selected') }}
               </div>
               <div v-else class="px-3 py-1.5 bg-slate-100 text-slate-500 rounded-lg text-xs font-medium">
-                Tanlang
+                {{ $t('attendance.select') }}
               </div>
             </div>
           </div>
@@ -104,8 +104,8 @@
             <AlertCircle class="w-6 h-6 text-amber-600" />
           </div>
           <div>
-            <h3 class="font-semibold text-amber-900">Darsni tanlang</h3>
-            <p class="text-sm text-amber-700">Davomat olish uchun yuqoridagi darslardan birini tanlang</p>
+            <h3 class="font-semibold text-amber-900">{{ $t('attendance.selectLesson') }}</h3>
+            <p class="text-sm text-amber-700">{{ $t('attendance.selectLessonDesc') }}</p>
           </div>
         </div>
       </div>
@@ -128,7 +128,7 @@
             </div>
             <div v-if="isLessonEnded" class="flex items-center gap-2 text-amber-700 bg-amber-100 px-3 py-1.5 rounded-lg">
               <Lock class="w-4 h-4" />
-              <span class="text-xs font-medium">Tugagan</span>
+              <span class="text-xs font-medium">{{ $t('attendance.ended') }}</span>
             </div>
           </div>
         </div>
@@ -423,7 +423,7 @@
             <div class="w-16 h-16 bg-white/20 rounded-2xl mx-auto flex items-center justify-center mb-4">
               <CheckCircle class="w-8 h-8" />
             </div>
-            <h3 class="text-xl font-bold">Davomat saqlandi!</h3>
+            <h3 class="text-xl font-bold">{{ $t('attendance.attendanceSaved') }}</h3>
             <p class="text-emerald-100 mt-1">{{ selectedLesson?.subject }} — {{ selectedLesson?.timeDisplay }}</p>
           </div>
           <div class="p-6 space-y-4">
@@ -445,7 +445,7 @@
             </div>
           </div>
           <div class="px-6 pb-6">
-            <button @click="showSummary = false" class="w-full py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-medium transition-colors">Yopish</button>
+            <button @click="showSummary = false" class="w-full py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-medium transition-colors">{{ $t('common.close') }}</button>
           </div>
         </div>
       </div>
@@ -490,7 +490,7 @@
           </div>
           <div class="px-6 pb-6 flex gap-3">
             <button @click="cancelReasonModal" class="flex-1 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-medium transition-colors">
-              Bekor qilish
+              {{ $t('common.cancel') }}
             </button>
             <button
               @click="confirmChange"

@@ -4,7 +4,7 @@
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
       <div>
         <h1 class="text-xl sm:text-2xl font-bold text-slate-800">{{ $t('reports.title') }}</h1>
-        <p class="text-sm text-slate-500">Barcha hisobotlar - to'liq boshqaruv</p>
+        <p class="text-sm text-slate-500">{{ $t('reports.allReportsDesc') }}</p>
       </div>
       <div class="flex items-center gap-3">
         <select v-model="selectedPeriod" class="px-4 py-2 rounded-xl border border-slate-200 focus:border-violet-500 outline-none text-sm">
@@ -29,7 +29,7 @@
         <div class="flex items-center justify-between">
           <div>
             <p class="text-xl sm:text-3xl font-bold text-violet-600">{{ reportStats.total }}</p>
-            <p class="text-xs sm:text-sm text-slate-500 mt-1">Jami hisobotlar</p>
+            <p class="text-xs sm:text-sm text-slate-500 mt-1">{{ $t('reports.totalReports') }}</p>
           </div>
           <div class="w-10 h-10 sm:w-12 sm:h-12 bg-violet-100 rounded-xl flex items-center justify-center">
             <FileText class="w-5 h-5 sm:w-6 sm:h-6 text-violet-600" />
@@ -41,7 +41,7 @@
         <div class="flex items-center justify-between">
           <div>
             <p class="text-xl sm:text-3xl font-bold text-amber-600">{{ reportStats.by_status?.pending || 0 }}</p>
-            <p class="text-xs sm:text-sm text-slate-500 mt-1">Kutilayotgan</p>
+            <p class="text-xs sm:text-sm text-slate-500 mt-1">{{ $t('reports.pendingStatus') }}</p>
           </div>
           <div class="w-10 h-10 sm:w-12 sm:h-12 bg-amber-100 rounded-xl flex items-center justify-center">
             <Clock class="w-5 h-5 sm:w-6 sm:h-6 text-amber-600" />
@@ -53,7 +53,7 @@
         <div class="flex items-center justify-between">
           <div>
             <p class="text-xl sm:text-3xl font-bold text-emerald-600">{{ reportStats.by_status?.approved || 0 }}</p>
-            <p class="text-xs sm:text-sm text-slate-500 mt-1">Tasdiqlangan</p>
+            <p class="text-xs sm:text-sm text-slate-500 mt-1">{{ $t('reports.approvedStatus') }}</p>
           </div>
           <div class="w-10 h-10 sm:w-12 sm:h-12 bg-emerald-100 rounded-xl flex items-center justify-center">
             <CheckCircle class="w-5 h-5 sm:w-6 sm:h-6 text-emerald-600" />
@@ -65,7 +65,7 @@
         <div class="flex items-center justify-between">
           <div>
             <p class="text-xl sm:text-3xl font-bold text-rose-600">{{ reportStats.by_status?.rejected || 0 }}</p>
-            <p class="text-xs sm:text-sm text-slate-500 mt-1">Rad etilgan</p>
+            <p class="text-xs sm:text-sm text-slate-500 mt-1">{{ $t('reports.rejectedStatus') }}</p>
           </div>
           <div class="w-10 h-10 sm:w-12 sm:h-12 bg-rose-100 rounded-xl flex items-center justify-center">
             <XCircle class="w-5 h-5 sm:w-6 sm:h-6 text-rose-600" />
@@ -77,7 +77,7 @@
         <div class="flex items-center justify-between">
           <div>
             <p class="text-xl sm:text-3xl font-bold text-blue-600">{{ reportStats.approval_rate }}%</p>
-            <p class="text-xs sm:text-sm text-slate-500 mt-1">Tasdiqlash foizi</p>
+            <p class="text-xs sm:text-sm text-slate-500 mt-1">{{ $t('reports.approvalRate') }}</p>
           </div>
           <div class="w-10 h-10 sm:w-12 sm:h-12 bg-blue-100 rounded-xl flex items-center justify-center">
             <TrendingUp class="w-5 h-5 sm:w-6 sm:h-6 text-blue-600" />
@@ -93,14 +93,14 @@
         class="px-4 sm:px-5 py-3 text-sm font-medium transition-colors border-b-2 -mb-px whitespace-nowrap"
         :class="activeTab === 'all' ? 'border-violet-500 text-violet-600' : 'border-transparent text-slate-500 hover:text-slate-700'"
       >
-        Barcha hisobotlar
+        {{ $t('reports.allReportsTab') }}
       </button>
       <button
         @click="activeTab = 'pending'"
         class="px-5 py-3 text-sm font-medium transition-colors border-b-2 -mb-px flex items-center gap-2"
         :class="activeTab === 'pending' ? 'border-amber-500 text-amber-600' : 'border-transparent text-slate-500 hover:text-slate-700'"
       >
-        Tasdiqlash kutilmoqda
+        {{ $t('reports.pendingApproval') }}
         <span v-if="reportStats.by_status?.pending > 0" class="px-2 py-0.5 bg-amber-100 text-amber-700 text-xs rounded-full font-bold">
           {{ reportStats.by_status.pending }}
         </span>
@@ -110,7 +110,7 @@
         class="px-5 py-3 text-sm font-medium transition-colors border-b-2 -mb-px"
         :class="activeTab === 'stats' ? 'border-blue-500 text-blue-600' : 'border-transparent text-slate-500 hover:text-slate-700'"
       >
-        Statistika
+        {{ $t('reports.statisticsTab') }}
       </button>
     </div>
 
@@ -119,26 +119,26 @@
       <!-- Filters -->
       <div class="flex flex-wrap items-center gap-3">
         <select v-model="filterGroup" class="px-3 py-2 rounded-xl border border-slate-200 text-sm">
-          <option :value="null">Barcha guruhlar</option>
+          <option :value="null">{{ $t('reports.allGroupsFilter') }}</option>
           <option v-for="group in groups" :key="group.id" :value="group.id">{{ group.name }}</option>
         </select>
         <select v-model="filterType" class="px-3 py-2 rounded-xl border border-slate-200 text-sm">
-          <option :value="null">Barcha turlar</option>
-          <option value="attendance">Davomat</option>
-          <option value="payment">To'lov</option>
-          <option value="students">Talabalar</option>
-          <option value="groups">Guruhlar</option>
-          <option value="analytics">Analitika</option>
-          <option value="ai_analysis">AI Tahlil</option>
-          <option value="custom">Boshqa</option>
+          <option :value="null">{{ $t('reports.allTypesFilter') }}</option>
+          <option value="attendance">{{ $t('attendance.title') }}</option>
+          <option value="payment">{{ $t('reports.paymentType') }}</option>
+          <option value="students">{{ $t('common.students') }}</option>
+          <option value="groups">{{ $t('common.groups') }}</option>
+          <option value="analytics">{{ $t('reports.analyticsType') }}</option>
+          <option value="ai_analysis">{{ $t('ai.title') }}</option>
+          <option value="custom">{{ $t('reports.otherType') }}</option>
         </select>
         <select v-if="activeTab === 'all'" v-model="filterStatus" class="px-3 py-2 rounded-xl border border-slate-200 text-sm">
-          <option :value="null">Barcha statuslar</option>
-          <option value="pending">Kutilayotgan</option>
-          <option value="approved">Tasdiqlangan</option>
-          <option value="rejected">Rad etilgan</option>
-          <option value="completed">Tayyor</option>
-          <option value="failed">Xato</option>
+          <option :value="null">{{ $t('reports.allStatusFilter') }}</option>
+          <option value="pending">{{ $t('reports.pendingStatus') }}</option>
+          <option value="approved">{{ $t('reports.approvedStatus') }}</option>
+          <option value="rejected">{{ $t('reports.rejectedStatus') }}</option>
+          <option value="completed">{{ $t('reports.completedStatus') }}</option>
+          <option value="failed">{{ $t('reports.failedStatus') }}</option>
         </select>
       </div>
 
@@ -149,12 +149,12 @@
             <thead>
               <tr class="border-b border-slate-100 bg-slate-50">
                 <th class="text-left p-4 font-semibold text-slate-600 text-sm">ID</th>
-                <th class="text-left p-4 font-semibold text-slate-600 text-sm">Nomi</th>
-                <th class="text-left p-4 font-semibold text-slate-600 text-sm">Turi</th>
-                <th class="text-left p-4 font-semibold text-slate-600 text-sm">Yaratuvchi</th>
-                <th class="text-left p-4 font-semibold text-slate-600 text-sm">Sana</th>
-                <th class="text-left p-4 font-semibold text-slate-600 text-sm">Status</th>
-                <th class="text-left p-4 font-semibold text-slate-600 text-sm">Amallar</th>
+                <th class="text-left p-4 font-semibold text-slate-600 text-sm">{{ $t('reports.reportName') }}</th>
+                <th class="text-left p-4 font-semibold text-slate-600 text-sm">{{ $t('reports.reportType') }}</th>
+                <th class="text-left p-4 font-semibold text-slate-600 text-sm">{{ $t('reports.reportCreator') }}</th>
+                <th class="text-left p-4 font-semibold text-slate-600 text-sm">{{ $t('reports.reportDate') }}</th>
+                <th class="text-left p-4 font-semibold text-slate-600 text-sm">{{ $t('reports.reportStatus') }}</th>
+                <th class="text-left p-4 font-semibold text-slate-600 text-sm">{{ $t('reports.reportActions') }}</th>
               </tr>
             </thead>
             <tbody class="divide-y divide-slate-100">
@@ -185,7 +185,7 @@
                       v-if="report.status !== 'approved'"
                       @click="approveReport(report)"
                       class="p-2 rounded-lg text-emerald-600 hover:bg-emerald-50 transition-colors"
-                      title="Tasdiqlash"
+                      :title="$t('common.approve')"
                     >
                       <Check class="w-4 h-4" />
                     </button>
@@ -193,21 +193,21 @@
                       v-if="report.status !== 'rejected'"
                       @click="openRejectModal(report)"
                       class="p-2 rounded-lg text-rose-600 hover:bg-rose-50 transition-colors"
-                      title="Rad etish"
+                      :title="$t('common.reject')"
                     >
                       <X class="w-4 h-4" />
                     </button>
                     <button 
                       @click="downloadReport(report)"
                       class="p-2 rounded-lg text-blue-600 hover:bg-blue-50 transition-colors"
-                      title="Yuklab olish"
+                      :title="$t('common.download')"
                     >
                       <Download class="w-4 h-4" />
                     </button>
                     <button 
                       @click="deleteReport(report)"
                       class="p-2 rounded-lg text-red-600 hover:bg-red-50 transition-colors"
-                      title="O'chirish"
+                      :title="$t('common.delete')"
                     >
                       <Trash2 class="w-4 h-4" />
                     </button>
@@ -221,12 +221,12 @@
         <!-- Empty state -->
         <div v-if="filteredReports.length === 0" class="p-12 text-center">
           <FileText class="w-12 h-12 mx-auto text-slate-300 mb-3" />
-          <p class="text-slate-500">Hisobotlar topilmadi</p>
+          <p class="text-slate-500">{{ $t('reports.noReportsTable') }}</p>
         </div>
 
         <!-- Pagination -->
         <div v-if="totalPages > 1" class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 p-4 border-t border-slate-100">
-          <span class="text-sm text-slate-500">Jami: {{ totalReports }}</span>
+          <span class="text-sm text-slate-500">{{ $t('common.total') }}: {{ totalReports }}</span>
           <div class="flex gap-1 flex-wrap">
             <button 
               v-for="p in totalPages" :key="p"
@@ -246,7 +246,7 @@
       <!-- Report types distribution -->
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div class="bg-white rounded-2xl border border-slate-200 p-6">
-          <h2 class="text-lg font-semibold text-slate-800 mb-4">Hisobot turlari</h2>
+          <h2 class="text-lg font-semibold text-slate-800 mb-4">{{ $t('reports.reportTypes') }}</h2>
           <div class="space-y-3">
             <div v-for="(count, type) in reportStats.by_type" :key="type" class="flex items-center gap-3">
               <span class="w-24 text-sm text-slate-600 font-medium">{{ formatReportType(type) }}</span>
@@ -262,23 +262,23 @@
         </div>
 
         <div class="bg-white rounded-2xl border border-slate-200 p-6">
-          <h2 class="text-lg font-semibold text-slate-800 mb-4">Status taqsimoti</h2>
+          <h2 class="text-lg font-semibold text-slate-800 mb-4">{{ $t('reports.statusDistribution') }}</h2>
           <div class="grid grid-cols-2 gap-3 sm:gap-4">
             <div class="rounded-xl bg-amber-50 p-3 sm:p-4 text-center">
               <p class="text-xl sm:text-3xl font-bold text-amber-600">{{ reportStats.by_status?.pending || 0 }}</p>
-              <p class="text-xs sm:text-sm text-amber-600/70">Kutilayotgan</p>
+              <p class="text-xs sm:text-sm text-amber-600/70">{{ $t('reports.pendingStatus') }}</p>
             </div>
             <div class="rounded-xl bg-emerald-50 p-3 sm:p-4 text-center">
               <p class="text-xl sm:text-3xl font-bold text-emerald-600">{{ reportStats.by_status?.approved || 0 }}</p>
-              <p class="text-xs sm:text-sm text-emerald-600/70">Tasdiqlangan</p>
+              <p class="text-xs sm:text-sm text-emerald-600/70">{{ $t('reports.approvedStatus') }}</p>
             </div>
             <div class="rounded-xl bg-rose-50 p-3 sm:p-4 text-center">
               <p class="text-xl sm:text-3xl font-bold text-rose-600">{{ reportStats.by_status?.rejected || 0 }}</p>
-              <p class="text-xs sm:text-sm text-rose-600/70">Rad etilgan</p>
+              <p class="text-xs sm:text-sm text-rose-600/70">{{ $t('reports.rejectedStatus') }}</p>
             </div>
             <div class="rounded-xl bg-blue-50 p-3 sm:p-4 text-center">
               <p class="text-xl sm:text-3xl font-bold text-blue-600">{{ reportStats.by_status?.completed || 0 }}</p>
-              <p class="text-xs sm:text-sm text-blue-600/70">Tayyor</p>
+              <p class="text-xs sm:text-sm text-blue-600/70">{{ $t('reports.completedStatus') }}</p>
             </div>
           </div>
         </div>
@@ -286,7 +286,7 @@
 
       <!-- Faculty attendance overview (real API) -->
       <div class="bg-white rounded-2xl border border-slate-200 p-6">
-        <h2 class="text-lg font-semibold text-slate-800 mb-4">Guruhlar bo'yicha statistika</h2>
+        <h2 class="text-lg font-semibold text-slate-800 mb-4">{{ $t('reports.groupStats') }}</h2>
         <div class="space-y-4">
           <div v-for="group in groupStats" :key="group.name">
             <div class="flex items-center justify-between mb-2">
@@ -320,11 +320,11 @@
       @click.self="showRejectModal = false"
     >
       <div class="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl">
-        <h3 class="text-lg font-bold text-slate-800 mb-4">Hisobotni rad etish</h3>
+        <h3 class="text-lg font-bold text-slate-800 mb-4">{{ $t('reports.rejectTitle') }}</h3>
         <textarea
           v-model="rejectReason"
           rows="4"
-          placeholder="Rad etish sababini kiriting (kamida 5 ta belgi)..."
+          :placeholder="$t('reports.rejectPlaceholder')"
           class="w-full rounded-xl border border-slate-200 p-4 text-slate-700 placeholder-slate-400 focus:border-rose-500 focus:outline-none"
         ></textarea>
         <div class="flex justify-end gap-3 mt-4">
@@ -332,14 +332,14 @@
             @click="showRejectModal = false"
             class="px-4 py-2 rounded-xl text-slate-600 hover:bg-slate-100"
           >
-            Bekor qilish
+            {{ $t('common.cancel') }}
           </button>
           <button 
             @click="confirmReject"
             :disabled="rejectReason.length < 5"
             class="px-4 py-2 rounded-xl bg-rose-500 text-white font-medium hover:bg-rose-600 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Rad etish
+            {{ $t('reports.rejectConfirm') }}
           </button>
         </div>
       </div>
@@ -370,9 +370,11 @@ import { computed, onMounted, ref, watch } from 'vue'
 import api from '../../services/api'
 import { useDataStore } from '../../stores/data'
 import { useToastStore } from '../../stores/toast'
+import { useLanguageStore } from '../../stores/language'
 
 const dataStore = useDataStore()
 const toast = useToastStore()
+const { t } = useLanguageStore()
 
 // State
 const loading = ref(true)
@@ -427,7 +429,7 @@ async function loadReports() {
     }
   } catch (err) {
     console.error('Load reports error:', err)
-    toast.error('Hisobotlarni yuklashda xatolik')
+    toast.error(t('reports.loadError'))
   } finally {
     loading.value = false
   }
@@ -465,11 +467,11 @@ const groupStats = computed(() => {
 async function approveReport(report) {
   try {
     await api.request(`/reports/${report.id}/approve`, { method: 'POST' })
-    toast.success('Hisobot tasdiqlandi')
+    toast.success(t('reports.reportApproved'))
     await Promise.all([loadReports(), loadStats()])
   } catch (err) {
     console.error('Approve error:', err)
-    toast.error('Tasdiqlashda xatolik')
+    toast.error(t('reports.approveError'))
   }
 }
 
@@ -483,18 +485,18 @@ async function confirmReject() {
   if (rejectReason.value.length < 5) return
   try {
     await api.request(`/reports/${rejectingReport.value.id}/reject?reason=${encodeURIComponent(rejectReason.value)}`, { method: 'POST' })
-    toast.success('Hisobot rad etildi')
+    toast.success(t('reports.reportRejected'))
     showRejectModal.value = false
     await Promise.all([loadReports(), loadStats()])
   } catch (err) {
     console.error('Reject error:', err)
-    toast.error('Rad etishda xatolik')
+    toast.error(t('reports.rejectError'))
   }
 }
 
 async function downloadReport(report, format = 'pdf') {
   try {
-    toast.info('Yuklab olinmoqda...')
+    toast.info(t('reports.downloading'))
     const blob = await api.request(`/reports/${report.id}/download?format=${format}`, { responseType: 'blob' })
     const extensions = { pdf: 'pdf', excel: 'xlsx', csv: 'csv' }
     const url = window.URL.createObjectURL(blob)
@@ -505,28 +507,28 @@ async function downloadReport(report, format = 'pdf') {
     link.click()
     link.remove()
     window.URL.revokeObjectURL(url)
-    toast.success('Yuklab olindi')
+    toast.success(t('reports.downloaded'))
   } catch (err) {
     console.error('Download error:', err)
-    toast.error('Yuklab olishda xatolik')
+    toast.error(t('reports.downloadError'))
   }
 }
 
 async function deleteReport(report) {
-  if (!confirm(`"${report.name}" hisobotini o'chirishni tasdiqlaysizmi?`)) return
+  if (!confirm(t('reports.deleteConfirm', { name: report.name }))) return
   try {
     await api.request(`/reports/${report.id}`, { method: 'DELETE' })
-    toast.success('Hisobot o\'chirildi')
+    toast.success(t('reports.reportDeleted'))
     await Promise.all([loadReports(), loadStats()])
   } catch (err) {
     console.error('Delete error:', err)
-    toast.error('O\'chirishda xatolik')
+    toast.error(t('reports.deleteError'))
   }
 }
 
 // Export PDF
 const exportReport = async () => {
-  toast.info('Hisobot tayyorlanmoqda...')
+  toast.info(t('reports.preparingReport'))
   try {
     const doc = new jsPDF('p', 'mm', 'a4')
     const pageWidth = doc.internal.pageSize.getWidth()
@@ -534,24 +536,24 @@ const exportReport = async () => {
 
     doc.setFontSize(20)
     doc.setTextColor(30, 41, 59)
-    doc.text('SuperAdmin - Tizim Hisoboti', pageWidth / 2, y, { align: 'center' })
+    doc.text(t('reports.systemReport'), pageWidth / 2, y, { align: 'center' })
     y += 10
 
     doc.setFontSize(12)
     doc.setTextColor(100, 116, 139)
-    doc.text(`Sana: ${new Date().toLocaleDateString('uz-UZ')}`, pageWidth / 2, y, { align: 'center' })
+    doc.text(`${t('reports.date')}: ${new Date().toLocaleDateString('uz-UZ')}`, pageWidth / 2, y, { align: 'center' })
     y += 15
 
     // Stats
     autoTable(doc, {
       startY: y,
-      head: [['Ko\'rsatkich', 'Qiymat']],
+      head: [[t('reports.indicator'), t('reports.value')]],
       body: [
-        ['Jami hisobotlar', reportStats.value.total.toString()],
-        ['Kutilayotgan', (reportStats.value.by_status?.pending || 0).toString()],
-        ['Tasdiqlangan', (reportStats.value.by_status?.approved || 0).toString()],
-        ['Rad etilgan', (reportStats.value.by_status?.rejected || 0).toString()],
-        ['Tasdiqlash foizi', `${reportStats.value.approval_rate}%`],
+        [t('reports.totalReports'), reportStats.value.total.toString()],
+        [t('reports.statusPending'), (reportStats.value.by_status?.pending || 0).toString()],
+        [t('reports.statusApproved'), (reportStats.value.by_status?.approved || 0).toString()],
+        [t('reports.statusRejected'), (reportStats.value.by_status?.rejected || 0).toString()],
+        [t('reports.approvalRate'), `${reportStats.value.approval_rate}%`],
       ],
       theme: 'striped',
       headStyles: { fillColor: [139, 92, 246] },
@@ -562,12 +564,12 @@ const exportReport = async () => {
     // Reports list
     if (allReports.value.length > 0) {
       doc.setFontSize(14)
-      doc.text('Hisobotlar ro\'yxati', 20, y)
+      doc.text(t('reports.reportsList'), 20, y)
       y += 5
 
       autoTable(doc, {
         startY: y,
-        head: [['ID', 'Nomi', 'Turi', 'Status', 'Sana']],
+        head: [['ID', t('reports.name'), t('reports.type'), t('reports.statusLabel'), t('reports.date')]],
         body: allReports.value.slice(0, 30).map(r => [
           `#${r.id}`,
           r.name,
@@ -591,23 +593,23 @@ const exportReport = async () => {
     }
 
     doc.save(`superadmin_hisobot_${new Date().toISOString().split('T')[0]}.pdf`)
-    toast.success('Hisobot yuklab olindi!')
+    toast.success(t('reports.reportDownloaded'))
   } catch (err) {
     console.error('Export error:', err)
-    toast.error('Eksport xatosi')
+    toast.error(t('reports.exportError'))
   }
 }
 
 // Helpers
 function formatReportType(type) {
   const labels = {
-    attendance: 'Davomat',
-    payment: 'To\'lov',
-    students: 'Talabalar',
-    groups: 'Guruhlar',
-    analytics: 'Analitika',
-    ai_analysis: 'AI Tahlil',
-    custom: 'Boshqa',
+    attendance: t('reports.attendance'),
+    payment: t('reports.payment'),
+    students: t('reports.students'),
+    groups: t('reports.groups'),
+    analytics: t('reports.analyticsType'),
+    ai_analysis: t('reports.aiAnalysis'),
+    custom: t('reports.other'),
   }
   return labels[type] || type
 }
@@ -631,12 +633,12 @@ function getStatusClass(status) {
 
 function getStatusLabel(status) {
   const labels = {
-    pending: 'Kutilayotgan',
-    approved: 'Tasdiqlangan',
-    rejected: 'Rad etilgan',
-    completed: 'Tayyor',
-    failed: 'Xato',
-    processing: 'Jarayonda',
+    pending: t('reports.statusPending'),
+    approved: t('reports.statusApproved'),
+    rejected: t('reports.statusRejected'),
+    completed: t('reports.statusCompleted'),
+    failed: t('reports.statusFailed'),
+    processing: t('reports.statusProcessing'),
   }
   return labels[status] || status
 }

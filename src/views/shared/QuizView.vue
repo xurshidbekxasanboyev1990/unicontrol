@@ -15,11 +15,9 @@
         </div>
 
         <!-- Title -->
-        <h2 class="mb-2 text-2xl font-bold text-slate-800">Topshiriqlar bo'limi 🔒</h2>
+        <h2 class="mb-2 text-2xl font-bold text-slate-800">{{ $t('quiz.lockedTitle') }} 🔒</h2>
         <p class="mb-6 text-sm text-slate-500 leading-relaxed">
-          Bu bo'limdan foydalanish uchun guruhingiz <span class="font-semibold text-violet-600">Plus</span>,
-          <span class="font-semibold text-amber-600">Pro</span> yoki
-          <span class="font-semibold text-emerald-600">Unlimited</span> obunasiga ega bo'lishi kerak.
+          {{ $t('quiz.lockedDesc') }}
         </p>
 
         <!-- Plan Cards -->
@@ -30,7 +28,7 @@
               <Zap :size="20" class="text-violet-600" />
             </div>
             <h3 class="text-sm font-bold text-violet-700">Plus</h3>
-            <p class="mt-1 text-xs text-slate-400">Asosiy imkoniyatlar</p>
+            <p class="mt-1 text-xs text-slate-400">{{ $t('quiz.basicFeatures') }}</p>
           </div>
           <!-- Pro -->
           <div class="rounded-2xl border-2 border-amber-200 bg-gradient-to-b from-amber-50 to-white p-4 transition-all hover:shadow-lg hover:shadow-amber-100/50 hover:-translate-y-1">
@@ -38,7 +36,7 @@
               <Crown :size="20" class="text-amber-600" />
             </div>
             <h3 class="text-sm font-bold text-amber-700">Pro</h3>
-            <p class="mt-1 text-xs text-slate-400">Kengaytirilgan</p>
+            <p class="mt-1 text-xs text-slate-400">{{ $t('quiz.extended') }}</p>
           </div>
           <!-- Unlimited -->
           <div class="rounded-2xl border-2 border-emerald-200 bg-gradient-to-b from-emerald-50 to-white p-4 transition-all hover:shadow-lg hover:shadow-emerald-100/50 hover:-translate-y-1">
@@ -46,29 +44,29 @@
               <Sparkles :size="20" class="text-emerald-600" />
             </div>
             <h3 class="text-sm font-bold text-emerald-700">Unlimited</h3>
-            <p class="mt-1 text-xs text-slate-400">Cheksiz imkoniyat</p>
+            <p class="mt-1 text-xs text-slate-400">{{ $t('quiz.unlimited') }}</p>
           </div>
         </div>
 
         <!-- Features -->
         <div class="mb-8 rounded-2xl border border-slate-100 bg-slate-50 p-5 text-left">
-          <h4 class="mb-3 text-sm font-semibold text-slate-700">✨ Topshiriqlar imkoniyatlari:</h4>
+          <h4 class="mb-3 text-sm font-semibold text-slate-700">✨ {{ $t('quiz.featureTitle') }}:</h4>
           <ul class="space-y-2 text-sm text-slate-600">
             <li class="flex items-center gap-2">
               <div class="flex h-5 w-5 items-center justify-center rounded-full bg-indigo-100 text-xs text-indigo-600">✓</div>
-              Kartochkalar yaratish va boshqarish
+              {{ $t('quiz.featureCards') }}
             </li>
             <li class="flex items-center gap-2">
               <div class="flex h-5 w-5 items-center justify-center rounded-full bg-indigo-100 text-xs text-indigo-600">✓</div>
-              Quizlet uslubidagi flashcard rejimi
+              {{ $t('quiz.featureFlashcard') }}
             </li>
             <li class="flex items-center gap-2">
               <div class="flex h-5 w-5 items-center justify-center rounded-full bg-indigo-100 text-xs text-indigo-600">✓</div>
-              Test rejimi — avtomatik tekshirish bilan
+              {{ $t('quiz.featureTest') }}
             </li>
             <li class="flex items-center gap-2">
               <div class="flex h-5 w-5 items-center justify-center rounded-full bg-indigo-100 text-xs text-indigo-600">✓</div>
-              Guruh ichida kartochkalarni bo'lishish
+              {{ $t('quiz.featureShare') }}
             </li>
           </ul>
         </div>
@@ -79,7 +77,7 @@
           class="inline-flex items-center gap-2 rounded-2xl bg-gradient-to-r from-indigo-500 to-violet-500 px-8 py-3.5 font-semibold text-white shadow-lg shadow-indigo-500/30 transition-all hover:from-indigo-600 hover:to-violet-600 hover:shadow-xl hover:-translate-y-0.5"
         >
           <ArrowUpCircle :size="20" />
-          Obunani yangilash
+          {{ $t('quiz.upgradeSubscription') }}
         </button>
       </div>
     </div>
@@ -89,15 +87,15 @@
     <!-- ================ HEADER ================ -->
     <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
       <div>
-        <h1 class="text-2xl font-bold text-slate-800">📚 Topshiriqlar</h1>
-        <p class="text-sm text-slate-500">Quizlet uslubidagi kartochkalar va testlar</p>
+        <h1 class="text-2xl font-bold text-slate-800">📚 {{ $t('quiz.title') }}</h1>
+        <p class="text-sm text-slate-500">{{ $t('quiz.subtitle') }}</p>
       </div>
       <button
         @click="openCreateModal"
         class="flex items-center gap-2 rounded-xl bg-indigo-500 px-5 py-2.5 font-medium text-white shadow-lg shadow-indigo-500/30 transition-all hover:bg-indigo-600"
       >
         <Plus :size="20" />
-        Yangi to'plam
+        {{ $t('quiz.newSet') }}
       </button>
     </div>
 
@@ -109,14 +107,14 @@
           class="rounded-lg px-4 py-2 text-sm font-medium transition-all"
           :class="activeTab === 'all' ? 'bg-white text-indigo-600 shadow' : 'text-slate-600 hover:text-slate-800'"
         >
-          Guruh to'plamlari
+          {{ $t('quiz.groupSets') }}
         </button>
         <button
           @click="activeTab = 'my'"
           class="rounded-lg px-4 py-2 text-sm font-medium transition-all"
           :class="activeTab === 'my' ? 'bg-white text-indigo-600 shadow' : 'text-slate-600 hover:text-slate-800'"
         >
-          Mening to'plamlarim
+          {{ $t('quiz.mySets') }}
         </button>
       </div>
 
@@ -126,7 +124,7 @@
           v-model="searchQuery"
           @input="onSearchInput"
           type="text"
-          placeholder="Qidirish..."
+          :placeholder="$t('quiz.searchPlaceholder')"
           class="w-48 rounded-xl border border-slate-200 bg-white py-2.5 pl-10 pr-4 text-sm focus:border-indigo-500 focus:outline-none sm:w-64"
         />
       </div>
@@ -169,11 +167,11 @@
           <div class="flex items-center gap-4 text-sm">
             <span class="flex items-center gap-1 text-slate-500">
               <Layers :size="14" />
-              {{ set.cards_count }} kartochka
+              {{ set.cards_count }} {{ $t('quiz.cards') }}
             </span>
             <span class="flex items-center gap-1 text-slate-500">
               <Play :size="14" />
-              {{ set.play_count }} marta
+              {{ set.play_count }} {{ $t('quiz.times') }}
             </span>
           </div>
 
@@ -189,14 +187,14 @@
               <button
                 @click.stop="startFlashcard(set)"
                 class="rounded-lg bg-emerald-50 px-3 py-1.5 text-xs font-medium text-emerald-600 transition-all hover:bg-emerald-100"
-                title="Kartochka rejimi"
+                :title="$t('quiz.cardMode')"
               >
                 <BookOpen :size="14" />
               </button>
               <button
                 @click.stop="startQuiz(set)"
                 class="rounded-lg bg-indigo-50 px-3 py-1.5 text-xs font-medium text-indigo-600 transition-all hover:bg-indigo-100"
-                title="Test rejimi"
+                :title="$t('quiz.testMode')"
               >
                 <Zap :size="14" />
               </button>
@@ -211,13 +209,13 @@
       <div class="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-indigo-100">
         <BookOpen :size="28" class="text-indigo-500" />
       </div>
-      <h3 class="mb-1 text-lg font-semibold text-slate-700">Hozircha to'plamlar yo'q</h3>
-      <p class="mb-4 text-sm text-slate-400">Birinchi bo'lib kartochkalar to'plamini yarating!</p>
+      <h3 class="mb-1 text-lg font-semibold text-slate-700">{{ $t('quiz.noSets') }}</h3>
+      <p class="mb-4 text-sm text-slate-400">{{ $t('quiz.createFirst') }}</p>
       <button
         @click="openCreateModal"
         class="rounded-xl bg-indigo-500 px-6 py-2.5 font-medium text-white hover:bg-indigo-600"
       >
-        + Yangi to'plam
+        + {{ $t('quiz.newSet') }}
       </button>
     </div>
 
@@ -229,7 +227,7 @@
         <!-- Header -->
         <div class="sticky top-0 z-10 flex items-center justify-between border-b border-slate-200 bg-white p-5">
           <h2 class="text-xl font-bold text-slate-800">
-            {{ editingSet ? "To'plamni tahrirlash" : "Yangi to'plam yaratish" }}
+            {{ editingSet ? $t('quiz.editSet') : $t('quiz.createSet') }}
           </h2>
           <button @click="showCreateModal = false" class="rounded-lg p-2 text-slate-400 hover:bg-slate-100">
             <X :size="20" />
@@ -239,7 +237,7 @@
         <div class="space-y-5 p-5">
           <!-- Title -->
           <div>
-            <label class="mb-1.5 block text-sm font-medium text-slate-700">Sarlavha *</label>
+            <label class="mb-1.5 block text-sm font-medium text-slate-700">{{ $t('quiz.setTitle') }} *</label>
             <input
               v-model="formData.title"
               type="text"
@@ -251,7 +249,7 @@
           <!-- Subject + Color -->
           <div class="grid grid-cols-2 gap-4">
             <div>
-              <label class="mb-1.5 block text-sm font-medium text-slate-700">Fan nomi</label>
+              <label class="mb-1.5 block text-sm font-medium text-slate-700">{{ $t('quiz.subjectName') }}</label>
               <input
                 v-model="formData.subject"
                 type="text"
@@ -260,7 +258,7 @@
               />
             </div>
             <div>
-              <label class="mb-1.5 block text-sm font-medium text-slate-700">Rang</label>
+              <label class="mb-1.5 block text-sm font-medium text-slate-700">{{ $t('quiz.color') }}</label>
               <div class="flex gap-2 pt-1.5">
                 <button
                   v-for="c in colors"
@@ -276,7 +274,7 @@
 
           <!-- Description -->
           <div>
-            <label class="mb-1.5 block text-sm font-medium text-slate-700">Tavsif</label>
+            <label class="mb-1.5 block text-sm font-medium text-slate-700">{{ $t('quiz.descriptionLabel') }}</label>
             <textarea
               v-model="formData.description"
               rows="2"
@@ -391,7 +389,7 @@
         <!-- Footer -->
         <div class="sticky bottom-0 flex items-center justify-end gap-3 border-t border-slate-200 bg-white p-5">
           <button @click="showCreateModal = false" class="rounded-xl border border-slate-200 px-5 py-2.5 text-slate-600 hover:bg-slate-50">
-            Bekor qilish
+            {{ $t('common.cancel') }}
           </button>
           <button
             @click="saveSet"
@@ -554,7 +552,7 @@
         <button
           @click="shuffleFlashcards"
           class="flex h-12 w-12 items-center justify-center rounded-full bg-white text-purple-600 shadow-lg transition-all hover:bg-purple-50"
-          title="Aralashtirish"
+          :title="$t('quiz.shuffle')"
         >
           <Shuffle :size="20" />
         </button>

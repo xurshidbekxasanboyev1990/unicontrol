@@ -97,13 +97,13 @@
       <!-- FAQ List -->
       <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden">
         <div class="p-4 border-b border-slate-100 flex items-center justify-between">
-          <h2 class="font-semibold text-slate-800">FAQ Savollar ({{ faqs.length }})</h2>
+          <h2 class="font-semibold text-slate-800">{{ $t('help.faqQuestions') }} ({{ faqs.length }})</h2>
           <div class="flex items-center gap-3">
             <select 
               v-model="filterCategory"
               class="text-sm border border-slate-200 rounded-lg px-3 py-2"
             >
-              <option value="">Barcha kategoriyalar</option>
+              <option value="">{{ $t('help.allCategories') }}</option>
               <option v-for="cat in categories" :key="cat.id" :value="cat.id">{{ cat.name }}</option>
             </select>
           </div>
@@ -253,7 +253,7 @@
           <div class="flex items-center justify-between mb-4">
             <h2 class="text-lg font-semibold text-slate-800 flex items-center gap-2">
               <Share2 :size="20" class="text-slate-400" />
-              Ijtimoiy tarmoqlar
+              {{ $t('help.socialNetworks') }}
             </h2>
           </div>
           <div class="space-y-3">
@@ -300,17 +300,17 @@
         <div class="bg-white rounded-2xl border border-slate-200 p-6">
           <h2 class="text-lg font-semibold text-slate-800 flex items-center gap-2 mb-4">
             <MapPin :size="20" class="text-slate-400" />
-            Manzil
+            {{ $t('help.address') }}
           </h2>
           <div class="space-y-3">
             <textarea 
               v-model="contactInfo.address"
               rows="3"
-              placeholder="To'liq manzil..."
+              placeholder="..."
               class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 outline-none resize-none"
             ></textarea>
             <div class="flex items-center gap-2">
-              <div class="w-24 text-sm text-slate-500">Ish vaqti:</div>
+              <div class="w-24 text-sm text-slate-500">{{ $t('help.workingHours') }}:</div>
               <input 
                 v-model="contactInfo.working_hours"
                 type="text"
@@ -331,7 +331,7 @@
         >
           <Loader2 v-if="isSaving" class="w-5 h-5 animate-spin" />
           <Save v-else class="w-5 h-5" />
-          {{ isSaving ? 'Saqlanmoqda...' : 'Saqlash' }}
+          {{ isSaving ? $t('settings.saving') : $t('common.save') }}
         </button>
       </div>
     </div>
@@ -340,21 +340,21 @@
     <div v-if="activeTab === 'messages'" class="space-y-4">
       <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden">
         <div class="p-4 border-b border-slate-100 flex items-center justify-between">
-          <h2 class="font-semibold text-slate-800">Foydalanuvchi murojaatlari ({{ messages.length }})</h2>
+          <h2 class="font-semibold text-slate-800">{{ $t('help.userMessages') }} ({{ messages.length }})</h2>
           <select 
             v-model="messageFilter"
             class="text-sm border border-slate-200 rounded-lg px-3 py-2"
           >
-            <option value="">Barchasi</option>
-            <option value="new">Yangi</option>
-            <option value="in_progress">Ko'rilmoqda</option>
-            <option value="resolved">Hal qilindi</option>
+            <option value="">{{ $t('common.all') }}</option>
+            <option value="new">{{ $t('help.newStatus') }}</option>
+            <option value="in_progress">{{ $t('help.inProgressStatus') }}</option>
+            <option value="resolved">{{ $t('help.resolvedStatus') }}</option>
           </select>
         </div>
 
         <div v-if="filteredMessages.length === 0" class="p-12 text-center">
           <MessageCircle :size="48" class="mx-auto mb-4 text-slate-300" />
-          <p class="text-slate-500">Murojaatlar yo'q</p>
+          <p class="text-slate-500">{{ $t('help.noMessages') }}</p>
         </div>
 
         <div v-else class="divide-y divide-slate-100">
@@ -412,18 +412,18 @@
           
           <div class="space-y-4">
             <div>
-              <label class="block text-sm font-medium text-slate-700 mb-2">Kategoriya</label>
+              <label class="block text-sm font-medium text-slate-700 mb-2">{{ $t('clubs.category') }}</label>
               <select 
                 v-model="faqForm.category_id"
                 class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 outline-none"
               >
-                <option value="">Kategoriya tanlang</option>
+                <option value="">{{ $t('help.selectCategory') }}</option>
                 <option v-for="cat in categories" :key="cat.id" :value="cat.id">{{ cat.name }}</option>
               </select>
             </div>
             
             <div>
-              <label class="block text-sm font-medium text-slate-700 mb-2">Savol</label>
+              <label class="block text-sm font-medium text-slate-700 mb-2">{{ $t('help.question') }}</label>
               <input 
                 v-model="faqForm.question"
                 type="text"
@@ -433,7 +433,7 @@
             </div>
             
             <div>
-              <label class="block text-sm font-medium text-slate-700 mb-2">Javob</label>
+              <label class="block text-sm font-medium text-slate-700 mb-2">{{ $t('help.answer') }}</label>
               <textarea 
                 v-model="faqForm.answer"
                 rows="5"
@@ -449,7 +449,7 @@
                 id="faqActive"
                 class="w-5 h-5 rounded border-slate-300 text-amber-500 focus:ring-amber-500"
               />
-              <label for="faqActive" class="text-sm text-slate-700">Faol (foydalanuvchilarga ko'rinadi)</label>
+              <label for="faqActive" class="text-sm text-slate-700">{{ $t('help.isActive') }}</label>
             </div>
           </div>
           
@@ -502,7 +502,7 @@
             </div>
             
             <div>
-              <label class="block text-sm font-medium text-slate-700 mb-2">Ikonka</label>
+              <label class="block text-sm font-medium text-slate-700 mb-2">{{ $t('help.iconLabel') }}</label>
               <div class="grid grid-cols-3 sm:grid-cols-6 gap-2">
                 <button
                   v-for="icon in availableIcons"
@@ -545,7 +545,7 @@
       >
         <div class="w-full max-w-2xl rounded-2xl bg-white p-6 shadow-2xl max-h-[90vh] overflow-y-auto">
           <div class="mb-4 flex items-center justify-between">
-            <h2 class="text-lg font-bold text-slate-800">Murojaat tafsilotlari</h2>
+            <h2 class="text-lg font-bold text-slate-800">{{ $t('help.messageDetails') }}</h2>
             <button @click="showMessageModal = false" class="text-slate-400 hover:text-slate-600">
               <X :size="24" />
             </button>
@@ -566,29 +566,29 @@
                   @change="updateMessageStatus"
                   class="text-sm border border-slate-200 rounded-lg px-3 py-2"
                 >
-                  <option value="new">Yangi</option>
-                  <option value="in_progress">Ko'rilmoqda</option>
-                  <option value="resolved">Hal qilindi</option>
+                  <option value="new">{{ $t('help.newStatus') }}</option>
+                  <option value="in_progress">{{ $t('help.inProgressStatus') }}</option>
+                  <option value="resolved">{{ $t('help.resolvedStatus') }}</option>
                 </select>
               </div>
             </div>
 
             <div class="p-4 border border-slate-200 rounded-xl">
-              <p class="text-xs text-slate-400 mb-1">Mavzu</p>
+              <p class="text-xs text-slate-400 mb-1">{{ $t('help.subject') }}</p>
               <p class="font-medium text-slate-800">{{ selectedMessage.subject }}</p>
             </div>
 
             <div class="p-4 border border-slate-200 rounded-xl">
-              <p class="text-xs text-slate-400 mb-1">Xabar</p>
+              <p class="text-xs text-slate-400 mb-1">{{ $t('help.messageContent') }}</p>
               <p class="text-slate-700 whitespace-pre-wrap">{{ selectedMessage.message }}</p>
             </div>
 
             <div class="p-4 bg-slate-50 rounded-xl">
-              <p class="text-xs text-slate-400 mb-2">Javob yozish</p>
+              <p class="text-xs text-slate-400 mb-2">{{ $t('help.writeReply') }}</p>
               <textarea 
                 v-model="replyMessage"
                 rows="4"
-                placeholder="Javobingizni yozing..."
+                placeholder="..."
                 class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 outline-none resize-none"
               ></textarea>
             </div>
@@ -599,7 +599,7 @@
               @click="showMessageModal = false"
               class="flex-1 rounded-xl bg-slate-100 py-3 font-medium text-slate-700 hover:bg-slate-200"
             >
-              Yopish
+              {{ $t('common.close') }}
             </button>
             <button 
               @click="sendReply"
@@ -607,7 +607,7 @@
               class="flex-1 rounded-xl bg-amber-500 py-3 font-medium text-white hover:bg-amber-600 disabled:opacity-50 flex items-center justify-center gap-2"
             >
               <Send :size="18" />
-              Javob yuborish
+              {{ $t('help.sendReply') }}
             </button>
           </div>
         </div>
@@ -679,11 +679,11 @@ const isSaving = ref(false)
 const activeTab = ref('faq')
 
 // Tabs
-const tabs = [
-  { id: 'faq', name: 'FAQ Savollar', icon: markRaw(HelpCircle) },
-  { id: 'contact', name: 'Kontakt ma\'lumotlari', icon: markRaw(Phone) },
-  { id: 'messages', name: 'Murojaatlar', icon: markRaw(MessageCircle) }
-]
+const tabs = computed(() => [
+  { id: 'faq', name: t('help.faqQuestions'), icon: markRaw(HelpCircle) },
+  { id: 'contact', name: t('help.contactInfo'), icon: markRaw(Phone) },
+  { id: 'messages', name: t('help.messages'), icon: markRaw(MessageCircle) }
+])
 
 // Available icons for categories
 const availableIcons = [
@@ -790,9 +790,9 @@ const getStatusBadge = (status) => {
 
 const getStatusLabel = (status) => {
   const labels = {
-    new: 'Yangi',
-    in_progress: 'Ko\'rilmoqda',
-    resolved: 'Hal qilindi'
+    new: t('help.newStatus'),
+    in_progress: t('help.inProgressStatus'),
+    resolved: t('help.resolvedStatus')
   }
   return labels[status] || status
 }

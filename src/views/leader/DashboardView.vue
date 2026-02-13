@@ -148,7 +148,7 @@
               class="flex items-center gap-2 rounded-xl bg-purple-600 px-4 py-2 text-sm font-medium text-white hover:bg-purple-700 disabled:opacity-50"
             >
               <Send :size="16" />
-              {{ sendingMessage ? 'Yuborilmoqda...' : $t('dashboard.sendMessage') }}
+              {{ sendingMessage ? $t('common.sending') : $t('dashboard.sendMessage') }}
             </button>
           </div>
         </div>
@@ -359,6 +359,7 @@
 import api from '@/services/api'
 import { useAuthStore } from '@/stores/auth'
 import { useDataStore } from '@/stores/data'
+import { useLanguageStore } from '@/stores/language'
 import {
   BookOpen,
   Cake,
@@ -375,6 +376,7 @@ import { useRouter } from 'vue-router'
 const router = useRouter()
 const dataStore = useDataStore()
 const authStore = useAuthStore()
+const { t } = useLanguageStore()
 
 // State
 const loading = ref(true)
@@ -650,7 +652,7 @@ function navigateTo(path) {
 function getLessonStatus(lesson) {
   const now = new Date()
   const timeStr = lesson.time || lesson.start_time || ''
-  if (!timeStr.includes('-')) return 'Kutilmoqda'
+  if (!timeStr.includes('-')) return t('dashboard.lessonPending')
   
   const [startHour, startMin] = timeStr.split('-')[0].split(':').map(Number)
   const [endHour, endMin] = timeStr.split('-')[1].split(':').map(Number)
@@ -661,9 +663,9 @@ function getLessonStatus(lesson) {
   const endTime = new Date()
   endTime.setHours(endHour, endMin, 0)
   
-  if (now < startTime) return 'Kutilmoqda'
-  if (now > endTime) return 'Tugadi'
-  return 'Davom etmoqda'
+  if (now < startTime) return t('dashboard.lessonPending')
+  if (now > endTime) return t('dashboard.lessonFinished')
+  return t('dashboard.lessonOngoing')
 }
 
 function getLessonStatusClass(lesson) {

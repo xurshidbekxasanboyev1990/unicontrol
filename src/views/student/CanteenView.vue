@@ -519,11 +519,11 @@ function getStatusClass(status) {
 
 function getStatusText(status) {
   const texts = {
-    pending: 'Kutilmoqda',
-    preparing: 'Tayyorlanmoqda',
-    ready: 'Tayyor',
-    completed: 'Bajarildi',
-    cancelled: 'Bekor qilindi'
+    pending: t('common.pending'),
+    preparing: t('canteen.preparing'),
+    ready: t('canteen.ready'),
+    completed: t('canteen.completed'),
+    cancelled: t('common.cancelled')
   }
   return texts[status] || status
 }

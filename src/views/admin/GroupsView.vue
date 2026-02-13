@@ -107,7 +107,7 @@
               @click="toggleStatus(group)"
               class="p-2 rounded-lg transition-colors"
               :class="group.isActive ? 'text-emerald-500 hover:bg-emerald-50' : 'text-rose-500 hover:bg-rose-50'"
-              :title="group.isActive ? 'O\'chirish' : 'Yoqish'"
+              :title="group.isActive ? $t('common.deactivate') : $t('common.activate')"
             >
               <Power class="w-4 h-4" />
             </button>
@@ -126,14 +126,14 @@
                   v-if="authStore.isSuperAdmin"
                   @click="openSubscriptionModal(group)"
                   class="p-2 text-slate-400 hover:text-emerald-500 hover:bg-emerald-50 rounded-lg transition-colors"
-                  title="Obuna berish"
+                  :title="$t('groups.assignSubscription')"
                 >
                   <CreditCard class="w-4 h-4" />
                 </button>
                 <button 
                   @click="openLeaderModal(group)"
                   class="p-2 text-slate-400 hover:text-amber-500 hover:bg-amber-50 rounded-lg transition-colors"
-                  title="Sardor tayinlash"
+                  :title="$t('groups.assignLeader')"
                 >
                   <Crown class="w-4 h-4" />
                 </button>
@@ -493,8 +493,8 @@
         <div class="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden">
           <div class="p-6 border-b border-slate-100 flex items-center justify-between">
             <div>
-              <h2 class="text-lg font-semibold text-slate-800">Excel import natijasi</h2>
-              <p class="text-sm text-slate-500">{{ importData.length }} ta guruh topildi</p>
+              <h2 class="text-lg font-semibold text-slate-800">{{ $t('groups.importResult') }}</h2>
+              <p class="text-sm text-slate-500">{{ importData.length }} {{ $t('groups.groupsFound') }}</p>
             </div>
             <button @click="showImportModal = false" class="p-2 hover:bg-slate-100 rounded-lg transition-colors">
               <X class="w-5 h-5 text-slate-500" />
@@ -506,15 +506,15 @@
               <div class="flex items-center justify-between mb-3">
                 <h3 class="font-semibold text-slate-800">{{ group.group }}</h3>
                 <span class="px-2 py-1 bg-violet-100 text-violet-700 rounded-lg text-sm">
-                  {{ group.students.length }} talaba
+                  {{ group.students.length }} {{ $t('groups.student') }}
                 </span>
               </div>
               <div class="text-sm text-slate-500 space-y-1">
-                <p><span class="font-medium">Fakultet:</span> {{ group.faculty || 'Noma\'lum' }}</p>
-                <p><span class="font-medium">Talabalar:</span></p>
+                <p><span class="font-medium">{{ $t('groups.faculty') }}:</span> {{ group.faculty || $t('common.unknown') }}</p>
+                <p><span class="font-medium">{{ $t('groups.students') }}:</span></p>
                 <ul class="ml-4 list-disc">
                   <li v-for="(s, i) in group.students.slice(0, 3)" :key="i">{{ s.name }} ({{ s.studentId }})</li>
-                  <li v-if="group.students.length > 3" class="text-slate-400">va yana {{ group.students.length - 3 }} ta...</li>
+                  <li v-if="group.students.length > 3" class="text-slate-400">{{ $t('groups.andMore', { count: group.students.length - 3 }) }}</li>
                 </ul>
               </div>
             </div>
@@ -572,7 +572,7 @@
 
             <template v-else>
               <p class="text-sm text-slate-600 mb-4">
-                Rejani tanlang va guruhga 1 oylik obuna faollashtiring:
+                {{ $t('groups.selectPlanDesc') }}
               </p>
 
               <!-- Plans List -->
@@ -971,7 +971,7 @@ async function openSubscriptionModal(group) {
 
 async function assignSubscription() {
   if (!subscriptionGroup.value || !selectedPlanId.value) {
-    toast.error('Rejani tanlang')
+    toast.error(t('groups.selectPlan'))
     return
   }
   

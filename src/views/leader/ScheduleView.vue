@@ -28,13 +28,13 @@
       <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
           <h1 class="text-xl sm:text-2xl font-bold text-slate-800">{{ $t('schedule.title') }}</h1>
-          <p class="text-sm text-slate-500">{{ groupName }} guruh jadvali</p>
+          <p class="text-sm text-slate-500">{{ groupName }} {{ $t('schedule.groupSchedule') }}</p>
         </div>
         <div class="flex items-center gap-3">
           <button 
             @click="loadSchedule"
             class="p-2 hover:bg-slate-100 rounded-lg transition-colors"
-            title="Yangilash"
+            title="refresh"
           >
             <RefreshCw class="w-5 h-5 text-slate-500" />
           </button>
@@ -44,14 +44,14 @@
               class="px-4 py-2 rounded-lg text-sm font-medium transition-colors"
               :class="viewMode === 'week' ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-500'"
             >
-              Haftalik
+              {{ $t('schedule.weekly') }}
             </button>
             <button 
               @click="viewMode = 'today'"
               class="px-4 py-2 rounded-lg text-sm font-medium transition-colors"
               :class="viewMode === 'today' ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-500'"
             >
-              Bugungi
+              {{ $t('schedule.today') }}
             </button>
           </div>
         </div>
@@ -88,7 +88,7 @@
               <h3 class="font-semibold text-slate-800">{{ lesson.subject || lesson.subjectName }}</h3>
               <p class="text-sm text-slate-500 flex items-center gap-2 mt-1">
                 <User class="w-4 h-4" />
-                {{ lesson.teacher || lesson.teacherName || 'O\'qituvchi ko\'rsatilmagan' }}
+                {{ lesson.teacher || lesson.teacherName || $t('schedule.noTeacher') }}
               </p>
             </div>
 
@@ -109,14 +109,14 @@
               class="px-4 py-2 bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 transition-colors flex items-center gap-2"
             >
               <CheckCircle class="w-4 h-4" />
-              Davomat
+              {{ $t('schedule.attendance') }}
             </router-link>
           </div>
 
           <div v-if="todayLessons.length === 0" class="bg-white rounded-2xl border border-slate-200 p-12 text-center">
             <Coffee class="w-12 h-12 text-slate-300 mx-auto mb-4" />
-            <p class="text-lg font-medium text-slate-600">Bugun dars yo'q</p>
-            <p class="text-sm text-slate-400 mt-1">Dam oling va keyingi kunga tayyorlaning</p>
+            <p class="text-lg font-medium text-slate-600">{{ $t('schedule.noLessonsToday') }}</p>
+            <p class="text-sm text-slate-400 mt-1">{{ $t('schedule.restAndPrepare') }}</p>
           </div>
         </div>
       </template>
@@ -165,7 +165,7 @@
 
         <!-- Legend -->
         <div class="flex flex-wrap items-center gap-4 text-sm">
-          <span class="text-slate-500">Fanlar:</span>
+          <span class="text-slate-500">{{ $t('schedule.subjectsLegend') }}:</span>
           <div v-for="(color, subject) in subjectColorMap" :key="subject" class="flex items-center gap-2">
             <span class="w-3 h-3 rounded-full" :class="color"></span>
             <span class="text-slate-600">{{ subject }}</span>
@@ -181,7 +181,7 @@
       >
         <div class="bg-white rounded-2xl p-6 max-w-md w-full mx-4 shadow-2xl">
           <div class="flex items-center justify-between mb-4">
-            <h3 class="text-lg font-semibold text-slate-800">Dars ma'lumotlari</h3>
+            <h3 class="text-lg font-semibold text-slate-800">{{ $t('schedule.lessonDetails') }}</h3>
             <button @click="selectedLesson = null" class="p-2 hover:bg-slate-100 rounded-lg">
               <X class="w-5 h-5 text-slate-500" />
             </button>
@@ -189,26 +189,26 @@
           
           <div class="space-y-4">
             <div>
-              <p class="text-sm text-slate-500">Fan</p>
+              <p class="text-sm text-slate-500">{{ $t('schedule.subjectLabel') }}</p>
               <p class="font-medium text-slate-800">{{ selectedLesson.subject || selectedLesson.subjectName }}</p>
             </div>
             <div>
-              <p class="text-sm text-slate-500">O'qituvchi</p>
-              <p class="font-medium text-slate-800">{{ selectedLesson.teacher || selectedLesson.teacherName || 'Ko\'rsatilmagan' }}</p>
+              <p class="text-sm text-slate-500">{{ $t('schedule.teacherLabel') }}</p>
+              <p class="font-medium text-slate-800">{{ selectedLesson.teacher || selectedLesson.teacherName || $t('schedule.notSpecified') }}</p>
             </div>
             <div class="grid grid-cols-2 gap-4">
               <div>
-                <p class="text-sm text-slate-500">Kun</p>
+                <p class="text-sm text-slate-500">{{ $t('schedule.dayLabel') }}</p>
                 <p class="font-medium text-slate-800">{{ selectedLesson.day || selectedLesson.dayName }}</p>
               </div>
               <div>
-                <p class="text-sm text-slate-500">Vaqt</p>
+                <p class="text-sm text-slate-500">{{ $t('schedule.timeLabel') }}</p>
                 <p class="font-medium text-slate-800">{{ selectedLesson.time || selectedLesson.startTime }}</p>
               </div>
             </div>
             <div>
-              <p class="text-sm text-slate-500">Xona / Bino</p>
-              <p class="font-medium text-slate-800">{{ selectedLesson.room || selectedLesson.roomNumber || 'Ko\'rsatilmagan' }}</p>
+              <p class="text-sm text-slate-500">{{ $t('schedule.roomBuilding') }}</p>
+              <p class="font-medium text-slate-800">{{ selectedLesson.room || selectedLesson.roomNumber || $t('schedule.notSpecified') }}</p>
             </div>
           </div>
 
@@ -217,13 +217,13 @@
               :to="{ path: '/leader/attendance', query: { lessonId: selectedLesson.id } }"
               class="flex-1 px-4 py-3 bg-emerald-500 text-white rounded-xl font-medium text-center hover:bg-emerald-600 transition-colors"
             >
-              Davomat olish
+              {{ $t('schedule.takeAttendance') }}
             </router-link>
             <button 
               @click="selectedLesson = null"
               class="px-4 py-3 border border-slate-200 rounded-xl font-medium hover:bg-slate-50 transition-colors"
             >
-              Yopish
+              {{ $t('common.close') }}
             </button>
           </div>
         </div>

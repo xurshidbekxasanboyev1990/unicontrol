@@ -52,15 +52,15 @@
       <div class="mt-6 grid grid-cols-3 gap-2 sm:gap-4">
         <div class="rounded-xl bg-white/10 p-3 sm:p-4 backdrop-blur text-center">
           <p class="text-xl sm:text-3xl font-bold">{{ stats.rate }}%</p>
-          <p class="text-xs sm:text-sm text-violet-200">Davomat</p>
+          <p class="text-xs sm:text-sm text-violet-200">{{ $t('ai.attendance') }}</p>
         </div>
         <div class="rounded-xl bg-white/10 p-3 sm:p-4 backdrop-blur text-center">
           <p class="text-xl sm:text-3xl font-bold">{{ stats.present }}</p>
-          <p class="text-xs sm:text-sm text-violet-200">Kelgan dars</p>
+          <p class="text-xs sm:text-sm text-violet-200">{{ $t('ai.presentLessons') }}</p>
         </div>
         <div class="rounded-xl bg-white/10 p-3 sm:p-4 backdrop-blur text-center">
           <p class="text-xl sm:text-3xl font-bold">{{ stats.absent }}</p>
-          <p class="text-xs sm:text-sm text-violet-200">Qoldirilgan</p>
+          <p class="text-xs sm:text-sm text-violet-200">{{ $t('ai.missedLessons') }}</p>
         </div>
       </div>
     </div>
@@ -74,15 +74,15 @@
             <TrendingUp :size="24" class="text-emerald-600" />
           </div>
           <div>
-            <h3 class="font-semibold text-slate-800">Davomat tahlili</h3>
-            <p class="text-sm text-slate-500">So'nggi 30 kun</p>
+            <h3 class="font-semibold text-slate-800">{{ $t('ai.attendanceAnalysis') }}</h3>
+            <p class="text-sm text-slate-500">{{ $t('ai.last30days') }}</p>
           </div>
         </div>
         
         <div class="space-y-4">
           <div class="rounded-xl bg-slate-50 p-4">
             <div class="flex items-center justify-between mb-2">
-              <span class="text-slate-600">Umumiy davomat</span>
+              <span class="text-slate-600">{{ $t('ai.overallAttendance') }}</span>
               <span class="font-semibold text-slate-800">{{ stats.rate }}%</span>
             </div>
             <div class="h-3 overflow-hidden rounded-full bg-slate-200">
@@ -98,23 +98,23 @@
             <div class="flex items-center justify-between p-3 rounded-lg bg-emerald-50">
               <div class="flex items-center gap-2">
                 <CheckCircle :size="18" class="text-emerald-600" />
-                <span class="text-emerald-700">Kelgan</span>
+                <span class="text-emerald-700">{{ $t('attendance.present') }}</span>
               </div>
-              <span class="font-semibold text-emerald-700">{{ stats.present }} dars</span>
+              <span class="font-semibold text-emerald-700">{{ stats.present }} {{ $t('ai.lessons') }}</span>
             </div>
             <div class="flex items-center justify-between p-3 rounded-lg bg-amber-50">
               <div class="flex items-center gap-2">
                 <Clock :size="18" class="text-amber-600" />
-                <span class="text-amber-700">Kechikkan</span>
+                <span class="text-amber-700">{{ $t('attendance.late') }}</span>
               </div>
-              <span class="font-semibold text-amber-700">{{ stats.late }} dars</span>
+              <span class="font-semibold text-amber-700">{{ stats.late }} {{ $t('ai.lessons') }}</span>
             </div>
             <div class="flex items-center justify-between p-3 rounded-lg bg-rose-50">
               <div class="flex items-center gap-2">
                 <XCircle :size="18" class="text-rose-600" />
-                <span class="text-rose-700">Kelmagan</span>
+                <span class="text-rose-700">{{ $t('attendance.absent') }}</span>
               </div>
-              <span class="font-semibold text-rose-700">{{ stats.absent }} dars</span>
+              <span class="font-semibold text-rose-700">{{ stats.absent }} {{ $t('ai.lessons') }}</span>
             </div>
           </div>
         </div>
@@ -127,8 +127,8 @@
             <BookOpen :size="24" class="text-blue-600" />
           </div>
           <div>
-            <h3 class="font-semibold text-slate-800">Fanlar bo'yicha</h3>
-            <p class="text-sm text-slate-500">Davomat taqsimoti</p>
+            <h3 class="font-semibold text-slate-800">{{ $t('ai.bySubjects') }}</h3>
+            <p class="text-sm text-slate-500">{{ $t('ai.attendanceDistribution') }}</p>
           </div>
         </div>
         
@@ -161,22 +161,22 @@
           <Lightbulb :size="24" class="text-violet-600" />
         </div>
         <div>
-          <h3 class="font-semibold text-slate-800">AI Tavsiyalari</h3>
-          <p class="text-sm text-slate-500">OpenAI tomonidan tayyorlangan shaxsiy tavsiyalar</p>
+          <h3 class="font-semibold text-slate-800">{{ $t('ai.aiRecommendations') }}</h3>
+          <p class="text-sm text-slate-500">{{ $t('ai.personalRecommendations') }}</p>
         </div>
       </div>
       
       <!-- AI Loading -->
       <div v-if="aiLoading" class="py-8 text-center">
         <Loader2 class="w-6 h-6 animate-spin text-violet-500 mx-auto mb-2" />
-        <p class="text-sm text-slate-500">AI tahlil qilmoqda...</p>
+        <p class="text-sm text-slate-500">{{ $t('ai.analyzing') }}...</p>
       </div>
 
       <!-- AI Error -->
       <div v-else-if="aiError" class="py-4 text-center">
         <AlertTriangle class="w-6 h-6 text-amber-500 mx-auto mb-2" />
         <p class="text-sm text-slate-500">{{ aiError }}</p>
-        <button @click="loadAIAnalysis" class="mt-2 text-sm text-violet-600 hover:underline">Qayta urinish</button>
+        <button @click="loadAIAnalysis" class="mt-2 text-sm text-violet-600 hover:underline">{{ $t('common.retry') }}</button>
       </div>
 
       <!-- AI Results -->
@@ -189,7 +189,7 @@
         >
           <CheckCircle :size="20" class="text-emerald-600 mt-0.5 flex-shrink-0" />
           <div>
-            <p class="font-medium text-emerald-800">Kuchli tomon</p>
+            <p class="font-medium text-emerald-800">{{ $t('ai.strength') }}</p>
             <p class="mt-1 text-sm text-emerald-600">{{ strength }}</p>
           </div>
         </div>
@@ -202,7 +202,7 @@
         >
           <AlertTriangle :size="20" class="text-amber-600 mt-0.5 flex-shrink-0" />
           <div>
-            <p class="font-medium text-amber-800">Yaxshilash kerak</p>
+            <p class="font-medium text-amber-800">{{ $t('ai.needsImprovement') }}</p>
             <p class="mt-1 text-sm text-amber-600">{{ area }}</p>
           </div>
         </div>
@@ -215,7 +215,7 @@
         >
           <Lightbulb :size="20" class="text-violet-600 mt-0.5 flex-shrink-0" />
           <div>
-            <p class="font-medium text-violet-800">Tavsiya {{ index + 1 }}</p>
+            <p class="font-medium text-violet-800">{{ $t('ai.recommendation') }} {{ index + 1 }}</p>
             <p class="mt-1 text-sm text-violet-600">{{ rec }}</p>
           </div>
         </div>
@@ -224,7 +224,7 @@
         <div v-if="aiRiskLevel" class="flex items-center gap-3 rounded-xl p-4" :class="riskBgClass">
           <Target :size="20" :class="riskTextClass" class="flex-shrink-0" />
           <div>
-            <p class="font-medium" :class="riskTextClass">Xavf darajasi: {{ riskLabel }}</p>
+            <p class="font-medium" :class="riskTextClass">{{ $t('ai.riskLevel') }}: {{ riskLabel }}</p>
             <p v-if="aiPrediction" class="mt-1 text-sm" :class="riskSubTextClass">{{ aiPrediction }}</p>
           </div>
         </div>
@@ -233,7 +233,7 @@
         <div v-if="aiMotivation" class="flex items-start gap-3 rounded-xl p-4 bg-indigo-50">
           <Sparkles :size="20" class="text-indigo-600 mt-0.5 flex-shrink-0" />
           <div>
-            <p class="font-medium text-indigo-800">Motivatsiya</p>
+            <p class="font-medium text-indigo-800">{{ $t('ai.motivation') }}</p>
             <p class="mt-1 text-sm text-indigo-600">{{ aiMotivation }}</p>
           </div>
         </div>
@@ -247,8 +247,8 @@
           <BarChart3 :size="24" class="text-indigo-600" />
         </div>
         <div>
-          <h3 class="font-semibold text-slate-800">Haftalik trend</h3>
-          <p class="text-sm text-slate-500">So'nggi 4 hafta</p>
+          <h3 class="font-semibold text-slate-800">{{ $t('ai.weeklyTrend') }}</h3>
+          <p class="text-sm text-slate-500">{{ $t('ai.last4weeks') }}</p>
         </div>
       </div>
       
@@ -278,8 +278,8 @@
           <Sparkles :size="24" class="text-white" />
         </div>
         <div>
-          <h3 class="font-semibold text-slate-800">AI Yordamchi</h3>
-          <p class="text-sm text-slate-500">Savol bering - AI javob beradi</p>
+          <h3 class="font-semibold text-slate-800">{{ $t('ai.aiAssistant') }}</h3>
+          <p class="text-sm text-slate-500">{{ $t('ai.askQuestion') }}</p>
         </div>
       </div>
 
@@ -305,7 +305,7 @@
         <input 
           v-model="chatInput"
           @keyup.enter="sendChat"
-          placeholder="Savolingizni yozing..."
+          placeholder="..."
           class="flex-1 rounded-xl border border-slate-200 px-4 py-2.5 text-sm focus:border-violet-400 focus:outline-none focus:ring-2 focus:ring-violet-100"
         />
         <button 
@@ -314,7 +314,7 @@
           class="rounded-xl bg-violet-500 px-4 py-2.5 text-white hover:bg-violet-600 disabled:opacity-50 transition-colors"
         >
           <RefreshCw v-if="chatLoading" :size="18" class="animate-spin" />
-          <span v-else class="text-sm font-medium">Yuborish</span>
+          <span v-else class="text-sm font-medium">{{ $t('ai.send') }}</span>
         </button>
       </div>
 

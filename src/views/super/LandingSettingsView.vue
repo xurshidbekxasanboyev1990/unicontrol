@@ -4,7 +4,7 @@
     <div v-if="loading" class="flex items-center justify-center py-20">
       <div class="text-center">
         <RefreshCw class="w-12 h-12 text-emerald-500 animate-spin mx-auto mb-4" />
-        <p class="text-slate-600">Ma'lumotlar yuklanmoqda...</p>
+        <p class="text-slate-600">{{ $t('landingSettings.loading') }}</p>
       </div>
     </div>
 
@@ -13,13 +13,13 @@
       <div class="bg-gradient-to-br from-emerald-500 via-teal-500 to-cyan-500 rounded-2xl p-4 sm:p-6 text-white">
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <h1 class="text-xl sm:text-2xl font-bold">Landing sahifa sozlamalari</h1>
-            <p class="text-emerald-100 mt-1 text-sm sm:text-base">Landing page kontentini boshqarish</p>
+            <h1 class="text-xl sm:text-2xl font-bold">{{ $t('landingSettings.title') }}</h1>
+            <p class="text-emerald-100 mt-1 text-sm sm:text-base">{{ $t('landingSettings.manageContent') }}</p>
           </div>
           <div class="flex items-center gap-3">
             <a href="/" target="_blank" class="flex items-center gap-2 bg-white/20 backdrop-blur px-4 py-2 rounded-xl text-sm font-medium hover:bg-white/30 transition-colors">
               <ExternalLink class="w-4 h-4" />
-              Ko'rish
+              {{ $t('landingSettings.viewPage') }}
             </a>
             <div class="hidden sm:flex w-14 h-14 bg-white/20 backdrop-blur rounded-2xl items-center justify-center">
               <Globe class="w-7 h-7" />
@@ -53,16 +53,16 @@
           <!-- =================== CARDS TAB =================== -->
           <div v-if="activeTab === 'cards'" class="space-y-6">
             <div class="flex items-center justify-between">
-              <h3 class="text-lg font-semibold text-slate-800">Landing Kartalar</h3>
+              <h3 class="text-lg font-semibold text-slate-800">{{ $t('landingSettings.landingCards') }}</h3>
               <button @click="openCardModal()" class="flex items-center gap-2 bg-emerald-500 hover:bg-emerald-600 text-white px-4 py-2 rounded-xl text-sm font-medium transition-colors">
                 <Plus class="w-4 h-4" />
-                Yangi karta
+                {{ $t('landingSettings.newCard') }}
               </button>
             </div>
 
             <div v-if="featureCards.length === 0" class="text-center py-12 text-slate-400">
               <LayoutGrid class="w-12 h-12 mx-auto mb-3" />
-              <p>Kartalar mavjud emas</p>
+              <p>{{ $t('landingSettings.noCards') }}</p>
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -88,8 +88,8 @@
                 <p class="text-sm text-slate-500 line-clamp-2">{{ card.description }}</p>
                 <div class="mt-3 flex items-center gap-2">
                   <span class="text-xs px-2 py-1 bg-slate-200 text-slate-600 rounded-full">{{ card.section }}</span>
-                  <span v-if="card.active" class="text-xs px-2 py-1 bg-emerald-100 text-emerald-600 rounded-full">Faol</span>
-                  <span v-else class="text-xs px-2 py-1 bg-slate-200 text-slate-400 rounded-full">Nofaol</span>
+                  <span v-if="card.active" class="text-xs px-2 py-1 bg-emerald-100 text-emerald-600 rounded-full">{{ $t('landingSettings.activeStatus') }}</span>
+                  <span v-else class="text-xs px-2 py-1 bg-slate-200 text-slate-400 rounded-full">{{ $t('landingSettings.inactiveStatus') }}</span>
                 </div>
               </div>
             </div>
@@ -98,11 +98,11 @@
           <!-- =================== SOCIAL LINKS TAB =================== -->
           <div v-if="activeTab === 'social'" class="space-y-6">
             <div class="flex items-center justify-between">
-              <h3 class="text-lg font-semibold text-slate-800">Ijtimoiy Tarmoqlar</h3>
+              <h3 class="text-lg font-semibold text-slate-800">{{ $t('landingSettings.socialLinks') }}</h3>
               <button @click="saveSocialLinks" :disabled="saving" class="flex items-center gap-2 bg-emerald-500 hover:bg-emerald-600 text-white px-4 py-2 rounded-xl text-sm font-medium transition-colors disabled:opacity-50">
                 <Save v-if="!saving" class="w-4 h-4" />
                 <RefreshCw v-else class="w-4 h-4 animate-spin" />
-                Saqlash
+                {{ $t('common.save') }}
               </button>
             </div>
 
@@ -125,16 +125,16 @@
           <!-- =================== TEAM TAB =================== -->
           <div v-if="activeTab === 'team'" class="space-y-6">
             <div class="flex items-center justify-between">
-              <h3 class="text-lg font-semibold text-slate-800">Loyiha Jamoasi</h3>
+              <h3 class="text-lg font-semibold text-slate-800">{{ $t('landingSettings.projectTeam') }}</h3>
               <button @click="openTeamModal()" class="flex items-center gap-2 bg-emerald-500 hover:bg-emerald-600 text-white px-4 py-2 rounded-xl text-sm font-medium transition-colors">
                 <UserPlus class="w-4 h-4" />
-                Qo'shish
+                {{ $t('landingSettings.addMember') }}
               </button>
             </div>
 
             <div v-if="teamMembers.length === 0" class="text-center py-12 text-slate-400">
               <Users class="w-12 h-12 mx-auto mb-3" />
-              <p>Jamoa a'zolari mavjud emas</p>
+              <p>{{ $t('landingSettings.noMembers') }}</p>
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -187,11 +187,11 @@
           <!-- =================== CONTACT TAB =================== -->
           <div v-if="activeTab === 'contact'" class="space-y-6">
             <div class="flex items-center justify-between">
-              <h3 class="text-lg font-semibold text-slate-800">Aloqa Ma'lumotlari</h3>
+              <h3 class="text-lg font-semibold text-slate-800">{{ $t('landingSettings.contactInfo') }}</h3>
               <button @click="saveContactInfo" :disabled="saving" class="flex items-center gap-2 bg-emerald-500 hover:bg-emerald-600 text-white px-4 py-2 rounded-xl text-sm font-medium transition-colors disabled:opacity-50">
                 <Save v-if="!saving" class="w-4 h-4" />
                 <RefreshCw v-else class="w-4 h-4 animate-spin" />
-                Saqlash
+                {{ $t('common.save') }}
               </button>
             </div>
 
@@ -199,28 +199,28 @@
               <div class="space-y-2">
                 <label class="flex items-center gap-2 text-sm font-medium text-slate-700">
                   <Mail class="w-4 h-4" />
-                  Email
+                  {{ $t('landingSettings.email') }}
                 </label>
                 <input v-model="contactInfo.email" type="email" placeholder="info@unicontrol.uz" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-emerald-300 focus:ring-4 focus:ring-emerald-500/10 transition-all" />
               </div>
               <div class="space-y-2">
                 <label class="flex items-center gap-2 text-sm font-medium text-slate-700">
                   <Phone class="w-4 h-4" />
-                  Telefon
+                  {{ $t('landingSettings.phone') }}
                 </label>
                 <input v-model="contactInfo.phone" type="tel" placeholder="+998 90 123 45 67" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-emerald-300 focus:ring-4 focus:ring-emerald-500/10 transition-all" />
               </div>
               <div class="space-y-2">
                 <label class="flex items-center gap-2 text-sm font-medium text-slate-700">
                   <Send class="w-4 h-4" />
-                  Telegram
+                  {{ $t('landingSettings.telegram') }}
                 </label>
                 <input v-model="contactInfo.telegram" type="text" placeholder="@unicontrol_uz" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-emerald-300 focus:ring-4 focus:ring-emerald-500/10 transition-all" />
               </div>
               <div class="space-y-2">
                 <label class="flex items-center gap-2 text-sm font-medium text-slate-700">
                   <MapPin class="w-4 h-4" />
-                  Manzil
+                  {{ $t('landingSettings.address') }}
                 </label>
                 <input v-model="contactInfo.address" type="text" placeholder="Toshkent sh., Chilonzor t." class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-emerald-300 focus:ring-4 focus:ring-emerald-500/10 transition-all" />
               </div>
@@ -230,11 +230,11 @@
           <!-- =================== HERO & ABOUT STATS TAB =================== -->
           <div v-if="activeTab === 'hero'" class="space-y-6">
             <div class="flex items-center justify-between">
-              <h3 class="text-lg font-semibold text-slate-800">Hero va About Statistika</h3>
+              <h3 class="text-lg font-semibold text-slate-800">{{ $t('landingSettings.heroAndAbout') }}</h3>
               <button @click="saveHeroAndAbout" :disabled="saving" class="flex items-center gap-2 bg-emerald-500 hover:bg-emerald-600 text-white px-4 py-2 rounded-xl text-sm font-medium transition-colors disabled:opacity-50">
                 <Save v-if="!saving" class="w-4 h-4" />
                 <RefreshCw v-else class="w-4 h-4 animate-spin" />
-                Saqlash
+                {{ $t('common.save') }}
               </button>
             </div>
 
@@ -243,19 +243,19 @@
               <div class="bg-slate-50 rounded-xl p-5 border border-slate-200 space-y-4">
                 <h4 class="font-medium text-slate-700 flex items-center gap-2">
                   <Sparkles class="w-4 h-4 text-emerald-500" />
-                  Hero bo'lim raqamlari
+                  {{ $t('landingSettings.heroNumbers') }}
                 </h4>
                 <div class="space-y-3">
                   <div class="space-y-1">
-                    <label class="text-sm text-slate-600">Talabalar soni</label>
+                    <label class="text-sm text-slate-600">{{ $t('landingSettings.studentsCount') }}</label>
                     <input v-model="heroStats.students_count" type="text" placeholder="500+" class="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-emerald-300 focus:ring-4 focus:ring-emerald-500/10" />
                   </div>
                   <div class="space-y-1">
-                    <label class="text-sm text-slate-600">Guruhlar soni</label>
+                    <label class="text-sm text-slate-600">{{ $t('landingSettings.groupsCount') }}</label>
                     <input v-model="heroStats.groups_count" type="text" placeholder="50+" class="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-emerald-300 focus:ring-4 focus:ring-emerald-500/10" />
                   </div>
                   <div class="space-y-1">
-                    <label class="text-sm text-slate-600">Natija foizi</label>
+                    <label class="text-sm text-slate-600">{{ $t('landingSettings.resultPercent') }}</label>
                     <input v-model="heroStats.result_percent" type="text" placeholder="99%" class="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-emerald-300 focus:ring-4 focus:ring-emerald-500/10" />
                   </div>
                 </div>
@@ -265,23 +265,23 @@
               <div class="bg-slate-50 rounded-xl p-5 border border-slate-200 space-y-4">
                 <h4 class="font-medium text-slate-700 flex items-center gap-2">
                   <Info class="w-4 h-4 text-teal-500" />
-                  Biz haqimizda raqamlari
+                  {{ $t('landingSettings.aboutNumbers') }}
                 </h4>
                 <div class="space-y-3">
                   <div class="space-y-1">
-                    <label class="text-sm text-slate-600">Tashkil etilgan sana</label>
+                    <label class="text-sm text-slate-600">{{ $t('landingSettings.foundedDate') }}</label>
                     <input v-model="aboutStats.founded" type="text" placeholder="01.10.2025" class="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-emerald-300 focus:ring-4 focus:ring-emerald-500/10" />
                   </div>
                   <div class="space-y-1">
-                    <label class="text-sm text-slate-600">Universitetlar soni</label>
+                    <label class="text-sm text-slate-600">{{ $t('landingSettings.universitiesCount') }}</label>
                     <input v-model="aboutStats.universities" type="text" placeholder="1" class="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-emerald-300 focus:ring-4 focus:ring-emerald-500/10" />
                   </div>
                   <div class="space-y-1">
-                    <label class="text-sm text-slate-600">Foydalanuvchilar</label>
+                    <label class="text-sm text-slate-600">{{ $t('landingSettings.usersCount') }}</label>
                     <input v-model="aboutStats.users" type="text" placeholder="500+" class="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-emerald-300 focus:ring-4 focus:ring-emerald-500/10" />
                   </div>
                   <div class="space-y-1">
-                    <label class="text-sm text-slate-600">Qo'llab-quvvatlash</label>
+                    <label class="text-sm text-slate-600">{{ $t('landingSettings.supportLabel') }}</label>
                     <input v-model="aboutStats.support" type="text" placeholder="24/7" class="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-emerald-300 focus:ring-4 focus:ring-emerald-500/10" />
                   </div>
                 </div>
@@ -290,19 +290,19 @@
 
             <!-- Preview -->
             <div class="bg-gradient-to-br from-emerald-50 to-teal-50 rounded-xl p-5 border border-emerald-200">
-              <h4 class="font-medium text-emerald-700 mb-4">Ko'rinishi (Preview)</h4>
+              <h4 class="font-medium text-emerald-700 mb-4">{{ $t('landingSettings.preview') }}</h4>
               <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
                 <div class="text-center">
                   <div class="text-2xl font-bold text-emerald-600">{{ heroStats.students_count || '-' }}</div>
-                  <div class="text-sm text-slate-500">Talabalar</div>
+                  <div class="text-sm text-slate-500">{{ $t('landingSettings.students') }}</div>
                 </div>
                 <div class="text-center">
                   <div class="text-2xl font-bold text-teal-600">{{ heroStats.groups_count || '-' }}</div>
-                  <div class="text-sm text-slate-500">Guruhlar</div>
+                  <div class="text-sm text-slate-500">{{ $t('landingSettings.groups') }}</div>
                 </div>
                 <div class="text-center">
                   <div class="text-2xl font-bold text-cyan-600">{{ heroStats.result_percent || '-' }}</div>
-                  <div class="text-sm text-slate-500">Natija</div>
+                  <div class="text-sm text-slate-500">{{ $t('landingSettings.result') }}</div>
                 </div>
               </div>
             </div>
@@ -319,21 +319,21 @@
           <div class="absolute inset-0 bg-slate-900/50 backdrop-blur-sm" @click="showCardModal = false"></div>
           <div class="relative bg-white rounded-2xl shadow-xl w-full max-w-lg overflow-hidden">
             <div class="px-6 py-4 border-b border-slate-200 flex items-center justify-between">
-              <h3 class="text-lg font-semibold text-slate-800">{{ editingCard ? 'Kartani tahrirlash' : 'Yangi karta' }}</h3>
+              <h3 class="text-lg font-semibold text-slate-800">{{ editingCard ? $t('landingSettings.editCard') : $t('landingSettings.newCard') }}</h3>
               <button @click="showCardModal = false" class="p-2 text-slate-400 hover:text-slate-600 rounded-lg"><X class="w-5 h-5" /></button>
             </div>
             <div class="p-6 space-y-4">
               <div>
-                <label class="block text-sm font-medium text-slate-700 mb-2">Sarlavha</label>
+                <label class="block text-sm font-medium text-slate-700 mb-2">{{ $t('landingSettings.cardTitle') }}</label>
                 <input v-model="cardForm.title" type="text" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-emerald-300 focus:ring-4 focus:ring-emerald-500/10" placeholder="Karta sarlavhasi" />
               </div>
               <div>
-                <label class="block text-sm font-medium text-slate-700 mb-2">Tavsif</label>
+                <label class="block text-sm font-medium text-slate-700 mb-2">{{ $t('landingSettings.cardDescription') }}</label>
                 <textarea v-model="cardForm.description" rows="3" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-emerald-300 focus:ring-4 focus:ring-emerald-500/10 resize-none" placeholder="Karta tavsifi"></textarea>
               </div>
               <div class="grid grid-cols-2 gap-4">
                 <div>
-                  <label class="block text-sm font-medium text-slate-700 mb-2">Bo'lim</label>
+                  <label class="block text-sm font-medium text-slate-700 mb-2">{{ $t('landingSettings.section') }}</label>
                   <select v-model="cardForm.section" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-emerald-300">
                     <option value="features">Xususiyatlar</option>
                     <option value="how-it-works">Qanday ishlaydi</option>
@@ -342,7 +342,7 @@
                   </select>
                 </div>
                 <div>
-                  <label class="block text-sm font-medium text-slate-700 mb-2">Ikon</label>
+                  <label class="block text-sm font-medium text-slate-700 mb-2">{{ $t('landingSettings.icon') }}</label>
                   <select v-model="cardForm.icon" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-emerald-300">
                     <option value="Zap">Zap</option>
                     <option value="Users">Users</option>
@@ -357,13 +357,13 @@
               </div>
               <div class="flex items-center gap-3">
                 <input type="checkbox" v-model="cardForm.active" id="cardActive" class="w-5 h-5 rounded border-slate-300 text-emerald-500 focus:ring-emerald-500" />
-                <label for="cardActive" class="text-sm text-slate-700">Faol holat</label>
+                <label for="cardActive" class="text-sm text-slate-700">{{ $t('landingSettings.activeState') }}</label>
               </div>
             </div>
             <div class="px-6 py-4 bg-slate-50 border-t border-slate-200 flex justify-end gap-3">
-              <button @click="showCardModal = false" class="px-4 py-2 text-slate-600 hover:bg-slate-100 rounded-xl text-sm font-medium transition-colors">Bekor qilish</button>
+              <button @click="showCardModal = false" class="px-4 py-2 text-slate-600 hover:bg-slate-100 rounded-xl text-sm font-medium transition-colors">{{ $t('common.cancel') }}</button>
               <button @click="saveCard" class="px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl text-sm font-medium transition-colors">
-                {{ editingCard ? 'Saqlash' : "Qo'shish" }}
+                {{ editingCard ? $t('common.save') : $t('common.add') }}
               </button>
             </div>
           </div>
@@ -378,33 +378,33 @@
           <div class="absolute inset-0 bg-slate-900/50 backdrop-blur-sm" @click="showTeamModal = false"></div>
           <div class="relative bg-white rounded-2xl shadow-xl w-full max-w-lg overflow-hidden">
             <div class="px-6 py-4 border-b border-slate-200 flex items-center justify-between">
-              <h3 class="text-lg font-semibold text-slate-800">{{ editingMember ? 'Tahrirlash' : "Yangi a'zo" }}</h3>
+              <h3 class="text-lg font-semibold text-slate-800">{{ editingMember ? $t('landingSettings.editMember') : $t('landingSettings.newMember') }}</h3>
               <button @click="showTeamModal = false" class="p-2 text-slate-400 hover:text-slate-600 rounded-lg"><X class="w-5 h-5" /></button>
             </div>
             <div class="p-6 space-y-4">
               <div>
-                <label class="block text-sm font-medium text-slate-700 mb-2">Ism Familiya</label>
+                <label class="block text-sm font-medium text-slate-700 mb-2">{{ $t('landingSettings.fullName') }}</label>
                 <input v-model="teamForm.name" type="text" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-emerald-300 focus:ring-4 focus:ring-emerald-500/10" placeholder="To'liq ism" />
               </div>
               <div>
-                <label class="block text-sm font-medium text-slate-700 mb-2">Lavozim</label>
+                <label class="block text-sm font-medium text-slate-700 mb-2">{{ $t('landingSettings.position') }}</label>
                 <input v-model="teamForm.position" type="text" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-emerald-300 focus:ring-4 focus:ring-emerald-500/10" placeholder="Masalan: Senior Developer" />
               </div>
               <div>
-                <label class="block text-sm font-medium text-slate-700 mb-2">Turi</label>
+                <label class="block text-sm font-medium text-slate-700 mb-2">{{ $t('landingSettings.memberType') }}</label>
                 <select v-model="teamForm.type" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-emerald-300">
-                  <option value="backend">Backend dasturchi</option>
-                  <option value="frontend">Frontend dasturchi</option>
-                  <option value="mobile">Mobil dasturchi</option>
-                  <option value="fullstack">Full Stack dasturchi</option>
-                  <option value="designer">UI/UX dizayner</option>
-                  <option value="devops">DevOps muhandis</option>
-                  <option value="pm">Loyiha menejeri</option>
-                  <option value="qa">QA muhandis</option>
+                  <option value="backend">{{ $t('landingSettings.backendDev') }}</option>
+                  <option value="frontend">{{ $t('landingSettings.frontendDev') }}</option>
+                  <option value="mobile">{{ $t('landingSettings.mobileDev') }}</option>
+                  <option value="fullstack">{{ $t('landingSettings.fullstackDev') }}</option>
+                  <option value="designer">{{ $t('landingSettings.designer') }}</option>
+                  <option value="devops">{{ $t('landingSettings.devops') }}</option>
+                  <option value="pm">{{ $t('landingSettings.pm') }}</option>
+                  <option value="qa">{{ $t('landingSettings.qa') }}</option>
                 </select>
               </div>
               <div class="space-y-3">
-                <label class="block text-sm font-medium text-slate-700">Ijtimoiy tarmoqlar</label>
+                <label class="block text-sm font-medium text-slate-700">{{ $t('landingSettings.socialNetworks') }}</label>
                 <div class="flex items-center gap-2">
                   <Github class="w-4 h-4 text-slate-400 shrink-0" />
                   <input v-model="teamForm.social.github" type="url" class="flex-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-emerald-300" placeholder="GitHub URL" />
@@ -420,9 +420,9 @@
               </div>
             </div>
             <div class="px-6 py-4 bg-slate-50 border-t border-slate-200 flex justify-end gap-3">
-              <button @click="showTeamModal = false" class="px-4 py-2 text-slate-600 hover:bg-slate-100 rounded-xl text-sm font-medium transition-colors">Bekor qilish</button>
+              <button @click="showTeamModal = false" class="px-4 py-2 text-slate-600 hover:bg-slate-100 rounded-xl text-sm font-medium transition-colors">{{ $t('common.cancel') }}</button>
               <button @click="saveTeamMember" class="px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl text-sm font-medium transition-colors">
-                {{ editingMember ? 'Saqlash' : "Qo'shish" }}
+                {{ editingMember ? $t('common.save') : $t('common.add') }}
               </button>
             </div>
           </div>
@@ -444,11 +444,14 @@ import {
   RefreshCw, Save, Send, Share2, Shield, ShieldCheck,
   Sparkles, Trash2, UserPlus, Users, X, Zap
 } from 'lucide-vue-next'
-import { markRaw, onMounted, reactive, ref } from 'vue'
+import { computed, markRaw, onMounted, reactive, ref } from 'vue'
 import api from '../../services/api'
 import { useToastStore } from '../../stores/toast'
+import { useLanguageStore } from '../../stores/language'
 
 const toast = useToastStore()
+const langStore = useLanguageStore()
+const t = (key) => langStore.t(key)
 
 // === State ===
 const loading = ref(true)
@@ -464,13 +467,13 @@ const heroStats = reactive({ students_count: '', groups_count: '', result_percen
 const aboutStats = reactive({ founded: '', universities: '', users: '', support: '' })
 
 // Tabs
-const tabs = [
-  { id: 'cards', label: 'Kartalar', icon: markRaw(LayoutGrid) },
-  { id: 'social', label: 'Ijtimoiy tarmoqlar', shortLabel: 'Tarmoqlar', icon: markRaw(Share2) },
-  { id: 'team', label: 'Jamoa', icon: markRaw(Users) },
-  { id: 'contact', label: 'Aloqa', icon: markRaw(Phone) },
-  { id: 'hero', label: 'Statistika', icon: markRaw(Sparkles) }
-]
+const tabs = computed(() => [
+  { id: 'cards', label: t('landingSettings.landingCards'), icon: markRaw(LayoutGrid) },
+  { id: 'social', label: t('landingSettings.socialLinks'), shortLabel: t('landingSettings.socialLinks'), icon: markRaw(Share2) },
+  { id: 'team', label: t('landingSettings.projectTeam'), icon: markRaw(Users) },
+  { id: 'contact', label: t('landingSettings.contactInfo'), icon: markRaw(Phone) },
+  { id: 'hero', label: t('landingSettings.heroAndAbout'), icon: markRaw(Sparkles) }
+])
 
 // Icons map
 const iconComponents = {

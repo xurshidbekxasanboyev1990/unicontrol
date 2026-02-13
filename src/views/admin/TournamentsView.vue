@@ -4,14 +4,14 @@
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
       <div>
         <h1 class="text-2xl font-bold text-slate-800">{{ $t('tournaments.title') }}</h1>
-        <p class="text-slate-500 mt-1">Bellashuvlarni e'lon qiling va ro'yxatdan o'tishlarni boshqaring</p>
+        <p class="text-slate-500 mt-1">{{ $t('tournaments.manageDesc') }}</p>
       </div>
       <button
         @click="openCreateModal"
         class="inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-xl font-semibold shadow-lg shadow-emerald-500/25 hover:shadow-xl hover:shadow-emerald-500/30 transition-all"
       >
         <Plus class="w-5 h-5" />
-        Yangi turnir
+        {{ $t('tournaments.newTournament') }}
       </button>
     </div>
 
@@ -42,7 +42,7 @@
           </div>
           <div>
             <p class="text-2xl font-bold text-slate-800">{{ dataStore.tournaments.length }}</p>
-            <p class="text-xs text-slate-500">Jami turnirlar</p>
+            <p class="text-xs text-slate-500">{{ $t('tournaments.totalTournaments') }}</p>
           </div>
         </div>
       </div>
@@ -53,7 +53,7 @@
           </div>
           <div>
             <p class="text-2xl font-bold text-slate-800">{{ activeTournaments.length }}</p>
-            <p class="text-xs text-slate-500">Faol turnirlar</p>
+            <p class="text-xs text-slate-500">{{ $t('tournaments.activeTournaments') }}</p>
           </div>
         </div>
       </div>
@@ -64,7 +64,7 @@
           </div>
           <div>
             <p class="text-2xl font-bold text-slate-800">{{ totalRegistrations }}</p>
-            <p class="text-xs text-slate-500">Jami ro'yxatlar</p>
+            <p class="text-xs text-slate-500">{{ $t('tournaments.totalRegistrations') }}</p>
           </div>
         </div>
       </div>
@@ -75,7 +75,7 @@
           </div>
           <div>
             <p class="text-2xl font-bold text-slate-800">{{ upcomingCount }}</p>
-            <p class="text-xs text-slate-500">Kelayotgan</p>
+            <p class="text-xs text-slate-500">{{ $t('tournaments.upcomingCount') }}</p>
           </div>
         </div>
       </div>
@@ -101,7 +101,7 @@
                 'px-2.5 py-1 text-xs font-bold rounded-lg',
                 tournament.isActive ? 'bg-white/20 text-white' : 'bg-red-500/80 text-white'
               ]">
-                {{ tournament.isActive ? 'Faol' : 'Nofaol' }}
+                {{ tournament.isActive ? $t('tournaments.active') : $t('tournaments.inactive') }}
               </span>
             </div>
             <h3 class="text-lg font-bold mt-2 line-clamp-2">{{ tournament.title }}</h3>
@@ -161,7 +161,7 @@
             class="flex items-center gap-1.5 px-3 py-1.5 text-sm text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors"
           >
             <ClipboardList class="w-4 h-4" />
-            Ro'yxatlar ({{ tournament.registrationsCount || 0 }})
+            {{ $t('tournaments.registrations') }} ({{ tournament.registrationsCount || 0 }})
           </button>
           <div class="flex items-center gap-1">
             <button
@@ -195,8 +195,8 @@
     <!-- Empty state -->
     <div v-if="filteredTournaments.length === 0" class="text-center py-16 bg-white rounded-2xl border border-slate-200">
       <Trophy class="w-16 h-16 mx-auto text-slate-300 mb-4" />
-      <h3 class="text-lg font-semibold text-slate-600">Turnirlar topilmadi</h3>
-      <p class="text-slate-400 mt-1">Yangi turnir yarating</p>
+      <h3 class="text-lg font-semibold text-slate-600">{{ $t('tournaments.notFound') }}</h3>
+      <p class="text-slate-400 mt-1">{{ $t('tournaments.createNew') }}</p>
     </div>
 
     <!-- Create/Edit Modal -->
@@ -208,7 +208,7 @@
             <!-- Modal header -->
             <div class="flex items-center justify-between p-6 border-b border-slate-100">
               <h3 class="text-xl font-bold text-slate-800">
-                {{ isEditing ? 'Turnirni tahrirlash' : 'Yangi turnir yaratish' }}
+                {{ isEditing ? $t('tournaments.editTournament') : $t('tournaments.createTournament') }}
               </h3>
               <button @click="closeModal" class="p-2 hover:bg-slate-100 rounded-xl transition-colors">
                 <X class="w-5 h-5 text-slate-400" />
@@ -221,12 +221,12 @@
               <div class="space-y-4">
                 <h4 class="font-semibold text-slate-700 flex items-center gap-2">
                   <FileText class="w-4 h-4" />
-                  Asosiy ma'lumotlar
+                  {{ $t('tournaments.basicInfo') }}
                 </h4>
                 
                 <div class="grid md:grid-cols-2 gap-4">
                   <div class="md:col-span-2">
-                    <label class="block text-sm font-medium text-slate-700 mb-1">Turnir nomi *</label>
+                    <label class="block text-sm font-medium text-slate-700 mb-1">{{ $t('tournaments.tournamentName') }} *</label>
                     <input
                       v-model="form.title"
                       type="text"
@@ -236,7 +236,7 @@
                   </div>
 
                   <div>
-                    <label class="block text-sm font-medium text-slate-700 mb-1">Kategoriya *</label>
+                    <label class="block text-sm font-medium text-slate-700 mb-1">{{ $t('tournaments.category') }} *</label>
                     <CustomSelect
                       v-model="form.category"
                       :options="categoryOptions"
@@ -245,7 +245,7 @@
                   </div>
 
                   <div>
-                    <label class="block text-sm font-medium text-slate-700 mb-1">Turi *</label>
+                    <label class="block text-sm font-medium text-slate-700 mb-1">{{ $t('tournaments.type') }} *</label>
                     <CustomSelect
                       v-model="form.type"
                       :options="typeOptions"
@@ -254,7 +254,7 @@
                   </div>
 
                   <div class="md:col-span-2">
-                    <label class="block text-sm font-medium text-slate-700 mb-1">Tavsif *</label>
+                    <label class="block text-sm font-medium text-slate-700 mb-1">{{ $t('tournaments.description') }} *</label>
                     <textarea
                       v-model="form.description"
                       rows="3"
@@ -269,12 +269,12 @@
               <div class="space-y-4">
                 <h4 class="font-semibold text-slate-700 flex items-center gap-2">
                   <Calendar class="w-4 h-4" />
-                  Sana va joy
+                  {{ $t('tournaments.dateAndLocation') }}
                 </h4>
                 
                 <div class="grid md:grid-cols-3 gap-4">
                   <div>
-                    <label class="block text-sm font-medium text-slate-700 mb-1">Boshlanish sanasi *</label>
+                    <label class="block text-sm font-medium text-slate-700 mb-1">{{ $t('tournaments.startDateLabel') }} *</label>
                     <input
                       v-model="form.startDate"
                       type="date"
@@ -282,7 +282,7 @@
                     />
                   </div>
                   <div>
-                    <label class="block text-sm font-medium text-slate-700 mb-1">Tugash sanasi *</label>
+                    <label class="block text-sm font-medium text-slate-700 mb-1">{{ $t('tournaments.endDateLabel') }} *</label>
                     <input
                       v-model="form.endDate"
                       type="date"
@@ -290,7 +290,7 @@
                     />
                   </div>
                   <div>
-                    <label class="block text-sm font-medium text-slate-700 mb-1">Ro'yxat muddati *</label>
+                    <label class="block text-sm font-medium text-slate-700 mb-1">{{ $t('tournaments.regDeadline') }} *</label>
                     <input
                       v-model="form.registrationDeadline"
                       type="date"
@@ -298,7 +298,7 @@
                     />
                   </div>
                   <div class="md:col-span-2">
-                    <label class="block text-sm font-medium text-slate-700 mb-1">Manzil *</label>
+                    <label class="block text-sm font-medium text-slate-700 mb-1">{{ $t('tournaments.address') }} *</label>
                     <input
                       v-model="form.location"
                       type="text"
@@ -307,7 +307,7 @@
                     />
                   </div>
                   <div>
-                    <label class="block text-sm font-medium text-slate-700 mb-1">Max ishtirokchilar *</label>
+                    <label class="block text-sm font-medium text-slate-700 mb-1">{{ $t('tournaments.maxParticipants') }} *</label>
                     <input
                       v-model.number="form.maxParticipants"
                       type="number"
@@ -322,12 +322,12 @@
               <div class="space-y-4">
                 <h4 class="font-semibold text-slate-700 flex items-center gap-2">
                   <Gift class="w-4 h-4" />
-                  Qo'shimcha
+                  {{ $t('tournaments.additional') }}
                 </h4>
                 
                 <div class="grid md:grid-cols-2 gap-4">
                   <div>
-                    <label class="block text-sm font-medium text-slate-700 mb-1">Sovrin</label>
+                    <label class="block text-sm font-medium text-slate-700 mb-1">{{ $t('tournaments.prizeLabel') }}</label>
                     <input
                       v-model="form.prize"
                       type="text"
@@ -336,7 +336,7 @@
                     />
                   </div>
                   <div>
-                    <label class="block text-sm font-medium text-slate-700 mb-1">Tashkilotchi</label>
+                    <label class="block text-sm font-medium text-slate-700 mb-1">{{ $t('tournaments.organizerLabel') }}</label>
                     <input
                       v-model="form.organizer"
                       type="text"
@@ -345,7 +345,7 @@
                     />
                   </div>
                   <div>
-                    <label class="block text-sm font-medium text-slate-700 mb-1">Bog'lanish telefoni</label>
+                    <label class="block text-sm font-medium text-slate-700 mb-1">{{ $t('tournaments.contactPhone') }}</label>
                     <input
                       v-model="form.contactPhone"
                       type="text"
@@ -361,22 +361,21 @@
                 <div class="flex items-center justify-between">
                   <h4 class="font-semibold text-slate-700 flex items-center gap-2">
                     <BookOpen class="w-4 h-4" />
-                    Yo'nalishlar bo'yicha fan tanlash
+                    {{ $t('tournaments.directionSubjects') }}
                   </h4>
                   <button
                     @click="addParticipationRule"
                     class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-500 text-white text-sm rounded-lg font-medium hover:bg-emerald-600 transition-colors"
                   >
                     <Plus class="w-4 h-4" />
-                    Qo'shish
+                    {{ $t('common.add') }}
                   </button>
                 </div>
 
                 <!-- Tushunarli izoh -->
                 <div class="flex items-start gap-3 p-3 bg-amber-50 rounded-lg border border-amber-200 text-sm text-amber-700">
                   <AlertTriangle class="w-5 h-5 shrink-0 mt-0.5" />
-                  <span>Har bir yo'nalish talabalari qaysi fanlardan qatnashishini belgilang. 
-                  Qo'shilmasa — barcha yo'nalishlar erkin qatnashadi.</span>
+                  <span>{{ $t('tournaments.directionNotice') }}</span>
                 </div>
 
                 <!-- Qoidalar ro'yxati -->
@@ -403,7 +402,7 @@
                       <button
                         @click="removeParticipationRule(index)"
                         class="p-2 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-colors"
-                        title="O'chirish"
+                        :title="$t('common.delete')"
                       >
                         <Trash2 class="w-4 h-4" />
                       </button>
@@ -414,7 +413,7 @@
                       <!-- Tanlash turi -->
                       <div>
                         <label class="block text-xs font-medium text-slate-500 mb-2 uppercase tracking-wide">
-                          Talaba qanday tanlaydi?
+                          {{ $t('tournaments.howToSelect') }}
                         </label>
                         <div class="grid grid-cols-3 gap-2">
                           <label
@@ -427,8 +426,8 @@
                           >
                             <input type="radio" v-model="rule.selectionMode" value="fixed" class="sr-only" />
                             <Lock :class="['w-6 h-6', rule.selectionMode === 'fixed' ? 'text-blue-500' : 'text-slate-400']" />
-                            <span class="text-xs font-medium">Avtomatik</span>
-                            <span class="text-[10px] text-slate-500">Tanlash yo'q</span>
+                            <span class="text-xs font-medium">{{ $t('tournaments.selectionAuto') }}</span>
+                            <span class="text-[10px] text-slate-500">{{ $t('tournaments.selectionAutoDesc') }}</span>
                           </label>
                           <label
                             :class="[
@@ -440,8 +439,8 @@
                           >
                             <input type="radio" v-model="rule.selectionMode" value="single" class="sr-only" />
                             <MousePointer :class="['w-6 h-6', rule.selectionMode === 'single' ? 'text-emerald-500' : 'text-slate-400']" />
-                            <span class="text-xs font-medium">Bittasini</span>
-                            <span class="text-[10px] text-slate-500">1 ta tanlaydi</span>
+                            <span class="text-xs font-medium">{{ $t('tournaments.selectionSingle') }}</span>
+                            <span class="text-[10px] text-slate-500">{{ $t('tournaments.selectionSingleDesc') }}</span>
                           </label>
                           <label
                             :class="[
@@ -453,8 +452,8 @@
                           >
                             <input type="radio" v-model="rule.selectionMode" value="multiple" class="sr-only" />
                             <List :class="['w-6 h-6', rule.selectionMode === 'multiple' ? 'text-purple-500' : 'text-slate-400']" />
-                            <span class="text-xs font-medium">Bir nechta</span>
-                            <span class="text-[10px] text-slate-500">Ko'p tanlaydi</span>
+                            <span class="text-xs font-medium">{{ $t('tournaments.selectionMultiple') }}</span>
+                            <span class="text-[10px] text-slate-500">{{ $t('tournaments.selectionMultipleDesc') }}</span>
                           </label>
                         </div>
                       </div>
@@ -462,7 +461,7 @@
                       <!-- Fanlar tanlash -->
                       <div>
                         <label class="block text-xs font-medium text-slate-500 mb-2 uppercase tracking-wide">
-                          Qaysi fanlardan? 
+                          {{ $t('tournaments.whichSubjects') }} 
                           <span class="text-emerald-500 normal-case">({{ rule.allowedSubjectIds?.length || 0 }} ta)</span>
                         </label>
                         <div class="flex flex-wrap gap-2">
@@ -511,7 +510,7 @@
                       <!-- Natija preview -->
                       <div class="p-3 bg-slate-100 rounded-xl text-sm text-slate-600">
                         <strong class="text-slate-800">{{ getDirectionCode(rule.directionId) }}</strong> talabasi: 
-                        <span v-if="!rule.directionId" class="text-amber-600">Yo'nalish tanlanmagan</span>
+                        <span v-if="!rule.directionId" class="text-amber-600">{{ $t('tournaments.directionNotSelected') }}</span>
                         <span v-else-if="!rule.allowedSubjectIds?.length" class="text-amber-600">Fan tanlanmagan</span>
                         <span v-else-if="rule.selectionMode === 'fixed'" class="text-blue-600">
                           {{ getFirstSubjectName(rule.allowedSubjectIds) }} fanidan qatnashadi (avtomatik)
@@ -530,9 +529,9 @@
                 <!-- Bo'sh holat -->
                 <div v-else class="p-8 bg-slate-50 rounded-2xl text-center border-2 border-dashed border-slate-200">
                   <GraduationCap class="w-12 h-12 mx-auto text-slate-300 mb-3" />
-                  <p class="text-slate-600 font-medium">Hozircha barcha yo'nalishlar qatnashadi</p>
+                  <p class="text-slate-600 font-medium">{{ $t('tournaments.allDirectionsParticipate') }}</p>
                   <p class="text-sm text-slate-400 mt-1">
-                    Faqat ma'lum yo'nalishlar qatnashishi kerak bo'lsa, yuqoridagi "Qo'shish" tugmasini bosing
+                    {{ $t('tournaments.addDirectionNotice') }}
                   </p>
                 </div>
               </div>
@@ -542,22 +541,22 @@
                 <div class="flex items-center justify-between">
                   <h4 class="font-semibold text-slate-700 flex items-center gap-2">
                     <ListPlus class="w-4 h-4" />
-                    Ro'yxatdan o'tish maydonlari
+                    {{ $t('tournaments.regFields') }}
                   </h4>
                   <button
                     @click="addCustomField"
                     class="text-sm text-emerald-600 hover:text-emerald-700 font-medium flex items-center gap-1"
                   >
                     <Plus class="w-4 h-4" />
-                    Maydon qo'shish
+                    {{ $t('tournaments.addField') }}
                   </button>
                 </div>
 
                 <div class="space-y-3">
                   <!-- Default fields info -->
                   <div class="p-3 bg-slate-50 rounded-xl text-sm text-slate-600">
-                    <p class="font-medium mb-1">Standart maydonlar (avtomatik):</p>
-                    <p class="text-slate-500">Ism, Familiya, Telefon, Guruh, Izoh{{ form.isSubjectBased ? ', Fan' : '' }}</p>
+                    <p class="font-medium mb-1">{{ $t('tournaments.defaultFields') }}:</p>
+                    <p class="text-slate-500">{{ $t('tournaments.defaultFieldsList') }}{{ form.isSubjectBased ? ', Fan' : '' }}</p>
                   </div>
 
                   <!-- Custom fields list -->
@@ -578,7 +577,7 @@
                     
                     <div class="grid grid-cols-3 gap-3">
                       <div>
-                        <label class="block text-xs text-slate-500 mb-1">Maydon nomi</label>
+                        <label class="block text-xs text-slate-500 mb-1">{{ $t('tournaments.fieldName') }}</label>
                         <input
                           v-model="field.name"
                           type="text"
@@ -587,7 +586,7 @@
                         />
                       </div>
                       <div>
-                        <label class="block text-xs text-slate-500 mb-1">Turi</label>
+                        <label class="block text-xs text-slate-500 mb-1">{{ $t('tournaments.fieldType') }}</label>
                         <CustomSelect
                           v-model="field.type"
                           :options="fieldTypeOptions"
@@ -598,14 +597,14 @@
                       <div class="flex items-end">
                         <label class="flex items-center gap-2 cursor-pointer">
                           <input type="checkbox" v-model="field.required" class="w-4 h-4 text-emerald-500 rounded" />
-                          <span class="text-sm text-slate-600">Majburiy</span>
+                          <span class="text-sm text-slate-600">{{ $t('tournaments.required') }}</span>
                         </label>
                       </div>
                     </div>
 
                     <!-- Options for select type -->
                     <div v-if="field.type === 'select'" class="space-y-2">
-                      <label class="block text-xs text-slate-500">Variantlar (vergul bilan ajrating)</label>
+                      <label class="block text-xs text-slate-500">{{ $t('tournaments.options') }}</label>
                       <input
                         v-model="field.optionsText"
                         type="text"
@@ -625,13 +624,13 @@
                 @click="closeModal"
                 class="px-5 py-2.5 text-slate-600 hover:bg-slate-200 rounded-xl font-medium transition-colors"
               >
-                Bekor qilish
+                {{ $t('common.cancel') }}
               </button>
               <button
                 @click="saveTournament"
                 class="px-5 py-2.5 bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-xl font-semibold shadow-lg shadow-emerald-500/25 hover:shadow-xl transition-all"
               >
-                {{ isEditing ? 'Saqlash' : 'Yaratish' }}
+                {{ isEditing ? $t('common.save') : $t('common.create') }}
               </button>
             </div>
           </div>
@@ -648,7 +647,7 @@
             <!-- Modal header -->
             <div class="flex items-center justify-between p-6 border-b border-slate-100">
               <div>
-                <h3 class="text-xl font-bold text-slate-800">Ro'yxatdan o'tganlar</h3>
+                <h3 class="text-xl font-bold text-slate-800">{{ $t('tournaments.registeredList') }}</h3>
                 <p class="text-sm text-slate-500 mt-1">{{ selectedTournament?.title }}</p>
               </div>
               <div class="flex items-center gap-2">
@@ -658,7 +657,7 @@
                   class="inline-flex items-center gap-1.5 px-4 py-2 bg-emerald-500 text-white text-sm rounded-xl font-medium hover:bg-emerald-600 transition-colors"
                 >
                   <Download class="w-4 h-4" />
-                  Excel yuklab olish
+                  {{ $t('tournaments.downloadExcel') }}
                 </button>
                 <button @click="showRegistrationsModal = false" class="p-2 hover:bg-slate-100 rounded-xl transition-colors">
                   <X class="w-5 h-5 text-slate-400" />
@@ -675,7 +674,7 @@
 
               <div v-else-if="participants.length === 0" class="text-center py-12">
                 <Users class="w-16 h-16 mx-auto text-slate-300 mb-4" />
-                <p class="text-slate-500">Hali hech kim ro'yxatdan o'tmagan</p>
+                <p class="text-slate-500">{{ $t('tournaments.noRegistrations') }}</p>
               </div>
 
               <div v-else class="space-y-4">
@@ -685,19 +684,19 @@
                     <p class="text-2xl font-bold text-amber-600">
                       {{ participants.filter(r => r.status === 'registered' || r.status === 'pending').length }}
                     </p>
-                    <p class="text-sm text-amber-700">Kutilmoqda</p>
+                    <p class="text-sm text-amber-700">{{ $t('tournaments.pending') }}</p>
                   </div>
                   <div class="bg-emerald-50 rounded-xl p-4 text-center">
                     <p class="text-2xl font-bold text-emerald-600">
                       {{ participants.filter(r => r.status === 'confirmed' || r.status === 'approved').length }}
                     </p>
-                    <p class="text-sm text-emerald-700">Tasdiqlangan</p>
+                    <p class="text-sm text-emerald-700">{{ $t('tournaments.confirmed') }}</p>
                   </div>
                   <div class="bg-rose-50 rounded-xl p-4 text-center">
                     <p class="text-2xl font-bold text-rose-600">
                       {{ participants.filter(r => r.status === 'cancelled' || r.status === 'rejected').length }}
                     </p>
-                    <p class="text-sm text-rose-700">Rad etilgan</p>
+                    <p class="text-sm text-rose-700">{{ $t('tournaments.rejected') }}</p>
                   </div>
                 </div>
 
@@ -707,12 +706,12 @@
                     <thead>
                       <tr class="text-left text-sm text-slate-500 border-b border-slate-200">
                         <th class="pb-3 font-medium">#</th>
-                        <th class="pb-3 font-medium">Ism Familiya</th>
-                        <th class="pb-3 font-medium">Telefon</th>
-                        <th class="pb-3 font-medium">Guruh</th>
-                        <th class="pb-3 font-medium">Holat</th>
-                        <th class="pb-3 font-medium">Sana</th>
-                        <th class="pb-3 font-medium">Amallar</th>
+                        <th class="pb-3 font-medium">{{ $t('tournaments.fullNameCol') }}</th>
+                        <th class="pb-3 font-medium">{{ $t('tournaments.phoneCol') }}</th>
+                        <th class="pb-3 font-medium">{{ $t('tournaments.groupCol') }}</th>
+                        <th class="pb-3 font-medium">{{ $t('tournaments.statusCol') }}</th>
+                        <th class="pb-3 font-medium">{{ $t('tournaments.dateCol') }}</th>
+                        <th class="pb-3 font-medium">{{ $t('tournaments.actionsCol') }}</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -745,7 +744,7 @@
                               v-if="reg.status !== 'confirmed' && reg.status !== 'approved'"
                               @click="updateStatus(selectedTournament.id, reg.id, 'confirmed')"
                               class="p-1.5 text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors"
-                              title="Tasdiqlash"
+                              :title="$t('common.approve')"
                             >
                               <Check class="w-4 h-4" />
                             </button>
@@ -753,7 +752,7 @@
                               v-if="reg.status !== 'cancelled' && reg.status !== 'rejected'"
                               @click="updateStatus(selectedTournament.id, reg.id, 'cancelled')"
                               class="p-1.5 text-rose-600 hover:bg-rose-50 rounded-lg transition-colors"
-                              title="Rad etish"
+                              :title="$t('common.reject')"
                             >
                               <X class="w-4 h-4" />
                             </button>
@@ -780,23 +779,22 @@
               <div class="w-16 h-16 bg-rose-100 rounded-full flex items-center justify-center mx-auto mb-4">
                 <AlertTriangle class="w-8 h-8 text-rose-500" />
               </div>
-              <h3 class="text-xl font-bold text-slate-800 mb-2">O'chirishni tasdiqlang</h3>
+              <h3 class="text-xl font-bold text-slate-800 mb-2">{{ $t('tournaments.confirmDelete') }}</h3>
               <p class="text-slate-500 mb-6">
-                "{{ tournamentToDelete?.title }}" turnirini o'chirmoqchimisiz?
-                Bu amalni qaytarib bo'lmaydi.
+                {{ $t('tournaments.deleteWarning') }}
               </p>
               <div class="flex gap-3">
                 <button
                   @click="showDeleteModal = false"
                   class="flex-1 px-5 py-2.5 border border-slate-200 text-slate-600 rounded-xl font-medium hover:bg-slate-50 transition-colors"
                 >
-                  Bekor qilish
+                  {{ $t('common.cancel') }}
                 </button>
                 <button
                   @click="deleteTournament"
                   class="flex-1 px-5 py-2.5 bg-rose-500 text-white rounded-xl font-semibold hover:bg-rose-600 transition-colors"
                 >
-                  O'chirish
+                  {{ $t('common.delete') }}
                 </button>
               </div>
             </div>
@@ -847,9 +845,11 @@ import { computed, onMounted, ref } from 'vue'
 import CustomSelect from '../../components/ui/CustomSelect.vue'
 import { useDataStore } from '../../stores/data'
 import { useToastStore } from '../../stores/toast'
+import { useLanguageStore } from '../../stores/language'
 
 const dataStore = useDataStore()
 const toast = useToastStore()
+const { t } = useLanguageStore()
 
 // Loading states
 const loading = ref(false)
@@ -1242,12 +1242,12 @@ const viewRegistrations = async (tournament) => {
 
 const getStatusLabel = (status) => {
   const labels = {
-    registered: 'Ro\'yxatdan o\'tgan',
-    pending: 'Kutilmoqda',
-    confirmed: 'Tasdiqlangan',
-    approved: 'Tasdiqlangan',
-    cancelled: 'Bekor qilingan',
-    rejected: 'Rad etilgan'
+    registered: t('tournaments.registered'),
+    pending: t('common.pending'),
+    confirmed: t('common.approved'),
+    approved: t('common.approved'),
+    cancelled: t('common.cancelled'),
+    rejected: t('common.rejected')
   }
   return labels[status] || status
 }

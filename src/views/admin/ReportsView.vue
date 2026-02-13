@@ -86,14 +86,14 @@
         class="px-4 sm:px-5 py-3 text-sm font-medium transition-colors border-b-2 -mb-px whitespace-nowrap"
         :class="activeTab === 'stats' ? 'border-violet-500 text-violet-600' : 'border-transparent text-slate-500 hover:text-slate-700'"
       >
-        Statistika
+        {{ $t('reports.statisticsTab') }}
       </button>
       <button
         @click="activeTab = 'pending'"
         class="px-5 py-3 text-sm font-medium transition-colors border-b-2 -mb-px flex items-center gap-2"
         :class="activeTab === 'pending' ? 'border-amber-500 text-amber-600' : 'border-transparent text-slate-500 hover:text-slate-700'"
       >
-        Hisobotlarni tasdiqlash
+        {{ $t('reports.pendingTab') }}
         <span v-if="pendingReports.length > 0" class="px-2 py-0.5 bg-amber-100 text-amber-700 text-xs rounded-full font-bold">
           {{ pendingReports.length }}
         </span>
@@ -103,7 +103,7 @@
         class="px-5 py-3 text-sm font-medium transition-colors border-b-2 -mb-px"
         :class="activeTab === 'all' ? 'border-blue-500 text-blue-600' : 'border-transparent text-slate-500 hover:text-slate-700'"
       >
-        Barcha hisobotlar
+        {{ $t('reports.allReportsTab') }}
       </button>
     </div>
 
@@ -113,7 +113,7 @@
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <!-- Weekly Trend -->
         <div class="bg-white rounded-2xl border border-slate-200 p-6">
-          <h2 class="text-lg font-semibold text-slate-800 mb-6">Haftalik trend</h2>
+          <h2 class="text-lg font-semibold text-slate-800 mb-6">{{ $t('reports.weeklyTrend') }}</h2>
           <div class="flex items-end gap-3 h-48">
             <div 
               v-for="(day, index) in weeklyData" 
@@ -135,7 +135,7 @@
 
         <!-- Group Comparison -->
         <div class="bg-white rounded-2xl border border-slate-200 p-6">
-          <h2 class="text-lg font-semibold text-slate-800 mb-4">Guruhlar taqqoslash</h2>
+          <h2 class="text-lg font-semibold text-slate-800 mb-4">{{ $t('reports.groupComparison') }}</h2>
           <div class="space-y-4">
             <div v-for="group in groupStats" :key="group.name">
               <div class="flex items-center justify-between mb-2">
@@ -165,21 +165,21 @@
       <!-- Detailed Table -->
       <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden mt-6">
         <div class="p-6 border-b border-slate-100 flex items-center justify-between">
-          <h2 class="text-lg font-semibold text-slate-800">Batafsil ma'lumotlar</h2>
+          <h2 class="text-lg font-semibold text-slate-800">{{ $t('reports.detailedInfo') }}</h2>
           <div class="flex items-center gap-2">
             <button 
               @click="detailTab = 'groups'"
               class="px-4 py-2 rounded-lg text-sm font-medium transition-colors"
               :class="detailTab === 'groups' ? 'bg-violet-100 text-violet-700' : 'text-slate-500 hover:bg-slate-100'"
             >
-              Guruhlar
+              {{ $t('reports.groupsTab') }}
             </button>
             <button 
               @click="detailTab = 'students'"
               class="px-4 py-2 rounded-lg text-sm font-medium transition-colors"
               :class="detailTab === 'students' ? 'bg-violet-100 text-violet-700' : 'text-slate-500 hover:bg-slate-100'"
             >
-              Talabalar
+              {{ $t('reports.studentsTab') }}
             </button>
           </div>
         </div>
@@ -189,18 +189,18 @@
             <thead>
               <tr class="border-b border-slate-100 bg-slate-50">
                 <template v-if="detailTab === 'groups'">
-                  <th class="text-left p-4 font-semibold text-slate-600">Guruh</th>
-                  <th class="text-left p-4 font-semibold text-slate-600">Talabalar</th>
-                  <th class="text-left p-4 font-semibold text-slate-600">Kelgan</th>
-                  <th class="text-left p-4 font-semibold text-slate-600">Kelmagan</th>
-                  <th class="text-left p-4 font-semibold text-slate-600">Davomat</th>
+                  <th class="text-left p-4 font-semibold text-slate-600">{{ $t('reports.groupColumn') }}</th>
+                  <th class="text-left p-4 font-semibold text-slate-600">{{ $t('reports.studentsColumn') }}</th>
+                  <th class="text-left p-4 font-semibold text-slate-600">{{ $t('reports.presentColumn') }}</th>
+                  <th class="text-left p-4 font-semibold text-slate-600">{{ $t('reports.absentColumn') }}</th>
+                  <th class="text-left p-4 font-semibold text-slate-600">{{ $t('reports.attendanceColumn') }}</th>
                 </template>
                 <template v-else>
-                  <th class="text-left p-4 font-semibold text-slate-600">Talaba</th>
-                  <th class="text-left p-4 font-semibold text-slate-600">Guruh</th>
-                  <th class="text-left p-4 font-semibold text-slate-600">Kelgan</th>
-                  <th class="text-left p-4 font-semibold text-slate-600">Kelmagan</th>
-                  <th class="text-left p-4 font-semibold text-slate-600">Davomat</th>
+                  <th class="text-left p-4 font-semibold text-slate-600">{{ $t('reports.studentColumn') }}</th>
+                  <th class="text-left p-4 font-semibold text-slate-600">{{ $t('reports.groupColumn') }}</th>
+                  <th class="text-left p-4 font-semibold text-slate-600">{{ $t('reports.presentColumn') }}</th>
+                  <th class="text-left p-4 font-semibold text-slate-600">{{ $t('reports.absentColumn') }}</th>
+                  <th class="text-left p-4 font-semibold text-slate-600">{{ $t('reports.attendanceColumn') }}</th>
                 </template>
               </tr>
             </thead>
@@ -280,14 +280,14 @@
               class="flex items-center gap-2 px-4 py-2.5 bg-emerald-500 text-white rounded-xl text-sm font-medium hover:bg-emerald-600 transition-colors"
             >
               <Check class="w-4 h-4" />
-              Tasdiqlash
+              {{ $t('reports.approveBtn') }}
             </button>
             <button 
               @click="openRejectModal(report)"
               class="flex items-center gap-2 px-4 py-2.5 bg-rose-500 text-white rounded-xl text-sm font-medium hover:bg-rose-600 transition-colors"
             >
               <XIcon class="w-4 h-4" />
-              Rad etish
+              {{ $t('reports.rejectBtn') }}
             </button>
           </div>
         </div>
@@ -298,8 +298,8 @@
         class="flex flex-col items-center justify-center rounded-2xl border border-dashed border-slate-300 bg-slate-50 py-16"
       >
         <CheckCircle2 class="w-12 h-12 text-emerald-400 mb-3" />
-        <p class="text-lg font-medium text-slate-500">Barcha hisobotlar ko'rib chiqilgan</p>
-        <p class="text-sm text-slate-400">Kutilayotgan hisobotlar yo'q</p>
+        <p class="text-lg font-medium text-slate-500">{{ $t('reports.allReviewed') }}</p>
+        <p class="text-sm text-slate-400">{{ $t('reports.noPendingReports') }}</p>
       </div>
     </div>
 
@@ -308,14 +308,14 @@
       <!-- Filters -->
       <div class="flex flex-wrap items-center gap-3">
         <select v-model="filterGroup" class="px-3 py-2 rounded-xl border border-slate-200 text-sm" @change="loadAllReports">
-          <option :value="null">Barcha guruhlar</option>
+          <option :value="null">{{ $t('reports.allGroupsFilter') }}</option>
           <option v-for="group in groups" :key="group.id" :value="group.id">{{ group.name }}</option>
         </select>
         <select v-model="filterStatus" class="px-3 py-2 rounded-xl border border-slate-200 text-sm" @change="loadAllReports">
-          <option :value="null">Barcha statuslar</option>
-          <option value="pending">Kutilayotgan</option>
-          <option value="approved">Tasdiqlangan</option>
-          <option value="rejected">Rad etilgan</option>
+          <option :value="null">{{ $t('reports.allStatusFilter') }}</option>
+          <option value="pending">{{ $t('reports.pendingStatus') }}</option>
+          <option value="approved">{{ $t('reports.approvedStatus') }}</option>
+          <option value="rejected">{{ $t('reports.rejectedStatus') }}</option>
         </select>
       </div>
 
@@ -325,12 +325,12 @@
           <table class="w-full">
             <thead>
               <tr class="border-b border-slate-100 bg-slate-50">
-                <th class="text-left p-4 font-semibold text-slate-600 text-sm">Nomi</th>
-                <th class="text-left p-4 font-semibold text-slate-600 text-sm">Turi</th>
-                <th class="text-left p-4 font-semibold text-slate-600 text-sm">Yaratuvchi</th>
-                <th class="text-left p-4 font-semibold text-slate-600 text-sm">Sana</th>
-                <th class="text-left p-4 font-semibold text-slate-600 text-sm">Status</th>
-                <th class="text-left p-4 font-semibold text-slate-600 text-sm">Amallar</th>
+                <th class="text-left p-4 font-semibold text-slate-600 text-sm">{{ $t('reports.reportName') }}</th>
+                <th class="text-left p-4 font-semibold text-slate-600 text-sm">{{ $t('reports.reportType') }}</th>
+                <th class="text-left p-4 font-semibold text-slate-600 text-sm">{{ $t('reports.reportCreator') }}</th>
+                <th class="text-left p-4 font-semibold text-slate-600 text-sm">{{ $t('reports.reportDate') }}</th>
+                <th class="text-left p-4 font-semibold text-slate-600 text-sm">{{ $t('reports.reportStatus') }}</th>
+                <th class="text-left p-4 font-semibold text-slate-600 text-sm">{{ $t('reports.reportActions') }}</th>
               </tr>
             </thead>
             <tbody class="divide-y divide-slate-100">
@@ -359,7 +359,7 @@
                       v-if="report.status !== 'approved'"
                       @click="approveReport(report)"
                       class="p-2 rounded-lg text-emerald-600 hover:bg-emerald-50 transition-colors"
-                      title="Tasdiqlash"
+                      :title="$t('common.approve')"
                     >
                       <Check class="w-4 h-4" />
                     </button>
@@ -367,14 +367,14 @@
                       v-if="report.status !== 'rejected'"
                       @click="openRejectModal(report)"
                       class="p-2 rounded-lg text-rose-600 hover:bg-rose-50 transition-colors"
-                      title="Rad etish"
+                      :title="$t('common.reject')"
                     >
                       <XIcon class="w-4 h-4" />
                     </button>
                     <button 
                       @click="downloadSingleReport(report)"
                       class="p-2 rounded-lg text-blue-600 hover:bg-blue-50 transition-colors"
-                      title="Yuklab olish"
+                      :title="$t('common.download')"
                     >
                       <Download class="w-4 h-4" />
                     </button>
@@ -387,7 +387,7 @@
 
         <div v-if="allReportsList.length === 0" class="p-12 text-center">
           <FileText class="w-12 h-12 mx-auto text-slate-300 mb-3" />
-          <p class="text-slate-500">Hisobotlar topilmadi</p>
+          <p class="text-slate-500">{{ $t('reports.noReportsTable') }}</p>
         </div>
       </div>
     </div>
@@ -399,11 +399,11 @@
       @click.self="showRejectModal = false"
     >
       <div class="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl">
-        <h3 class="text-lg font-bold text-slate-800 mb-4">Hisobotni rad etish</h3>
+        <h3 class="text-lg font-bold text-slate-800 mb-4">{{ $t('reports.rejectTitle') }}</h3>
         <textarea
           v-model="rejectReason"
           rows="4"
-          placeholder="Rad etish sababini kiriting (kamida 5 ta belgi)..."
+          :placeholder="$t('reports.rejectPlaceholder')"
           class="w-full rounded-xl border border-slate-200 p-4 text-slate-700 placeholder-slate-400 focus:border-rose-500 focus:outline-none"
         ></textarea>
         <div class="flex justify-end gap-3 mt-4">
@@ -411,14 +411,14 @@
             @click="showRejectModal = false"
             class="px-4 py-2 rounded-xl text-slate-600 hover:bg-slate-100"
           >
-            Bekor qilish
+            {{ $t('common.cancel') }}
           </button>
           <button 
             @click="confirmReject"
             :disabled="rejectReason.length < 5"
             class="px-4 py-2 rounded-xl bg-rose-500 text-white font-medium hover:bg-rose-600 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Rad etish
+            {{ $t('reports.rejectConfirm') }}
           </button>
         </div>
       </div>

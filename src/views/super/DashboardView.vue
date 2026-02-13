@@ -4,7 +4,7 @@
     <div v-if="loading" class="flex items-center justify-center py-20">
       <div class="text-center">
         <RefreshCw class="w-12 h-12 text-amber-500 animate-spin mx-auto mb-4" />
-        <p class="text-slate-600">Ma'lumotlar yuklanmoqda...</p>
+        <p class="text-slate-600">{{ $t('dashboard.loadingData') }}</p>
       </div>
     </div>
 
@@ -13,11 +13,11 @@
       <div class="flex items-center gap-3">
         <AlertCircle class="w-6 h-6 text-rose-500" />
         <div>
-          <h3 class="font-semibold text-rose-700">Xatolik yuz berdi</h3>
+          <h3 class="font-semibold text-rose-700">{{ $t('dashboard.errorOccurred') }}</h3>
           <p class="text-rose-600 text-sm mt-1">{{ error }}</p>
         </div>
         <button @click="refresh" class="ml-auto px-4 py-2 bg-rose-500 text-white rounded-lg hover:bg-rose-600 transition-colors">
-          Qayta urinish
+          {{ $t('dashboard.retryBtn') }}
         </button>
       </div>
     </div>
@@ -30,25 +30,25 @@
           <div class="min-w-0">
             <h1 class="text-xl sm:text-2xl font-bold flex items-center gap-2">
               <Crown class="w-6 h-6 sm:w-7 sm:h-7" />
-              Super Admin Panel
+              {{ $t('dashboard.superAdminPanel') }}
             </h1>
-            <p class="text-amber-100 mt-1 text-sm sm:text-base">Tizimni to'liq boshqarish va monitoring</p>
+            <p class="text-amber-100 mt-1 text-sm sm:text-base">{{ $t('dashboard.fullMonitoring') }}</p>
           </div>
           <div class="flex items-center gap-3">
             <div class="text-right text-sm">
-              <p class="text-amber-100">Server holati</p>
+              <p class="text-amber-100">{{ $t('dashboard.serverStatus') }}</p>
               <p class="font-bold text-lg">
                 <span v-if="healthStatus === 'healthy'" class="flex items-center gap-1">
                   <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse inline-block"></span>
-                  Ishlayapti
+                  {{ $t('dashboard.working') }}
                 </span>
                 <span v-else class="flex items-center gap-1">
                   <span class="w-2.5 h-2.5 rounded-full bg-red-400 inline-block"></span>
-                  Muammo
+                  {{ $t('dashboard.problemStatus') }}
                 </span>
               </p>
             </div>
-            <button @click="refresh" class="w-10 h-10 bg-white/20 backdrop-blur rounded-xl flex items-center justify-center hover:bg-white/30 transition-colors" title="Yangilash">
+            <button @click="refresh" class="w-10 h-10 bg-white/20 backdrop-blur rounded-xl flex items-center justify-center hover:bg-white/30 transition-colors" :title="$t('common.refresh')">
               <RefreshCw class="w-5 h-5" :class="{ 'animate-spin': refreshing }" />
             </button>
           </div>
@@ -62,7 +62,7 @@
           <div class="flex items-center justify-between">
             <div>
               <p class="text-xl sm:text-3xl font-bold text-slate-800">{{ formatNumber(stats.totalUsers) }}</p>
-              <p class="text-xs sm:text-sm text-slate-500 mt-1">Jami foydalanuvchilar</p>
+              <p class="text-xs sm:text-sm text-slate-500 mt-1">{{ $t('dashboard.totalUsers') }}</p>
             </div>
             <div class="w-10 h-10 sm:w-12 sm:h-12 bg-blue-100 rounded-xl flex items-center justify-center">
               <UsersRound class="w-5 h-5 sm:w-6 sm:h-6 text-blue-600" />
@@ -71,7 +71,7 @@
           <div class="mt-2 sm:mt-3 flex items-center gap-1 text-xs">
             <TrendingUp v-if="stats.newUsersWeek > 0" class="w-3.5 h-3.5 text-emerald-500" />
             <span class="text-emerald-600 font-medium">+{{ stats.newUsersWeek }}</span>
-            <span class="text-slate-400">bu hafta</span>
+            <span class="text-slate-400">{{ $t('dashboard.thisWeekNew') }}</span>
           </div>
         </div>
 
@@ -80,14 +80,14 @@
           <div class="flex items-center justify-between">
             <div>
               <p class="text-xl sm:text-3xl font-bold text-violet-600">{{ formatNumber(stats.totalStudents) }}</p>
-              <p class="text-xs sm:text-sm text-slate-500 mt-1">Talabalar</p>
+              <p class="text-xs sm:text-sm text-slate-500 mt-1">{{ $t('dashboard.students') }}</p>
             </div>
             <div class="w-10 h-10 sm:w-12 sm:h-12 bg-violet-100 rounded-xl flex items-center justify-center">
               <GraduationCap class="w-5 h-5 sm:w-6 sm:h-6 text-violet-600" />
             </div>
           </div>
           <div class="mt-2 sm:mt-3 flex items-center gap-1 text-xs">
-            <span class="text-slate-500">Faol:</span>
+            <span class="text-slate-500">{{ $t('dashboard.activeLabel') }}:</span>
             <span class="text-violet-600 font-medium">{{ formatNumber(stats.activeStudents) }}</span>
           </div>
         </div>
@@ -97,14 +97,14 @@
           <div class="flex items-center justify-between">
             <div>
               <p class="text-xl sm:text-3xl font-bold text-emerald-600">{{ formatNumber(stats.totalGroups) }}</p>
-              <p class="text-xs sm:text-sm text-slate-500 mt-1">Guruhlar</p>
+              <p class="text-xs sm:text-sm text-slate-500 mt-1">{{ $t('dashboard.groups') }}</p>
             </div>
             <div class="w-12 h-12 bg-emerald-100 rounded-xl flex items-center justify-center">
               <Layers class="w-6 h-6 text-emerald-600" />
             </div>
           </div>
           <div class="mt-3 flex items-center gap-1 text-xs">
-            <span class="text-slate-500">Faol:</span>
+            <span class="text-slate-500">{{ $t('dashboard.activeLabel') }}:</span>
             <span class="text-emerald-600 font-medium">{{ formatNumber(stats.activeGroups) }}</span>
           </div>
         </div>
@@ -114,15 +114,15 @@
           <div class="flex items-center justify-between">
             <div>
               <p class="text-3xl font-bold text-amber-600">{{ todayAttendance.rate }}%</p>
-              <p class="text-sm text-slate-500 mt-1">Bugungi davomat</p>
+              <p class="text-sm text-slate-500 mt-1">{{ $t('dashboard.todayAttendance') }}</p>
             </div>
             <div class="w-12 h-12 bg-amber-100 rounded-xl flex items-center justify-center">
               <CalendarCheck class="w-6 h-6 text-amber-600" />
             </div>
           </div>
           <div class="mt-3 flex items-center gap-1 text-xs">
-            <span class="text-slate-500">Jami:</span>
-            <span class="text-amber-600 font-medium">{{ todayAttendance.total }} ta yozuv</span>
+            <span class="text-slate-500">{{ $t('dashboard.totalLabel') }}:</span>
+            <span class="text-amber-600 font-medium">{{ todayAttendance.total }} {{ $t('dashboard.recordsLabel') }}</span>
           </div>
         </div>
       </div>
@@ -133,28 +133,28 @@
           <div class="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center mx-auto mb-2 group-hover:scale-110 transition-transform">
             <Users class="w-6 h-6 text-blue-600" />
           </div>
-          <h3 class="font-semibold text-slate-800 text-sm">Foydalanuvchilar</h3>
+          <h3 class="font-semibold text-slate-800 text-sm">{{ $t('dashboard.usersAction') }}</h3>
         </router-link>
 
         <router-link to="/super/admins" class="bg-white rounded-2xl border border-slate-200 p-4 hover:shadow-lg hover:border-amber-200 transition-all group text-center">
           <div class="w-12 h-12 bg-amber-100 rounded-xl flex items-center justify-center mx-auto mb-2 group-hover:scale-110 transition-transform">
             <ShieldCheck class="w-6 h-6 text-amber-600" />
           </div>
-          <h3 class="font-semibold text-slate-800 text-sm">Adminlar</h3>
+          <h3 class="font-semibold text-slate-800 text-sm">{{ $t('dashboard.adminsAction') }}</h3>
         </router-link>
 
         <router-link to="/super/settings" class="bg-white rounded-2xl border border-slate-200 p-4 hover:shadow-lg hover:border-violet-200 transition-all group text-center">
           <div class="w-12 h-12 bg-violet-100 rounded-xl flex items-center justify-center mx-auto mb-2 group-hover:scale-110 transition-transform">
             <Settings class="w-6 h-6 text-violet-600" />
           </div>
-          <h3 class="font-semibold text-slate-800 text-sm">Sozlamalar</h3>
+          <h3 class="font-semibold text-slate-800 text-sm">{{ $t('dashboard.settingsAction') }}</h3>
         </router-link>
 
         <router-link to="/super/logs" class="bg-white rounded-2xl border border-slate-200 p-4 hover:shadow-lg hover:border-emerald-200 transition-all group text-center">
           <div class="w-12 h-12 bg-emerald-100 rounded-xl flex items-center justify-center mx-auto mb-2 group-hover:scale-110 transition-transform">
             <ScrollText class="w-6 h-6 text-emerald-600" />
           </div>
-          <h3 class="font-semibold text-slate-800 text-sm">Loglar</h3>
+          <h3 class="font-semibold text-slate-800 text-sm">{{ $t('dashboard.logsAction') }}</h3>
         </router-link>
       </div>
 
@@ -164,7 +164,7 @@
         <div class="bg-white rounded-2xl border border-slate-200 p-6">
           <h2 class="text-lg font-semibold text-slate-800 mb-4 flex items-center gap-2">
             <PieChart class="w-5 h-5 text-slate-400" />
-            Rollar bo'yicha taqsimot
+            {{ $t('dashboard.roleDistribution') }}
           </h2>
           <div class="space-y-3">
             <div v-for="role in roleDistribution" :key="role.key" class="group">
@@ -193,7 +193,7 @@
         <div class="bg-white rounded-2xl border border-slate-200 p-6">
           <h2 class="text-lg font-semibold text-slate-800 mb-4 flex items-center gap-2">
             <CalendarCheck class="w-5 h-5 text-slate-400" />
-            Bugungi davomat tafsiloti
+            {{ $t('dashboard.todayAttendanceDetail') }}
           </h2>
           <div v-if="todayAttendance.total > 0" class="space-y-4">
             <!-- Attendance donut-like visual -->
@@ -202,25 +202,25 @@
                 <div class="w-20 h-20 rounded-full border-4 border-emerald-500 flex items-center justify-center bg-emerald-50">
                   <span class="text-xl font-bold text-emerald-600">{{ todayAttendance.present }}</span>
                 </div>
-                <p class="text-xs text-slate-500 mt-2">Keldi</p>
+                <p class="text-xs text-slate-500 mt-2">{{ $t('dashboard.presentLabel') }}</p>
               </div>
               <div class="text-center">
                 <div class="w-20 h-20 rounded-full border-4 border-rose-500 flex items-center justify-center bg-rose-50">
                   <span class="text-xl font-bold text-rose-600">{{ todayAttendance.absent }}</span>
                 </div>
-                <p class="text-xs text-slate-500 mt-2">Kelmadi</p>
+                <p class="text-xs text-slate-500 mt-2">{{ $t('dashboard.absentLabel') }}</p>
               </div>
               <div class="text-center">
                 <div class="w-20 h-20 rounded-full border-4 border-amber-500 flex items-center justify-center bg-amber-50">
                   <span class="text-xl font-bold text-amber-600">{{ todayAttendance.late }}</span>
                 </div>
-                <p class="text-xs text-slate-500 mt-2">Kechikdi</p>
+                <p class="text-xs text-slate-500 mt-2">{{ $t('dashboard.lateLabel') }}</p>
               </div>
             </div>
             <!-- Rate bar -->
             <div>
               <div class="flex items-center justify-between mb-1.5">
-                <span class="text-sm text-slate-600">Umumiy davomat darajasi</span>
+                <span class="text-sm text-slate-600">{{ $t('dashboard.overallRate') }}</span>
                 <span class="text-sm font-bold" :class="todayAttendance.rate >= 80 ? 'text-emerald-600' : todayAttendance.rate >= 60 ? 'text-amber-600' : 'text-rose-600'">{{ todayAttendance.rate }}%</span>
               </div>
               <div class="h-3 bg-slate-100 rounded-full overflow-hidden">
@@ -234,7 +234,7 @@
           </div>
           <div v-else class="flex flex-col items-center justify-center py-8 text-slate-400">
             <CalendarCheck class="w-12 h-12 mb-3" />
-            <p class="text-sm">Bugun hali davomat belgilanmagan</p>
+            <p class="text-sm">{{ $t('dashboard.noAttendanceYet') }}</p>
           </div>
         </div>
       </div>
@@ -245,29 +245,29 @@
         <div class="bg-white rounded-2xl border border-slate-200 p-6">
           <h2 class="text-lg font-semibold text-slate-800 mb-4 flex items-center gap-2">
             <BarChart3 class="w-5 h-5 text-slate-400" />
-            Oylik davomat statistikasi
+            {{ $t('dashboard.monthlyStats') }}
           </h2>
           <div class="grid grid-cols-2 gap-4 mb-4">
             <div class="bg-emerald-50 rounded-xl p-4 text-center">
               <p class="text-2xl font-bold text-emerald-600">{{ monthAttendance.present }}</p>
-              <p class="text-xs text-emerald-700 mt-1">Kelgan</p>
+              <p class="text-xs text-emerald-700 mt-1">{{ $t('dashboard.monthPresent') }}</p>
             </div>
             <div class="bg-rose-50 rounded-xl p-4 text-center">
               <p class="text-2xl font-bold text-rose-600">{{ monthAttendance.absent }}</p>
-              <p class="text-xs text-rose-700 mt-1">Kelmagan</p>
+              <p class="text-xs text-rose-700 mt-1">{{ $t('dashboard.monthAbsent') }}</p>
             </div>
             <div class="bg-amber-50 rounded-xl p-4 text-center">
               <p class="text-2xl font-bold text-amber-600">{{ monthAttendance.late }}</p>
-              <p class="text-xs text-amber-700 mt-1">Kechikkan</p>
+              <p class="text-xs text-amber-700 mt-1">{{ $t('dashboard.monthLate') }}</p>
             </div>
             <div class="bg-blue-50 rounded-xl p-4 text-center">
               <p class="text-2xl font-bold text-blue-600">{{ monthAttendance.total }}</p>
-              <p class="text-xs text-blue-700 mt-1">Jami yozuvlar</p>
+              <p class="text-xs text-blue-700 mt-1">{{ $t('dashboard.monthTotal') }}</p>
             </div>
           </div>
           <div>
             <div class="flex items-center justify-between mb-1.5">
-              <span class="text-sm text-slate-600">Oylik davomat darajasi</span>
+                <span class="text-sm text-slate-600">{{ $t('dashboard.monthlyRate') }}</span>
               <span class="text-sm font-bold" :class="monthAttendance.rate >= 80 ? 'text-emerald-600' : monthAttendance.rate >= 60 ? 'text-amber-600' : 'text-rose-600'">{{ monthAttendance.rate }}%</span>
             </div>
             <div class="h-3 bg-slate-100 rounded-full overflow-hidden">
@@ -284,7 +284,7 @@
         <div class="bg-white rounded-2xl border border-slate-200 p-6">
           <h2 class="text-lg font-semibold text-slate-800 mb-4 flex items-center gap-2">
             <TrendingUp class="w-5 h-5 text-slate-400" />
-            Haftalik davomat trendi
+            {{ $t('dashboard.weeklyTrend') }}
           </h2>
           <div v-if="attendanceTrend.length > 0" class="space-y-2">
             <div v-for="day in attendanceTrend" :key="day.date" class="flex items-center gap-3">
@@ -310,14 +310,14 @@
             </div>
             <!-- Legend -->
             <div class="flex items-center justify-center gap-4 pt-3 border-t border-slate-100 mt-3">
-              <div class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-emerald-500"></span><span class="text-xs text-slate-500">Keldi</span></div>
-              <div class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-amber-500"></span><span class="text-xs text-slate-500">Kechikdi</span></div>
-              <div class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-rose-500"></span><span class="text-xs text-slate-500">Kelmadi</span></div>
+              <div class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-emerald-500"></span><span class="text-xs text-slate-500">{{ $t('dashboard.legendPresent') }}</span></div>
+              <div class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-amber-500"></span><span class="text-xs text-slate-500">{{ $t('dashboard.legendLate') }}</span></div>
+              <div class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-rose-500"></span><span class="text-xs text-slate-500">{{ $t('dashboard.legendAbsent') }}</span></div>
             </div>
           </div>
           <div v-else class="flex flex-col items-center justify-center py-8 text-slate-400">
             <TrendingUp class="w-12 h-12 mb-3" />
-            <p class="text-sm">Haftalik ma'lumot mavjud emas</p>
+            <p class="text-sm">{{ $t('dashboard.noWeeklyData') }}</p>
           </div>
         </div>
       </div>
@@ -328,41 +328,41 @@
         <div class="bg-white rounded-2xl border border-slate-200 p-6">
           <h2 class="text-lg font-semibold text-slate-800 mb-4 flex items-center gap-2">
             <Database class="w-5 h-5 text-slate-400" />
-            Ma'lumotlar bazasi
+            {{ $t('dashboard.databaseStats') }}
           </h2>
           <div class="space-y-3">
             <div class="flex items-center justify-between p-3 bg-slate-50 rounded-xl">
               <div class="flex items-center gap-2">
                 <UsersRound class="w-4 h-4 text-blue-500" />
-                <span class="text-sm text-slate-700">Foydalanuvchilar</span>
+                <span class="text-sm text-slate-700">{{ $t('dashboard.dbUsers') }}</span>
               </div>
               <span class="font-semibold text-sm text-slate-800">{{ formatNumber(stats.totalUsers) }}</span>
             </div>
             <div class="flex items-center justify-between p-3 bg-slate-50 rounded-xl">
               <div class="flex items-center gap-2">
                 <GraduationCap class="w-4 h-4 text-violet-500" />
-                <span class="text-sm text-slate-700">Talabalar</span>
+                <span class="text-sm text-slate-700">{{ $t('dashboard.dbStudents') }}</span>
               </div>
               <span class="font-semibold text-sm text-slate-800">{{ formatNumber(stats.totalStudents) }}</span>
             </div>
             <div class="flex items-center justify-between p-3 bg-slate-50 rounded-xl">
               <div class="flex items-center gap-2">
                 <Layers class="w-4 h-4 text-emerald-500" />
-                <span class="text-sm text-slate-700">Guruhlar</span>
+                <span class="text-sm text-slate-700">{{ $t('dashboard.dbGroups') }}</span>
               </div>
               <span class="font-semibold text-sm text-slate-800">{{ formatNumber(stats.totalGroups) }}</span>
             </div>
             <div class="flex items-center justify-between p-3 bg-slate-50 rounded-xl">
               <div class="flex items-center gap-2">
                 <ClipboardList class="w-4 h-4 text-amber-500" />
-                <span class="text-sm text-slate-700">Davomat yozuvlari</span>
+                <span class="text-sm text-slate-700">{{ $t('dashboard.dbAttendance') }}</span>
               </div>
               <span class="font-semibold text-sm text-slate-800">{{ formatNumber(stats.attendanceRecords) }}</span>
             </div>
             <div class="flex items-center justify-between p-3 bg-slate-50 rounded-xl">
               <div class="flex items-center gap-2">
                 <Bell class="w-4 h-4 text-indigo-500" />
-                <span class="text-sm text-slate-700">Bildirishnomalar</span>
+                <span class="text-sm text-slate-700">{{ $t('dashboard.dbNotifications') }}</span>
               </div>
               <span class="font-semibold text-sm text-slate-800">{{ formatNumber(stats.notificationsCount) }}</span>
             </div>
@@ -373,38 +373,38 @@
         <div class="bg-white rounded-2xl border border-slate-200 p-6">
           <h2 class="text-lg font-semibold text-slate-800 mb-4 flex items-center gap-2">
             <FileBarChart class="w-5 h-5 text-slate-400" />
-            Hisobotlar
+            {{ $t('dashboard.reportsSection') }}
           </h2>
           <div class="text-center py-2 mb-4">
             <p class="text-4xl font-bold text-slate-800">{{ reports.total }}</p>
-            <p class="text-sm text-slate-500 mt-1">Jami hisobotlar</p>
+            <p class="text-sm text-slate-500 mt-1">{{ $t('dashboard.totalReports') }}</p>
           </div>
           <div class="space-y-3">
             <div class="flex items-center justify-between p-3 bg-amber-50 rounded-xl">
               <div class="flex items-center gap-2">
                 <Clock class="w-4 h-4 text-amber-600" />
-                <span class="text-sm text-amber-800">Kutilmoqda</span>
+                <span class="text-sm text-amber-800">{{ $t('dashboard.pendingReports') }}</span>
               </div>
               <span class="font-bold text-amber-600">{{ reports.pending }}</span>
             </div>
             <div class="flex items-center justify-between p-3 bg-emerald-50 rounded-xl">
               <div class="flex items-center gap-2">
                 <CheckCircle class="w-4 h-4 text-emerald-600" />
-                <span class="text-sm text-emerald-800">Tasdiqlangan</span>
+                <span class="text-sm text-emerald-800">{{ $t('dashboard.approvedReports') }}</span>
               </div>
               <span class="font-bold text-emerald-600">{{ reports.approved }}</span>
             </div>
             <div class="flex items-center justify-between p-3 bg-rose-50 rounded-xl">
               <div class="flex items-center gap-2">
                 <XCircle class="w-4 h-4 text-rose-600" />
-                <span class="text-sm text-rose-800">Rad etilgan</span>
+                <span class="text-sm text-rose-800">{{ $t('dashboard.rejectedReports') }}</span>
               </div>
               <span class="font-bold text-rose-600">{{ reports.rejected }}</span>
             </div>
           </div>
           <div class="mt-4 pt-3 border-t border-slate-100">
             <div class="flex items-center justify-between">
-              <span class="text-sm text-slate-500">Tasdiqlash darajasi</span>
+              <span class="text-sm text-slate-500">{{ $t('dashboard.approvalRate') }}</span>
               <span class="text-sm font-bold text-emerald-600">{{ reports.approvalRate }}%</span>
             </div>
           </div>
@@ -414,7 +414,7 @@
         <div class="bg-white rounded-2xl border border-slate-200 p-6">
           <h2 class="text-lg font-semibold text-slate-800 mb-4 flex items-center gap-2">
             <Activity class="w-5 h-5 text-slate-400" />
-            Tizim holati
+            {{ $t('dashboard.systemStatus') }}
           </h2>
           <div class="space-y-4">
             <!-- API Server -->
@@ -422,11 +422,11 @@
               <div class="flex items-center justify-between mb-1.5">
                 <div class="flex items-center gap-2">
                   <Server class="w-4 h-4 text-slate-500" />
-                  <span class="text-sm text-slate-600">API Server</span>
+                  <span class="text-sm text-slate-600">{{ $t('dashboard.apiServer') }}</span>
                 </div>
                 <span class="text-xs font-medium flex items-center gap-1" :class="healthStatus === 'healthy' ? 'text-emerald-600' : 'text-rose-600'">
                   <span class="w-2 h-2 rounded-full animate-pulse" :class="healthStatus === 'healthy' ? 'bg-emerald-500' : 'bg-rose-500'"></span>
-                  {{ healthStatus === 'healthy' ? 'Ishlayapti' : 'Xatolik' }}
+                  {{ healthStatus === 'healthy' ? $t('dashboard.working') : $t('dashboard.errorStatus') }}
                 </span>
               </div>
               <div class="h-2 bg-slate-100 rounded-full overflow-hidden">
@@ -438,11 +438,11 @@
               <div class="flex items-center justify-between mb-1.5">
                 <div class="flex items-center gap-2">
                   <Database class="w-4 h-4 text-slate-500" />
-                  <span class="text-sm text-slate-600">Ma'lumotlar bazasi</span>
+                  <span class="text-sm text-slate-600">{{ $t('dashboard.database') }}</span>
                 </div>
                 <span class="text-xs font-medium flex items-center gap-1" :class="stats.totalUsers > 0 ? 'text-emerald-600' : 'text-rose-600'">
                   <span class="w-2 h-2 rounded-full animate-pulse" :class="stats.totalUsers > 0 ? 'bg-emerald-500' : 'bg-rose-500'"></span>
-                  {{ stats.totalUsers > 0 ? 'Ulangan' : 'Uzilgan' }}
+                  {{ stats.totalUsers > 0 ? $t('dashboard.connected') : $t('dashboard.disconnected') }}
                 </span>
               </div>
               <div class="h-2 bg-slate-100 rounded-full overflow-hidden">
@@ -452,15 +452,15 @@
             <!-- App info -->
             <div class="pt-3 mt-2 border-t border-slate-100 space-y-2">
               <div class="flex items-center justify-between">
-                <span class="text-xs text-slate-500">Ilova</span>
+                <span class="text-xs text-slate-500">{{ $t('dashboard.appLabel') }}</span>
                 <span class="text-xs font-medium text-slate-700">{{ healthInfo.app }}</span>
               </div>
               <div class="flex items-center justify-between">
-                <span class="text-xs text-slate-500">Versiya</span>
+                <span class="text-xs text-slate-500">{{ $t('dashboard.versionLabel') }}</span>
                 <span class="text-xs font-medium text-slate-700">{{ healthInfo.version }}</span>
               </div>
               <div class="flex items-center justify-between">
-                <span class="text-xs text-slate-500">Muhit</span>
+                <span class="text-xs text-slate-500">{{ $t('dashboard.environmentLabel') }}</span>
                 <span class="text-xs font-medium px-2 py-0.5 rounded-full" :class="healthInfo.environment === 'production' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'">{{ healthInfo.environment }}</span>
               </div>
             </div>
@@ -475,7 +475,7 @@
           <div class="p-6 border-b border-slate-100">
             <h2 class="text-lg font-semibold text-slate-800 flex items-center gap-2">
               <Award class="w-5 h-5 text-amber-500" />
-              Eng katta guruhlar
+              {{ $t('dashboard.topGroups') }}
             </h2>
           </div>
           <div v-if="topGroups.length > 0" class="divide-y divide-slate-100">
@@ -495,7 +495,7 @@
           </div>
           <div v-else class="p-8 text-center text-slate-400">
             <Layers class="w-10 h-10 mx-auto mb-3" />
-            <p class="text-sm">Guruhlar mavjud emas</p>
+            <p class="text-sm">{{ $t('dashboard.noGroups') }}</p>
           </div>
         </div>
 
@@ -504,10 +504,10 @@
           <div class="p-6 border-b border-slate-100 flex items-center justify-between">
             <h2 class="text-lg font-semibold text-slate-800 flex items-center gap-2">
               <UserPlus class="w-5 h-5 text-emerald-500" />
-              Yangi foydalanuvchilar
+              {{ $t('dashboard.newUsers') }}
             </h2>
             <router-link to="/super/users" class="text-xs text-amber-600 hover:text-amber-700 font-medium">
-              Barchasini ko'rish →
+              {{ $t('dashboard.viewAllLink') }}
             </router-link>
           </div>
           <div v-if="recentUsers.length > 0" class="divide-y divide-slate-100">
@@ -527,7 +527,7 @@
           </div>
           <div v-else class="p-8 text-center text-slate-400">
             <Users class="w-10 h-10 mx-auto mb-3" />
-            <p class="text-sm">Foydalanuvchilar mavjud emas</p>
+            <p class="text-sm">{{ $t('dashboard.noUsers') }}</p>
           </div>
         </div>
       </div>
@@ -537,7 +537,7 @@
         <div class="p-6 border-b border-slate-100 flex items-center justify-between">
           <h2 class="text-lg font-semibold text-slate-800 flex items-center gap-2">
             <ScrollText class="w-5 h-5 text-slate-400" />
-            So'nggi faoliyatlar
+            {{ $t('dashboard.recentActivity') }}
           </h2>
           <router-link to="/super/logs" class="text-xs text-amber-600 hover:text-amber-700 font-medium">
             Barchasini ko'rish →
@@ -545,7 +545,7 @@
         </div>
         <div v-if="recentLogs.length === 0" class="p-8 text-center text-slate-400">
           <Clock class="w-10 h-10 mx-auto mb-3" />
-          <p class="text-sm">Hozircha faoliyat mavjud emas</p>
+          <p class="text-sm">{{ $t('dashboard.noActivity') }}</p>
         </div>
         <div v-else class="divide-y divide-slate-100">
           <div v-for="log in recentLogs" :key="log.id" class="p-4 flex items-center gap-4">

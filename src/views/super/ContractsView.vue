@@ -3,9 +3,9 @@
     <!-- Header -->
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
       <div>
-        <h1 class="text-xl sm:text-2xl font-bold text-slate-800">Kontrakt ma'lumotlari</h1>
+        <h1 class="text-xl sm:text-2xl font-bold text-slate-800">{{ $t('contracts.title') }}</h1>
         <p class="text-sm text-slate-500">
-          Jami: {{ totalContracts }} ta kontrakt
+          {{ $t('contracts.totalContracts') }}: {{ totalContracts }}
           <span v-if="selectedYear"> · {{ selectedYear }} o'quv yili</span>
         </p>
       </div>
@@ -15,7 +15,7 @@
           class="px-4 py-2.5 bg-emerald-500 text-white rounded-xl font-medium hover:bg-emerald-600 transition-colors flex items-center gap-2"
         >
           <Upload class="w-5 h-5" />
-          Excel import
+          {{ $t('contracts.excelImport') }}
         </button>
         <button 
           @click="exportToExcel"
@@ -23,7 +23,7 @@
           class="px-4 py-2.5 bg-blue-500 text-white rounded-xl font-medium hover:bg-blue-600 transition-colors flex items-center gap-2 disabled:opacity-50"
         >
           <Download class="w-5 h-5" />
-          {{ exporting ? 'Yuklanmoqda...' : 'Excel export' }}
+          {{ exporting ? $t('contracts.exporting') : $t('contracts.excelExport') }}
         </button>
       </div>
     </div>
@@ -31,27 +31,27 @@
     <!-- Statistics Cards -->
     <div v-if="stats" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
       <div class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-        <p class="text-xs text-slate-500 mb-1">Jami kontraktlar</p>
+        <p class="text-xs text-slate-500 mb-1">{{ $t('contracts.totalContracts') }}</p>
         <p class="text-lg font-bold text-slate-800">{{ formatNumber(stats.total_contracts) }}</p>
       </div>
       <div class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-        <p class="text-xs text-slate-500 mb-1">Kontrakt summasi</p>
+        <p class="text-xs text-slate-500 mb-1">{{ $t('contracts.contractAmount') }}</p>
         <p class="text-lg font-bold text-blue-600">{{ formatMoney(stats.total_contract_amount) }}</p>
       </div>
       <div class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-        <p class="text-xs text-slate-500 mb-1">To'langan</p>
+        <p class="text-xs text-slate-500 mb-1">{{ $t('contracts.paid') }}</p>
         <p class="text-lg font-bold text-emerald-600">{{ formatMoney(stats.total_paid) }}</p>
       </div>
       <div class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-        <p class="text-xs text-slate-500 mb-1">Qarzdorlik</p>
+        <p class="text-xs text-slate-500 mb-1">{{ $t('contracts.debt') }}</p>
         <p class="text-lg font-bold text-red-600">{{ formatMoney(Math.abs(stats.total_debt)) }}</p>
       </div>
       <div class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-        <p class="text-xs text-slate-500 mb-1">Grant summasi</p>
+        <p class="text-xs text-slate-500 mb-1">{{ $t('contracts.grantAmount') }}</p>
         <p class="text-lg font-bold text-purple-600">{{ formatMoney(stats.total_grant_amount) }}</p>
       </div>
       <div class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-        <p class="text-xs text-slate-500 mb-1">To'lov %</p>
+        <p class="text-xs text-slate-500 mb-1">{{ $t('contracts.paymentPercent') }}</p>
         <p class="text-lg font-bold text-amber-600">{{ stats.payment_percentage?.toFixed(1) }}%</p>
       </div>
     </div>
@@ -59,19 +59,19 @@
     <!-- Additional stats row -->
     <div v-if="stats" class="grid grid-cols-2 sm:grid-cols-4 gap-3">
       <div class="rounded-xl border border-emerald-100 bg-emerald-50 p-3">
-        <p class="text-xs text-emerald-600 mb-1">To'liq to'langan</p>
+        <p class="text-xs text-emerald-600 mb-1">{{ $t('contracts.fullyPaid') }}</p>
         <p class="text-lg font-bold text-emerald-700">{{ stats.fully_paid_count }}</p>
       </div>
       <div class="rounded-xl border border-red-100 bg-red-50 p-3">
-        <p class="text-xs text-red-600 mb-1">Qarzdorlar</p>
+        <p class="text-xs text-red-600 mb-1">{{ $t('contracts.debtors') }}</p>
         <p class="text-lg font-bold text-red-700">{{ stats.with_debt_count }}</p>
       </div>
       <div class="rounded-xl border border-blue-100 bg-blue-50 p-3">
-        <p class="text-xs text-blue-600 mb-1">Kunduzgi</p>
+        <p class="text-xs text-blue-600 mb-1">{{ $t('contracts.daytime') }}</p>
         <p class="text-lg font-bold text-blue-700">{{ stats.kunduzgi_count }}</p>
       </div>
       <div class="rounded-xl border border-orange-100 bg-orange-50 p-3">
-        <p class="text-xs text-orange-600 mb-1">O'qimoqda</p>
+        <p class="text-xs text-orange-600 mb-1">{{ $t('contracts.studying') }}</p>
         <p class="text-lg font-bold text-orange-700">{{ stats.studying_count }}</p>
       </div>
     </div>
@@ -82,7 +82,7 @@
         <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-100">
           <Filter :size="20" class="text-amber-600" />
         </div>
-        <h2 class="font-semibold text-slate-800">Filter va qidiruv</h2>
+        <h2 class="font-semibold text-slate-800">{{ $t('contracts.filterAndSearch') }}</h2>
       </div>
       
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
@@ -92,7 +92,7 @@
           <input 
             v-model="searchQuery"
             type="text"
-            placeholder="Ism, JSHSHIR, passport..."
+            :placeholder="$t('contracts.searchPlaceholder')"
             class="w-full rounded-xl border border-slate-200 py-2.5 pl-10 pr-4 text-sm focus:border-amber-400 focus:outline-none focus:ring-2 focus:ring-amber-400/20"
             @input="onSearchInput"
           />
@@ -103,7 +103,7 @@
           class="rounded-xl border border-slate-200 px-3 py-2.5 text-sm focus:border-amber-400 focus:outline-none"
           @change="loadData"
         >
-          <option value="">Barcha yillar</option>
+          <option value="">{{ $t('contracts.allYears') }}</option>
           <option v-for="year in filterOptions.academic_years" :key="year" :value="year">
             {{ year }}
           </option>
@@ -114,7 +114,7 @@
           class="rounded-xl border border-slate-200 px-3 py-2.5 text-sm focus:border-amber-400 focus:outline-none"
           @change="loadData"
         >
-          <option value="">Barcha ta'lim shakli</option>
+          <option value="">{{ $t('contracts.allEducationForms') }}</option>
           <option v-for="form in filterOptions.education_forms" :key="form" :value="form">
             {{ form }}
           </option>
@@ -125,9 +125,9 @@
           class="rounded-xl border border-slate-200 px-3 py-2.5 text-sm focus:border-amber-400 focus:outline-none"
           @change="loadData"
         >
-          <option value="">Barchasi</option>
-          <option value="true">Qarzdorlar</option>
-          <option value="false">Qarzsizlar</option>
+          <option value="">{{ $t('contracts.allItems') }}</option>
+          <option value="true">{{ $t('contracts.debtors') }}</option>
+          <option value="false">{{ $t('contracts.noDebt') }}</option>
         </select>
       </div>
       
@@ -138,7 +138,7 @@
           class="rounded-xl border border-slate-200 px-3 py-2.5 text-sm focus:border-amber-400 focus:outline-none"
           @change="loadData"
         >
-          <option value="">Barcha guruhlar</option>
+          <option value="">{{ $t('contracts.allGroups') }}</option>
           <option v-for="g in groups" :key="g.id" :value="g.id">
             {{ g.name }}
           </option>
@@ -148,7 +148,7 @@
           class="rounded-xl border border-slate-200 px-3 py-2.5 text-sm focus:border-amber-400 focus:outline-none"
           @change="loadData"
         >
-          <option value="">Barcha holatlar</option>
+          <option value="">{{ $t('contracts.allStatuses') }}</option>
           <option v-for="s in filterOptions.student_statuses" :key="s" :value="s">
             {{ s }}
           </option>
@@ -158,10 +158,10 @@
             @click="resetFilters"
             class="px-3 py-2 text-sm text-slate-600 hover:text-slate-800 rounded-lg hover:bg-slate-100 transition-colors"
           >
-            Tozalash
+            {{ $t('contracts.clearFilters') }}
           </button>
           <span class="text-sm text-slate-400">
-            {{ totalContracts }} ta natija
+            {{ $t('contracts.resultsCount', { count: totalContracts }) }}
           </span>
         </div>
       </div>
@@ -170,14 +170,14 @@
     <!-- Loading -->
     <div v-if="loading && !contracts.length" class="flex items-center justify-center py-16">
       <Loader2 class="w-8 h-8 text-amber-500 animate-spin" />
-      <span class="ml-3 text-slate-600">Yuklanmoqda...</span>
+      <span class="ml-3 text-slate-600">{{ $t('common.loading') }}</span>
     </div>
 
     <!-- Table -->
     <div v-else class="rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden">
       <div class="border-b border-slate-100 bg-slate-50 p-4 flex items-center justify-between">
         <h3 class="font-semibold text-slate-700">
-          Kontrakt ma'lumotlari
+          {{ $t('contracts.contractInfo') }}
         </h3>
         <div v-if="loading" class="flex items-center gap-2 text-sm text-slate-500">
           <Loader2 class="w-4 h-4 animate-spin" />
@@ -186,8 +186,8 @@
 
       <div v-if="contracts.length === 0 && !loading" class="p-12 text-center">
         <FileSpreadsheet :size="48" class="mx-auto mb-4 text-slate-300" />
-        <p class="text-slate-500">Kontrakt ma'lumotlari topilmadi</p>
-        <p class="text-sm text-slate-400 mt-1">Excel fayldan import qiling</p>
+        <p class="text-slate-500">{{ $t('contracts.noContractsFound') }}</p>
+        <p class="text-sm text-slate-400 mt-1">{{ $t('contracts.importFromExcel') }}</p>
       </div>
 
       <div v-else class="overflow-x-auto">
@@ -195,17 +195,17 @@
           <thead class="bg-slate-50 border-b border-slate-200">
             <tr>
               <th class="text-left px-3 py-2.5 text-xs font-semibold text-slate-500 uppercase whitespace-nowrap">#</th>
-              <th class="text-left px-3 py-2.5 text-xs font-semibold text-slate-500 uppercase whitespace-nowrap">F.I.O</th>
-              <th class="text-left px-3 py-2.5 text-xs font-semibold text-slate-500 uppercase whitespace-nowrap">JSHSHIR</th>
-              <th class="text-left px-3 py-2.5 text-xs font-semibold text-slate-500 uppercase whitespace-nowrap">Guruh</th>
-              <th class="text-left px-3 py-2.5 text-xs font-semibold text-slate-500 uppercase whitespace-nowrap">Kurs</th>
-              <th class="text-left px-3 py-2.5 text-xs font-semibold text-slate-500 uppercase whitespace-nowrap">Holat</th>
-              <th class="text-left px-3 py-2.5 text-xs font-semibold text-slate-500 uppercase whitespace-nowrap">Ta'lim shakli</th>
-              <th class="text-right px-3 py-2.5 text-xs font-semibold text-slate-500 uppercase whitespace-nowrap">Kontrakt</th>
-              <th class="text-right px-3 py-2.5 text-xs font-semibold text-slate-500 uppercase whitespace-nowrap">To'langan</th>
-              <th class="text-right px-3 py-2.5 text-xs font-semibold text-slate-500 uppercase whitespace-nowrap">Qarzdorlik</th>
-              <th class="text-right px-3 py-2.5 text-xs font-semibold text-slate-500 uppercase whitespace-nowrap">Grant</th>
-              <th class="text-center px-3 py-2.5 text-xs font-semibold text-slate-500 uppercase whitespace-nowrap">Amallar</th>
+              <th class="text-left px-3 py-2.5 text-xs font-semibold text-slate-500 uppercase whitespace-nowrap">{{ $t('contracts.fullName') }}</th>
+              <th class="text-left px-3 py-2.5 text-xs font-semibold text-slate-500 uppercase whitespace-nowrap">{{ $t('contracts.jshshir') }}</th>
+              <th class="text-left px-3 py-2.5 text-xs font-semibold text-slate-500 uppercase whitespace-nowrap">{{ $t('contracts.group') }}</th>
+              <th class="text-left px-3 py-2.5 text-xs font-semibold text-slate-500 uppercase whitespace-nowrap">{{ $t('contracts.course') }}</th>
+              <th class="text-left px-3 py-2.5 text-xs font-semibold text-slate-500 uppercase whitespace-nowrap">{{ $t('contracts.status') }}</th>
+              <th class="text-left px-3 py-2.5 text-xs font-semibold text-slate-500 uppercase whitespace-nowrap">{{ $t('contracts.educationForm') }}</th>
+              <th class="text-right px-3 py-2.5 text-xs font-semibold text-slate-500 uppercase whitespace-nowrap">{{ $t('contracts.contract') }}</th>
+              <th class="text-right px-3 py-2.5 text-xs font-semibold text-slate-500 uppercase whitespace-nowrap">{{ $t('contracts.paid') }}</th>
+              <th class="text-right px-3 py-2.5 text-xs font-semibold text-slate-500 uppercase whitespace-nowrap">{{ $t('contracts.debt') }}</th>
+              <th class="text-right px-3 py-2.5 text-xs font-semibold text-slate-500 uppercase whitespace-nowrap">{{ $t('contracts.grant') }}</th>
+              <th class="text-center px-3 py-2.5 text-xs font-semibold text-slate-500 uppercase whitespace-nowrap">{{ $t('contracts.actions') }}</th>
             </tr>
           </thead>
           <tbody>
@@ -254,21 +254,21 @@
                   <button 
                     @click="openEditModal(contract)"
                     class="p-1.5 text-slate-400 hover:text-blue-500 hover:bg-blue-50 rounded-lg transition-colors"
-                    title="Tahrirlash"
+                    :title="$t('contracts.editBtn')"
                   >
                     <Pencil class="w-4 h-4" />
                   </button>
                   <button 
                     @click="openDetailModal(contract)"
                     class="p-1.5 text-slate-400 hover:text-amber-500 hover:bg-amber-50 rounded-lg transition-colors"
-                    title="Batafsil"
+                    :title="$t('contracts.detailsBtn')"
                   >
                     <Eye class="w-4 h-4" />
                   </button>
                   <button 
                     @click="confirmDelete(contract)"
                     class="p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
-                    title="O'chirish"
+                    :title="$t('contracts.deleteBtn')"
                   >
                     <Trash2 class="w-4 h-4" />
                   </button>
@@ -320,14 +320,14 @@
         <div class="bg-emerald-50 px-6 py-4 border-b border-emerald-100">
           <h3 class="text-lg font-bold text-emerald-800 flex items-center gap-2">
             <Upload class="w-5 h-5" />
-            Excel import
+            {{ $t('contracts.excelImport') }}
           </h3>
-          <p class="text-sm text-emerald-600 mt-1">Kontrakt ma'lumotlarini Excel fayldan yuklash</p>
+          <p class="text-sm text-emerald-600 mt-1">{{ $t('contracts.importDesc') }}</p>
         </div>
         <div class="p-6 space-y-4">
           <!-- Academic Year -->
           <div>
-            <label class="block text-sm font-medium text-slate-700 mb-1">O'quv yili</label>
+            <label class="block text-sm font-medium text-slate-700 mb-1">{{ $t('contracts.academicYear') }}</label>
             <input 
               v-model="importYear" 
               type="text" 
@@ -338,11 +338,11 @@
           <!-- Update Existing -->
           <label class="flex items-center gap-3 cursor-pointer">
             <input v-model="importUpdateExisting" type="checkbox" class="w-4 h-4 rounded border-slate-300 text-emerald-500 focus:ring-emerald-400" />
-            <span class="text-sm text-slate-700">Mavjudlarni yangilash</span>
+            <span class="text-sm text-slate-700">{{ $t('contracts.updateExisting') }}</span>
           </label>
           <!-- File -->
           <div>
-            <label class="block text-sm font-medium text-slate-700 mb-1">Excel fayl (.xlsx)</label>
+            <label class="block text-sm font-medium text-slate-700 mb-1">{{ $t('contracts.excelFile') }}</label>
             <div 
               class="border-2 border-dashed rounded-xl p-6 text-center transition-colors"
               :class="importFile ? 'border-emerald-300 bg-emerald-50' : 'border-slate-200 hover:border-slate-300'"
@@ -368,8 +368,8 @@
               </div>
               <div v-else @click="$refs.fileInput.click()" class="cursor-pointer">
                 <Upload class="w-10 h-10 text-slate-300 mx-auto mb-2" />
-                <p class="text-sm text-slate-500">Faylni tanlang yoki shu yerga tashlang</p>
-                <p class="text-xs text-slate-400 mt-1">.xlsx format</p>
+                <p class="text-sm text-slate-500">{{ $t('contracts.selectOrDropFile') }}</p>
+                <p class="text-xs text-slate-400 mt-1">{{ $t('contracts.xlsxFormat') }}</p>
               </div>
             </div>
           </div>
@@ -377,23 +377,23 @@
           <!-- Import Result -->
           <div v-if="importResult" class="rounded-xl p-4" :class="importResult.success ? 'bg-emerald-50 border border-emerald-200' : 'bg-red-50 border border-red-200'">
             <p class="font-medium mb-2" :class="importResult.success ? 'text-emerald-800' : 'text-red-800'">
-              {{ importResult.success ? 'Import muvaffaqiyatli!' : 'Xatolik yuz berdi' }}
+              {{ importResult.success ? $t('contracts.importSuccess') : $t('contracts.importError') }}
             </p>
             <div class="text-sm space-y-1" :class="importResult.success ? 'text-emerald-700' : 'text-red-700'">
-              <p>Jami qatorlar: {{ importResult.total_rows }}</p>
-              <p>Yangi qo'shildi: {{ importResult.imported }}</p>
-              <p>Yangilandi: {{ importResult.updated }}</p>
-              <p v-if="importResult.skipped > 0">O'tkazib yuborildi: {{ importResult.skipped }}</p>
-              <p v-if="importResult.failed > 0" class="text-red-600">Xatolik: {{ importResult.failed }}</p>
+              <p>{{ $t('contracts.totalRows') }}: {{ importResult.total_rows }}</p>
+              <p>{{ $t('contracts.newAdded') }}: {{ importResult.imported }}</p>
+              <p>{{ $t('contracts.updated') }}: {{ importResult.updated }}</p>
+              <p v-if="importResult.skipped > 0">{{ $t('contracts.skipped') }}: {{ importResult.skipped }}</p>
+              <p v-if="importResult.failed > 0" class="text-red-600">{{ $t('contracts.errorCount') }}: {{ importResult.failed }}</p>
             </div>
             <div v-if="importResult.errors?.length" class="mt-2">
-              <p class="text-xs font-medium text-red-600 mb-1">Xatoliklar:</p>
+              <p class="text-xs font-medium text-red-600 mb-1">{{ $t('contracts.errors') }}:</p>
               <ul class="text-xs text-red-600 space-y-0.5 max-h-32 overflow-y-auto">
                 <li v-for="(err, i) in importResult.errors.slice(0, 10)" :key="i">• {{ err }}</li>
               </ul>
             </div>
             <div v-if="importResult.warnings?.length" class="mt-2">
-              <p class="text-xs font-medium text-amber-600 mb-1">Ogohlantirishlar:</p>
+              <p class="text-xs font-medium text-amber-600 mb-1">{{ $t('contracts.warnings') }}:</p>
               <ul class="text-xs text-amber-600 space-y-0.5 max-h-32 overflow-y-auto">
                 <li v-for="(w, i) in importResult.warnings.slice(0, 10)" :key="i">• {{ w }}</li>
               </ul>
@@ -405,7 +405,7 @@
             @click="showImportModal = false; importResult = null"
             class="px-4 py-2 text-sm text-slate-600 hover:text-slate-800 rounded-lg hover:bg-slate-200 transition-colors"
           >
-            Yopish
+            {{ $t('contracts.close') }}
           </button>
           <button 
             @click="doImport"
@@ -413,7 +413,7 @@
             class="px-5 py-2 text-sm font-medium bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 transition-colors"
           >
             <Loader2 v-if="importing" class="w-4 h-4 animate-spin" />
-            {{ importing ? 'Yuklanmoqda...' : 'Import qilish' }}
+            {{ importing ? $t('contracts.importing') : $t('contracts.importBtn') }}
           </button>
         </div>
       </div>
@@ -424,7 +424,7 @@
       <div class="bg-white rounded-2xl shadow-xl w-full max-w-2xl mx-4 overflow-hidden max-h-[90vh] overflow-y-auto">
         <div class="bg-amber-50 px-6 py-4 border-b border-amber-100 flex justify-between items-center">
           <div>
-            <h3 class="text-lg font-bold text-amber-800">Kontrakt tafsilotlari</h3>
+            <h3 class="text-lg font-bold text-amber-800">{{ $t('contracts.contractDetails') }}</h3>
             <p class="text-sm text-amber-600">{{ selectedContract.student_name }}</p>
           </div>
           <button @click="showDetailModal = false" class="p-1 text-slate-400 hover:text-slate-600">
@@ -434,37 +434,37 @@
         <div class="p-6 space-y-4">
           <div class="grid grid-cols-2 gap-4">
             <div>
-              <p class="text-xs text-slate-500 mb-1">F.I.O</p>
+              <p class="text-xs text-slate-500 mb-1">{{ $t('contracts.fullName') }}</p>
               <p class="font-medium text-slate-800">{{ selectedContract.student_name || '—' }}</p>
             </div>
             <div>
-              <p class="text-xs text-slate-500 mb-1">JSHSHIR</p>
+              <p class="text-xs text-slate-500 mb-1">{{ $t('contracts.jshshir') }}</p>
               <p class="font-mono text-sm text-slate-800">{{ selectedContract.student_jshshir || '—' }}</p>
             </div>
             <div>
-              <p class="text-xs text-slate-500 mb-1">Guruh</p>
+              <p class="text-xs text-slate-500 mb-1">{{ $t('contracts.group') }}</p>
               <p class="font-medium text-slate-800">{{ selectedContract.group_name || '—' }}</p>
             </div>
             <div>
-              <p class="text-xs text-slate-500 mb-1">O'quv yili</p>
+              <p class="text-xs text-slate-500 mb-1">{{ $t('contracts.academicYear') }}</p>
               <p class="font-medium text-slate-800">{{ selectedContract.academic_year }}</p>
             </div>
             <div>
-              <p class="text-xs text-slate-500 mb-1">Kurs</p>
+              <p class="text-xs text-slate-500 mb-1">{{ $t('contracts.course') }}</p>
               <p class="text-slate-800">{{ selectedContract.course || '—' }}</p>
             </div>
             <div>
-              <p class="text-xs text-slate-500 mb-1">Holat</p>
+              <p class="text-xs text-slate-500 mb-1">{{ $t('contracts.status') }}</p>
               <span class="px-2 py-0.5 rounded-lg text-xs font-medium" :class="getStatusClass(selectedContract.student_status)">
                 {{ selectedContract.student_status || '—' }}
               </span>
             </div>
             <div>
-              <p class="text-xs text-slate-500 mb-1">Yo'nalish</p>
+              <p class="text-xs text-slate-500 mb-1">{{ $t('contracts.direction') }}</p>
               <p class="text-slate-800">{{ selectedContract.direction || '—' }}</p>
             </div>
             <div>
-              <p class="text-xs text-slate-500 mb-1">Ta'lim shakli</p>
+              <p class="text-xs text-slate-500 mb-1">{{ $t('contracts.educationForm') }}</p>
               <p class="text-slate-800">{{ selectedContract.education_form || '—' }}</p>
             </div>
           </div>
@@ -473,45 +473,45 @@
           
           <div class="grid grid-cols-2 gap-4">
             <div>
-              <p class="text-xs text-slate-500 mb-1">Kontrakt summasi</p>
+              <p class="text-xs text-slate-500 mb-1">{{ $t('contracts.contractAmount') }}</p>
               <p class="text-lg font-bold text-slate-800">{{ formatMoney(selectedContract.contract_amount) }}</p>
             </div>
             <div>
-              <p class="text-xs text-slate-500 mb-1">To'langan summa</p>
+              <p class="text-xs text-slate-500 mb-1">{{ $t('contracts.totalPaid') }}</p>
               <p class="text-lg font-bold text-emerald-600">{{ formatMoney(selectedContract.total_paid) }}</p>
             </div>
             <div>
-              <p class="text-xs text-slate-500 mb-1">Qarzdorlik</p>
+              <p class="text-xs text-slate-500 mb-1">{{ $t('contracts.debt') }}</p>
               <p class="text-lg font-bold" :class="Number(selectedContract.debt_amount) < 0 ? 'text-red-600' : 'text-slate-600'">
                 {{ formatMoney(selectedContract.debt_amount) }}
               </p>
             </div>
             <div>
-              <p class="text-xs text-slate-500 mb-1">To'lov foizi</p>
+              <p class="text-xs text-slate-500 mb-1">{{ $t('contracts.paymentPercentage') }}</p>
               <p class="text-lg font-bold text-amber-600">{{ ((selectedContract.payment_percentage || 0) * 100).toFixed(1) }}%</p>
             </div>
             <div>
-              <p class="text-xs text-slate-500 mb-1">Grant (foizda)</p>
+              <p class="text-xs text-slate-500 mb-1">{{ $t('contracts.grantPercent') }}</p>
               <p class="text-slate-800">{{ selectedContract.grant_percentage ? (selectedContract.grant_percentage * 100).toFixed(1) + '%' : '—' }}</p>
             </div>
             <div>
-              <p class="text-xs text-slate-500 mb-1">Grant (summada)</p>
+              <p class="text-xs text-slate-500 mb-1">{{ $t('contracts.grantSum') }}</p>
               <p class="text-purple-600 font-medium">{{ formatMoney(selectedContract.grant_amount) }}</p>
             </div>
             <div>
-              <p class="text-xs text-slate-500 mb-1">Qaytarilgan summa</p>
+              <p class="text-xs text-slate-500 mb-1">{{ $t('contracts.refundAmount') }}</p>
               <p class="text-slate-800">{{ formatMoney(selectedContract.refund_amount) }}</p>
             </div>
             <div>
-              <p class="text-xs text-slate-500 mb-1">Qoldiq summa</p>
+              <p class="text-xs text-slate-500 mb-1">{{ $t('contracts.remainingAmount') }}</p>
               <p class="text-slate-800">{{ formatMoney(selectedContract.remaining_amount) }}</p>
             </div>
             <div>
-              <p class="text-xs text-slate-500 mb-1">Yil boshiga qoldiq</p>
+              <p class="text-xs text-slate-500 mb-1">{{ $t('contracts.yearStartBalance') }}</p>
               <p class="text-slate-800">{{ formatMoney(selectedContract.year_start_balance) }}</p>
             </div>
             <div>
-              <p class="text-xs text-slate-500 mb-1">Yil yakuniga qoldiq</p>
+              <p class="text-xs text-slate-500 mb-1">{{ $t('contracts.yearEndBalance') }}</p>
               <p class="font-medium" :class="Number(selectedContract.year_end_balance) < 0 ? 'text-red-600' : 'text-slate-800'">
                 {{ formatMoney(selectedContract.year_end_balance) }}
               </p>
@@ -526,7 +526,7 @@
       <div class="bg-white rounded-2xl shadow-xl w-full max-w-2xl mx-4 overflow-hidden max-h-[90vh] overflow-y-auto">
         <div class="bg-blue-50 px-6 py-4 border-b border-blue-100 flex justify-between items-center">
           <div>
-            <h3 class="text-lg font-bold text-blue-800">Kontraktni tahrirlash</h3>
+            <h3 class="text-lg font-bold text-blue-800">{{ $t('contracts.editContract') }}</h3>
             <p class="text-sm text-blue-600">{{ editForm._student_name }}</p>
           </div>
           <button @click="showEditModal = false" class="p-1 text-slate-400 hover:text-slate-600">
@@ -536,48 +536,48 @@
         <div class="p-6 space-y-4">
           <div class="grid grid-cols-2 gap-4">
             <div>
-              <label class="block text-xs font-medium text-slate-600 mb-1">Kontrakt summasi</label>
+              <label class="block text-xs font-medium text-slate-600 mb-1">{{ $t('contracts.contractAmount') }}</label>
               <input v-model.number="editForm.contract_amount" type="number" class="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm focus:border-blue-400 focus:outline-none" />
             </div>
             <div>
-              <label class="block text-xs font-medium text-slate-600 mb-1">To'langan summa</label>
+              <label class="block text-xs font-medium text-slate-600 mb-1">{{ $t('contracts.totalPaid') }}</label>
               <input v-model.number="editForm.total_paid" type="number" class="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm focus:border-blue-400 focus:outline-none" />
             </div>
             <div>
-              <label class="block text-xs font-medium text-slate-600 mb-1">Qarzdorlik</label>
+              <label class="block text-xs font-medium text-slate-600 mb-1">{{ $t('contracts.debt') }}</label>
               <input v-model.number="editForm.debt_amount" type="number" class="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm focus:border-blue-400 focus:outline-none" />
             </div>
             <div>
-              <label class="block text-xs font-medium text-slate-600 mb-1">Grant summasi</label>
+              <label class="block text-xs font-medium text-slate-600 mb-1">{{ $t('contracts.grantAmount') }}</label>
               <input v-model.number="editForm.grant_amount" type="number" class="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm focus:border-blue-400 focus:outline-none" />
             </div>
             <div>
-              <label class="block text-xs font-medium text-slate-600 mb-1">Qaytarilgan summa</label>
+              <label class="block text-xs font-medium text-slate-600 mb-1">{{ $t('contracts.refundAmount') }}</label>
               <input v-model.number="editForm.refund_amount" type="number" class="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm focus:border-blue-400 focus:outline-none" />
             </div>
             <div>
-              <label class="block text-xs font-medium text-slate-600 mb-1">Kurs</label>
+              <label class="block text-xs font-medium text-slate-600 mb-1">{{ $t('contracts.course') }}</label>
               <input v-model="editForm.course" type="text" class="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm focus:border-blue-400 focus:outline-none" />
             </div>
             <div>
-              <label class="block text-xs font-medium text-slate-600 mb-1">Talaba holati</label>
+              <label class="block text-xs font-medium text-slate-600 mb-1">{{ $t('contracts.studentStatus') }}</label>
               <input v-model="editForm.student_status" type="text" class="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm focus:border-blue-400 focus:outline-none" />
             </div>
             <div>
-              <label class="block text-xs font-medium text-slate-600 mb-1">Ta'lim shakli</label>
+              <label class="block text-xs font-medium text-slate-600 mb-1">{{ $t('contracts.educationForm') }}</label>
               <input v-model="editForm.education_form" type="text" class="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm focus:border-blue-400 focus:outline-none" />
             </div>
             <div>
-              <label class="block text-xs font-medium text-slate-600 mb-1">Yil boshiga qoldiq</label>
+              <label class="block text-xs font-medium text-slate-600 mb-1">{{ $t('contracts.yearStartBalance') }}</label>
               <input v-model.number="editForm.year_start_balance" type="number" class="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm focus:border-blue-400 focus:outline-none" />
             </div>
             <div>
-              <label class="block text-xs font-medium text-slate-600 mb-1">Yil yakuniga qoldiq</label>
+              <label class="block text-xs font-medium text-slate-600 mb-1">{{ $t('contracts.yearEndBalance') }}</label>
               <input v-model.number="editForm.year_end_balance" type="number" class="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm focus:border-blue-400 focus:outline-none" />
             </div>
           </div>
           <div>
-            <label class="block text-xs font-medium text-slate-600 mb-1">Izoh</label>
+            <label class="block text-xs font-medium text-slate-600 mb-1">{{ $t('contracts.note') }}</label>
             <textarea v-model="editForm.note" rows="2" class="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm focus:border-blue-400 focus:outline-none resize-none"></textarea>
           </div>
         </div>
@@ -586,7 +586,7 @@
             @click="showEditModal = false"
             class="px-4 py-2 text-sm text-slate-600 hover:text-slate-800 rounded-lg hover:bg-slate-200 transition-colors"
           >
-            Bekor qilish
+            {{ $t('contracts.cancel') }}
           </button>
           <button 
             @click="saveEdit"
@@ -594,7 +594,7 @@
             class="px-5 py-2 text-sm font-medium bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50 flex items-center gap-2 transition-colors"
           >
             <Loader2 v-if="saving" class="w-4 h-4 animate-spin" />
-            {{ saving ? 'Saqlanmoqda...' : 'Saqlash' }}
+            {{ saving ? $t('contracts.saving') : $t('contracts.save') }}
           </button>
         </div>
       </div>
@@ -606,16 +606,16 @@
         <div class="w-14 h-14 mx-auto mb-4 rounded-full bg-red-100 flex items-center justify-center">
           <Trash2 class="w-7 h-7 text-red-500" />
         </div>
-        <h3 class="text-lg font-bold text-slate-800 mb-2">O'chirishni tasdiqlang</h3>
+        <h3 class="text-lg font-bold text-slate-800 mb-2">{{ $t('contracts.confirmDelete') }}</h3>
         <p class="text-sm text-slate-500 mb-6">
-          {{ deleteTarget?.student_name }} kontraktini o'chirmoqchimisiz?
+          {{ $t('contracts.confirmDeleteMsg', { name: deleteTarget?.student_name }) }}
         </p>
         <div class="flex gap-3 justify-center">
           <button 
             @click="showDeleteModal = false"
             class="px-4 py-2 text-sm text-slate-600 rounded-lg hover:bg-slate-100 transition-colors"
           >
-            Bekor qilish
+            {{ $t('contracts.cancel') }}
           </button>
           <button 
             @click="doDelete"
@@ -623,7 +623,7 @@
             class="px-5 py-2 text-sm font-medium bg-red-500 text-white rounded-lg hover:bg-red-600 disabled:opacity-50 flex items-center gap-2 transition-colors"
           >
             <Loader2 v-if="deleting" class="w-4 h-4 animate-spin" />
-            O'chirish
+            {{ $t('contracts.deleteAction') }}
           </button>
         </div>
       </div>

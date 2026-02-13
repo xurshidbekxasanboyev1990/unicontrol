@@ -4,7 +4,7 @@
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
       <div>
         <h1 class="text-xl sm:text-2xl font-bold text-slate-800">{{ $t('telegram.title') }}</h1>
-        <p class="text-sm text-slate-500">Bot holati va ulangan guruhlar</p>
+        <p class="text-sm text-slate-500">{{ $t('telegram.botStatusDesc') }}</p>
       </div>
       <button
         @click="refresh"
@@ -23,11 +23,11 @@
         </div>
         <div class="flex-1">
           <h2 class="text-xl font-bold">@unicontroluzbot</h2>
-          <p class="text-blue-100 text-sm mt-1">UniControl Davomat Bot</p>
+          <p class="text-blue-100 text-sm mt-1">{{ $t('telegram.botName') }}</p>
           <div class="flex items-center gap-2 mt-2">
             <span class="inline-flex items-center gap-1.5 px-3 py-1 bg-white/20 rounded-full text-sm font-medium">
               <span class="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"></span>
-              Ishlayapti
+              {{ $t('telegram.running') }}
             </span>
           </div>
         </div>
@@ -36,7 +36,7 @@
           target="_blank"
           class="px-5 py-2.5 bg-white text-blue-600 rounded-xl font-semibold hover:bg-blue-50 transition-colors"
         >
-          Botni ochish
+          {{ $t('telegram.openBot') }}
         </a>
       </div>
     </div>
@@ -49,7 +49,7 @@
             <MessageSquare class="w-5 h-5 text-violet-600" />
           </div>
           <div>
-            <p class="text-xs sm:text-sm text-slate-500">Ulangan chatlar</p>
+            <p class="text-xs sm:text-sm text-slate-500">{{ $t('telegram.connectedChats') }}</p>
             <p class="text-xl sm:text-2xl font-bold text-slate-800">{{ registeredChats.length }}</p>
           </div>
         </div>
@@ -60,7 +60,7 @@
             <Building2 class="w-5 h-5 text-emerald-600" />
           </div>
           <div>
-            <p class="text-xs sm:text-sm text-slate-500">Obunali guruhlar</p>
+            <p class="text-xs sm:text-sm text-slate-500">{{ $t('telegram.subscribedGroups') }}</p>
             <p class="text-xl sm:text-2xl font-bold text-slate-800">{{ activeGroups }}</p>
           </div>
         </div>
@@ -71,8 +71,8 @@
             <Zap class="w-5 h-5 text-amber-600" />
           </div>
           <div>
-            <p class="text-sm text-slate-500">Bot vazifasi</p>
-            <p class="text-lg font-bold text-slate-800">Davomat yetkazish</p>
+            <p class="text-sm text-slate-500">{{ $t('telegram.botTask') }}</p>
+            <p class="text-lg font-bold text-slate-800">{{ $t('telegram.attendanceDelivery') }}</p>
           </div>
         </div>
       </div>
@@ -159,10 +159,10 @@
             <MessageSquare class="w-5 h-5 text-blue-600" />
           </div>
           <div class="flex-1 min-w-0">
-            <p class="font-medium text-slate-800 truncate">{{ chat.chat_title || 'Noma\'lum chat' }}</p>
+            <p class="font-medium text-slate-800 truncate">{{ chat.chat_title || $t('telegram.unknownChat') }}</p>
             <p class="text-sm text-slate-500">
-              Guruh: <span class="font-medium text-violet-600">{{ chat.group_code }}</span> • 
-              Turi: {{ chat.chat_type === 'group' || chat.chat_type === 'supergroup' ? 'Guruh' : 'Shaxsiy' }}
+              {{ $t('telegram.groupLabel') }}: <span class="font-medium text-violet-600">{{ chat.group_code }}</span> • 
+              {{ $t('telegram.typeLabel') }}: {{ chat.chat_type === 'group' || chat.chat_type === 'supergroup' ? $t('telegram.groupType') : $t('telegram.personalType') }}
             </p>
           </div>
           <div class="text-right text-sm text-slate-400">

@@ -4,7 +4,7 @@
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
       <div>
         <h1 class="text-xl sm:text-2xl font-bold text-slate-800">{{ $t('subscription.manageSubscriptions') }}</h1>
-        <p class="text-sm text-slate-500">Guruh obunalari va to'lovlarni boshqarish</p>
+        <p class="text-sm text-slate-500">{{ $t('subscription.manageDesc') }}</p>
       </div>
       <button
         v-if="!trialActivated"
@@ -18,7 +18,7 @@
       </button>
       <div v-else class="flex items-center gap-2 px-4 py-2 bg-emerald-100 text-emerald-700 rounded-xl">
         <CheckCircle class="w-5 h-5" />
-        <span class="font-medium">Sinov muddati: {{ trialEndDate }} gacha</span>
+        <span class="font-medium">{{ $t('subscription.trialUntil', { date: trialEndDate }) }}</span>
       </div>
     </div>
 
@@ -68,7 +68,7 @@
       </div>
       <div v-else-if="filteredPayments.length === 0" class="text-center py-12 bg-white rounded-2xl border border-slate-200">
         <CreditCard class="w-12 h-12 text-slate-300 mx-auto mb-3" />
-        <p class="text-slate-500">To'lovlar topilmadi</p>
+        <p class="text-slate-500">{{ $t('subscription.noPayments') }}</p>
       </div>
       <div v-else class="space-y-3">
         <div
@@ -102,7 +102,7 @@
                 v-if="payment.receipt_file"
                 @click="viewReceipt(payment)"
                 class="p-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-colors"
-                title="Chekni ko'rish"
+                title="View receipt"
               >
                 <Eye class="w-5 h-5" />
               </button>
@@ -111,14 +111,14 @@
                 @click="approvePayment(payment)"
                 class="px-4 py-2 bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 transition-colors flex items-center gap-1.5 text-sm font-medium"
               >
-                <Check class="w-4 h-4" /> Tasdiqlash
+                <Check class="w-4 h-4" /> {{ $t('common.confirm') }}
               </button>
               <button
                 v-if="payment.status !== 'rejected'"
                 @click="openRejectModal(payment)"
                 class="px-4 py-2 bg-rose-500 text-white rounded-lg hover:bg-rose-600 transition-colors flex items-center gap-1.5 text-sm font-medium"
               >
-                <X class="w-4 h-4" /> Rad etish
+                <X class="w-4 h-4" /> {{ $t('reports.reject') }}
               </button>
               <span :class="[
                 'px-3 py-1 rounded-full text-xs font-bold',
@@ -131,7 +131,7 @@
             </div>
           </div>
           <div v-if="payment.admin_note" class="mt-3 p-3 bg-slate-50 rounded-lg text-sm text-slate-600">
-            <span class="font-medium">Izoh:</span> {{ payment.admin_note }}
+            <span class="font-medium">{{ $t('subscription.note') }}:</span> {{ payment.admin_note }}
           </div>
         </div>
       </div>
@@ -162,7 +162,7 @@
       </div>
       <div v-else-if="filteredMarketPayments.length === 0" class="text-center py-12 bg-white rounded-2xl border border-slate-200">
         <CreditCard class="w-12 h-12 text-slate-300 mx-auto mb-3" />
-        <p class="text-slate-500">Market tarif to'lovlari topilmadi</p>
+        <p class="text-slate-500">{{ $t('subscription.noMarketPayments') }}</p>
       </div>
       <div v-else class="space-y-3">
         <div
@@ -201,7 +201,7 @@
                 v-if="payment.receipt_file"
                 @click="viewMarketReceipt(payment)"
                 class="p-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-colors"
-                title="Chekni ko'rish"
+                :title="$t('subscription.receipt')"
               >
                 <Eye class="w-5 h-5" />
               </button>
@@ -210,14 +210,14 @@
                 @click="approveMarketPayment(payment)"
                 class="px-4 py-2 bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 transition-colors flex items-center gap-1.5 text-sm font-medium"
               >
-                <Check class="w-4 h-4" /> Tasdiqlash
+                <Check class="w-4 h-4" /> {{ $t('common.confirm') }}
               </button>
               <button
                 v-if="payment.status !== 'rejected'"
                 @click="rejectMarketPayment(payment)"
                 class="px-4 py-2 bg-rose-500 text-white rounded-lg hover:bg-rose-600 transition-colors flex items-center gap-1.5 text-sm font-medium"
               >
-                <X class="w-4 h-4" /> Rad etish
+                <X class="w-4 h-4" /> {{ $t('reports.reject') }}
               </button>
               <span :class="[
                 'px-3 py-1 rounded-full text-xs font-bold',
@@ -230,7 +230,7 @@
             </div>
           </div>
           <div v-if="payment.admin_note" class="mt-3 p-3 bg-slate-50 rounded-lg text-sm text-slate-600">
-            <span class="font-medium">Izoh:</span> {{ payment.admin_note }}
+            <span class="font-medium">{{ $t('subscription.note') }}:</span> {{ payment.admin_note }}
           </div>
         </div>
       </div>
@@ -243,7 +243,7 @@
           <div class="absolute inset-0 bg-slate-900/50 backdrop-blur-sm" @click="showMarketReceiptModal = false"></div>
           <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col">
             <div class="flex items-center justify-between p-4 border-b border-slate-200">
-              <h3 class="text-lg font-semibold text-slate-800">Market to'lov cheki — {{ marketReceiptPayment?.user_name }}</h3>
+              <h3 class="text-lg font-semibold text-slate-800">{{ $t('subscription.marketReceipt') }} — {{ marketReceiptPayment?.user_name }}</h3>
               <button @click="showMarketReceiptModal = false" class="p-1.5 hover:bg-slate-100 rounded-lg transition-colors">
                 <X class="w-5 h-5 text-slate-500" />
               </button>
@@ -252,11 +252,11 @@
               <Loader2 v-if="marketReceiptLoading" class="w-8 h-8 text-emerald-500 animate-spin" />
               <img v-else-if="marketReceiptUrl && !marketReceiptIsPdf" :src="marketReceiptUrl" class="max-w-full max-h-[70vh] rounded-lg shadow-lg object-contain" alt="Chek" />
               <iframe v-else-if="marketReceiptUrl && marketReceiptIsPdf" :src="marketReceiptUrl" class="w-full h-[70vh] rounded-lg border-0"></iframe>
-              <p v-else class="text-slate-400">Chek yuklanmadi</p>
+              <p v-else class="text-slate-400">{{ $t('subscription.receiptNotLoaded') }}</p>
             </div>
             <div class="p-4 border-t border-slate-200 flex justify-end">
               <button @click="showMarketReceiptModal = false" class="px-5 py-2.5 bg-slate-100 text-slate-700 rounded-xl hover:bg-slate-200 transition-colors font-medium">
-                Yopish
+                {{ $t('common.close') }}
               </button>
             </div>
           </div>
@@ -268,12 +268,12 @@
     <div v-if="activeTab === 'settings'" class="bg-white rounded-2xl border border-slate-200 p-6 space-y-6">
       <h3 class="text-lg font-semibold text-slate-800 flex items-center gap-2">
         <Settings class="w-5 h-5 text-slate-400" />
-        Obuna sozlamalari
+        {{ $t('subscription.settings') }}
       </h3>
 
       <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
-          <label class="block text-sm font-medium text-slate-700 mb-2">Karta raqami</label>
+          <label class="block text-sm font-medium text-slate-700 mb-2">{{ $t('subscription.cardNumber') }}</label>
           <input
             v-model="settingsForm.card_number"
             type="text"
@@ -282,7 +282,7 @@
           />
         </div>
         <div>
-          <label class="block text-sm font-medium text-slate-700 mb-2">Karta egasi</label>
+          <label class="block text-sm font-medium text-slate-700 mb-2">{{ $t('subscription.cardHolder') }}</label>
           <input
             v-model="settingsForm.card_holder"
             type="text"
@@ -291,7 +291,7 @@
           />
         </div>
         <div>
-          <label class="block text-sm font-medium text-slate-700 mb-2">Sinov muddati tugash sanasi</label>
+          <label class="block text-sm font-medium text-slate-700 mb-2">{{ $t('subscription.trialEndDate') }}</label>
           <input
             v-model="settingsForm.trial_end_date"
             type="date"
@@ -303,7 +303,7 @@
             <input type="checkbox" v-model="settingsForm.is_subscription_enabled" class="sr-only peer">
             <div class="w-11 h-6 bg-slate-200 peer-focus:ring-4 peer-focus:ring-emerald-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-500"></div>
           </label>
-          <span class="text-sm font-medium text-slate-700">Obuna tizimini yoqish</span>
+          <span class="text-sm font-medium text-slate-700">{{ $t('subscription.enableSubscription') }}</span>
         </div>
       </div>
 
@@ -342,18 +342,18 @@
       </div>
       <div v-else-if="filteredSubscriptions.length === 0" class="text-center py-12 bg-white rounded-2xl border border-slate-200">
         <Crown class="w-12 h-12 text-slate-300 mx-auto mb-3" />
-        <p class="text-slate-500">Hozircha obunalar yo'q</p>
+        <p class="text-slate-500">{{ $t('subscription.noSubscriptions') }}</p>
       </div>
       <div v-else class="overflow-x-auto bg-white rounded-2xl border border-slate-200">
         <table class="w-full">
           <thead>
             <tr class="border-b border-slate-200 bg-slate-50">
-              <th class="text-left p-4 text-sm font-medium text-slate-600">Guruh</th>
-              <th class="text-left p-4 text-sm font-medium text-slate-600">Reja</th>
-              <th class="text-left p-4 text-sm font-medium text-slate-600">Status</th>
-              <th class="text-left p-4 text-sm font-medium text-slate-600">Muddat</th>
-              <th class="text-left p-4 text-sm font-medium text-slate-600">Qolgan kun</th>
-              <th class="text-left p-4 text-sm font-medium text-slate-600">Amallar</th>
+              <th class="text-left p-4 text-sm font-medium text-slate-600">{{ $t('subscription.group') }}</th>
+              <th class="text-left p-4 text-sm font-medium text-slate-600">{{ $t('subscription.plan') }}</th>
+              <th class="text-left p-4 text-sm font-medium text-slate-600">{{ $t('common.status') }}</th>
+              <th class="text-left p-4 text-sm font-medium text-slate-600">{{ $t('subscription.period') }}</th>
+              <th class="text-left p-4 text-sm font-medium text-slate-600">{{ $t('subscription.daysLeft') }}</th>
+              <th class="text-left p-4 text-sm font-medium text-slate-600">{{ $t('common.actions') }}</th>
             </tr>
           </thead>
           <tbody>
@@ -372,7 +372,7 @@
               <td class="p-4 text-sm text-slate-600">{{ formatDate(sub.start_date) }} - {{ formatDate(sub.end_date) }}</td>
               <td class="p-4">
                 <span :class="['font-semibold', sub.days_left <= 3 ? 'text-rose-600' : sub.days_left <= 7 ? 'text-amber-600' : 'text-emerald-600']">
-                  {{ sub.days_left }} kun
+                  {{ sub.days_left }} {{ $t('subscription.days') }}
                 </span>
               </td>
               <td class="p-4">
@@ -407,7 +407,7 @@
                     @click="openStatusModal(sub, 'blocked')"
                     class="px-3 py-1.5 bg-red-700 text-white rounded-lg hover:bg-red-800 transition-colors flex items-center gap-1.5 text-xs font-medium"
                   >
-                    <ShieldOff class="w-3.5 h-3.5" /> Bloklash
+                    <ShieldOff class="w-3.5 h-3.5" /> {{ $t('subscription.block') }}
                   </button>
                 </div>
               </td>
@@ -464,14 +464,14 @@
                 <button
                   @click="openEditPlanModal(plan)"
                   class="p-2 bg-white/80 hover:bg-white rounded-lg transition-colors shadow-sm"
-                  title="Tahrirlash"
+                  :title="$t('common.edit')"
                 >
                   <Pencil class="w-4 h-4 text-blue-600" />
                 </button>
                 <button
                   @click="openDeletePlan(plan)"
                   class="p-2 bg-white/80 hover:bg-white rounded-lg transition-colors shadow-sm"
-                  title="O'chirish"
+                  :title="$t('common.delete')"
                 >
                   <Trash2 class="w-4 h-4 text-rose-600" />
                 </button>
@@ -520,7 +520,7 @@
             <div class="p-5 space-y-4">
               <div class="grid grid-cols-2 gap-4">
                 <div class="col-span-2">
-                  <label class="block text-sm font-medium text-slate-700 mb-1.5">Reja nomi</label>
+                  <label class="block text-sm font-medium text-slate-700 mb-1.5">{{ $t('subscription.planName') }}</label>
                   <input
                     v-model="planForm.name"
                     type="text"
@@ -529,7 +529,7 @@
                   />
                 </div>
                 <div v-if="planModalMode === 'create'">
-                  <label class="block text-sm font-medium text-slate-700 mb-1.5">Reja turi</label>
+                  <label class="block text-sm font-medium text-slate-700 mb-1.5">{{ $t('subscription.planType') }}</label>
                   <select
                     v-model="planForm.plan_type"
                     class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 outline-none"
@@ -541,13 +541,13 @@
                   </select>
                 </div>
                 <div v-else>
-                  <label class="block text-sm font-medium text-slate-700 mb-1.5">Reja turi</label>
+                  <label class="block text-sm font-medium text-slate-700 mb-1.5">{{ $t('subscription.planType') }}</label>
                   <div class="px-4 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-600">
                     {{ getPlanLabel(planForm.plan_type) }}
                   </div>
                 </div>
                 <div>
-                  <label class="block text-sm font-medium text-slate-700 mb-1.5">Narxi (so'm)</label>
+                  <label class="block text-sm font-medium text-slate-700 mb-1.5">{{ $t('subscription.price') }}</label>
                   <input
                     v-model.number="planForm.price"
                     type="number"
@@ -558,7 +558,7 @@
                   />
                 </div>
                 <div>
-                  <label class="block text-sm font-medium text-slate-700 mb-1.5">Muddat (kun)</label>
+                  <label class="block text-sm font-medium text-slate-700 mb-1.5">{{ $t('subscription.duration') }}</label>
                   <input
                     v-model.number="planForm.duration_days"
                     type="number"
@@ -568,7 +568,7 @@
                   />
                 </div>
                 <div class="col-span-2">
-                  <label class="block text-sm font-medium text-slate-700 mb-1.5">Tavsif</label>
+                  <label class="block text-sm font-medium text-slate-700 mb-1.5">{{ $t('subscription.description') }}</label>
                   <textarea
                     v-model="planForm.description"
                     rows="2"
@@ -580,7 +580,7 @@
 
               <!-- Features -->
               <div>
-                <label class="block text-sm font-medium text-slate-700 mb-1.5">Imkoniyatlar</label>
+                <label class="block text-sm font-medium text-slate-700 mb-1.5">{{ $t('subscription.features') }}</label>
                 <div class="flex gap-2 mb-3">
                   <input
                     v-model="newFeature"
@@ -609,14 +609,14 @@
                     </button>
                   </span>
                 </div>
-                <p v-else class="text-sm text-slate-400">Hali imkoniyat qo'shilmagan</p>
+                <p v-else class="text-sm text-slate-400">{{ $t('subscription.noFeatures') }}</p>
               </div>
 
               <!-- Price preview -->
               <div class="bg-slate-50 rounded-xl p-4 text-center">
-                <span class="text-sm text-slate-500">Narx:</span>
+                <span class="text-sm text-slate-500">{{ $t('subscription.price') }}:</span>
                 <span class="text-2xl font-bold text-slate-800 ml-2">{{ Number(planForm.price || 0).toLocaleString() }}</span>
-                <span class="text-slate-500 ml-1">so'm / {{ planForm.duration_days || 30 }} kun</span>
+                <span class="text-slate-500 ml-1">{{ $t('subscription.currencyPerDays', { days: planForm.duration_days || 30 }) }}</span>
               </div>
             </div>
 
@@ -704,13 +704,12 @@
               </div>
             </div>
             <p class="text-sm text-slate-600 mb-4">
-              "{{ statusModalSub?.group_name }}" guruhining obunasini
-              <strong>{{ getSubStatusLabel(statusModalTarget) }}</strong> holatiga o'zgartirmoqchimisiz?
+              {{ $t('subscription.statusChangeConfirm', { group: statusModalSub?.group_name, status: getSubStatusLabel(statusModalTarget) }) }}
             </p>
             <textarea
               v-model="statusModalReason"
               rows="2"
-              placeholder="Sabab (ixtiyoriy)..."
+              placeholder="..."
               class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 outline-none resize-none mb-4"
             ></textarea>
             <div class="flex gap-3">
@@ -747,7 +746,7 @@
           <div class="absolute inset-0 bg-slate-900/50 backdrop-blur-sm" @click="showReceiptModal = false"></div>
           <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col">
             <div class="flex items-center justify-between p-4 border-b border-slate-200">
-              <h3 class="text-lg font-semibold text-slate-800">To'lov cheki — {{ receiptPayment?.group_name }}</h3>
+              <h3 class="text-lg font-semibold text-slate-800">{{ $t('subscription.paymentReceipt') }} — {{ receiptPayment?.group_name }}</h3>
               <button @click="showReceiptModal = false" class="p-1.5 hover:bg-slate-100 rounded-lg transition-colors">
                 <X class="w-5 h-5 text-slate-500" />
               </button>
@@ -756,11 +755,11 @@
               <Loader2 v-if="receiptLoading" class="w-8 h-8 text-emerald-500 animate-spin" />
               <img v-else-if="receiptUrl && !receiptIsPdf" :src="receiptUrl" class="max-w-full max-h-[70vh] rounded-lg shadow-lg object-contain" alt="Chek" />
               <iframe v-else-if="receiptUrl && receiptIsPdf" :src="receiptUrl" class="w-full h-[70vh] rounded-lg border-0"></iframe>
-              <p v-else class="text-slate-400">Chek yuklanmadi</p>
+              <p v-else class="text-slate-400">{{ $t('subscription.receiptNotLoaded') }}</p>
             </div>
             <div class="p-4 border-t border-slate-200 flex justify-end">
               <button @click="showReceiptModal = false" class="px-5 py-2.5 bg-slate-100 text-slate-700 rounded-xl hover:bg-slate-200 transition-colors font-medium">
-                Yopish
+                {{ $t('common.close') }}
               </button>
             </div>
           </div>
@@ -774,11 +773,11 @@
         <div v-if="showRejectModal" class="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div class="absolute inset-0 bg-slate-900/50 backdrop-blur-sm" @click="showRejectModal = false"></div>
           <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-md p-6">
-            <h3 class="text-lg font-semibold text-slate-800 mb-4">To'lovni rad etish</h3>
+            <h3 class="text-lg font-semibold text-slate-800 mb-4">{{ $t('subscription.rejectPayment') }}</h3>
             <textarea
               v-model="rejectNote"
               rows="3"
-              placeholder="Rad etish sababini yozing..."
+              placeholder="..."
               class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-rose-500 focus:ring-2 focus:ring-rose-500/20 outline-none resize-none"
             ></textarea>
             <div class="flex gap-3 mt-4">
@@ -807,27 +806,27 @@ import api from '@/services/api'
 import { useLanguageStore } from '@/stores/language'
 import { useToastStore } from '@/stores/toast'
 import {
-  Ban,
-  Bot,
-  Check,
-  CheckCircle,
-  Clock, CreditCard,
-  Crown,
-  DollarSign,
-  Eye,
-  Loader2,
-  Package,
-  Pause,
-  Pencil,
-  Play,
-  Plus,
-  Rocket,
-  Save,
-  Settings,
-  ShieldOff,
-  Trash2,
-  X,
-  XCircle
+    Ban,
+    Bot,
+    Check,
+    CheckCircle,
+    Clock, CreditCard,
+    Crown,
+    DollarSign,
+    Eye,
+    Loader2,
+    Package,
+    Pause,
+    Pencil,
+    Play,
+    Plus,
+    Rocket,
+    Save,
+    Settings,
+    ShieldOff,
+    Trash2,
+    X,
+    XCircle
 } from 'lucide-vue-next'
 import { computed, markRaw, onMounted, ref } from 'vue'
 
@@ -837,23 +836,23 @@ const { t } = langStore
 
 const activeTab = ref('payments')
 const tabs = computed(() => [
-  { id: 'payments', label: 'To\'lovlar', icon: markRaw(CreditCard), badge: pendingCount.value || null },
-  { id: 'market-payments', label: 'Market to\'lovlari', icon: markRaw(DollarSign), badge: marketPendingCount.value || null },
-  { id: 'subscriptions', label: 'Obunalar', icon: markRaw(Crown), badge: null },
-  { id: 'plans', label: 'Rejalar', icon: markRaw(DollarSign), badge: null },
-  { id: 'settings', label: 'Sozlamalar', icon: markRaw(Settings), badge: null },
+  { id: 'payments', label: t('subscription.payments'), icon: markRaw(CreditCard), badge: pendingCount.value || null },
+  { id: 'market-payments', label: t('subscription.marketPayments'), icon: markRaw(DollarSign), badge: marketPendingCount.value || null },
+  { id: 'subscriptions', label: t('subscription.subscriptions'), icon: markRaw(Crown), badge: null },
+  { id: 'plans', label: t('subscription.plansTab'), icon: markRaw(DollarSign), badge: null },
+  { id: 'settings', label: t('subscription.settingsTab'), icon: markRaw(Settings), badge: null },
 ])
 
 // Payments
 const payments = ref([])
 const paymentsLoading = ref(true)
 const paymentStatusFilter = ref(null)
-const paymentFilters = [
-  { value: null, label: 'Barchasi' },
-  { value: 'pending', label: 'Kutilmoqda' },
-  { value: 'approved', label: 'Tasdiqlangan' },
-  { value: 'rejected', label: 'Rad etilgan' },
-]
+const paymentFilters = computed(() => [
+  { value: null, label: t('common.all') },
+  { value: 'pending', label: t('subscription.pending') },
+  { value: 'approved', label: t('subscription.approved') },
+  { value: 'rejected', label: t('subscription.rejected') },
+])
 
 const pendingCount = computed(() => payments.value.filter(p => p.status === 'pending').length)
 const filteredPayments = computed(() => {
@@ -880,15 +879,15 @@ const marketReceiptPayment = ref(null)
 const allSubscriptions = ref([])
 const subsLoading = ref(true)
 const subStatusFilter = ref(null)
-const subFilters = [
-  { value: null, label: 'Barchasi' },
-  { value: 'active', label: 'Faol' },
-  { value: 'trial', label: 'Sinov' },
-  { value: 'paused', label: 'To\'xtatilgan' },
-  { value: 'expired', label: 'Tugagan' },
-  { value: 'cancelled', label: 'Bekor qilingan' },
-  { value: 'blocked', label: 'Bloklangan' },
-]
+const subFilters = computed(() => [
+  { value: null, label: t('common.all') },
+  { value: 'active', label: t('common.active') },
+  { value: 'trial', label: t('subscription.trial') },
+  { value: 'paused', label: t('subscription.paused') },
+  { value: 'expired', label: t('subscription.expired') },
+  { value: 'cancelled', label: t('subscription.cancelled') },
+  { value: 'blocked', label: t('subscription.blocked') },
+])
 const filteredSubscriptions = computed(() => {
   if (!subStatusFilter.value) return allSubscriptions.value
   return allSubscriptions.value.filter(s => s.status === subStatusFilter.value)
@@ -948,15 +947,15 @@ const rejectingPayment = ref(null)
 
 // Helpers
 const getPlanLabel = (type) => {
-  const labels = { start: 'Start', plus: 'Plus', pro: 'Pro', unlimited: 'Unlimited', trial: 'Sinov' }
+  const labels = { start: 'Start', plus: 'Plus', pro: 'Pro', unlimited: 'Unlimited', trial: t('subscription.trial') }
   return labels[type] || type
 }
 const getStatusLabel = (status) => {
-  const labels = { pending: 'Kutilmoqda', approved: 'Tasdiqlangan', rejected: 'Rad etilgan' }
+  const labels = { pending: t('subscription.pending'), approved: t('subscription.approved'), rejected: t('subscription.rejected') }
   return labels[status] || status
 }
 const getSubStatusLabel = (status) => {
-  const labels = { trial: 'Sinov', active: 'Faol', expired: 'Tugagan', blocked: 'Bloklangan', cancelled: 'Bekor qilingan', paused: 'To\'xtatilgan' }
+  const labels = { trial: t('subscription.trial'), active: t('common.active'), expired: t('subscription.expired'), blocked: t('subscription.blocked'), cancelled: t('subscription.cancelled'), paused: t('subscription.paused') }
   return labels[status] || status
 }
 const getPlanBadgeClass = (type) => {
@@ -1068,12 +1067,12 @@ const loadPayments = async () => {
 // Status change actions
 const getStatusActionTitle = (status) => {
   const titles = {
-    active: 'Obunani faollashtirish',
-    paused: 'Obunani to\'xtatish',
-    cancelled: 'Obunani bekor qilish',
-    blocked: 'Obunani bloklash'
+    active: t('subscription.activateSubscription'),
+    paused: t('subscription.pauseSubscription'),
+    cancelled: t('subscription.cancelSubscription'),
+    blocked: t('subscription.blockSubscription')
   }
-  return titles[status] || 'Holatni o\'zgartirish'
+  return titles[status] || t('subscription.changeStatus')
 }
 
 const openStatusModal = (sub, targetStatus) => {

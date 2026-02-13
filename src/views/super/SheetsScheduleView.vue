@@ -552,8 +552,8 @@
             <Upload class="w-5 h-5 text-white" />
           </div>
           <div>
-            <h3 class="font-bold text-slate-800">Excel orqali jadval yuklash</h3>
-            <p class="text-sm text-slate-400">Excel fayldan dars jadvalini yuklab, bazaga saqlash</p>
+            <h3 class="font-bold text-slate-800">{{ $t('sheets.excelUploadTitle') }}</h3>
+            <p class="text-sm text-slate-400">{{ $t('sheets.excelUploadDesc') }}</p>
           </div>
         </div>
 
@@ -572,7 +572,7 @@
               </button>
               <span class="text-slate-400 text-sm"> yoki bu yerga tashlang</span>
             </div>
-            <p class="text-xs text-slate-400">Faqat .xlsx va .xls fayllar</p>
+            <p class="text-xs text-slate-400">{{ $t('sheets.onlyXlsx') }}</p>
           </div>
           <div v-else class="flex items-center justify-center gap-3">
             <FileSpreadsheet class="w-8 h-8 text-emerald-500" />
@@ -593,7 +593,7 @@
             <input v-model="excelForm.academic_year" type="text" class="w-full border border-slate-200 rounded-xl px-3 py-2.5 text-sm focus:ring-2 focus:ring-indigo-500" />
           </div>
           <div>
-            <label class="text-sm font-medium text-slate-700 mb-1 block">Semestr</label>
+            <label class="text-sm font-medium text-slate-700 mb-1 block">{{ $t('sheets.semester') }}</label>
             <select v-model.number="excelForm.semester" class="w-full border border-slate-200 rounded-xl px-3 py-2.5 text-sm focus:ring-2 focus:ring-indigo-500">
               <option :value="1">1-semestr</option>
               <option :value="2">2-semestr</option>
@@ -602,7 +602,7 @@
           <div class="flex items-end">
             <div class="flex items-center gap-3 pb-2">
               <input v-model="excelForm.clear_existing" type="checkbox" id="excelClearExisting" class="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500" />
-              <label for="excelClearExisting" class="text-sm text-slate-600">Eskisini tozalash</label>
+              <label for="excelClearExisting" class="text-sm text-slate-600">{{ $t('sheets.clearExisting') }}</label>
             </div>
           </div>
         </div>
@@ -611,10 +611,10 @@
         <div class="flex items-center justify-between bg-slate-50 rounded-xl p-3">
           <div class="flex items-center gap-2 text-sm text-slate-600">
             <Download class="w-4 h-4" />
-            <span>Shablon faylni yuklab oling</span>
+            <span>{{ $t('sheets.downloadTemplate') }}</span>
           </div>
           <button @click="downloadTemplate" class="text-indigo-600 text-sm font-medium hover:text-indigo-800 transition-colors">
-            Yuklab olish
+            {{ $t('sheets.downloadTemplate') }}
           </button>
         </div>
 
@@ -639,11 +639,11 @@
           <!-- Stats -->
           <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
             <div class="bg-white rounded-lg p-2.5 text-center">
-              <p class="text-xs text-slate-500">Jami</p>
+              <p class="text-xs text-slate-500">{{ $t('common.total') }}</p>
               <p class="text-lg font-bold text-slate-800">{{ excelImportResult.total_records || 0 }}</p>
             </div>
             <div class="bg-white rounded-lg p-2.5 text-center">
-              <p class="text-xs text-emerald-500">Yuklandi</p>
+              <p class="text-xs text-emerald-500">{{ $t('sheets.uploaded') }}</p>
               <p class="text-lg font-bold text-emerald-600">{{ excelImportResult.synced || 0 }}</p>
             </div>
             <div class="bg-white rounded-lg p-2.5 text-center">
@@ -651,7 +651,7 @@
               <p class="text-lg font-bold text-amber-600">{{ excelImportResult.skipped || 0 }}</p>
             </div>
             <div class="bg-white rounded-lg p-2.5 text-center">
-              <p class="text-xs text-slate-500">Guruhlar</p>
+              <p class="text-xs text-slate-500">{{ $t('common.groups') }}</p>
               <p class="text-lg font-bold text-indigo-600">{{ (excelImportResult.matched_groups || []).length }}</p>
             </div>
           </div>
@@ -710,7 +710,7 @@
           </div>
           <div class="bg-purple-50 rounded-xl p-4">
             <h4 class="text-sm font-bold text-purple-800 mb-2">Format 2: Setka</h4>
-            <p class="text-xs text-purple-600 mb-2">Guruhlar ustun, kunlar qator:</p>
+            <p class="text-xs text-purple-600 mb-2">{{ $t('sheets.groupsColumnDaysRow') }}</p>
             <div class="bg-white rounded-lg p-2 text-[10px] font-mono text-slate-600 space-y-0.5">
               <p class="font-bold">Kun | Para | PI-23-01 | PI-24-01</p>
               <p>Dushanba | 1 | Matematika | Fizika</p>

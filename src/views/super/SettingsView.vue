@@ -30,11 +30,11 @@
       <div class="bg-white rounded-2xl border border-slate-200 p-6">
         <h2 class="text-lg font-semibold text-slate-800 mb-4 flex items-center gap-2">
           <Settings class="w-5 h-5 text-slate-400" />
-          Umumiy sozlamalar
+          {{ $t('settings.generalSettings') }}
         </h2>
         <div class="space-y-4">
           <div>
-            <label class="block text-sm font-medium text-slate-700 mb-2">Tizim nomi</label>
+            <label class="block text-sm font-medium text-slate-700 mb-2">{{ $t('settings.systemName') }}</label>
             <input 
               v-model="settings.systemName"
               type="text"
@@ -42,7 +42,7 @@
             />
           </div>
           <div>
-            <label class="block text-sm font-medium text-slate-700 mb-2">Universitet nomi</label>
+            <label class="block text-sm font-medium text-slate-700 mb-2">{{ $t('settings.universityName') }}</label>
             <input 
               v-model="settings.universityName"
               type="text"
@@ -50,7 +50,7 @@
             />
           </div>
           <div>
-            <label class="block text-sm font-medium text-slate-700 mb-2">O'quv yili</label>
+            <label class="block text-sm font-medium text-slate-700 mb-2">{{ $t('settings.academicYear') }}</label>
             <select 
               v-model="settings.academicYear"
               class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 outline-none"
@@ -61,13 +61,13 @@
             </select>
           </div>
           <div>
-            <label class="block text-sm font-medium text-slate-700 mb-2">Semestr</label>
+            <label class="block text-sm font-medium text-slate-700 mb-2">{{ $t('settings.semesterLabel') }}</label>
             <select 
               v-model="settings.semester"
               class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 outline-none"
             >
-              <option value="1">1-semestr (Kuz)</option>
-              <option value="2">2-semestr (Bahor)</option>
+              <option value="1">{{ $t('settings.semester1') }}</option>
+              <option value="2">{{ $t('settings.semester2') }}</option>
             </select>
           </div>
         </div>
@@ -77,11 +77,11 @@
       <div class="bg-white rounded-2xl border border-slate-200 p-6">
         <h2 class="text-lg font-semibold text-slate-800 mb-4 flex items-center gap-2">
           <ClipboardCheck class="w-5 h-5 text-slate-400" />
-          Davomat sozlamalari
+          {{ $t('settings.attendanceSettings') }}
         </h2>
         <div class="space-y-4">
           <div>
-            <label class="block text-sm font-medium text-slate-700 mb-2">Minimal davomat foizi (%)</label>
+            <label class="block text-sm font-medium text-slate-700 mb-2">{{ $t('settings.minAttendancePercent') }}</label>
             <input 
               v-model="settings.minAttendance"
               type="number"
@@ -91,7 +91,7 @@
             />
           </div>
           <div>
-            <label class="block text-sm font-medium text-slate-700 mb-2">Kechikish chegarasi (daqiqa)</label>
+            <label class="block text-sm font-medium text-slate-700 mb-2">{{ $t('settings.lateThreshold') }}</label>
             <input 
               v-model="settings.lateThreshold"
               type="number"
@@ -101,8 +101,8 @@
           </div>
           <div class="flex items-center justify-between p-3 bg-slate-50 rounded-xl">
             <div>
-              <p class="font-medium text-slate-700">Avtomatik ogohlantirish</p>
-              <p class="text-sm text-slate-500">Past davomat bo'lganda xabar yuborish</p>
+              <p class="font-medium text-slate-700">{{ $t('settings.autoWarning') }}</p>
+              <p class="text-sm text-slate-500">{{ $t('settings.autoWarningDesc') }}</p>
             </div>
             <button 
               @click="settings.autoWarning = !settings.autoWarning"
@@ -117,8 +117,8 @@
           </div>
           <div class="flex items-center justify-between p-3 bg-slate-50 rounded-xl">
             <div>
-              <p class="font-medium text-slate-700">Hafta oxiri davomati</p>
-              <p class="text-sm text-slate-500">Shanba kunlarni hisoblash</p>
+              <p class="font-medium text-slate-700">{{ $t('settings.weekendAttendance') }}</p>
+              <p class="text-sm text-slate-500">{{ $t('settings.weekendAttendanceDesc') }}</p>
             </div>
             <button 
               @click="settings.weekendAttendance = !settings.weekendAttendance"
@@ -138,13 +138,13 @@
       <div class="bg-white rounded-2xl border border-slate-200 p-6">
         <h2 class="text-lg font-semibold text-slate-800 mb-4 flex items-center gap-2">
           <Bell class="w-5 h-5 text-slate-400" />
-          Bildirishnoma sozlamalari
+          {{ $t('settings.notificationSettings') }}
         </h2>
         <div class="space-y-4">
           <div class="flex items-center justify-between p-3 bg-slate-50 rounded-xl">
             <div>
-              <p class="font-medium text-slate-700">Email xabarnomalar</p>
-              <p class="text-sm text-slate-500">Muhim yangiliklar emailga yuborilsin</p>
+              <p class="font-medium text-slate-700">{{ $t('settings.emailNotifications') }}</p>
+              <p class="text-sm text-slate-500">{{ $t('settings.emailNotificationsDesc') }}</p>
             </div>
             <button 
               @click="settings.emailNotifications = !settings.emailNotifications"
@@ -159,8 +159,8 @@
           </div>
           <div class="flex items-center justify-between p-3 bg-slate-50 rounded-xl">
             <div>
-              <p class="font-medium text-slate-700">SMS xabarnomalar</p>
-              <p class="text-sm text-slate-500">Muhim yangiliklar SMS orqali</p>
+              <p class="font-medium text-slate-700">{{ $t('settings.smsNotifications') }}</p>
+              <p class="text-sm text-slate-500">{{ $t('settings.smsNotificationsDesc') }}</p>
             </div>
             <button 
               @click="settings.smsNotifications = !settings.smsNotifications"
@@ -175,8 +175,8 @@
           </div>
           <div class="flex items-center justify-between p-3 bg-slate-50 rounded-xl">
             <div>
-              <p class="font-medium text-slate-700">Push xabarnomalar</p>
-              <p class="text-sm text-slate-500">Brauzer orqali xabarnomalar</p>
+              <p class="font-medium text-slate-700">{{ $t('settings.pushNotifications') }}</p>
+              <p class="text-sm text-slate-500">{{ $t('settings.pushNotificationsDesc') }}</p>
             </div>
             <button 
               @click="settings.pushNotifications = !settings.pushNotifications"
@@ -196,11 +196,11 @@
       <div class="bg-white rounded-2xl border border-slate-200 p-6">
         <h2 class="text-lg font-semibold text-slate-800 mb-4 flex items-center gap-2">
           <Shield class="w-5 h-5 text-slate-400" />
-          Xavfsizlik sozlamalari
+          {{ $t('settings.securitySettings') }}
         </h2>
         <div class="space-y-4">
           <div>
-            <label class="block text-sm font-medium text-slate-700 mb-2">Sessiya muddati (daqiqa)</label>
+            <label class="block text-sm font-medium text-slate-700 mb-2">{{ $t('settings.sessionTimeout') }}</label>
             <input 
               v-model="settings.sessionTimeout"
               type="number"
@@ -210,8 +210,8 @@
           </div>
           <div class="flex items-center justify-between p-3 bg-slate-50 rounded-xl">
             <div>
-              <p class="font-medium text-slate-700">Ikki bosqichli autentifikatsiya</p>
-              <p class="text-sm text-slate-500">Qo'shimcha xavfsizlik</p>
+              <p class="font-medium text-slate-700">{{ $t('settings.twoFactorAuth') }}</p>
+              <p class="text-sm text-slate-500">{{ $t('settings.twoFactorAuthDesc') }}</p>
             </div>
             <button 
               @click="settings.twoFactorAuth = !settings.twoFactorAuth"
@@ -226,8 +226,8 @@
           </div>
           <div class="flex items-center justify-between p-3 bg-slate-50 rounded-xl">
             <div>
-              <p class="font-medium text-slate-700">IP cheklash</p>
-              <p class="text-sm text-slate-500">Faqat ruxsat berilgan IP lardan kirish</p>
+              <p class="font-medium text-slate-700">{{ $t('settings.ipRestriction') }}</p>
+              <p class="text-sm text-slate-500">{{ $t('settings.ipRestrictionDesc') }}</p>
             </div>
             <button 
               @click="settings.ipRestriction = !settings.ipRestriction"

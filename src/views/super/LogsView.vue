@@ -25,22 +25,22 @@
       <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 class="text-xl sm:text-2xl font-bold text-slate-800">{{ $t('logs.title') }}</h1>
-          <p class="text-sm text-slate-500">Barcha faoliyatlar tarixi</p>
+          <p class="text-sm text-slate-500">{{ $t('logs.allActivities') }}</p>
         </div>
         <div class="flex items-center gap-2 sm:gap-3">
           <select v-model="filterType" @change="loadLogs" class="flex-1 sm:flex-none px-3 sm:px-4 py-2 rounded-xl border border-slate-200 focus:border-amber-500 outline-none text-sm">
-            <option value="">Barcha turlar</option>
-            <option value="auth">Autentifikatsiya</option>
-            <option value="crud">CRUD amallar</option>
-            <option value="system">Tizim</option>
-            <option value="error">Xatolar</option>
+            <option value="">{{ $t('logs.allTypes') }}</option>
+            <option value="auth">{{ $t('logs.auth') }}</option>
+            <option value="crud">{{ $t('logs.crud') }}</option>
+            <option value="system">{{ $t('logs.system') }}</option>
+            <option value="error">{{ $t('logs.errors') }}</option>
           </select>
           <button 
             @click="exportLogs"
             class="px-4 py-2 bg-amber-500 text-white rounded-xl font-medium hover:bg-amber-600 transition-colors flex items-center gap-2"
           >
             <Download class="w-4 h-4" />
-            Eksport
+            {{ $t('logs.export') }}
           </button>
         </div>
       </div>
@@ -54,7 +54,7 @@
           </div>
           <div>
             <p class="text-2xl font-bold text-slate-800">{{ logs.length }}</p>
-            <p class="text-xs text-slate-500">Jami loglar</p>
+            <p class="text-xs text-slate-500">{{ $t('logs.totalLogs') }}</p>
           </div>
         </div>
       </div>
@@ -65,7 +65,7 @@
           </div>
           <div>
             <p class="text-2xl font-bold text-emerald-600">{{ authLogs }}</p>
-            <p class="text-xs text-slate-500">Kirish/Chiqish</p>
+            <p class="text-xs text-slate-500">{{ $t('logs.loginLogout') }}</p>
           </div>
         </div>
       </div>
@@ -76,7 +76,7 @@
           </div>
           <div>
             <p class="text-2xl font-bold text-violet-600">{{ crudLogs }}</p>
-            <p class="text-xs text-slate-500">CRUD amallar</p>
+            <p class="text-xs text-slate-500">{{ $t('logs.crudActions') }}</p>
           </div>
         </div>
       </div>
@@ -87,7 +87,7 @@
           </div>
           <div>
             <p class="text-2xl font-bold text-rose-600">{{ errorLogs }}</p>
-            <p class="text-xs text-slate-500">Xatolar</p>
+            <p class="text-xs text-slate-500">{{ $t('logs.errors') }}</p>
           </div>
         </div>
       </div>
@@ -99,12 +99,12 @@
         <table class="w-full min-w-[700px]">
           <thead>
             <tr class="border-b border-slate-100 bg-slate-50">
-              <th class="text-left p-4 font-semibold text-slate-600">Vaqt</th>
-              <th class="text-left p-4 font-semibold text-slate-600">Tur</th>
-              <th class="text-left p-4 font-semibold text-slate-600">Foydalanuvchi</th>
-              <th class="text-left p-4 font-semibold text-slate-600">Amal</th>
-              <th class="text-left p-4 font-semibold text-slate-600">IP manzil</th>
-              <th class="text-left p-4 font-semibold text-slate-600">Holat</th>
+              <th class="text-left p-4 font-semibold text-slate-600">{{ $t('logs.time') }}</th>
+              <th class="text-left p-4 font-semibold text-slate-600">{{ $t('logs.type') }}</th>
+              <th class="text-left p-4 font-semibold text-slate-600">{{ $t('common.name') }}</th>
+              <th class="text-left p-4 font-semibold text-slate-600">{{ $t('common.actions') }}</th>
+              <th class="text-left p-4 font-semibold text-slate-600">{{ $t('logs.ipAddress') }}</th>
+              <th class="text-left p-4 font-semibold text-slate-600">{{ $t('logs.status') }}</th>
             </tr>
           </thead>
           <tbody class="divide-y divide-slate-100">
@@ -134,7 +134,7 @@
                   :class="log.status === 'success' ? 'text-emerald-600' : 'text-rose-600'"
                 >
                   <component :is="log.status === 'success' ? CheckCircle : XCircle" class="w-4 h-4" />
-                  {{ log.status === 'success' ? 'Muvaffaqiyatli' : 'Xato' }}
+                  {{ log.status === 'success' ? $t('logs.success') : $t('common.error') }}
                 </span>
               </td>
             </tr>
@@ -144,12 +144,12 @@
 
       <div v-if="filteredLogs.length === 0" class="p-12 text-center">
         <ScrollText class="w-12 h-12 text-slate-300 mx-auto mb-4" />
-        <p class="text-slate-500">Log topilmadi</p>
+        <p class="text-slate-500">{{ $t('logs.logNotFound') }}</p>
       </div>
 
       <!-- Pagination -->
       <div class="p-3 sm:p-4 border-t border-slate-100 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
-        <p class="text-sm text-slate-500">{{ filteredLogs.length }} ta yozuvdan {{ Math.min(20, filteredLogs.length) }} tasi ko'rsatilmoqda</p>
+        <p class="text-sm text-slate-500">{{ $t('logs.showingOf', { shown: Math.min(20, filteredLogs.length), total: filteredLogs.length }) }}</p>
         <div class="flex items-center gap-1 sm:gap-2 flex-wrap">
           <button class="px-3 py-1.5 rounded-lg border border-slate-200 text-sm text-slate-600 hover:bg-slate-50 disabled:opacity-50" disabled>
             <ChevronLeft class="w-4 h-4" />

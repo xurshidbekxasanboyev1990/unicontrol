@@ -8,17 +8,17 @@
         <div>
           <div class="flex items-center gap-3 mb-2">
             <GraduationCap class="w-8 h-8" />
-            <span class="text-sm font-medium opacity-90">Boshqaruv</span>
+            <span class="text-sm font-medium opacity-90">{{ $t('common.management') }}</span>
           </div>
           <h1 class="text-2xl md:text-3xl font-bold">{{ $t('subjects.title') }}</h1>
-          <p class="text-white/80 mt-2">Yo'nalishlarni boshqarish va ularga fanlarni biriktirish</p>
+          <p class="text-white/80 mt-2">{{ $t('subjects.manageDirections') }}</p>
         </div>
         <button
           @click="openCreateDirectionModal"
           class="flex items-center gap-2 px-5 py-3 bg-white/20 hover:bg-white/30 backdrop-blur rounded-xl font-semibold transition-all hover:scale-105"
         >
           <Plus class="w-5 h-5" />
-          Yangi yo'nalish
+          {{ $t('subjects.newDirection') }}
         </button>
       </div>
     </div>
@@ -32,7 +32,7 @@
           </div>
           <div>
             <p class="text-2xl font-bold text-slate-800">{{ activeDirections.length }}</p>
-            <p class="text-sm text-slate-500">Faol yo'nalishlar</p>
+            <p class="text-sm text-slate-500">{{ $t('subjects.activeDirections') }}</p>
           </div>
         </div>
       </div>
@@ -43,7 +43,7 @@
           </div>
           <div>
             <p class="text-2xl font-bold text-slate-800">{{ dataStore.subjects.length }}</p>
-            <p class="text-sm text-slate-500">Jami fanlar</p>
+            <p class="text-sm text-slate-500">{{ $t('subjects.totalSubjects') }}</p>
           </div>
         </div>
       </div>
@@ -54,7 +54,7 @@
           </div>
           <div>
             <p class="text-2xl font-bold text-slate-800">{{ totalLinks }}</p>
-            <p class="text-sm text-slate-500">Bog'lanishlar</p>
+            <p class="text-sm text-slate-500">{{ $t('subjects.links') }}</p>
           </div>
         </div>
       </div>
@@ -65,7 +65,7 @@
           </div>
           <div>
             <p class="text-2xl font-bold text-slate-800">{{ subjectBasedTournaments }}</p>
-            <p class="text-sm text-slate-500">Fan turnirlari</p>
+            <p class="text-sm text-slate-500">{{ $t('subjects.subjectTournaments') }}</p>
           </div>
         </div>
       </div>
@@ -74,8 +74,8 @@
     <!-- Directions List -->
     <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden">
       <div class="p-5 border-b border-slate-100">
-        <h2 class="font-bold text-lg text-slate-800">Yo'nalishlar ro'yxati</h2>
-        <p class="text-sm text-slate-500 mt-1">Yo'nalishni tanlang va unga fanlar belgilang</p>
+        <h2 class="font-bold text-lg text-slate-800">{{ $t('subjects.directionsList') }}</h2>
+        <p class="text-sm text-slate-500 mt-1">{{ $t('subjects.selectDirectionDesc') }}</p>
       </div>
 
       <div class="divide-y divide-slate-100">
@@ -97,7 +97,7 @@
                     'px-2 py-0.5 text-xs font-medium rounded-full',
                     direction.isActive ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-500'
                   ]">
-                    {{ direction.isActive ? 'Faol' : 'Nofaol' }}
+                    {{ direction.isActive ? $t('common.active') : $t('common.inactive') }}
                   </span>
                 </div>
                 <p class="text-sm text-slate-500">{{ direction.faculty }}</p>
@@ -117,7 +117,7 @@
                       +{{ getDirectionSubjects(direction.id).length - 4 }} ta
                     </span>
                   </template>
-                  <span v-else class="text-xs text-slate-400 italic">Fanlar belgilanmagan</span>
+                  <span v-else class="text-xs text-slate-400 italic">{{ $t('subjects.noSubjectsAssigned') }}</span>
                 </div>
               </div>
             </div>
@@ -129,12 +129,12 @@
                 class="px-4 py-2.5 bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-xl text-sm font-semibold shadow-lg shadow-emerald-500/25 hover:shadow-xl transition-all flex items-center gap-2"
               >
                 <BookOpen class="w-4 h-4" />
-                Fanlar ({{ getDirectionSubjects(direction.id).length }})
+                {{ $t('subjects.subjects') }} ({{ getDirectionSubjects(direction.id).length }})
               </button>
               <button
                 @click="editDirection(direction)"
                 class="p-2.5 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl transition-colors"
-                title="Tahrirlash"
+                :title="$t('common.edit')"
               >
                 <Pencil class="w-4 h-4" />
               </button>
@@ -144,14 +144,14 @@
                   'p-2.5 rounded-xl transition-colors',
                   direction.isActive ? 'bg-amber-100 text-amber-600 hover:bg-amber-200' : 'bg-emerald-100 text-emerald-600 hover:bg-emerald-200'
                 ]"
-                :title="direction.isActive ? 'O\'chirish' : 'Yoqish'"
+                :title="direction.isActive ? $t('common.deactivate') : $t('common.activate')"
               >
                 <Power class="w-4 h-4" />
               </button>
               <button
                 @click="confirmDeleteDirection(direction)"
                 class="p-2.5 bg-rose-100 text-rose-600 hover:bg-rose-200 rounded-xl transition-colors"
-                title="O'chirish"
+                :title="$t('common.delete')"
               >
                 <Trash2 class="w-4 h-4" />
               </button>
@@ -163,8 +163,8 @@
       <!-- Empty state -->
       <div v-if="dataStore.directions.length === 0" class="p-16 text-center">
         <GraduationCap class="w-16 h-16 mx-auto text-slate-300 mb-4" />
-        <h3 class="text-lg font-semibold text-slate-600">Yo'nalishlar yo'q</h3>
-        <p class="text-slate-400 mt-1">Yangi yo'nalish qo'shish uchun yuqoridagi tugmani bosing</p>
+        <h3 class="text-lg font-semibold text-slate-600">{{ $t('subjects.noDirections') }}</h3>
+        <p class="text-slate-400 mt-1">{{ $t('subjects.noDirectionsDesc') }}</p>
       </div>
     </div>
 
@@ -175,13 +175,13 @@
           <div class="absolute inset-0 bg-slate-900/50 backdrop-blur-sm" @click="showDirectionModal = false"></div>
           <div class="relative bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden">
             <div class="bg-gradient-to-r from-blue-500 to-indigo-500 p-6 text-white">
-              <h3 class="text-xl font-bold">{{ isEditingDirection ? 'Yo\'nalishni tahrirlash' : 'Yangi yo\'nalish' }}</h3>
-              <p class="text-white/80 text-sm mt-1">Yo'nalish ma'lumotlarini kiriting</p>
+              <h3 class="text-xl font-bold">{{ isEditingDirection ? $t('subjects.editDirection') : $t('subjects.newDirection') }}</h3>
+              <p class="text-white/80 text-sm mt-1">{{ $t('subjects.enterDirectionInfo') }}</p>
             </div>
 
             <div class="p-6 space-y-4">
               <div>
-                <label class="block text-sm font-medium text-slate-700 mb-1.5">Yo'nalish nomi *</label>
+                <label class="block text-sm font-medium text-slate-700 mb-1.5">{{ $t('subjects.directionName') }} *</label>
                 <input
                   v-model="directionForm.name"
                   type="text"
@@ -191,7 +191,7 @@
               </div>
 
               <div>
-                <label class="block text-sm font-medium text-slate-700 mb-1.5">Qisqa kod *</label>
+                <label class="block text-sm font-medium text-slate-700 mb-1.5">{{ $t('subjects.shortCode') }} *</label>
                 <input
                   v-model="directionForm.code"
                   type="text"
@@ -202,7 +202,7 @@
               </div>
 
               <div>
-                <label class="block text-sm font-medium text-slate-700 mb-1.5">Fakultet</label>
+                <label class="block text-sm font-medium text-slate-700 mb-1.5">{{ $t('subjects.faculty') }}</label>
                 <input
                   v-model="directionForm.faculty"
                   type="text"
@@ -217,13 +217,13 @@
                 @click="showDirectionModal = false"
                 class="px-5 py-2.5 text-slate-600 hover:bg-slate-200 rounded-xl font-medium transition-colors"
               >
-                Bekor qilish
+                {{ $t('common.cancel') }}
               </button>
               <button
                 @click="saveDirection"
                 class="px-6 py-2.5 bg-gradient-to-r from-blue-500 to-indigo-500 text-white rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all"
               >
-                {{ isEditingDirection ? 'Saqlash' : 'Qo\'shish' }}
+                {{ isEditingDirection ? $t('common.save') : $t('common.add') }}
               </button>
             </div>
           </div>
@@ -245,7 +245,7 @@
                 </div>
                 <div>
                   <h3 class="text-xl font-bold">{{ selectedDirection?.name }}</h3>
-                  <p class="text-white/80 text-sm mt-1">Fanlarni belgilang va yangi fan qo'shing</p>
+                  <p class="text-white/80 text-sm mt-1">{{ $t('subjects.assignSubjects') }}</p>
                 </div>
               </div>
             </div>
@@ -257,10 +257,9 @@
                 <div class="flex items-start gap-3">
                   <Info class="w-5 h-5 text-blue-500 mt-0.5 shrink-0" />
                   <div>
-                    <p class="text-sm font-medium text-blue-700">Qanday ishlaydi?</p>
+                    <p class="text-sm font-medium text-blue-700">{{ $t('subjects.howItWorks') }}</p>
                     <p class="text-xs text-blue-600 mt-1">
-                      Bu yo'nalishdagi talabalar faqat belgilangan fanlar bo'yicha bellashuvlarda qatnashishi mumkin.
-                      Masalan: 2 ta fan tanlasangiz, talaba ulardan birini tanlashi mumkin.
+                      {{ $t('subjects.howItWorksDesc') }}
                     </p>
                   </div>
                 </div>
@@ -270,14 +269,14 @@
               <div class="p-4 bg-slate-50 rounded-xl border border-slate-200">
                 <p class="text-sm font-medium text-slate-700 mb-3 flex items-center gap-2">
                   <Plus class="w-4 h-4" />
-                  Yangi fan qo'shish
+                  {{ $t('subjects.addSubject') }}
                 </p>
                 <div class="flex gap-3">
                   <input
                     v-model="newSubjectName"
                     type="text"
                     class="flex-1 px-4 py-2.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500"
-                    placeholder="Fan nomini kiriting..."
+                    placeholder="..."
                     @keyup.enter="addNewSubject"
                   />
                   <select
@@ -293,7 +292,7 @@
                     class="px-5 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl font-semibold transition-colors flex items-center gap-2"
                   >
                     <Plus class="w-4 h-4" />
-                    Qo'shish
+                    {{ $t('common.add') }}
                   </button>
                 </div>
               </div>
@@ -301,8 +300,8 @@
               <!-- Subjects list -->
               <div>
                 <p class="text-sm font-medium text-slate-700 mb-3">
-                  Fanlarni tanlang 
-                  <span class="text-emerald-600">({{ selectedSubjectIds.length }} ta tanlangan)</span>
+                  {{ $t('subjects.selectSubjects') }}
+                  <span class="text-emerald-600">({{ selectedSubjectIds.length }} {{ $t('subjects.selected') }})</span>
                 </p>
                 
                 <div class="grid grid-cols-2 gap-2">
@@ -332,7 +331,7 @@
                     <button
                       @click.prevent="confirmDeleteSubject(subject)"
                       class="p-1.5 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-colors"
-                      title="O'chirish"
+                      :title="$t('common.delete')"
                     >
                       <X class="w-4 h-4" />
                     </button>
@@ -341,7 +340,7 @@
 
                 <div v-if="dataStore.subjects.length === 0" class="text-center py-8 text-slate-400">
                   <BookOpen class="w-12 h-12 mx-auto mb-2 opacity-50" />
-                  <p>Hali fanlar yo'q. Yuqorida yangi fan qo'shing.</p>
+                  <p>{{ $t('subjects.noSubjectsYet') }}</p>
                 </div>
               </div>
             </div>
@@ -352,14 +351,14 @@
                 @click="showSubjectsModal = false"
                 class="px-5 py-2.5 text-slate-600 hover:bg-slate-200 rounded-xl font-medium transition-colors"
               >
-                Bekor qilish
+                {{ $t('common.cancel') }}
               </button>
               <button
                 @click="saveDirectionSubjects"
                 class="px-6 py-2.5 bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all flex items-center gap-2"
               >
                 <Check class="w-5 h-5" />
-                Saqlash
+                {{ $t('common.save') }}
               </button>
             </div>
           </div>
@@ -376,22 +375,22 @@
             <div class="w-16 h-16 bg-rose-100 rounded-full flex items-center justify-center mx-auto mb-4">
               <Trash2 class="w-8 h-8 text-rose-500" />
             </div>
-            <h3 class="text-xl font-bold text-slate-800 mb-2">Yo'nalishni o'chirish</h3>
+            <h3 class="text-xl font-bold text-slate-800 mb-2">{{ $t('subjects.deleteDirection') }}</h3>
             <p class="text-slate-500 mb-6">
-              "{{ directionToDelete?.name }}" yo'nalishini o'chirishni xohlaysizmi?
+              "{{ directionToDelete?.name }}" {{ $t('subjects.deleteDirectionConfirm') }}
             </p>
             <div class="flex gap-3">
               <button
                 @click="showDeleteDirectionModal = false"
                 class="flex-1 px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-semibold transition-colors"
               >
-                Bekor qilish
+                {{ $t('common.cancel') }}
               </button>
               <button
                 @click="deleteDirection"
                 class="flex-1 px-5 py-2.5 bg-rose-500 hover:bg-rose-600 text-white rounded-xl font-semibold transition-colors"
               >
-                O'chirish
+                {{ $t('common.delete') }}
               </button>
             </div>
           </div>
@@ -408,22 +407,22 @@
             <div class="w-16 h-16 bg-rose-100 rounded-full flex items-center justify-center mx-auto mb-4">
               <Trash2 class="w-8 h-8 text-rose-500" />
             </div>
-            <h3 class="text-xl font-bold text-slate-800 mb-2">Fanni o'chirish</h3>
+            <h3 class="text-xl font-bold text-slate-800 mb-2">{{ $t('subjects.deleteSubject') }}</h3>
             <p class="text-slate-500 mb-6">
-              "{{ subjectToDelete?.name }}" fanini o'chirishni xohlaysizmi?
+              "{{ subjectToDelete?.name }}" {{ $t('subjects.deleteSubjectConfirm') }}
             </p>
             <div class="flex gap-3">
               <button
                 @click="showDeleteSubjectModal = false"
                 class="flex-1 px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-semibold transition-colors"
               >
-                Bekor qilish
+                {{ $t('common.cancel') }}
               </button>
               <button
                 @click="deleteSubject"
                 class="flex-1 px-5 py-2.5 bg-rose-500 hover:bg-rose-600 text-white rounded-xl font-semibold transition-colors"
               >
-                O'chirish
+                {{ $t('common.delete') }}
               </button>
             </div>
           </div>

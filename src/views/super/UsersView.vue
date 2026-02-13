@@ -3,22 +3,22 @@
     <!-- Header -->
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
       <div>
-        <h1 class="text-xl sm:text-2xl font-bold text-slate-800">Foydalanuvchilar boshqaruvi</h1>
-        <p class="text-sm text-slate-500">Jami: {{ totalUsers }} ta foydalanuvchi</p>
+        <h1 class="text-xl sm:text-2xl font-bold text-slate-800">{{ $t('users.title') }}</h1>
+        <p class="text-sm text-slate-500">{{ $t('users.totalCount', { count: totalUsers }) }}</p>
       </div>
       <button 
         @click="openCreateModal()"
         class="w-full sm:w-auto px-4 py-2.5 bg-amber-500 text-white rounded-xl font-medium hover:bg-amber-600 transition-colors flex items-center justify-center gap-2"
       >
         <UserPlus class="w-5 h-5" />
-        Yangi foydalanuvchi
+        {{ $t('users.newUser') }}
       </button>
     </div>
 
     <!-- Loading State -->
     <div v-if="loading && !users.length" class="flex items-center justify-center py-20">
       <Loader2 class="w-8 h-8 text-amber-500 animate-spin" />
-      <span class="ml-3 text-slate-600">Yuklanmoqda...</span>
+      <span class="ml-3 text-slate-600">{{ $t('common.loading') }}</span>
     </div>
 
     <template v-else>
@@ -29,8 +29,8 @@
           <Search :size="24" class="text-amber-600" />
         </div>
         <div>
-          <h2 class="font-semibold text-slate-800">Foydalanuvchilarni qidirish</h2>
-          <p class="text-sm text-slate-500">Ism, login yoki talaba ID bo'yicha qidiring</p>
+          <h2 class="font-semibold text-slate-800">{{ $t('users.searchUsers') }}</h2>
+          <p class="text-sm text-slate-500">{{ $t('users.searchByNameLogin') }}</p>
         </div>
       </div>
       
@@ -40,7 +40,7 @@
           <input 
             v-model="searchQuery"
             type="text"
-            placeholder="Ism, login yoki ID kiriting..."
+            :placeholder="$t('users.searchPlaceholder')"
             class="w-full rounded-xl border border-slate-200 py-3 pl-12 pr-4 focus:border-amber-400 focus:outline-none focus:ring-2 focus:ring-amber-400/20"
             @input="onSearchInput"
           />
@@ -50,20 +50,20 @@
           class="rounded-xl border border-slate-200 px-4 py-3 focus:border-amber-400 focus:outline-none"
           @change="onFilterChange"
         >
-          <option value="">Barcha rollar</option>
-          <option value="student">Talaba</option>
-          <option value="leader">Sardor</option>
-          <option value="admin">Admin</option>
-          <option value="superadmin">Super Admin</option>
+          <option value="">{{ $t('users.allRoles') }}</option>
+          <option value="student">{{ $t('users.student') }}</option>
+          <option value="leader">{{ $t('users.groupLeader') }}</option>
+          <option value="admin">{{ $t('users.admin') }}</option>
+          <option value="superadmin">{{ $t('users.superAdmin') }}</option>
         </select>
         <select 
           v-model="filterActive"
           class="rounded-xl border border-slate-200 px-4 py-3 focus:border-amber-400 focus:outline-none"
           @change="onFilterChange"
         >
-          <option value="">Barchasi</option>
-          <option value="true">Faol</option>
-          <option value="false">Nofaol</option>
+          <option value="">{{ $t('users.allActive') }}</option>
+          <option value="true">{{ $t('users.activeOnly') }}</option>
+          <option value="false">{{ $t('users.inactiveOnly') }}</option>
         </select>
       </div>
     </div>
@@ -72,18 +72,18 @@
     <div class="rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden">
       <div class="border-b border-slate-100 bg-slate-50 p-4 flex items-center justify-between">
         <h3 class="font-semibold text-slate-700">
-          Foydalanuvchilar: {{ totalUsers }}
+          {{ $t('users.usersCount') }}: {{ totalUsers }}
         </h3>
         <div v-if="loading" class="flex items-center gap-2 text-sm text-slate-500">
           <Loader2 class="w-4 h-4 animate-spin" />
-          Yuklanmoqda...
+          {{ $t('common.loading') }}
         </div>
       </div>
       
       <div v-if="users.length === 0 && !loading" class="p-12 text-center">
         <UserX :size="48" class="mx-auto mb-4 text-slate-300" />
-        <p class="text-slate-500">Foydalanuvchi topilmadi</p>
-        <p class="text-sm text-slate-400 mt-1">Boshqa qidiruv so'zini sinab ko'ring</p>
+        <p class="text-slate-500">{{ $t('users.noUsersFound') }}</p>
+        <p class="text-sm text-slate-400 mt-1">{{ $t('users.searchOther') }}</p>
       </div>
       
       <!-- Table -->
@@ -92,14 +92,14 @@
           <thead class="bg-slate-50 border-b border-slate-200">
             <tr>
               <th class="text-left px-3 sm:px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide whitespace-nowrap">#</th>
-              <th class="text-left px-3 sm:px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide whitespace-nowrap">F.I.O</th>
-              <th class="text-left px-3 sm:px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide whitespace-nowrap">Login</th>
-              <th class="text-left px-3 sm:px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide whitespace-nowrap">Parol</th>
-              <th class="text-left px-3 sm:px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide whitespace-nowrap">Rol</th>
-              <th class="text-left px-3 sm:px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide whitespace-nowrap">Holat</th>
-              <th class="text-left px-3 sm:px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide whitespace-nowrap">Guruh</th>
-              <th class="text-left px-3 sm:px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide whitespace-nowrap">Telefon</th>
-              <th class="text-right px-3 sm:px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide whitespace-nowrap">Amallar</th>
+              <th class="text-left px-3 sm:px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide whitespace-nowrap">{{ $t('users.fio') }}</th>
+              <th class="text-left px-3 sm:px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide whitespace-nowrap">{{ $t('users.loginColumn') }}</th>
+              <th class="text-left px-3 sm:px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide whitespace-nowrap">{{ $t('users.passwordColumn') }}</th>
+              <th class="text-left px-3 sm:px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide whitespace-nowrap">{{ $t('users.roleColumn') }}</th>
+              <th class="text-left px-3 sm:px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide whitespace-nowrap">{{ $t('users.statusColumn') }}</th>
+              <th class="text-left px-3 sm:px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide whitespace-nowrap">{{ $t('users.groupColumn') }}</th>
+              <th class="text-left px-3 sm:px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide whitespace-nowrap">{{ $t('users.phoneColumn') }}</th>
+              <th class="text-right px-3 sm:px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide whitespace-nowrap">{{ $t('users.actionsColumn') }}</th>
             </tr>
           </thead>
           <tbody class="divide-y divide-slate-100">
@@ -158,10 +158,10 @@
                   </button>
                 </div>
                 <span v-else-if="user.role === 'superadmin'" class="text-xs text-slate-400">
-                  <Lock :size="14" class="inline" /> Yashirin
+                  <Lock :size="14" class="inline" /> {{ $t('users.hidden') }}
                 </span>
                 <span v-else class="text-xs text-slate-400">
-                  O'rnatilmagan
+                  {{ $t('users.notSet') }}
                 </span>
               </td>
               <td class="px-4 py-3">
@@ -178,7 +178,7 @@
                   :class="user.isActive ? 'text-emerald-600' : 'text-rose-500'"
                 >
                   <span class="w-2 h-2 rounded-full" :class="user.isActive ? 'bg-emerald-500' : 'bg-rose-400'"></span>
-                  {{ user.isActive ? 'Faol' : 'Nofaol' }}
+                  {{ user.isActive ? $t('users.activeStatus') : $t('users.inactiveStatus') }}
                 </span>
               </td>
               <td class="px-4 py-3 text-sm text-slate-600">{{ user.group || '-' }}</td>
@@ -188,21 +188,21 @@
                   <button 
                     @click="viewUserDetails(user)"
                     class="p-2 rounded-lg text-slate-400 hover:text-amber-600 hover:bg-amber-50 transition-colors"
-                    title="Batafsil"
+                    :title="$t('common.details')"
                   >
                     <Eye :size="16" />
                   </button>
                   <button 
                     @click="openEditModal(user)"
                     class="p-2 rounded-lg text-slate-400 hover:text-blue-600 hover:bg-blue-50 transition-colors"
-                    title="Tahrirlash"
+                    :title="$t('common.edit')"
                   >
                     <Pencil :size="16" />
                   </button>
                   <button 
                     @click="resetPasswordModal(user)"
                     class="p-2 rounded-lg text-slate-400 hover:text-violet-600 hover:bg-violet-50 transition-colors"
-                    title="Parolni tiklash"
+                    :title="$t('users.resetPassword')"
                   >
                     <RefreshCw :size="16" />
                   </button>
@@ -210,7 +210,7 @@
                     v-if="user.isActive"
                     @click="toggleUserActive(user, false)"
                     class="p-2 rounded-lg text-slate-400 hover:text-orange-600 hover:bg-orange-50 transition-colors"
-                    title="O'chirish"
+                    :title="$t('common.deactivate')"
                   >
                     <UserMinus :size="16" />
                   </button>
@@ -218,7 +218,7 @@
                     v-else
                     @click="toggleUserActive(user, true)"
                     class="p-2 rounded-lg text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 transition-colors"
-                    title="Faollashtirish"
+                    :title="$t('common.activate')"
                   >
                     <UserCheck :size="16" />
                   </button>
@@ -226,7 +226,7 @@
                     v-if="user.role !== 'superadmin'"
                     @click="confirmDeleteUser(user)"
                     class="p-2 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors"
-                    title="O'chirish"
+                    :title="$t('common.delete')"
                   >
                     <Trash2 :size="16" />
                   </button>
@@ -303,7 +303,7 @@
       >
         <div class="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl">
           <div class="mb-4 flex items-center justify-between">
-            <h2 class="text-lg font-bold text-slate-800">Foydalanuvchi ma'lumotlari</h2>
+            <h2 class="text-lg font-bold text-slate-800">{{ $t('users.detailsTitle') }}</h2>
             <button @click="showDetailsModal = false" class="text-slate-400 hover:text-slate-600">
               <X :size="24" />
             </button>
@@ -378,7 +378,7 @@
               </div>
 
               <div class="rounded-xl border border-slate-200 p-4">
-                <label class="mb-1 block text-xs font-medium text-slate-500">Holat</label>
+                <label class="mb-1 block text-xs font-medium text-slate-500">{{ $t('users.status') }}</label>
                 <span :class="selectedUser.isActive ? 'text-emerald-600' : 'text-rose-500'" class="font-medium">
                   {{ selectedUser.isActive ? 'Faol' : 'Nofaol' }}
                 </span>
@@ -391,14 +391,14 @@
               @click="showDetailsModal = false"
               class="flex-1 rounded-xl bg-slate-100 py-3 font-medium text-slate-700 hover:bg-slate-200"
             >
-              Yopish
+              {{ $t('users.closeBtn') }}
             </button>
             <button 
               @click="showDetailsModal = false; openEditModal(selectedUser)"
               class="flex-1 rounded-xl bg-amber-500 py-3 font-medium text-white hover:bg-amber-600 flex items-center justify-center gap-2"
             >
               <Pencil :size="16" />
-              Tahrirlash
+              {{ $t('users.editBtn') }}
             </button>
           </div>
         </div>
@@ -415,7 +415,7 @@
         <div class="w-full max-w-lg rounded-2xl bg-white shadow-2xl my-8">
           <div class="p-6 border-b border-slate-100 flex items-center justify-between">
             <h2 class="text-lg font-bold text-slate-800">
-              {{ editingUser ? 'Foydalanuvchini tahrirlash' : 'Yangi foydalanuvchi qo\'shish' }}
+              {{ editingUser ? $t('users.editTitle') : $t('users.createTitle') }}
             </h2>
             <button @click="showFormModal = false" class="p-2 hover:bg-slate-100 rounded-lg transition-colors">
               <X class="w-5 h-5 text-slate-500" />
@@ -425,13 +425,13 @@
           <form @submit.prevent="saveUser" class="p-6 space-y-4 max-h-[70vh] overflow-y-auto">
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label class="block text-sm font-medium text-slate-700 mb-2">F.I.O *</label>
+                <label class="block text-sm font-medium text-slate-700 mb-2">{{ $t('users.nameField') }} *</label>
                 <input 
                   v-model="form.name"
                   type="text"
                   required
                   class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 outline-none"
-                  placeholder="Ism familiya"
+                  :placeholder="$t('users.namePlaceholder')"
                 />
               </div>
               <div>
@@ -510,7 +510,7 @@
                 :disabled="saving"
                 class="flex-1 rounded-xl bg-slate-100 py-3 font-medium text-slate-700 hover:bg-slate-200 disabled:opacity-50"
               >
-                Bekor qilish
+                {{ $t('users.cancelBtn') }}
               </button>
               <button 
                 type="submit"
@@ -518,7 +518,7 @@
                 class="flex-1 rounded-xl bg-amber-500 py-3 font-medium text-white hover:bg-amber-600 disabled:opacity-50 flex items-center justify-center gap-2"
               >
                 <Loader2 v-if="saving" class="w-4 h-4 animate-spin" />
-                {{ saving ? 'Saqlanmoqda...' : (editingUser ? 'Saqlash' : 'Qo\'shish') }}
+                {{ saving ? $t('users.saving') : (editingUser ? $t('users.saveBtn') : $t('users.addBtn')) }}
               </button>
             </div>
           </form>
@@ -535,7 +535,7 @@
       >
         <div class="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl">
           <div class="mb-4 flex items-center justify-between">
-            <h2 class="text-lg font-bold text-slate-800">Parolni tiklash</h2>
+            <h2 class="text-lg font-bold text-slate-800">{{ $t('users.resetPasswordTitle') }}</h2>
             <button @click="showResetModal = false" class="text-slate-400 hover:text-slate-600">
               <X :size="24" />
             </button>
@@ -549,11 +549,11 @@
             </div>
             
             <div>
-              <label class="mb-2 block text-sm font-medium text-slate-700">Yangi parol</label>
+              <label class="mb-2 block text-sm font-medium text-slate-700">{{ $t('users.resetNewPassword') }}</label>
               <input 
                 v-model="newPassword"
                 type="text"
-                placeholder="Yangi parol kiriting"
+                :placeholder="$t('users.enterNewPassword')"
                 class="w-full rounded-xl border border-slate-200 px-4 py-3 focus:border-amber-400 focus:outline-none focus:ring-2 focus:ring-amber-400/20"
               />
             </div>
@@ -563,13 +563,13 @@
                 @click="generatePassword"
                 class="flex-1 rounded-xl border border-slate-200 py-3 text-sm font-medium text-slate-600 hover:bg-slate-50"
               >
-                Avtomatik yaratish
+                {{ $t('users.autoGenerate') }}
               </button>
               <button 
                 @click="newPassword = '123456'"
                 class="flex-1 rounded-xl border border-slate-200 py-3 text-sm font-medium text-slate-600 hover:bg-slate-50"
               >
-                Standart (123456)
+                {{ $t('users.defaultPassword') }}
               </button>
             </div>
           </div>
@@ -580,7 +580,7 @@
               :disabled="resetting"
               class="flex-1 rounded-xl bg-slate-100 py-3 font-medium text-slate-700 hover:bg-slate-200 disabled:opacity-50"
             >
-              Bekor qilish
+              {{ $t('users.cancelBtn') }}
             </button>
             <button 
               @click="confirmReset"
@@ -588,7 +588,7 @@
               class="flex-1 rounded-xl bg-amber-500 py-3 font-medium text-white hover:bg-amber-600 disabled:opacity-50 flex items-center justify-center gap-2"
             >
               <Loader2 v-if="resetting" class="w-4 h-4 animate-spin" />
-              {{ resetting ? 'Saqlanmoqda...' : 'Saqlash' }}
+              {{ resetting ? $t('users.resetting') : $t('users.saveBtn') }}
             </button>
           </div>
         </div>
@@ -607,7 +607,7 @@
             <div class="mx-auto w-16 h-16 rounded-full bg-rose-100 flex items-center justify-center mb-4">
               <AlertTriangle :size="32" class="text-rose-500" />
             </div>
-            <h2 class="text-lg font-bold text-slate-800">O'chirishni tasdiqlang</h2>
+            <h2 class="text-lg font-bold text-slate-800">{{ $t('users.deleteTitle') }}</h2>
             <p class="text-sm text-slate-500 mt-2" v-if="selectedUser">
               <strong>{{ selectedUser.name }}</strong> foydalanuvchisini o'chirmoqchimisiz?
               Bu amalni qaytarib bo'lmaydi.
@@ -620,7 +620,7 @@
               :disabled="deleting"
               class="flex-1 rounded-xl bg-slate-100 py-3 font-medium text-slate-700 hover:bg-slate-200 disabled:opacity-50"
             >
-              Bekor qilish
+              {{ $t('users.cancelBtn') }}
             </button>
             <button 
               @click="deleteUser"
@@ -628,7 +628,7 @@
               class="flex-1 rounded-xl bg-rose-500 py-3 font-medium text-white hover:bg-rose-600 disabled:opacity-50 flex items-center justify-center gap-2"
             >
               <Loader2 v-if="deleting" class="w-4 h-4 animate-spin" />
-              {{ deleting ? 'O\'chirilmoqda...' : 'O\'chirish' }}
+              {{ deleting ? $t('users.deleting') : $t('users.deleteBtn') }}
             </button>
           </div>
         </div>

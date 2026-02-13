@@ -3,8 +3,8 @@
     <!-- Header -->
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
       <div>
-        <h1 class="text-2xl font-bold text-slate-800">{{ $t('attendance.management') || 'Davomat boshqaruvi' }}</h1>
-        <p class="text-slate-500">Barcha guruhlar davomatini ko'rish va boshqarish</p>
+        <h1 class="text-2xl font-bold text-slate-800">{{ $t('attendance.management') }}</h1>
+        <p class="text-slate-500">{{ $t('attendance.managementDesc') }}</p>
       </div>
       <div class="flex items-center gap-3">
         <button @click="exportToExcel" class="px-4 py-2.5 bg-emerald-500 text-white rounded-xl hover:bg-emerald-600 transition-colors flex items-center gap-2">
@@ -21,48 +21,48 @@
     <div class="bg-white rounded-2xl border border-slate-200 p-5">
       <div class="flex items-center gap-3 mb-4">
         <Filter class="w-5 h-5 text-slate-400" />
-        <h3 class="font-semibold text-slate-700">Filtrlar</h3>
+        <h3 class="font-semibold text-slate-700">{{ $t('attendance.filters') }}</h3>
       </div>
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
         <!-- Group Select -->
         <div>
-          <label class="block text-sm font-medium text-slate-600 mb-1.5">Guruh</label>
+          <label class="block text-sm font-medium text-slate-600 mb-1.5">{{ $t('attendance.group') }}</label>
           <select v-model="filters.groupId" @change="loadAttendance" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-white focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 outline-none text-sm">
-            <option :value="null">Barcha guruhlar</option>
+            <option :value="null">{{ $t('attendance.allGroups') }}</option>
             <option v-for="group in groups" :key="group.id" :value="group.id">{{ group.name }}</option>
           </select>
         </div>
 
         <!-- Status -->
         <div>
-          <label class="block text-sm font-medium text-slate-600 mb-1.5">Holat</label>
+          <label class="block text-sm font-medium text-slate-600 mb-1.5">{{ $t('attendance.statusLabel') }}</label>
           <select v-model="filters.status" @change="loadAttendance" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-white focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 outline-none text-sm">
-            <option :value="null">Barchasi</option>
-            <option value="present">✅ Keldi</option>
-            <option value="absent">❌ Kelmadi</option>
-            <option value="late">⚠️ Kech qoldi</option>
-            <option value="excused">📋 Sababli</option>
+            <option :value="null">{{ $t('attendance.allStatuses') }}</option>
+            <option value="present">✅ {{ $t('attendance.statusPresent') }}</option>
+            <option value="absent">❌ {{ $t('attendance.statusAbsent') }}</option>
+            <option value="late">⚠️ {{ $t('attendance.statusLate') }}</option>
+            <option value="excused">📋 {{ $t('attendance.statusExcused') }}</option>
           </select>
         </div>
 
         <!-- Date From -->
         <div>
-          <label class="block text-sm font-medium text-slate-600 mb-1.5">Sana (dan)</label>
+          <label class="block text-sm font-medium text-slate-600 mb-1.5">{{ $t('attendance.dateFrom') }}</label>
           <input v-model="filters.dateFrom" type="date" @change="loadAttendance" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-white focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 outline-none text-sm" />
         </div>
 
         <!-- Date To -->
         <div>
-          <label class="block text-sm font-medium text-slate-600 mb-1.5">Sana (gacha)</label>
+          <label class="block text-sm font-medium text-slate-600 mb-1.5">{{ $t('attendance.dateTo') }}</label>
           <input v-model="filters.dateTo" type="date" @change="loadAttendance" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-white focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 outline-none text-sm" />
         </div>
 
         <!-- Search -->
         <div>
-          <label class="block text-sm font-medium text-slate-600 mb-1.5">Qidirish</label>
+          <label class="block text-sm font-medium text-slate-600 mb-1.5">{{ $t('common.search') }}</label>
           <div class="relative">
             <Search class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-            <input v-model="searchQuery" type="text" placeholder="Talaba ismi..." class="w-full pl-9 pr-3 py-2.5 rounded-xl border border-slate-200 bg-white focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 outline-none text-sm" />
+            <input v-model="searchQuery" type="text" :placeholder="$t('attendance.searchStudent')" class="w-full pl-9 pr-3 py-2.5 rounded-xl border border-slate-200 bg-white focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 outline-none text-sm" />
           </div>
         </div>
       </div>
@@ -74,7 +74,7 @@
         <div class="flex items-center justify-between">
           <div>
             <p class="text-xl sm:text-2xl font-bold text-slate-700">{{ stats.total }}</p>
-            <p class="text-xs sm:text-sm text-slate-500 font-medium">Jami</p>
+            <p class="text-xs sm:text-sm text-slate-500 font-medium">{{ $t('attendance.total') }}</p>
           </div>
           <div class="w-10 h-10 bg-slate-200/50 rounded-xl flex items-center justify-center">
             <Users class="w-5 h-5 text-slate-500" />
@@ -85,7 +85,7 @@
         <div class="flex items-center justify-between">
           <div>
             <p class="text-2xl font-bold text-emerald-600">{{ stats.present }}</p>
-            <p class="text-sm text-emerald-700 font-medium">Keldi</p>
+            <p class="text-sm text-emerald-700 font-medium">{{ $t('attendance.statusPresent') }}</p>
           </div>
           <div class="w-10 h-10 bg-emerald-200/50 rounded-xl flex items-center justify-center">
             <CheckCircle class="w-5 h-5 text-emerald-500" />
@@ -96,7 +96,7 @@
         <div class="flex items-center justify-between">
           <div>
             <p class="text-2xl font-bold text-rose-600">{{ stats.absent }}</p>
-            <p class="text-sm text-rose-700 font-medium">Kelmadi</p>
+            <p class="text-sm text-rose-700 font-medium">{{ $t('attendance.statusAbsent') }}</p>
           </div>
           <div class="w-10 h-10 bg-rose-200/50 rounded-xl flex items-center justify-center">
             <XCircle class="w-5 h-5 text-rose-500" />
@@ -107,7 +107,7 @@
         <div class="flex items-center justify-between">
           <div>
             <p class="text-2xl font-bold text-amber-600">{{ stats.late }}</p>
-            <p class="text-sm text-amber-700 font-medium">Kech qoldi</p>
+            <p class="text-sm text-amber-700 font-medium">{{ $t('attendance.statusLate') }}</p>
           </div>
           <div class="w-10 h-10 bg-amber-200/50 rounded-xl flex items-center justify-center">
             <Clock class="w-5 h-5 text-amber-500" />
@@ -118,7 +118,7 @@
         <div class="flex items-center justify-between">
           <div>
             <p class="text-2xl font-bold text-blue-600">{{ stats.excused }}</p>
-            <p class="text-sm text-blue-700 font-medium">Sababli</p>
+            <p class="text-sm text-blue-700 font-medium">{{ $t('attendance.statusExcused') }}</p>
           </div>
           <div class="w-10 h-10 bg-blue-200/50 rounded-xl flex items-center justify-center">
             <FileText class="w-5 h-5 text-blue-500" />
@@ -131,7 +131,7 @@
     <div v-if="loading" class="flex items-center justify-center py-16">
       <div class="text-center">
         <RefreshCw class="w-10 h-10 text-emerald-500 animate-spin mx-auto mb-4" />
-        <p class="text-slate-500">Yuklanmoqda...</p>
+        <p class="text-slate-500">{{ $t('attendance.loadingText') }}</p>
       </div>
     </div>
 
@@ -142,15 +142,15 @@
           <thead>
             <tr class="bg-slate-50 border-b border-slate-200">
               <th class="text-left px-3 sm:px-5 py-3 sm:py-4 font-semibold text-slate-600 whitespace-nowrap">#</th>
-              <th class="text-left px-3 sm:px-5 py-3 sm:py-4 font-semibold text-slate-600 whitespace-nowrap">Talaba</th>
-              <th class="text-left px-3 sm:px-5 py-3 sm:py-4 font-semibold text-slate-600 whitespace-nowrap">Guruh</th>
-              <th class="text-left px-3 sm:px-5 py-3 sm:py-4 font-semibold text-slate-600 whitespace-nowrap">Sana</th>
-              <th class="text-left px-3 sm:px-5 py-3 sm:py-4 font-semibold text-slate-600 whitespace-nowrap">Fan</th>
-              <th class="text-left px-3 sm:px-5 py-3 sm:py-4 font-semibold text-slate-600 whitespace-nowrap">Para</th>
-              <th class="text-left px-3 sm:px-5 py-3 sm:py-4 font-semibold text-slate-600 whitespace-nowrap">Holat</th>
-              <th class="text-left px-3 sm:px-5 py-3 sm:py-4 font-semibold text-slate-600 whitespace-nowrap">Kechikish</th>
-              <th class="text-left px-3 sm:px-5 py-3 sm:py-4 font-semibold text-slate-600 whitespace-nowrap">Izoh/Sabab</th>
-              <th class="text-left px-3 sm:px-5 py-3 sm:py-4 font-semibold text-slate-600 whitespace-nowrap">Amallar</th>
+              <th class="text-left px-3 sm:px-5 py-3 sm:py-4 font-semibold text-slate-600 whitespace-nowrap">{{ $t('attendance.tableStudent') }}</th>
+              <th class="text-left px-3 sm:px-5 py-3 sm:py-4 font-semibold text-slate-600 whitespace-nowrap">{{ $t('attendance.tableGroup') }}</th>
+              <th class="text-left px-3 sm:px-5 py-3 sm:py-4 font-semibold text-slate-600 whitespace-nowrap">{{ $t('attendance.tableDate') }}</th>
+              <th class="text-left px-3 sm:px-5 py-3 sm:py-4 font-semibold text-slate-600 whitespace-nowrap">{{ $t('attendance.tableSubject') }}</th>
+              <th class="text-left px-3 sm:px-5 py-3 sm:py-4 font-semibold text-slate-600 whitespace-nowrap">{{ $t('attendance.tablePeriod') }}</th>
+              <th class="text-left px-3 sm:px-5 py-3 sm:py-4 font-semibold text-slate-600 whitespace-nowrap">{{ $t('attendance.tableStatus') }}</th>
+              <th class="text-left px-3 sm:px-5 py-3 sm:py-4 font-semibold text-slate-600 whitespace-nowrap">{{ $t('attendance.tableDelay') }}</th>
+              <th class="text-left px-3 sm:px-5 py-3 sm:py-4 font-semibold text-slate-600 whitespace-nowrap">{{ $t('attendance.tableNote') }}</th>
+              <th class="text-left px-3 sm:px-5 py-3 sm:py-4 font-semibold text-slate-600 whitespace-nowrap">{{ $t('attendance.tableActions') }}</th>
             </tr>
           </thead>
           <tbody class="divide-y divide-slate-100">
@@ -161,7 +161,7 @@
                   <div class="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-gradient-to-br from-slate-100 to-slate-200 flex items-center justify-center flex-shrink-0">
                     <User class="w-4 h-4 text-slate-500" />
                   </div>
-                  <span class="font-medium text-slate-800 whitespace-nowrap">{{ record.student_name || 'Noma\'lum' }}</span>
+                  <span class="font-medium text-slate-800 whitespace-nowrap">{{ record.student_name || $t('attendance.unknownStudent') }}</span>
                 </div>
               </td>
               <td class="px-3 sm:px-5 py-3 sm:py-4 text-slate-600 whitespace-nowrap">{{ getGroupName(record) }}</td>
@@ -175,7 +175,7 @@
               </td>
               <td class="px-5 py-4 text-slate-600">
                 <span v-if="record.status === 'late' && record.late_minutes > 0" class="text-amber-600 font-medium">
-                  {{ record.late_minutes }} daq.
+                  {{ record.late_minutes }} {{ $t('attendance.delayMinutes') }}
                 </span>
                 <span v-else class="text-slate-400">-</span>
               </td>
@@ -193,7 +193,7 @@
                         ? 'text-blue-500 hover:bg-blue-50'
                         : 'text-slate-300 cursor-not-allowed'
                     ]"
-                    :title="record.is_editable || isSuperAdmin ? 'Tahrirlash' : '24 soat o\'tgan — tahrirlash bloklangan'"
+                    :title="record.is_editable || isSuperAdmin ? $t('common.edit') : $t('attendance.editBlocked')"
                   >
                     <Edit3 class="w-4 h-4" />
                   </button>
@@ -201,7 +201,7 @@
                     v-if="isSuperAdmin"
                     @click="deleteRecord(record)"
                     class="p-2 text-rose-400 hover:bg-rose-50 rounded-lg transition-colors"
-                    title="O'chirish"
+                    :title="$t('common.delete')"
                   >
                     <Trash2 class="w-4 h-4" />
                   </button>
@@ -218,8 +218,8 @@
       <!-- Empty State -->
       <div v-if="filteredRecords.length === 0 && !loading" class="p-12 text-center">
         <ClipboardList class="w-12 h-12 text-slate-300 mx-auto mb-4" />
-        <p class="text-lg font-medium text-slate-600">Davomat ma'lumotlari topilmadi</p>
-        <p class="text-sm text-slate-400 mt-1">Filtrlarni o'zgartiring yoki boshqa sanani tanlang</p>
+        <p class="text-lg font-medium text-slate-600">{{ $t('attendance.noRecordsTitle') }}</p>
+        <p class="text-sm text-slate-400 mt-1">{{ $t('attendance.noRecordsDesc') }}</p>
       </div>
 
       <!-- Pagination -->
@@ -253,7 +253,7 @@
           <div class="bg-gradient-to-r from-blue-500 to-indigo-500 p-6 text-white">
             <div class="flex items-center justify-between">
               <div>
-                <h3 class="text-xl font-bold">Davomatni tahrirlash</h3>
+                <h3 class="text-xl font-bold">{{ $t('attendance.editTitle') }}</h3>
                 <p class="text-blue-100 text-sm mt-1">{{ editModal.record?.student_name }}</p>
               </div>
               <button @click="editModal.show = false" class="p-2 hover:bg-white/20 rounded-xl transition-colors">
@@ -264,7 +264,7 @@
           <div class="p-6 space-y-5">
             <!-- Status -->
             <div>
-              <label class="block text-sm font-medium text-slate-700 mb-2">Holat</label>
+              <label class="block text-sm font-medium text-slate-700 mb-2">{{ $t('attendance.statusLabel') }}</label>
               <div class="grid grid-cols-4 gap-2">
                 <button v-for="st in statusOptions" :key="st.value" @click="editModal.form.status = st.value"
                   :class="[
@@ -281,29 +281,29 @@
 
             <!-- Late Minutes -->
             <div v-if="editModal.form.status === 'late'">
-              <label class="block text-sm font-medium text-slate-700 mb-2">Kechikish (daqiqa)</label>
+              <label class="block text-sm font-medium text-slate-700 mb-2">{{ $t('attendance.delayLabel') }}</label>
               <input v-model.number="editModal.form.late_minutes" type="number" min="1" max="90" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none text-sm" />
             </div>
 
             <!-- Note -->
             <div>
-              <label class="block text-sm font-medium text-slate-700 mb-2">Izoh</label>
-              <textarea v-model="editModal.form.note" rows="2" placeholder="Izoh..." class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none text-sm resize-none"></textarea>
+              <label class="block text-sm font-medium text-slate-700 mb-2">{{ $t('attendance.noteLabel') }}</label>
+              <textarea v-model="editModal.form.note" rows="2" :placeholder="$t('attendance.notePlaceholder')" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none text-sm resize-none"></textarea>
             </div>
 
             <!-- Excuse Reason -->
             <div v-if="editModal.form.status === 'excused' || editModal.form.status === 'absent'">
-              <label class="block text-sm font-medium text-slate-700 mb-2">Sabab</label>
-              <textarea v-model="editModal.form.excuse_reason" rows="2" placeholder="Kasallik, oilaviy sabab..." class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none text-sm resize-none"></textarea>
+              <label class="block text-sm font-medium text-slate-700 mb-2">{{ $t('attendance.reasonLabel') }}</label>
+              <textarea v-model="editModal.form.excuse_reason" rows="2" :placeholder="$t('attendance.reasonPlaceholder')" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none text-sm resize-none"></textarea>
             </div>
           </div>
           <div class="px-6 pb-6 flex gap-3">
             <button @click="editModal.show = false" class="flex-1 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-medium transition-colors">
-              Bekor qilish
+              {{ $t('attendance.cancelBtn') }}
             </button>
             <button @click="saveEdit" :disabled="editModal.saving" class="flex-1 py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-xl font-medium transition-colors disabled:opacity-50 flex items-center justify-center gap-2">
               <RefreshCw v-if="editModal.saving" class="w-4 h-4 animate-spin" />
-              Saqlash
+              {{ $t('attendance.saveBtn') }}
             </button>
           </div>
         </div>

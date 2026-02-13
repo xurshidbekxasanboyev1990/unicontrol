@@ -4,7 +4,7 @@
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
       <div>
         <h1 class="text-xl sm:text-2xl font-bold text-slate-800">{{ $t('users.title') }}</h1>
-        <p class="text-sm text-slate-500">Jami: {{ totalUsers }} ta foydalanuvchi</p>
+        <p class="text-sm text-slate-500">{{ $t('users.totalCount', { count: totalUsers }) }}</p>
       </div>
     </div>
 
@@ -23,7 +23,7 @@
         </div>
         <div>
           <h2 class="font-semibold text-slate-800">{{ $t('users.searchUsers') }}</h2>
-          <p class="text-sm text-slate-500">Ism, login yoki talaba ID bo'yicha qidiring</p>
+          <p class="text-sm text-slate-500">{{ $t('users.searchByNameLogin') }}</p>
         </div>
       </div>
       
@@ -33,7 +33,7 @@
           <input 
             v-model="searchQuery"
             type="text"
-            placeholder="Ism, login yoki ID kiriting..."
+            :placeholder="$t('users.searchPlaceholder')"
             class="w-full rounded-xl border border-slate-200 py-3 pl-12 pr-4 focus:border-violet-400 focus:outline-none focus:ring-2 focus:ring-violet-400/20"
             @input="onSearchInput"
           />
@@ -59,7 +59,7 @@
         </h3>
         <div v-if="loading" class="flex items-center gap-2 text-sm text-slate-500">
           <Loader2 class="w-4 h-4 animate-spin" />
-          Yuklanmoqda...
+          {{ $t('common.loading') }}
         </div>
       </div>
       
@@ -75,13 +75,13 @@
           <thead class="bg-slate-50 border-b border-slate-200">
             <tr>
               <th class="text-left px-3 sm:px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide whitespace-nowrap">#</th>
-              <th class="text-left px-3 sm:px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide whitespace-nowrap">F.I.O</th>
-              <th class="text-left px-3 sm:px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide whitespace-nowrap">Login</th>
-              <th class="text-left px-3 sm:px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide whitespace-nowrap">Parol</th>
-              <th class="text-left px-3 sm:px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide whitespace-nowrap">Rol</th>
-              <th class="text-left px-3 sm:px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide whitespace-nowrap">Guruh</th>
-              <th class="text-left px-3 sm:px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide whitespace-nowrap">Telefon</th>
-              <th class="text-right px-3 sm:px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide whitespace-nowrap">Amallar</th>
+              <th class="text-left px-3 sm:px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide whitespace-nowrap">{{ $t('users.fio') }}</th>
+              <th class="text-left px-3 sm:px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide whitespace-nowrap">{{ $t('users.loginColumn') }}</th>
+              <th class="text-left px-3 sm:px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide whitespace-nowrap">{{ $t('users.passwordColumn') }}</th>
+              <th class="text-left px-3 sm:px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide whitespace-nowrap">{{ $t('users.roleColumn') }}</th>
+              <th class="text-left px-3 sm:px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide whitespace-nowrap">{{ $t('users.groupColumn') }}</th>
+              <th class="text-left px-3 sm:px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide whitespace-nowrap">{{ $t('users.phoneColumn') }}</th>
+              <th class="text-right px-3 sm:px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide whitespace-nowrap">{{ $t('users.actionsColumn') }}</th>
             </tr>
           </thead>
           <tbody class="divide-y divide-slate-100">
@@ -138,10 +138,10 @@
                   </button>
                 </div>
                 <span v-else-if="user.role === 'admin' || user.role === 'superadmin'" class="text-xs text-slate-400">
-                  <Lock :size="14" class="inline" /> Yashirin
+                  <Lock :size="14" class="inline" /> {{ $t('users.hidden') }}
                 </span>
                 <span v-else class="text-xs text-slate-400">
-                  O'rnatilmagan
+                  {{ $t('users.notSet') }}
                 </span>
               </td>
               <td class="px-4 py-3">
@@ -159,14 +159,14 @@
                   <button 
                     @click="viewUserDetails(user)"
                     class="p-2 rounded-lg text-slate-400 hover:text-violet-600 hover:bg-violet-50 transition-colors"
-                    title="Batafsil"
+                    :title="$t('common.details')"
                   >
                     <Eye :size="16" />
                   </button>
                   <button 
                     @click="resetPassword(user)"
                     class="p-2 rounded-lg text-slate-400 hover:text-amber-600 hover:bg-amber-50 transition-colors"
-                    title="Parolni tiklash"
+                    :title="$t('users.resetPassword')"
                   >
                     <RefreshCw :size="16" />
                   </button>
@@ -248,7 +248,7 @@
       >
         <div class="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl">
           <div class="mb-4 flex items-center justify-between">
-            <h2 class="text-lg font-bold text-slate-800">Foydalanuvchi ma'lumotlari</h2>
+            <h2 class="text-lg font-bold text-slate-800">{{ $t('users.detailsTitle') }}</h2>
             <button @click="showDetailsModal = false" class="text-slate-400 hover:text-slate-600">
               <X :size="24" />
             </button>
@@ -300,7 +300,7 @@
                 <label class="mb-1 block text-xs font-medium text-slate-500">Parol</label>
                 <div class="flex items-center justify-between">
                   <span class="text-sm text-slate-500">
-                    {{ (selectedUser.role === 'admin' || selectedUser.role === 'superadmin') ? 'Xavfsizlik sababli yashirin' : 'O\'rnatilmagan' }}
+                    {{ (selectedUser.role === 'admin' || selectedUser.role === 'superadmin') ? $t('users.securityHidden') : $t('users.notSet') }}
                   </span>
                 </div>
               </div>
@@ -327,14 +327,14 @@
               @click="showDetailsModal = false"
               class="flex-1 rounded-xl bg-slate-100 py-3 font-medium text-slate-700 hover:bg-slate-200"
             >
-              Yopish
+              {{ $t('users.closeBtn') }}
             </button>
             <button 
               @click="showDetailsModal = false; resetPassword(selectedUser)"
               class="flex-1 rounded-xl bg-amber-500 py-3 font-medium text-white hover:bg-amber-600 flex items-center justify-center gap-2"
             >
               <RefreshCw :size="16" />
-              Parolni tiklash
+              {{ $t('users.resetPasswordTitle') }}
             </button>
           </div>
         </div>
@@ -350,7 +350,7 @@
       >
         <div class="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl">
           <div class="mb-4 flex items-center justify-between">
-            <h2 class="text-lg font-bold text-slate-800">Parolni tiklash</h2>
+            <h2 class="text-lg font-bold text-slate-800">{{ $t('users.resetPasswordTitle') }}</h2>
             <button @click="showResetModal = false" class="text-slate-400 hover:text-slate-600">
               <X :size="24" />
             </button>
@@ -364,11 +364,11 @@
             </div>
             
             <div>
-              <label class="mb-2 block text-sm font-medium text-slate-700">Yangi parol</label>
+              <label class="mb-2 block text-sm font-medium text-slate-700">{{ $t('users.resetNewPassword') }}</label>
               <input 
                 v-model="newPassword"
                 type="text"
-                placeholder="Yangi parol kiriting"
+                :placeholder="$t('users.enterNewPassword')"
                 class="w-full rounded-xl border border-slate-200 px-4 py-3 focus:border-violet-400 focus:outline-none focus:ring-2 focus:ring-violet-400/20"
               />
             </div>
@@ -378,13 +378,13 @@
                 @click="generatePassword"
                 class="flex-1 rounded-xl border border-slate-200 py-3 text-sm font-medium text-slate-600 hover:bg-slate-50"
               >
-                Avtomatik yaratish
+                {{ $t('users.autoGenerate') }}
               </button>
               <button 
                 @click="newPassword = '123456'"
                 class="flex-1 rounded-xl border border-slate-200 py-3 text-sm font-medium text-slate-600 hover:bg-slate-50"
               >
-                Standart (123456)
+                {{ $t('users.defaultPassword') }}
               </button>
             </div>
           </div>
@@ -403,7 +403,7 @@
               class="flex-1 rounded-xl bg-violet-500 py-3 font-medium text-white hover:bg-violet-600 disabled:opacity-50 flex items-center justify-center gap-2"
             >
               <Loader2 v-if="resetting" class="w-4 h-4 animate-spin" />
-              {{ resetting ? 'Saqlanmoqda...' : 'Saqlash' }}
+              {{ resetting ? $t('users.resetting') : $t('users.saveBtn') }}
             </button>
           </div>
         </div>

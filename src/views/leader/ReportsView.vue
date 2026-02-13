@@ -311,26 +311,26 @@
           <div v-if="activeSection === 'contract'" class="space-y-4">
             <div class="flex items-center gap-2 rounded-xl bg-green-50 p-3 text-green-700">
               <CheckCircle :size="20" />
-              <span class="text-sm">{{ $t('reports.autoFilledNote') }} (Kontrakt bazasidan)</span>
+              <span class="text-sm">{{ $t('reports.autoFilledNote') }} ({{ $t('reports.fromContractDB') }})</span>
             </div>
 
             <!-- Contract Stats -->
             <div class="grid grid-cols-2 gap-2 sm:gap-3 sm:grid-cols-4">
               <div class="rounded-xl border border-blue-200 bg-blue-50 p-3 sm:p-4 text-center">
                 <p class="text-sm sm:text-xl font-bold text-blue-600 truncate">{{ formatMoney(autoData.contract.total) }}</p>
-                <p class="text-[10px] sm:text-xs text-blue-600/70">Kontrakt summasi</p>
+                <p class="text-[10px] sm:text-xs text-blue-600/70">{{ $t('reports.contractAmount') }}</p>
               </div>
               <div class="rounded-xl border border-emerald-200 bg-emerald-50 p-3 sm:p-4 text-center">
                 <p class="text-sm sm:text-xl font-bold text-emerald-600 truncate">{{ formatMoney(autoData.contract.paid) }}</p>
-                <p class="text-[10px] sm:text-xs text-emerald-600/70">To'langan</p>
+                <p class="text-[10px] sm:text-xs text-emerald-600/70">{{ $t('reports.paid') }}</p>
               </div>
               <div class="rounded-xl border border-red-200 bg-red-50 p-3 sm:p-4 text-center">
                 <p class="text-sm sm:text-xl font-bold text-red-600 truncate">{{ formatMoney(contractsData.stats ? Math.abs(Number(contractsData.stats.total_debt || 0)) : 0) }}</p>
-                <p class="text-[10px] sm:text-xs text-red-600/70">Qarzdorlik</p>
+                <p class="text-[10px] sm:text-xs text-red-600/70">{{ $t('reports.debt') }}</p>
               </div>
               <div class="rounded-xl border border-purple-200 bg-purple-50 p-3 sm:p-4 text-center">
                 <p class="text-sm sm:text-xl font-bold text-purple-600 truncate">{{ formatMoney(contractsData.stats ? Number(contractsData.stats.total_grant_amount || 0) : 0) }}</p>
-                <p class="text-[10px] sm:text-xs text-purple-600/70">Grant</p>
+                <p class="text-[10px] sm:text-xs text-purple-600/70">{{ $t('reports.grant') }}</p>
               </div>
             </div>
 
@@ -338,15 +338,15 @@
             <div class="grid grid-cols-3 gap-2 sm:gap-3">
               <div class="rounded-xl border border-emerald-100 bg-emerald-50 p-2.5 sm:p-3 text-center">
                 <p class="text-lg sm:text-2xl font-bold text-emerald-700">{{ contractsData.stats?.fully_paid_count || 0 }}</p>
-                <p class="text-[10px] sm:text-xs text-emerald-600">To'liq to'langan</p>
+                <p class="text-[10px] sm:text-xs text-emerald-600">{{ $t('reports.fullyPaid') }}</p>
               </div>
               <div class="rounded-xl border border-red-100 bg-red-50 p-2.5 sm:p-3 text-center">
                 <p class="text-lg sm:text-2xl font-bold text-red-700">{{ contractsData.stats?.with_debt_count || 0 }}</p>
-                <p class="text-[10px] sm:text-xs text-red-600">Qarzdorlar</p>
+                <p class="text-[10px] sm:text-xs text-red-600">{{ $t('reports.debtors') }}</p>
               </div>
               <div class="rounded-xl border border-indigo-100 bg-indigo-50 p-2.5 sm:p-3 text-center">
                 <p class="text-lg sm:text-2xl font-bold text-indigo-700">{{ autoData.contract.rate }}%</p>
-                <p class="text-[10px] sm:text-xs text-indigo-600">O'rtacha to'lov</p>
+                <p class="text-[10px] sm:text-xs text-indigo-600">{{ $t('reports.averagePayment') }}</p>
               </div>
             </div>
 
@@ -1470,9 +1470,13 @@ const downloadReport = async (report) => {
   toastStore.info(t('reports.pdfDownloading'))
   
   try {
+    // ═══ LOKAL PDF GENERATSIYA ═══
+    // Leader hisobotlari kompozit (davomat + kontrakt + faoliyat) bo'lgani uchun
+    // har doim lokal PDF generatsiya qilamiz - barcha ma'lumotlar to'liq ko'rinadi
     const group = groupInfo.value || {}
-    const stats = report.stats || autoData.value
+    const stats = report.stats || {}
     const content = report.content || {}
+    const data = autoData.value
     
     // Create PDF document
     const doc = new jsPDF('p', 'mm', 'a4')
@@ -1508,9 +1512,11 @@ const downloadReport = async (report) => {
     y += 10
     
     // Statistics boxes
+    const attRate = stats.attendance || data?.attendance?.rate || 0
+    const conRate = stats.contract || data?.contract?.rate || 0
     const statData = [
-      { label: 'Davomat', value: `${stats.attendance?.rate || stats.attendance || 0}%`, color: [34, 197, 94] },
-      { label: 'Kontrakt', value: `${stats.contract?.rate || stats.contract || 0}%`, color: [59, 130, 246] },
+      { label: 'Davomat', value: `${attRate}%`, color: [34, 197, 94] },
+      { label: 'Kontrakt', value: `${conRate}%`, color: [59, 130, 246] },
       { label: 'Tadbirlar', value: `${stats.activities || 0}`, color: [245, 158, 11] },
       { label: 'Yig\'ilishlar', value: `${stats.meetings || 0}`, color: [239, 68, 68] }
     ]
@@ -1537,14 +1543,14 @@ const downloadReport = async (report) => {
     })
     y += boxHeight + 15
     
-    // Students attendance table
-    if (autoData.value?.studentsAttendance?.length > 0) {
+    // ═══ 1. DAVOMAT JADVALI ═══
+    if (data?.studentsAttendance?.length > 0) {
       doc.setFontSize(14)
       doc.setTextColor(30, 41, 59)
       doc.text('Talabalar Davomati', 20, y)
       y += 5
       
-      const tableData = autoData.value.studentsAttendance.map((s, i) => [
+      const attendanceTableData = data.studentsAttendance.map((s, i) => [
         i + 1,
         s.name,
         s.present,
@@ -1555,7 +1561,7 @@ const downloadReport = async (report) => {
       autoTable(doc, {
         startY: y,
         head: [['#', 'Talaba', 'Kelgan', 'Kelmagan', 'Foiz']],
-        body: tableData,
+        body: attendanceTableData,
         theme: 'striped',
         headStyles: { fillColor: [16, 185, 129], textColor: 255 },
         styles: { fontSize: 10, cellPadding: 3 },
@@ -1571,13 +1577,78 @@ const downloadReport = async (report) => {
       y = doc.lastAutoTable.finalY + 15
     }
     
+    // ═══ 2. KONTRAKT JADVALI ═══
+    if (data?.studentsContract?.length > 0) {
+      // Check if we need a new page
+      if (y > 200) {
+        doc.addPage()
+        y = 20
+      }
+      
+      doc.setFontSize(14)
+      doc.setTextColor(30, 41, 59)
+      doc.text('Talabalar Kontrakt Holati', 20, y)
+      y += 5
+      
+      // Contract summary row
+      const contractSummary = [
+        ['Jami kontrakt', formatMoney(data.contract?.total || 0)],
+        ['To\'langan', formatMoney(data.contract?.paid || 0)],
+        ['To\'lov foizi', `${data.contract?.rate || 0}%`]
+      ]
+      
+      autoTable(doc, {
+        startY: y,
+        head: [['Ko\'rsatkich', 'Qiymat']],
+        body: contractSummary,
+        theme: 'striped',
+        headStyles: { fillColor: [59, 130, 246], textColor: 255 },
+        styles: { fontSize: 10, cellPadding: 3 },
+        columnStyles: {
+          0: { cellWidth: 80 },
+          1: { cellWidth: 75, halign: 'right' }
+        }
+      })
+      
+      y = doc.lastAutoTable.finalY + 10
+      
+      // Students contract table
+      const contractTableData = data.studentsContract.map((s, i) => [
+        i + 1,
+        s.name,
+        formatMoney(s.total),
+        formatMoney(s.paid),
+        formatMoney(s.debt || 0),
+        `${s.rate}%`
+      ])
+      
+      autoTable(doc, {
+        startY: y,
+        head: [['#', 'Talaba', 'Kontrakt', 'To\'langan', 'Qarz', 'Foiz']],
+        body: contractTableData,
+        theme: 'striped',
+        headStyles: { fillColor: [59, 130, 246], textColor: 255 },
+        styles: { fontSize: 9, cellPadding: 2.5 },
+        columnStyles: {
+          0: { cellWidth: 8 },
+          1: { cellWidth: 45 },
+          2: { cellWidth: 30, halign: 'right' },
+          3: { cellWidth: 30, halign: 'right' },
+          4: { cellWidth: 25, halign: 'right' },
+          5: { cellWidth: 18, halign: 'center' }
+        }
+      })
+      
+      y = doc.lastAutoTable.finalY + 15
+    }
+    
     // Check if we need a new page
     if (y > 250) {
       doc.addPage()
       y = 20
     }
     
-    // Content sections
+    // ═══ 3. MATNLI BO'LIMLAR ═══
     const sections = [
       { title: 'Guruh Faoliyati', text: content.activities },
       { title: 'Yutuqlar', text: content.achievements },

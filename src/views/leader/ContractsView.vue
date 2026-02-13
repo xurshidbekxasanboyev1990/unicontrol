@@ -3,7 +3,7 @@
     <!-- Header -->
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
       <div>
-        <h1 class="text-xl sm:text-2xl font-bold text-slate-800">Guruh kontrakt ma'lumotlari</h1>
+        <h1 class="text-xl sm:text-2xl font-bold text-slate-800">{{ $t('contracts.title') }}</h1>
         <p class="text-sm text-slate-500">
           {{ groupName }} guruhi
           <span v-if="totalContracts"> · {{ totalContracts }} ta talaba</span>
@@ -14,27 +14,27 @@
     <!-- Stats Cards -->
     <div v-if="stats" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
       <div class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-        <p class="text-xs text-slate-500 mb-1">Talabalar</p>
+        <p class="text-xs text-slate-500 mb-1">{{ $t('students.title') }}</p>
         <p class="text-lg font-bold text-slate-800">{{ stats.total_contracts }}</p>
       </div>
       <div class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-        <p class="text-xs text-slate-500 mb-1">Kontrakt summasi</p>
+        <p class="text-xs text-slate-500 mb-1">{{ $t('contracts.contractAmount') }}</p>
         <p class="text-lg font-bold text-blue-600">{{ formatMoney(stats.total_contract_amount) }}</p>
       </div>
       <div class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-        <p class="text-xs text-slate-500 mb-1">To'langan</p>
+        <p class="text-xs text-slate-500 mb-1">{{ $t('contracts.paid') }}</p>
         <p class="text-lg font-bold text-emerald-600">{{ formatMoney(stats.total_paid) }}</p>
       </div>
       <div class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-        <p class="text-xs text-slate-500 mb-1">Qarzdorlik</p>
+        <p class="text-xs text-slate-500 mb-1">{{ $t('contracts.debt') }}</p>
         <p class="text-lg font-bold text-red-600">{{ formatMoney(Math.abs(stats.total_debt)) }}</p>
       </div>
       <div class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-        <p class="text-xs text-slate-500 mb-1">Grant</p>
+        <p class="text-xs text-slate-500 mb-1">{{ $t('contracts.grant') }}</p>
         <p class="text-lg font-bold text-purple-600">{{ formatMoney(stats.total_grant_amount) }}</p>
       </div>
       <div class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-        <p class="text-xs text-slate-500 mb-1">To'lov %</p>
+        <p class="text-xs text-slate-500 mb-1">{{ $t('contracts.paymentPercent') }}</p>
         <p class="text-lg font-bold text-amber-600">{{ stats.payment_percentage?.toFixed(1) }}%</p>
       </div>
     </div>
@@ -43,15 +43,15 @@
     <div v-if="stats" class="grid grid-cols-3 gap-2 sm:gap-3">
       <div class="rounded-xl border border-emerald-100 bg-emerald-50 p-2 sm:p-3 text-center">
         <p class="text-lg sm:text-2xl font-bold text-emerald-700">{{ stats.fully_paid_count }}</p>
-        <p class="text-[10px] sm:text-xs text-emerald-600">To'liq to'langan</p>
+        <p class="text-[10px] sm:text-xs text-emerald-600">{{ $t('contracts.fullyPaid') }}</p>
       </div>
       <div class="rounded-xl border border-red-100 bg-red-50 p-2 sm:p-3 text-center">
         <p class="text-lg sm:text-2xl font-bold text-red-700">{{ stats.with_debt_count }}</p>
-        <p class="text-[10px] sm:text-xs text-red-600">Qarzdorlar</p>
+        <p class="text-[10px] sm:text-xs text-red-600">{{ $t('contracts.debtors') }}</p>
       </div>
       <div class="rounded-xl border border-blue-100 bg-blue-50 p-2 sm:p-3 text-center">
         <p class="text-lg sm:text-2xl font-bold text-blue-700">{{ stats.studying_count }}</p>
-        <p class="text-[10px] sm:text-xs text-blue-600">O'qimoqda</p>
+        <p class="text-[10px] sm:text-xs text-blue-600">{{ $t('contracts.studying') }}</p>
       </div>
     </div>
 
@@ -61,7 +61,7 @@
       <input 
         v-model="searchQuery"
         type="text"
-        placeholder="Talaba qidirish..."
+        :placeholder="$t('students.searchStudents')"
         class="w-full rounded-xl border border-slate-200 py-2.5 pl-10 pr-4 text-sm focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-400/20"
         @input="onSearchInput"
       />
@@ -70,7 +70,7 @@
     <!-- Loading -->
     <div v-if="loading && !contracts.length" class="flex items-center justify-center py-16">
       <Loader2 class="w-8 h-8 text-emerald-500 animate-spin" />
-      <span class="ml-3 text-slate-600">Yuklanmoqda...</span>
+      <span class="ml-3 text-slate-600">{{ $t('common.loading') }}</span>
     </div>
 
     <!-- Students Cards -->
@@ -92,26 +92,26 @@
             class="px-2 py-0.5 rounded-lg text-xs font-medium flex-shrink-0"
             :class="Number(c.debt_amount) < 0 ? 'bg-red-100 text-red-700' : 'bg-emerald-100 text-emerald-700'"
           >
-            {{ Number(c.debt_amount) < 0 ? 'Qarzdor' : 'To\'langan' }}
+            {{ Number(c.debt_amount) < 0 ? $t('contracts.debtors') : $t('contracts.paid') }}
           </span>
         </div>
 
         <!-- Finance info -->
         <div class="grid grid-cols-2 gap-3 mb-3">
           <div class="p-3 bg-slate-50 rounded-xl">
-            <p class="text-xs text-slate-500">Kontrakt</p>
+            <p class="text-xs text-slate-500">{{ $t('contracts.contract') }}</p>
             <p class="text-sm font-bold text-slate-800">{{ formatMoney(c.contract_amount) }}</p>
           </div>
           <div class="p-3 bg-emerald-50 rounded-xl">
-            <p class="text-xs text-slate-500">To'langan</p>
+            <p class="text-xs text-slate-500">{{ $t('contracts.paid') }}</p>
             <p class="text-sm font-bold text-emerald-600">{{ formatMoney(c.total_paid) }}</p>
           </div>
           <div class="p-3 bg-rose-50 rounded-xl">
-            <p class="text-xs text-slate-500">Qarz</p>
+            <p class="text-xs text-slate-500">{{ $t('contracts.debt') }}</p>
             <p class="text-sm font-bold text-rose-600">{{ formatMoney(Math.abs(Number(c.debt_amount) || 0)) }}</p>
           </div>
           <div class="p-3 bg-purple-50 rounded-xl">
-            <p class="text-xs text-slate-500">Grant</p>
+            <p class="text-xs text-slate-500">{{ $t('contracts.grant') }}</p>
             <p class="text-sm font-bold text-purple-600">{{ Number(c.grant_amount) > 0 ? formatMoney(c.grant_amount) : '—' }}</p>
           </div>
         </div>
@@ -124,14 +124,14 @@
             :style="{ width: Math.min((c.payment_percentage || 0) * 100, 100) + '%' }"
           ></div>
         </div>
-        <p class="text-xs text-right text-slate-500 mt-1">{{ ((c.payment_percentage || 0) * 100).toFixed(0) }}% to'langan</p>
+        <p class="text-xs text-right text-slate-500 mt-1">{{ ((c.payment_percentage || 0) * 100).toFixed(0) }}% {{ $t('contracts.paid').toLowerCase() }}</p>
       </div>
     </div>
 
     <!-- Empty -->
     <div v-else class="bg-white rounded-2xl border border-slate-200 p-12 text-center">
       <FileSpreadsheet :size="48" class="mx-auto mb-4 text-slate-300" />
-      <p class="text-slate-500">Guruh uchun kontrakt ma'lumotlari topilmadi</p>
+      <p class="text-slate-500">{{ $t('contracts.noContractsFound') }}</p>
     </div>
   </div>
 </template>

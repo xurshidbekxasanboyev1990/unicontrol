@@ -605,7 +605,7 @@
                 {{ $t('common.cancel') }}
               </button>
               <button @click="orderStep = 2" class="flex-1 bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-xl py-2.5 font-semibold hover:from-emerald-600 hover:to-teal-600 shadow-lg shadow-emerald-500/25 transition-all">
-                Davom etish →
+                {{ $t('market.continue') }} →
               </button>
             </div>
           </div>
@@ -613,31 +613,31 @@
           <!-- Step 2: Payment -->
           <div v-if="orderStep === 2">
             <div class="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-4">
-              <p class="font-bold text-blue-800 text-sm mb-2">💳 To'lov ma'lumotlari</p>
+              <p class="font-bold text-blue-800 text-sm mb-2">💳 {{ $t('market.paymentInfo') }}</p>
               <div v-if="tariffPrices" class="space-y-1">
                 <div class="flex items-center justify-between">
-                  <span class="text-sm text-blue-600">Karta raqami:</span>
+                  <span class="text-sm text-blue-600">{{ $t('market.cardNumber') }}:</span>
                   <span class="font-mono font-bold text-blue-900 text-lg">{{ tariffPrices.card_number || '—' }}</span>
                 </div>
                 <div class="flex items-center justify-between">
-                  <span class="text-sm text-blue-600">Karta egasi:</span>
+                  <span class="text-sm text-blue-600">{{ $t('market.cardHolder') }}:</span>
                   <span class="font-semibold text-blue-900">{{ tariffPrices.card_holder || '—' }}</span>
                 </div>
               </div>
               <div class="mt-2 pt-2 border-t border-blue-200 flex items-center justify-between">
-                <span class="text-sm text-blue-600">To'lov summasi:</span>
+                <span class="text-sm text-blue-600">{{ $t('market.paymentAmount') }}:</span>
                 <span class="font-bold text-lg text-blue-900">{{ formatPrice(selectedListing?.price) }}</span>
               </div>
             </div>
 
             <div class="mb-4">
-              <label class="text-sm font-medium text-slate-700 mb-2 block">📎 To'lov chekini yuklang</label>
+              <label class="text-sm font-medium text-slate-700 mb-2 block">📎 {{ $t('market.uploadReceipt') }}</label>
               <div class="border-2 border-dashed rounded-xl p-4 text-center transition-colors"
                 :class="orderReceiptFile ? 'border-emerald-400 bg-emerald-50' : 'border-slate-300 hover:border-emerald-400'">
                 <input type="file" accept="image/*,.pdf" class="hidden" ref="orderReceiptInput" @change="handleOrderReceipt" />
                 <div v-if="!orderReceiptFile" @click="$refs.orderReceiptInput?.click()" class="cursor-pointer">
                   <Upload class="w-8 h-8 text-slate-400 mx-auto mb-2" />
-                  <p class="text-sm text-slate-500">Chek rasmini tanlang</p>
+                  <p class="text-sm text-slate-500">{{ $t('market.selectReceiptImage') }}</p>
                   <p class="text-xs text-slate-400 mt-1">JPG, PNG, PDF (max 10MB)</p>
                 </div>
                 <div v-else class="flex items-center justify-between">
@@ -654,13 +654,13 @@
 
             <div class="flex gap-3">
               <button @click="orderStep = 1" class="flex-1 border border-slate-200 rounded-xl py-2.5 font-medium text-slate-600 hover:bg-slate-50 transition-colors">
-                ← Ortga
+                ← {{ $t('market.back') }}
               </button>
               <button @click="submitOrder" :disabled="!orderReceiptFile || orderSubmitting"
                 class="flex-1 bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-xl py-2.5 font-semibold hover:from-emerald-600 hover:to-teal-600 shadow-lg shadow-emerald-500/25 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2">
                 <Loader2 v-if="orderSubmitting" class="w-4 h-4 animate-spin" />
                 <template v-else>💳</template>
-                {{ orderSubmitting ? 'Yuborilmoqda...' : $t('market.payAndOrder') }}
+                {{ orderSubmitting ? $t('market.sending') : $t('market.payAndOrder') }}
               </button>
             </div>
           </div>
@@ -785,8 +785,8 @@
         <div v-if="myTariffPayments.some(p => p.status === 'pending')" class="mx-6 mt-4 bg-amber-50 border border-amber-200 rounded-xl p-4 flex items-center gap-3">
           <Clock class="w-5 h-5 text-amber-500 flex-shrink-0" />
           <div>
-            <p class="font-medium text-amber-700">To'lov chekingiz ko'rib chiqilmoqda</p>
-            <p class="text-sm text-amber-600">Admin tasdiqlashini kuting. Odatda 24 soat ichida.</p>
+            <p class="font-medium text-amber-700">{{ $t('market.receiptUnderReview') }}</p>
+            <p class="text-sm text-amber-600">{{ $t('market.waitForAdminApproval') }}</p>
           </div>
         </div>
 
@@ -918,36 +918,36 @@
         <!-- Step 2: Payment -->
         <div v-else class="p-6 space-y-5">
           <button @click="selectedTariff = null; tariffReceiptFile = null" class="flex items-center gap-2 text-sm text-slate-500 hover:text-slate-700 transition-colors">
-            ← Tariflarni tanlash
+            ← {{ $t('market.chooseTariff') }}
           </button>
 
           <div class="text-center">
             <h3 class="text-xl font-bold text-slate-800">
-              {{ selectedTariff === 'student_pro' ? 'Student Pro' : 'Premium' }} — To'lov
+              {{ selectedTariff === 'student_pro' ? 'Student Pro' : 'Premium' }} — {{ $t('market.payment') }}
             </h3>
-            <p class="text-slate-500 text-sm mt-1">Quyidagi kartaga to'lovni amalga oshiring va chekni yuklang</p>
+            <p class="text-slate-500 text-sm mt-1">{{ $t('market.payToCardAndUpload') }}</p>
           </div>
 
           <!-- Card Info -->
           <div v-if="tariffPrices?.card_number" class="bg-gradient-to-r from-slate-800 to-slate-900 rounded-2xl p-5 text-white">
-            <p class="text-slate-400 text-xs mb-2">Karta raqami</p>
+            <p class="text-slate-400 text-xs mb-2">{{ $t('market.cardNumber') }}</p>
             <p class="text-2xl font-mono tracking-wider mb-3">{{ tariffPrices.card_number }}</p>
-            <p class="text-slate-400 text-xs">Karta egasi</p>
+            <p class="text-slate-400 text-xs">{{ $t('market.cardHolder') }}</p>
             <p class="font-medium">{{ tariffPrices.card_holder }}</p>
             <div class="mt-3 pt-3 border-t border-slate-700 flex justify-between items-center">
-              <span class="text-sm text-slate-400">To'lov summasi</span>
+              <span class="text-sm text-slate-400">{{ $t('market.paymentAmount') }}</span>
               <span class="text-xl font-bold text-amber-400">
                 {{ selectedTariff === 'student_pro' ? '29,000' : '79,000' }} UZS
               </span>
             </div>
           </div>
           <div v-else class="bg-amber-50 border border-amber-200 rounded-xl p-4 text-center text-amber-700 text-sm">
-            Admin hali karta ma'lumotlarini kiritmagan. Iltimos keyinroq urinib ko'ring.
+            {{ $t('market.noCardInfoYet') }}
           </div>
 
           <!-- Upload Receipt -->
           <div>
-            <label class="block text-sm font-medium text-slate-700 mb-2">To'lov cheki</label>
+            <label class="block text-sm font-medium text-slate-700 mb-2">{{ $t('market.paymentReceipt') }}</label>
             <div class="border-2 border-dashed rounded-xl p-6 text-center transition-colors"
               :class="tariffReceiptFile ? 'border-emerald-300 bg-emerald-50' : 'border-slate-300 hover:border-emerald-400'">
               <input ref="tariffFileInput" type="file" accept="image/*,.pdf" class="hidden" @change="handleTariffReceipt" />
@@ -963,8 +963,8 @@
               </div>
               <div v-else @click="$refs.tariffFileInput.click()" class="cursor-pointer">
                 <Upload class="w-10 h-10 text-slate-400 mx-auto mb-2" />
-                <p class="text-slate-600 font-medium">Chek rasmini yuklang</p>
-                <p class="text-slate-400 text-sm mt-1">JPG, PNG yoki PDF (max 10 MB)</p>
+                <p class="text-slate-600 font-medium">{{ $t('market.uploadReceiptImage') }}</p>
+                <p class="text-slate-400 text-sm mt-1">JPG, PNG {{ $t('market.or') }} PDF (max 10 MB)</p>
               </div>
             </div>
           </div>
@@ -977,12 +977,12 @@
           >
             <Loader2 v-if="tariffUpgrading" class="w-5 h-5 animate-spin" />
             <Send v-else class="w-5 h-5" />
-            {{ tariffUpgrading ? 'Yuborilmoqda...' : 'To\'lov chekini yuborish' }}
+            {{ tariffUpgrading ? $t('market.sending') : $t('market.submitReceipt') }}
           </button>
 
           <!-- Payment History -->
           <div v-if="myTariffPayments.length > 0" class="border-t border-slate-100 pt-4">
-            <h4 class="text-sm font-semibold text-slate-700 mb-3">To'lov tarixi</h4>
+            <h4 class="text-sm font-semibold text-slate-700 mb-3">{{ $t('market.paymentHistory') }}</h4>
             <div class="space-y-2">
               <div v-for="p in myTariffPayments" :key="p.id" class="flex items-center justify-between p-3 rounded-xl bg-slate-50 border border-slate-100">
                 <div class="flex items-center gap-3">
@@ -999,7 +999,7 @@
                 <div class="text-right">
                   <p class="text-sm font-semibold text-slate-800">{{ Number(p.amount).toLocaleString() }} UZS</p>
                   <p :class="['text-xs font-medium', p.status === 'approved' ? 'text-emerald-600' : p.status === 'rejected' ? 'text-rose-600' : 'text-amber-600']">
-                    {{ p.status === 'approved' ? 'Tasdiqlangan' : p.status === 'rejected' ? 'Rad etilgan' : 'Kutilmoqda' }}
+                    {{ p.status === 'approved' ? $t('market.approved') : p.status === 'rejected' ? $t('market.rejected') : $t('market.pending') }}
                   </p>
                 </div>
               </div>
@@ -1597,7 +1597,7 @@ const upgradeTariff = async (tariff) => {
     showTariffModal.value = false
     tariffReceiptFile.value = null
     selectedTariff.value = null
-    alert(data.message || 'To\'lov cheki yuborildi! Admin tasdiqlashini kuting.')
+    alert(data.message || t('market.receiptSentWaitApproval'))
     await loadTariffPayments()
   } catch (e) {
     alert(e.message || t('common.error'))

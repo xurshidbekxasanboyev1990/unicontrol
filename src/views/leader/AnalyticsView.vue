@@ -24,7 +24,7 @@
       <!-- Header -->
       <div class="mb-6">
         <h1 class="text-2xl font-bold text-slate-800 md:text-3xl">{{ $t('analytics.title') }}</h1>
-        <p class="text-slate-500">{{ currentGroup?.name }} - Davomat va boshqa ko'rsatkichlar</p>
+        <p class="text-slate-500">{{ currentGroup?.name }} - {{ $t('analytics.subtitle') }}</p>
       </div>
 
     <!-- Date Range Filter -->
@@ -87,7 +87,7 @@
             class="text-sm"
             :class="card.trend > 0 ? 'text-green-600' : card.trend < 0 ? 'text-red-600' : 'text-slate-500'"
           >
-            {{ card.trend > 0 ? '+' : '' }}{{ card.trend }}% o'tgan davriga nisbatan
+            {{ card.trend > 0 ? '+' : '' }}{{ card.trend }}% {{ $t('analytics.comparedToPrevious') }}
           </span>
         </div>
       </div>
@@ -98,7 +98,7 @@
       <!-- Attendance Trend Chart -->
       <div class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
         <div class="mb-4 flex items-center justify-between">
-          <h3 class="text-lg font-semibold text-slate-800">Davomat dinamikasi</h3>
+          <h3 class="text-lg font-semibold text-slate-800">{{ $t('analytics.attendanceTrend') }}</h3>
           <div class="flex gap-2">
             <button
               @click="trendChartType = 'line'"
@@ -125,7 +125,7 @@
       <!-- Status Distribution Chart -->
       <div class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
         <div class="mb-4 flex items-center justify-between">
-          <h3 class="text-lg font-semibold text-slate-800">Status bo'yicha taqsimot</h3>
+          <h3 class="text-lg font-semibold text-slate-800">{{ $t('analytics.statusDistribution') }}</h3>
           <PieChart :size="18" class="text-slate-400" />
         </div>
         <div class="h-64">
@@ -142,18 +142,18 @@
       <!-- Weekly Heatmap -->
       <div class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm lg:col-span-2">
         <div class="mb-4 flex items-center justify-between">
-          <h3 class="text-lg font-semibold text-slate-800">Haftalik davomat xaritasi</h3>
+          <h3 class="text-lg font-semibold text-slate-800">{{ $t('analytics.weeklyHeatmap') }}</h3>
           <Calendar :size="18" class="text-slate-400" />
         </div>
         <div class="overflow-x-auto">
           <table class="w-full min-w-[600px]">
             <thead>
               <tr>
-                <th class="p-2 text-left text-sm text-slate-500">Talaba</th>
+                <th class="p-2 text-left text-sm text-slate-500">{{ $t('analytics.student') }}</th>
                 <th v-for="day in weekDays" :key="day" class="p-2 text-center text-sm text-slate-500">
                   {{ day }}
                 </th>
-                <th class="p-2 text-center text-sm text-slate-500">Jami %</th>
+                <th class="p-2 text-center text-sm text-slate-500">{{ $t('analytics.totalPercent') }}</th>
               </tr>
             </thead>
             <tbody>
@@ -185,7 +185,7 @@
       <!-- Student Comparison Chart -->
       <div class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
         <div class="mb-4 flex items-center justify-between">
-          <h3 class="text-lg font-semibold text-slate-800">Talabalar solishtirmasi</h3>
+          <h3 class="text-lg font-semibold text-slate-800">{{ $t('analytics.studentComparison') }}</h3>
           <Users :size="18" class="text-slate-400" />
         </div>
         <div class="h-64">
@@ -196,7 +196,7 @@
       <!-- Subject Attendance Chart -->
       <div class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
         <div class="mb-4 flex items-center justify-between">
-          <h3 class="text-lg font-semibold text-slate-800">Fanlar bo'yicha davomat</h3>
+          <h3 class="text-lg font-semibold text-slate-800">{{ $t('analytics.subjectAttendance') }}</h3>
           <BookOpen :size="18" class="text-slate-400" />
         </div>
         <div class="h-64">
@@ -211,7 +211,7 @@
       <div class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
         <div class="mb-4 flex items-center gap-2">
           <Award class="text-yellow-500" :size="20" />
-          <h3 class="text-lg font-semibold text-slate-800">Eng yaxshi davomat</h3>
+          <h3 class="text-lg font-semibold text-slate-800">{{ $t('analytics.bestAttendance') }}</h3>
         </div>
         <div class="space-y-3">
           <div 
@@ -227,7 +227,7 @@
             </div>
             <div class="flex-1">
               <p class="font-medium text-slate-800">{{ student.name }}</p>
-              <p class="text-xs text-slate-500">{{ student.present }}/{{ student.total }} dars</p>
+              <p class="text-xs text-slate-500">{{ student.present }}/{{ student.total }} {{ $t('analytics.lessons') }}</p>
             </div>
             <span class="text-lg font-bold text-green-600">{{ student.rate }}%</span>
           </div>
@@ -238,7 +238,7 @@
       <div class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
         <div class="mb-4 flex items-center gap-2">
           <AlertTriangle class="text-red-500" :size="20" />
-          <h3 class="text-lg font-semibold text-slate-800">E'tibor kerak</h3>
+          <h3 class="text-lg font-semibold text-slate-800">{{ $t('analytics.needsAttention') }}</h3>
         </div>
         <div class="space-y-3">
           <div 
@@ -251,7 +251,7 @@
             </div>
             <div class="flex-1">
               <p class="font-medium text-slate-800">{{ student.name }}</p>
-              <p class="text-xs text-red-600">{{ student.absent }} marta kelmagan</p>
+              <p class="text-xs text-red-600">{{ student.absent }} {{ $t('analytics.timesAbsent') }}</p>
             </div>
             <span class="text-lg font-bold text-red-600">{{ student.rate }}%</span>
           </div>
@@ -297,6 +297,7 @@ import {
 import { computed, onMounted, ref } from 'vue'
 import { Bar, Doughnut, Line, Radar } from 'vue-chartjs'
 import api from '../../services/api'
+import { useLanguageStore } from '../../stores/language'
 
 // Register Chart.js components
 ChartJS.register(
@@ -315,6 +316,8 @@ ChartJS.register(
 
 const authStore = useAuthStore()
 const toast = useToastStore()
+const langStore = useLanguageStore()
+const { t } = langStore
 
 // State
 const loading = ref(true)
@@ -327,15 +330,15 @@ const currentGroup = ref(null)
 const groupStudents = ref([])
 const attendanceStats = ref(null)
 
-const dateRanges = [
-  { label: 'Hafta', value: 'week' },
-  { label: 'Oy', value: 'month' },
-  { label: 'Semestr', value: 'semester' },
-  { label: 'Yil', value: 'year' }
-]
+const dateRanges = computed(() => [
+  { label: t('analytics.week'), value: 'week' },
+  { label: t('analytics.month'), value: 'month' },
+  { label: t('analytics.semester'), value: 'semester' },
+  { label: t('analytics.year'), value: 'year' }
+])
 
 const weekDays = ['Du', 'Se', 'Cho', 'Pa', 'Ju', 'Sha', 'Ya']
-const statusLabels = ['Keldi', 'Kelmadi', 'Kech qoldi', 'Sababli']
+const statusLabels = computed(() => [t('analytics.came'), t('analytics.didntCome'), t('analytics.late'), t('analytics.excused')])
 const statusColors = ['#22c55e', '#ef4444', '#f59e0b', '#3b82f6']
 
 // Load data from API
@@ -404,28 +407,28 @@ const cardColorMap = {
 
 const summaryCards = computed(() => [
   {
-    title: 'Umumiy davomat',
+    title: t('analytics.overallAttendance'),
     value: calculateOverallAttendance() + '%',
     icon: CheckCircle,
     color: 'green',
     trend: 5
   },
   {
-    title: 'Kelmaganlar soni',
+    title: t('analytics.absentCount'),
     value: getTotalAbsent(),
     icon: XCircle,
     color: 'red',
     trend: -3
   },
   {
-    title: 'Kech qolganlar',
+    title: t('analytics.lateCount'),
     value: getTotalLate(),
     icon: Clock,
     color: 'yellow',
     trend: 2
   },
   {
-    title: 'Darslar soni',
+    title: t('analytics.lessonsCount'),
     value: getTotalLessons(),
     icon: BookOpen,
     color: 'blue',
@@ -444,7 +447,7 @@ const attendanceTrendData = computed(() => {
     labels,
     datasets: [
       {
-        label: 'Keldi',
+        label: t('analytics.came'),
         data: presentData,
         borderColor: '#22c55e',
         backgroundColor: 'rgba(34, 197, 94, 0.1)',
@@ -452,7 +455,7 @@ const attendanceTrendData = computed(() => {
         tension: 0.4
       },
       {
-        label: 'Kelmadi',
+        label: t('analytics.didntCome'),
         data: absentData,
         borderColor: '#ef4444',
         backgroundColor: 'rgba(239, 68, 68, 0.1)',
@@ -460,7 +463,7 @@ const attendanceTrendData = computed(() => {
         tension: 0.4
       },
       {
-        label: 'Kech qoldi',
+        label: t('analytics.late'),
         data: lateData,
         borderColor: '#f59e0b',
         backgroundColor: 'rgba(245, 158, 11, 0.1)',

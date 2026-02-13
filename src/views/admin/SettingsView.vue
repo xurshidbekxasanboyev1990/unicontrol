@@ -89,11 +89,11 @@
       <div class="bg-white rounded-2xl border border-slate-200 p-6">
         <h2 class="text-lg font-semibold text-slate-800 mb-4 flex items-center gap-2">
           <ClipboardCheck class="w-5 h-5 text-slate-400" />
-          Davomat sozlamalari
+          {{ $t('settings.attendanceSettings') }}
         </h2>
         <div class="space-y-4">
           <div>
-            <label class="block text-sm font-medium text-slate-700 mb-2">Minimal davomat foizi (%)</label>
+            <label class="block text-sm font-medium text-slate-700 mb-2">{{ $t('settings.minAttendance') }} (%)</label>
             <input 
               v-model.number="settings.min_attendance"
               type="number"
@@ -103,7 +103,7 @@
             />
           </div>
           <div>
-            <label class="block text-sm font-medium text-slate-700 mb-2">Kechikish chegarasi (daqiqa)</label>
+            <label class="block text-sm font-medium text-slate-700 mb-2">{{ $t('settings.lateThreshold') }}</label>
             <input 
               v-model.number="settings.late_threshold"
               type="number"
@@ -113,8 +113,8 @@
           </div>
           <div class="flex items-center justify-between p-3 bg-slate-50 rounded-xl">
             <div>
-              <p class="font-medium text-slate-700">Avtomatik ogohlantirish</p>
-              <p class="text-sm text-slate-500">Past davomat bo'lganda xabar yuborish</p>
+              <p class="font-medium text-slate-700">{{ $t('settings.autoWarning') }}</p>
+              <p class="text-sm text-slate-500">{{ $t('settings.autoWarningDesc') }}</p>
             </div>
             <button 
               @click="settings.auto_warning = !settings.auto_warning"
@@ -129,8 +129,8 @@
           </div>
           <div class="flex items-center justify-between p-3 bg-slate-50 rounded-xl">
             <div>
-              <p class="font-medium text-slate-700">Hafta oxiri davomati</p>
-              <p class="text-sm text-slate-500">Shanba kunlarni hisoblash</p>
+              <p class="font-medium text-slate-700">{{ $t('settings.weekendAttendance') }}</p>
+              <p class="text-sm text-slate-500">{{ $t('settings.weekendAttendanceDesc') }}</p>
             </div>
             <button 
               @click="settings.weekend_attendance = !settings.weekend_attendance"
@@ -150,13 +150,13 @@
       <div class="bg-white rounded-2xl border border-slate-200 p-6">
         <h2 class="text-lg font-semibold text-slate-800 mb-4 flex items-center gap-2">
           <Bell class="w-5 h-5 text-slate-400" />
-          Bildirishnoma sozlamalari
+          {{ $t('settings.notificationSettings') }}
         </h2>
         <div class="space-y-4">
           <div class="flex items-center justify-between p-3 bg-slate-50 rounded-xl">
             <div>
-              <p class="font-medium text-slate-700">Email xabarnomalar</p>
-              <p class="text-sm text-slate-500">Muhim yangiliklar emailga yuborilsin</p>
+              <p class="font-medium text-slate-700">{{ $t('settings.emailNotifs') }}</p>
+              <p class="text-sm text-slate-500">{{ $t('settings.emailNotifsDesc') }}</p>
             </div>
             <button 
               @click="settings.email_notifications = !settings.email_notifications"
@@ -171,8 +171,8 @@
           </div>
           <div class="flex items-center justify-between p-3 bg-slate-50 rounded-xl">
             <div>
-              <p class="font-medium text-slate-700">SMS xabarnomalar</p>
-              <p class="text-sm text-slate-500">Muhim yangiliklar SMS orqali</p>
+              <p class="font-medium text-slate-700">{{ $t('settings.smsNotifs') }}</p>
+              <p class="text-sm text-slate-500">{{ $t('settings.smsNotifsDesc') }}</p>
             </div>
             <button 
               @click="settings.sms_notifications = !settings.sms_notifications"
@@ -187,8 +187,8 @@
           </div>
           <div class="flex items-center justify-between p-3 bg-slate-50 rounded-xl">
             <div>
-              <p class="font-medium text-slate-700">Telegram xabarnomalar</p>
-              <p class="text-sm text-slate-500">Telegram bot orqali xabar yuborish</p>
+              <p class="font-medium text-slate-700">{{ $t('settings.telegramNotifs') }}</p>
+              <p class="text-sm text-slate-500">{{ $t('settings.telegramNotifsDesc') }}</p>
             </div>
             <button 
               @click="settings.telegram_notifications = !settings.telegram_notifications"
@@ -203,8 +203,8 @@
           </div>
           <div class="flex items-center justify-between p-3 bg-slate-50 rounded-xl">
             <div>
-              <p class="font-medium text-slate-700">Push xabarnomalar</p>
-              <p class="text-sm text-slate-500">Brauzer orqali xabarnomalar</p>
+              <p class="font-medium text-slate-700">{{ $t('settings.pushNotifs') }}</p>
+              <p class="text-sm text-slate-500">{{ $t('settings.pushNotifsDesc') }}</p>
             </div>
             <button 
               @click="settings.push_notifications = !settings.push_notifications"
@@ -224,11 +224,11 @@
       <div class="bg-white rounded-2xl border border-slate-200 p-6">
         <h2 class="text-lg font-semibold text-slate-800 mb-4 flex items-center gap-2">
           <CreditCard class="w-5 h-5 text-slate-400" />
-          Kontrakt sozlamalari
+          {{ $t('settings.contractSettings') }}
         </h2>
         <div class="space-y-4">
           <div>
-            <label class="block text-sm font-medium text-slate-700 mb-2">Kontrakt summasi (so'm)</label>
+            <label class="block text-sm font-medium text-slate-700 mb-2">{{ $t('settings.contractAmount') }}</label>
             <input 
               v-model.number="settings.contract_amount"
               type="number"
@@ -238,7 +238,7 @@
             <p class="text-xs text-slate-500 mt-1">{{ formatMoney(settings.contract_amount) }} so'm</p>
           </div>
           <div>
-            <label class="block text-sm font-medium text-slate-700 mb-2">To'lov muddati (kun)</label>
+            <label class="block text-sm font-medium text-slate-700 mb-2">{{ $t('settings.paymentDeadline') }}</label>
             <input 
               v-model.number="settings.payment_deadline"
               type="number"
@@ -248,8 +248,8 @@
           </div>
           <div class="flex items-center justify-between p-3 bg-slate-50 rounded-xl">
             <div>
-              <p class="font-medium text-slate-700">To'lov eslatmasi</p>
-              <p class="text-sm text-slate-500">Muddat yaqinlashganda xabar yuborish</p>
+              <p class="font-medium text-slate-700">{{ $t('settings.paymentReminder') }}</p>
+              <p class="text-sm text-slate-500">{{ $t('settings.paymentReminderDesc') }}</p>
             </div>
             <button 
               @click="settings.payment_reminder = !settings.payment_reminder"
@@ -264,8 +264,8 @@
           </div>
           <div class="flex items-center justify-between p-3 bg-slate-50 rounded-xl">
             <div>
-              <p class="font-medium text-slate-700">Qarzdorlarni bloklash</p>
-              <p class="text-sm text-slate-500">Qarzdor talabalarni cheklash</p>
+              <p class="font-medium text-slate-700">{{ $t('settings.blockDebtors') }}</p>
+              <p class="text-sm text-slate-500">{{ $t('settings.blockDebtorsDesc') }}</p>
             </div>
             <button 
               @click="settings.block_debtors = !settings.block_debtors"
@@ -285,11 +285,11 @@
       <div class="bg-white rounded-2xl border border-slate-200 p-6">
         <h2 class="text-lg font-semibold text-slate-800 mb-4 flex items-center gap-2">
           <FileText class="w-5 h-5 text-slate-400" />
-          Hisobotlar sozlamalari
+          {{ $t('settings.reportsSettings') }}
         </h2>
         <div class="space-y-4">
           <div>
-            <label class="block text-sm font-medium text-slate-700 mb-2">Haftalik hisobot kuni</label>
+            <label class="block text-sm font-medium text-slate-700 mb-2">{{ $t('settings.weeklyReportDay') }}</label>
             <select 
               v-model="settings.weekly_report_day"
               class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-violet-500 focus:ring-2 focus:ring-violet-500/20 outline-none"
@@ -305,8 +305,8 @@
           </div>
           <div class="flex items-center justify-between p-3 bg-slate-50 rounded-xl">
             <div>
-              <p class="font-medium text-slate-700">Avtomatik hisobot</p>
-              <p class="text-sm text-slate-500">Haftalik hisobotlarni avtomatik yaratish</p>
+              <p class="font-medium text-slate-700">{{ $t('settings.autoReport') }}</p>
+              <p class="text-sm text-slate-500">{{ $t('settings.autoReportDesc') }}</p>
             </div>
             <button 
               @click="settings.auto_report = !settings.auto_report"
@@ -321,8 +321,8 @@
           </div>
           <div class="flex items-center justify-between p-3 bg-slate-50 rounded-xl">
             <div>
-              <p class="font-medium text-slate-700">Hisobotni emailga yuborish</p>
-              <p class="text-sm text-slate-500">Yaratilgan hisobotni emailga jo'natish</p>
+              <p class="font-medium text-slate-700">{{ $t('settings.emailReport') }}</p>
+              <p class="text-sm text-slate-500">{{ $t('settings.emailReportDesc') }}</p>
             </div>
             <button 
               @click="settings.email_report = !settings.email_report"
@@ -342,11 +342,11 @@
       <div class="bg-white rounded-2xl border border-slate-200 p-6">
         <h2 class="text-lg font-semibold text-slate-800 mb-4 flex items-center gap-2">
           <Monitor class="w-5 h-5 text-slate-400" />
-          Ko'rinish sozlamalari
+          {{ $t('settings.displaySettings') }}
         </h2>
         <div class="space-y-4">
           <div>
-            <label class="block text-sm font-medium text-slate-700 mb-2">Sahifadagi elementlar soni</label>
+            <label class="block text-sm font-medium text-slate-700 mb-2">{{ $t('settings.itemsPerPage') }}</label>
             <select 
               v-model.number="settings.items_per_page"
               class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-violet-500 focus:ring-2 focus:ring-violet-500/20 outline-none"
@@ -358,8 +358,8 @@
           </div>
           <div class="flex items-center justify-between p-3 bg-slate-50 rounded-xl">
             <div>
-              <p class="font-medium text-slate-700">Kompakt ko'rinish</p>
-              <p class="text-sm text-slate-500">Jadvallarni ixcham ko'rsatish</p>
+              <p class="font-medium text-slate-700">{{ $t('settings.compactView') }}</p>
+              <p class="text-sm text-slate-500">{{ $t('settings.compactViewDesc') }}</p>
             </div>
             <button 
               @click="settings.compact_view = !settings.compact_view"
@@ -374,8 +374,8 @@
           </div>
           <div class="flex items-center justify-between p-3 bg-slate-50 rounded-xl">
             <div>
-              <p class="font-medium text-slate-700">Animatsiyalar</p>
-              <p class="text-sm text-slate-500">Interfeys animatsiyalari</p>
+              <p class="font-medium text-slate-700">{{ $t('settings.animations') }}</p>
+              <p class="text-sm text-slate-500">{{ $t('settings.animationsDesc') }}</p>
             </div>
             <button 
               @click="settings.animations = !settings.animations"
@@ -397,9 +397,9 @@
       <div class="text-sm text-slate-500">
         <span v-if="hasChanges" class="text-amber-600 flex items-center gap-1">
           <AlertCircle class="w-4 h-4" />
-          O'zgarishlar saqlanmagan
+          {{ $t('settings.unsavedChanges') }}
         </span>
-        <span v-else>Barcha o'zgarishlar saqlangan</span>
+        <span v-else>{{ $t('settings.allSaved') }}</span>
       </div>
       <div class="flex gap-3">
         <button 

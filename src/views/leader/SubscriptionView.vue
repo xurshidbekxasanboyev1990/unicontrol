@@ -302,7 +302,7 @@ const getPlanIcon = (type) => {
 }
 
 const getStatusLabel = (status) => {
-  const labels = { pending: 'Kutilmoqda', approved: 'Tasdiqlangan', rejected: 'Rad etilgan' }
+  const labels = { pending: t('common.pending'), approved: t('common.approved'), rejected: t('common.rejected') }
   return labels[status] || status
 }
 
