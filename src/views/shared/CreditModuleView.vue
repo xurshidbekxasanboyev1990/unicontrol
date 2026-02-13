@@ -1,7 +1,7 @@
 <template>
   <div class="space-y-6">
     <!-- Header -->
-    <div class="relative overflow-hidden rounded-2xl bg-gradient-to-br from-violet-500 via-purple-600 to-indigo-700 p-6 text-white">
+    <div class="relative overflow-hidden rounded-2xl bg-gradient-to-br from-emerald-500 via-emerald-600 to-teal-700 p-6 text-white">
       <div class="absolute -right-10 -top-10 h-40 w-40 rounded-full bg-white/10"></div>
       <div class="absolute -bottom-10 -left-10 h-32 w-32 rounded-full bg-white/10"></div>
       <div class="relative">
@@ -11,7 +11,7 @@
               <Calculator class="w-8 h-8" />
               {{ $t('credit.title') }}
             </h1>
-            <p class="mt-2 text-violet-200 text-sm sm:text-base">{{ $t('credit.subtitle') }}</p>
+            <p class="mt-2 text-emerald-200 text-sm sm:text-base">{{ $t('credit.subtitle') }}</p>
           </div>
           <div class="flex items-center gap-3">
             <button
@@ -27,19 +27,19 @@
         <div class="mt-6 grid grid-cols-2 sm:grid-cols-4 gap-3">
           <div class="bg-white/15 backdrop-blur rounded-xl p-3 text-center">
             <p class="text-2xl font-bold">{{ totalCredits }}</p>
-            <p class="text-xs text-violet-200">{{ $t('credit.totalCredits') }}</p>
+            <p class="text-xs text-emerald-200">{{ $t('credit.totalCredits') }}</p>
           </div>
           <div class="bg-white/15 backdrop-blur rounded-xl p-3 text-center">
             <p class="text-2xl font-bold">{{ gpa.toFixed(2) }}</p>
-            <p class="text-xs text-violet-200">{{ $t('credit.gpa') }}</p>
+            <p class="text-xs text-emerald-200">{{ $t('credit.gpa') }}</p>
           </div>
           <div class="bg-white/15 backdrop-blur rounded-xl p-3 text-center">
             <p class="text-2xl font-bold">{{ totalHours }}</p>
-            <p class="text-xs text-violet-200">{{ $t('credit.totalHours') }}</p>
+            <p class="text-xs text-emerald-200">{{ $t('credit.totalHours') }}</p>
           </div>
           <div class="bg-white/15 backdrop-blur rounded-xl p-3 text-center">
             <p class="text-2xl font-bold" :class="gpaLetterColor">{{ gpaLetter }}</p>
-            <p class="text-xs text-violet-200">{{ $t('credit.gradeLevel') }}</p>
+            <p class="text-xs text-emerald-200">{{ $t('credit.gradeLevel') }}</p>
           </div>
         </div>
       </div>
@@ -47,35 +47,35 @@
 
     <!-- Info Panel (collapsible) -->
     <Transition name="slide">
-      <div v-if="showInfo" class="rounded-2xl border border-violet-200 bg-violet-50 p-5 sm:p-6">
-        <h3 class="text-lg font-bold text-violet-800 mb-4 flex items-center gap-2">
+      <div v-if="showInfo" class="rounded-2xl border border-emerald-200 bg-emerald-50 p-5 sm:p-6">
+        <h3 class="text-lg font-bold text-emerald-800 mb-4 flex items-center gap-2">
           <GraduationCap class="w-5 h-5" />
           {{ $t('credit.aboutCreditSystem') }}
         </h3>
-        <div class="grid sm:grid-cols-2 gap-6 text-sm text-violet-700">
+        <div class="grid sm:grid-cols-2 gap-6 text-sm text-emerald-700">
           <div class="space-y-3">
             <div class="flex items-start gap-2">
-              <div class="mt-1 w-2 h-2 rounded-full bg-violet-400 shrink-0"></div>
+              <div class="mt-1 w-2 h-2 rounded-full bg-emerald-400 shrink-0"></div>
               <p>{{ $t('credit.info1') }}</p>
             </div>
             <div class="flex items-start gap-2">
-              <div class="mt-1 w-2 h-2 rounded-full bg-violet-400 shrink-0"></div>
+              <div class="mt-1 w-2 h-2 rounded-full bg-emerald-400 shrink-0"></div>
               <p>{{ $t('credit.info2') }}</p>
             </div>
             <div class="flex items-start gap-2">
-              <div class="mt-1 w-2 h-2 rounded-full bg-violet-400 shrink-0"></div>
+              <div class="mt-1 w-2 h-2 rounded-full bg-emerald-400 shrink-0"></div>
               <p>{{ $t('credit.info3') }}</p>
             </div>
             <div class="flex items-start gap-2">
-              <div class="mt-1 w-2 h-2 rounded-full bg-violet-400 shrink-0"></div>
+              <div class="mt-1 w-2 h-2 rounded-full bg-emerald-400 shrink-0"></div>
               <p>{{ $t('credit.info4') }}</p>
             </div>
           </div>
           <div>
-            <h4 class="font-semibold text-violet-800 mb-2">{{ $t('credit.gradingScale') }}</h4>
-            <div class="rounded-xl overflow-hidden border border-violet-200">
+            <h4 class="font-semibold text-emerald-800 mb-2">{{ $t('credit.gradingScale') }}</h4>
+            <div class="rounded-xl overflow-hidden border border-emerald-200">
               <table class="w-full text-sm">
-                <thead class="bg-violet-100">
+                <thead class="bg-emerald-100">
                   <tr>
                     <th class="px-3 py-2 text-left font-semibold">{{ $t('credit.grade') }}</th>
                     <th class="px-3 py-2 text-left font-semibold">{{ $t('credit.ball') }}</th>
@@ -84,25 +84,25 @@
                   </tr>
                 </thead>
                 <tbody>
-                  <tr class="border-t border-violet-100">
+                  <tr class="border-t border-emerald-100">
                     <td class="px-3 py-2 font-medium text-emerald-700">{{ $t('credit.excellent') }}</td>
                     <td class="px-3 py-2">5.0</td>
                     <td class="px-3 py-2">86-100%</td>
                     <td class="px-3 py-2 font-bold text-emerald-600">A</td>
                   </tr>
-                  <tr class="border-t border-violet-100 bg-violet-50/50">
+                  <tr class="border-t border-emerald-100 bg-emerald-50/50">
                     <td class="px-3 py-2 font-medium text-blue-700">{{ $t('credit.good') }}</td>
                     <td class="px-3 py-2">4.0</td>
                     <td class="px-3 py-2">71-85%</td>
                     <td class="px-3 py-2 font-bold text-blue-600">B</td>
                   </tr>
-                  <tr class="border-t border-violet-100">
+                  <tr class="border-t border-emerald-100">
                     <td class="px-3 py-2 font-medium text-amber-700">{{ $t('credit.satisfactory') }}</td>
                     <td class="px-3 py-2">3.0</td>
                     <td class="px-3 py-2">56-70%</td>
                     <td class="px-3 py-2 font-bold text-amber-600">C</td>
                   </tr>
-                  <tr class="border-t border-violet-100 bg-violet-50/50">
+                  <tr class="border-t border-emerald-100 bg-emerald-50/50">
                     <td class="px-3 py-2 font-medium text-red-700">{{ $t('credit.unsatisfactory') }}</td>
                     <td class="px-3 py-2">2.0</td>
                     <td class="px-3 py-2">0-55%</td>
@@ -125,8 +125,8 @@
         :class="[
           'px-4 py-2 rounded-xl text-sm font-medium transition-all',
           selectedLevel === level.key
-            ? 'bg-violet-600 text-white shadow-lg shadow-violet-500/25'
-            : 'bg-white border border-slate-200 text-slate-600 hover:bg-violet-50 hover:border-violet-300'
+            ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-500/25'
+            : 'bg-white border border-slate-200 text-slate-600 hover:bg-emerald-50 hover:border-emerald-300'
         ]"
       >
         {{ level.label }}
@@ -144,7 +144,7 @@
             :class="[
               'px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-all whitespace-nowrap',
               activeSemester === sem
-                ? 'bg-violet-100 text-violet-700 ring-1 ring-violet-300'
+                ? 'bg-emerald-100 text-emerald-700 ring-1 ring-emerald-300'
                 : 'text-slate-500 hover:bg-slate-100 hover:text-slate-700'
             ]"
           >
@@ -154,7 +154,7 @@
         <div class="flex items-center gap-2">
           <span class="text-xs text-slate-400">
             {{ $t('credit.semesterCredits') }}: 
-            <span class="font-bold text-violet-600">{{ semesterCredits }} / 30</span>
+            <span class="font-bold text-emerald-600">{{ semesterCredits }} / 30</span>
           </span>
         </div>
       </div>
@@ -186,7 +186,7 @@
                   v-model="subject.name"
                   type="text"
                   :placeholder="$t('credit.enterSubjectName')"
-                  class="w-full bg-transparent border-0 border-b border-transparent hover:border-slate-300 focus:border-violet-500 focus:ring-0 text-sm font-medium text-slate-800 placeholder-slate-300 py-1 px-0 transition-colors"
+                  class="w-full bg-transparent border-0 border-b border-transparent hover:border-slate-300 focus:border-emerald-500 focus:ring-0 text-sm font-medium text-slate-800 placeholder-slate-300 py-1 px-0 transition-colors"
                 />
               </td>
               <td class="px-4 py-3 text-center">
@@ -195,7 +195,7 @@
                   type="number"
                   min="1"
                   max="30"
-                  class="w-16 text-center bg-violet-50 border border-violet-200 rounded-lg text-sm font-bold text-violet-700 py-1 focus:ring-2 focus:ring-violet-400 focus:border-violet-400"
+                  class="w-16 text-center bg-emerald-50 border border-emerald-200 rounded-lg text-sm font-bold text-emerald-700 py-1 focus:ring-2 focus:ring-emerald-400 focus:border-emerald-400"
                 />
               </td>
               <td class="px-4 py-3 text-center">
@@ -204,7 +204,7 @@
               <td class="px-4 py-3 text-center">
                 <select
                   v-model.number="subject.grade"
-                  class="bg-white border border-slate-200 rounded-lg text-sm font-medium py-1.5 px-2 focus:ring-2 focus:ring-violet-400 focus:border-violet-400 cursor-pointer"
+                  class="bg-white border border-slate-200 rounded-lg text-sm font-medium py-1.5 px-2 focus:ring-2 focus:ring-emerald-400 focus:border-emerald-400 cursor-pointer"
                   :class="getGradeSelectClass(subject.grade)"
                 >
                   <option :value="0" disabled>{{ $t('credit.selectGrade') }}</option>
@@ -255,14 +255,14 @@
               <td colspan="2" class="px-4 py-3">
                 <button
                   @click="addSubject"
-                  class="flex items-center gap-2 text-sm font-medium text-violet-600 hover:text-violet-800 transition-colors"
+                  class="flex items-center gap-2 text-sm font-medium text-emerald-600 hover:text-emerald-800 transition-colors"
                 >
                   <Plus class="w-4 h-4" />
                   {{ $t('credit.addSubject') }}
                 </button>
               </td>
               <td class="px-4 py-3 text-center">
-                <span class="text-sm font-bold text-violet-700">{{ semesterCredits }}</span>
+                <span class="text-sm font-bold text-emerald-700">{{ semesterCredits }}</span>
               </td>
               <td class="px-4 py-3 text-center">
                 <span class="text-sm font-bold text-slate-600">{{ semesterCredits * 30 }}</span>
@@ -276,7 +276,7 @@
                 </span>
               </td>
               <td class="px-4 py-3 text-center">
-                <span class="text-sm font-bold text-violet-700">{{ semesterGPA > 0 ? semesterGPA.toFixed(2) : '—' }}</span>
+                <span class="text-sm font-bold text-emerald-700">{{ semesterGPA > 0 ? semesterGPA.toFixed(2) : '—' }}</span>
               </td>
               <td></td>
             </tr>
@@ -291,8 +291,8 @@
       <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
         <div class="flex items-center justify-between mb-4">
           <h3 class="text-sm font-semibold text-slate-500 uppercase tracking-wider">{{ $t('credit.overallGPA') }}</h3>
-          <div class="w-10 h-10 rounded-xl bg-violet-100 flex items-center justify-center">
-            <Award class="w-5 h-5 text-violet-600" />
+          <div class="w-10 h-10 rounded-xl bg-emerald-100 flex items-center justify-center">
+            <Award class="w-5 h-5 text-emerald-600" />
           </div>
         </div>
         <div class="flex items-end gap-3">
@@ -318,17 +318,17 @@
       <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
         <div class="flex items-center justify-between mb-4">
           <h3 class="text-sm font-semibold text-slate-500 uppercase tracking-wider">{{ $t('credit.creditsProgress') }}</h3>
-          <div class="w-10 h-10 rounded-xl bg-blue-100 flex items-center justify-center">
-            <Target class="w-5 h-5 text-blue-600" />
+          <div class="w-10 h-10 rounded-xl bg-teal-100 flex items-center justify-center">
+            <Target class="w-5 h-5 text-teal-600" />
           </div>
         </div>
         <div class="flex items-end gap-3">
-          <span class="text-4xl font-bold text-blue-600">{{ totalCredits }}</span>
+          <span class="text-4xl font-bold text-teal-600">{{ totalCredits }}</span>
           <span class="text-sm text-slate-400 mb-1">/ {{ requiredCredits }}</span>
         </div>
         <div class="mt-4 h-3 bg-slate-100 rounded-full overflow-hidden">
           <div
-            class="h-full bg-gradient-to-r from-blue-500 to-blue-600 rounded-full transition-all duration-700 ease-out"
+            class="h-full bg-gradient-to-r from-teal-500 to-teal-600 rounded-full transition-all duration-700 ease-out"
             :style="{ width: `${Math.min((totalCredits / requiredCredits) * 100, 100)}%` }"
           ></div>
         </div>
@@ -351,9 +351,9 @@
             v-for="sem in totalSemesters"
             :key="sem"
             class="flex items-center justify-between py-1.5 px-2 rounded-lg"
-            :class="activeSemester === sem ? 'bg-violet-50' : 'hover:bg-slate-50'"
+            :class="activeSemester === sem ? 'bg-emerald-50' : 'hover:bg-slate-50'"
           >
-            <span class="text-sm" :class="activeSemester === sem ? 'font-semibold text-violet-700' : 'text-slate-600'">
+            <span class="text-sm" :class="activeSemester === sem ? 'font-semibold text-emerald-700' : 'text-slate-600'">
               {{ sem }}-{{ $t('credit.semester') }}
             </span>
             <div class="flex items-center gap-3">
@@ -383,7 +383,7 @@
       </button>
       <button
         @click="loadSampleData"
-        class="flex items-center gap-2 px-4 py-2.5 bg-violet-50 text-violet-600 hover:bg-violet-100 rounded-xl text-sm font-medium transition-colors"
+        class="flex items-center gap-2 px-4 py-2.5 bg-teal-50 text-teal-600 hover:bg-teal-100 rounded-xl text-sm font-medium transition-colors"
       >
         <Sparkles class="w-4 h-4" />
         {{ $t('credit.loadSample') }}
@@ -494,9 +494,9 @@ const gpaLetter = computed(() => {
 })
 
 const gpaLetterColor = computed(() => {
-  if (gpa.value >= 4.5) return 'text-emerald-300'
-  if (gpa.value >= 3.5) return 'text-blue-300'
-  if (gpa.value >= 2.5) return 'text-amber-300'
+  if (gpa.value >= 4.5) return 'text-yellow-300'
+  if (gpa.value >= 3.5) return 'text-sky-200'
+  if (gpa.value >= 2.5) return 'text-orange-300'
   if (gpa.value > 0) return 'text-red-300'
   return 'text-white/50'
 })
