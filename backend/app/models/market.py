@@ -112,7 +112,7 @@ class UserMarketProfile(Base):
     tariff: Mapped[str] = mapped_column(
         SQLEnum(MarketTariff), default=MarketTariff.FREE, nullable=False
     )
-    tariff_expires_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
+    tariff_expires_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
 
     # Balance
     balance: Mapped[float] = mapped_column(Float, default=0.0, nullable=False)
@@ -131,9 +131,9 @@ class UserMarketProfile(Base):
     card_number: Mapped[Optional[str]] = mapped_column(String(20), nullable=True)
     card_holder: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
 
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(TASHKENT_TZ))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(TASHKENT_TZ))
     updated_at: Mapped[datetime] = mapped_column(
-        DateTime, default=lambda: datetime.now(TASHKENT_TZ), onupdate=lambda: datetime.now(TASHKENT_TZ)
+        DateTime(timezone=True), default=lambda: datetime.now(TASHKENT_TZ), onupdate=lambda: datetime.now(TASHKENT_TZ)
     )
 
     # Relationships
@@ -182,7 +182,7 @@ class ServiceListing(Base):
     moderated_by: Mapped[Optional[int]] = mapped_column(
         ForeignKey("users.id"), nullable=True
     )
-    moderated_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
+    moderated_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
 
     # Stats
     views: Mapped[int] = mapped_column(Integer, default=0)
@@ -191,9 +191,9 @@ class ServiceListing(Base):
     # Images / attachments stored as JSON list of paths
     images: Mapped[Optional[dict]] = mapped_column(JSON, nullable=True)
 
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(TASHKENT_TZ))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(TASHKENT_TZ))
     updated_at: Mapped[datetime] = mapped_column(
-        DateTime, default=lambda: datetime.now(TASHKENT_TZ), onupdate=lambda: datetime.now(TASHKENT_TZ)
+        DateTime(timezone=True), default=lambda: datetime.now(TASHKENT_TZ), onupdate=lambda: datetime.now(TASHKENT_TZ)
     )
 
     # Relationships
@@ -237,9 +237,9 @@ class MarketOrder(Base):
     seller_amount: Mapped[float] = mapped_column(Float, default=0.0)
 
     # Timeline
-    deadline: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
-    delivered_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
-    completed_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
+    deadline: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
+    delivered_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
+    completed_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
 
     # Status
     status: Mapped[str] = mapped_column(
@@ -266,9 +266,9 @@ class MarketOrder(Base):
     buyer_review: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     seller_rating: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
 
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(TASHKENT_TZ))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(TASHKENT_TZ))
     updated_at: Mapped[datetime] = mapped_column(
-        DateTime, default=lambda: datetime.now(TASHKENT_TZ), onupdate=lambda: datetime.now(TASHKENT_TZ)
+        DateTime(timezone=True), default=lambda: datetime.now(TASHKENT_TZ), onupdate=lambda: datetime.now(TASHKENT_TZ)
     )
 
     # Relationships
@@ -300,11 +300,11 @@ class EscrowTransaction(Base):
         SQLEnum(EscrowStatus), default=EscrowStatus.ON_HOLD, nullable=False
     )
 
-    paid_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
-    released_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
-    refunded_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
+    paid_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
+    released_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
+    refunded_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
 
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(TASHKENT_TZ))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(TASHKENT_TZ))
 
     # Relationships
     order = relationship("MarketOrder", back_populates="escrow")
@@ -339,8 +339,8 @@ class MarketDispute(Base):
     buyer_refund: Mapped[float] = mapped_column(Float, default=0.0)
     seller_payout: Mapped[float] = mapped_column(Float, default=0.0)
 
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(TASHKENT_TZ))
-    resolved_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(TASHKENT_TZ))
+    resolved_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
 
     # Relationships
     order = relationship("MarketOrder", back_populates="dispute")
@@ -375,7 +375,7 @@ class MarketMessage(Base):
     is_system: Mapped[bool] = mapped_column(Boolean, default=False)
     is_read: Mapped[bool] = mapped_column(Boolean, default=False)
 
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(TASHKENT_TZ))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(TASHKENT_TZ))
 
     # Relationships
     order = relationship("MarketOrder", back_populates="messages")
@@ -403,8 +403,8 @@ class SellerPayout(Base):
         SQLEnum(PayoutStatus), default=PayoutStatus.PENDING, nullable=False
     )
 
-    requested_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(TASHKENT_TZ))
-    processed_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
+    requested_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(TASHKENT_TZ))
+    processed_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
 
     # Relationships
     user = relationship("User", backref="market_payouts")
@@ -435,9 +435,9 @@ class MarketTariffPayment(Base):
     approved_by: Mapped[Optional[int]] = mapped_column(
         ForeignKey("users.id", ondelete="SET NULL"), nullable=True
     )
-    approved_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
+    approved_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
 
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(TASHKENT_TZ))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(TASHKENT_TZ))
 
     # Relationships
     user = relationship("User", foreign_keys=[user_id], backref="market_tariff_payments")
