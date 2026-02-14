@@ -927,6 +927,15 @@ class MarketService:
             .where(UserMarketProfile.tariff == MarketTariff.PREMIUM)
         )).scalar() or 0
 
+        pending_payments = (await db.execute(
+            select(func.count()).select_from(MarketOrder)
+            .where(
+                MarketOrder.payment_receipt.isnot(None),
+                MarketOrder.payment_verified == False,
+                MarketOrder.payment_rejected == False,
+            )
+        )).scalar() or 0
+
         return {
             "total_listings": listings_total,
             "active_listings": listings_active,
@@ -936,6 +945,7 @@ class MarketService:
             "completed_orders": orders_completed,
             "disputed_orders": orders_disputed,
             "open_disputes": orders_disputed,
+            "pending_payments": pending_payments,
             "total_escrow_held": float(escrow_held),
             "total_commission_earned": float(commission_earned),
             "total_payouts": float(total_payouts),

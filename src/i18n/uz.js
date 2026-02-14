@@ -2593,6 +2593,23 @@ export default {
         paymentHistory: 'To\'lov tarixi',
         receiptSentWaitApproval: 'To\'lov cheki yuborildi! Admin tasdiqlashini kuting.',
         revisionReason: 'Qayta ishlash sababini yozing...',
+
+        // Order Payments (admin)
+        orderPayments: 'Buyurtma to\'lovlari',
+        noOrderPayments: 'Buyurtma to\'lovlari topilmadi',
+        paymentPending: 'Tekshirilmoqda',
+        paymentVerified: 'Tasdiqlangan',
+        paymentRejected: 'Rad etilgan',
+        verifyPayment: 'Tasdiqlash',
+        rejectPayment: 'Rad etish',
+        viewReceipt: 'Chekni ko\'rish',
+        confirmVerifyPayment: 'Bu to\'lovni tasdiqlaysizmi?',
+        enterRejectReason: 'Rad etish sababini yozing:',
+        receiptLoadError: 'Chekni yuklashda xatolik',
+        paymentRejectedSuccess: 'To\'lov rad etildi',
+        noReceipt: 'Chek topilmadi',
+        receiptFile: 'Chek fayli',
+        date: 'Sana',
     },
 
     // ============ KONTRAKTLAR ============

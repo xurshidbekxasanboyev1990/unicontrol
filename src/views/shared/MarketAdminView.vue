@@ -15,7 +15,7 @@
     </div>
 
     <!-- Stats -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
       <div class="bg-white rounded-2xl border border-slate-200 p-5">
         <div class="flex items-center justify-between">
           <div>
@@ -35,6 +35,17 @@
           </div>
           <div class="w-12 h-12 bg-amber-100 rounded-xl flex items-center justify-center">
             <Clock class="w-6 h-6 text-amber-600" />
+          </div>
+        </div>
+      </div>
+      <div class="bg-white rounded-2xl border border-slate-200 p-5 cursor-pointer hover:shadow-md transition-all" @click="activeTab = 'order-payments'">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-sm text-slate-500">{{ $t('market.orderPayments') }}</p>
+            <p class="text-2xl font-bold" :class="stats.pending_payments ? 'text-orange-600' : 'text-slate-400'">{{ stats.pending_payments || 0 }}</p>
+          </div>
+          <div class="w-12 h-12 rounded-xl flex items-center justify-center" :class="stats.pending_payments ? 'bg-orange-100' : 'bg-slate-100'">
+            <CreditCard class="w-6 h-6" :class="stats.pending_payments ? 'text-orange-600' : 'text-slate-400'" />
           </div>
         </div>
       </div>
@@ -74,6 +85,9 @@
         ]"
       >
         {{ tab.label }}
+        <span v-if="tab.badge" class="ml-1 px-2 py-0.5 text-xs font-bold rounded-full" :class="activeTab === tab.value ? 'bg-white/20 text-white' : 'bg-rose-100 text-rose-700'">
+          {{ tab.badge }}
+        </span>
       </button>
     </div>
 
@@ -112,6 +126,81 @@
               class="bg-gradient-to-r from-rose-500 to-rose-600 text-white px-4 py-2 rounded-xl text-sm font-medium hover:from-rose-600 hover:to-rose-700 shadow-sm transition-all flex items-center gap-1">
               <XCircle class="w-4 h-4" /> {{ $t('market.reject') }}
             </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Order Payments -->
+    <div v-if="activeTab === 'order-payments'" class="space-y-4">
+      <!-- Filter -->
+      <div class="flex flex-wrap gap-2">
+        <button v-for="f in paymentFilters" :key="f.value"
+          @click="orderPaymentFilter = f.value"
+          :class="[
+            'px-4 py-2 rounded-xl text-sm font-medium transition-all',
+            orderPaymentFilter === f.value
+              ? 'bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-lg shadow-emerald-500/25'
+              : 'bg-white border border-slate-200 text-slate-600 hover:border-emerald-300'
+          ]">
+          {{ f.label }}
+        </button>
+      </div>
+
+      <div v-if="orderPaymentsLoading" class="text-center py-12">
+        <div class="w-8 h-8 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
+      </div>
+      <div v-else-if="filteredOrderPayments.length === 0" class="text-center py-16">
+        <div class="w-20 h-20 bg-slate-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
+          <CreditCard class="w-10 h-10 text-slate-300" />
+        </div>
+        <p class="text-slate-500 font-medium">{{ $t('market.noOrderPayments') }}</p>
+      </div>
+
+      <div v-else class="space-y-3">
+        <div v-for="op in filteredOrderPayments" :key="op.id"
+          class="bg-white rounded-2xl border border-slate-200 p-5 hover:shadow-md transition-all">
+          <div class="flex flex-col lg:flex-row lg:items-start gap-4">
+            <div class="flex-1">
+              <div class="flex items-center gap-2 mb-2 flex-wrap">
+                <span class="bg-blue-100 text-blue-700 px-2.5 py-0.5 text-xs rounded-full font-medium">
+                  {{ $t('market.order') }} #{{ op.id }}
+                </span>
+                <span :class="op.payment_status === 'pending' ? 'bg-amber-100 text-amber-700' : op.payment_status === 'verified' ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'"
+                  class="px-2.5 py-0.5 text-xs rounded-full font-medium">
+                  {{ op.payment_status === 'pending' ? $t('market.paymentPending') : op.payment_status === 'verified' ? $t('market.paymentVerified') : $t('market.paymentRejected') }}
+                </span>
+                <span :class="getStatusBadge(op.status)" class="px-2.5 py-0.5 text-xs rounded-full font-medium">
+                  {{ op.status }}
+                </span>
+              </div>
+              <h3 class="font-semibold text-slate-800 text-lg mb-1">{{ op.title }}</h3>
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm mt-2">
+                <div><span class="text-slate-400">{{ $t('market.buyer') }}:</span> <span class="font-medium text-slate-700">{{ op.buyer_name }}</span></div>
+                <div><span class="text-slate-400">{{ $t('market.seller') }}:</span> <span class="font-medium text-slate-700">{{ op.seller_name }}</span></div>
+                <div><span class="text-slate-400">{{ $t('market.amount') }}:</span> <span class="font-bold text-emerald-600">{{ formatPrice(op.amount) }}</span></div>
+                <div><span class="text-slate-400">{{ $t('market.commission') }}:</span> <span class="font-medium text-slate-600">{{ formatPrice(op.commission_amount) }}</span></div>
+                <div><span class="text-slate-400">{{ $t('market.date') }}:</span> <span class="text-slate-600">{{ formatDate(op.created_at) }}</span></div>
+                <div v-if="op.payment_receipt_filename"><span class="text-slate-400">{{ $t('market.receiptFile') }}:</span> <span class="text-slate-600">{{ op.payment_receipt_filename }}</span></div>
+              </div>
+              <p v-if="op.payment_reject_reason" class="mt-2 text-sm text-rose-600 bg-rose-50 rounded-lg px-3 py-2">
+                ❌ {{ op.payment_reject_reason }}
+              </p>
+            </div>
+            <div class="flex flex-col gap-2 min-w-[140px]">
+              <button @click="viewOrderReceipt(op)"
+                class="w-full bg-gradient-to-r from-blue-500 to-blue-600 text-white px-4 py-2.5 rounded-xl text-sm font-medium hover:from-blue-600 hover:to-blue-700 shadow-sm transition-all flex items-center justify-center gap-1.5">
+                <Eye class="w-4 h-4" /> {{ $t('market.viewReceipt') }}
+              </button>
+              <button v-if="op.payment_status === 'pending'" @click="verifyOrderPayment(op)"
+                class="w-full bg-gradient-to-r from-emerald-500 to-emerald-600 text-white px-4 py-2.5 rounded-xl text-sm font-medium hover:from-emerald-600 hover:to-emerald-700 shadow-sm transition-all flex items-center justify-center gap-1.5">
+                <CheckCircle class="w-4 h-4" /> {{ $t('market.verifyPayment') }}
+              </button>
+              <button v-if="op.payment_status === 'pending'" @click="rejectOrderPayment(op)"
+                class="w-full border border-rose-200 text-rose-600 px-4 py-2.5 rounded-xl text-sm font-medium hover:bg-rose-50 transition-colors flex items-center justify-center gap-1.5">
+                <XCircle class="w-4 h-4" /> {{ $t('market.rejectPayment') }}
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -233,6 +322,27 @@
         </div>
       </div>
     </div>
+
+    <!-- Receipt Viewer Modal -->
+    <div v-if="showReceiptModal" class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" @click.self="showReceiptModal = false">
+      <div class="relative bg-white rounded-3xl max-w-2xl w-full p-6 shadow-2xl max-h-[90vh] overflow-y-auto">
+        <button @click="showReceiptModal = false" class="absolute top-4 right-4 p-1 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors z-10"><X class="w-5 h-5" /></button>
+        <h2 class="text-xl font-bold text-slate-800 mb-4">{{ $t('market.paymentReceipt') }}</h2>
+        <div v-if="receiptPayment" class="mb-4 bg-slate-50 rounded-xl p-4 text-sm space-y-1">
+          <p><span class="text-slate-400">{{ $t('market.order') }}:</span> <span class="font-medium">#{{ receiptPayment.id }} — {{ receiptPayment.title }}</span></p>
+          <p><span class="text-slate-400">{{ $t('market.buyer') }}:</span> <span class="font-medium">{{ receiptPayment.buyer_name }}</span></p>
+          <p><span class="text-slate-400">{{ $t('market.amount') }}:</span> <span class="font-bold text-emerald-600">{{ formatPrice(receiptPayment.amount) }}</span></p>
+        </div>
+        <div v-if="receiptLoading" class="flex items-center justify-center py-12">
+          <div class="w-8 h-8 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin"></div>
+        </div>
+        <div v-else-if="receiptUrl">
+          <iframe v-if="receiptIsPdf" :src="receiptUrl" class="w-full h-[60vh] rounded-xl border border-slate-200"></iframe>
+          <img v-else :src="receiptUrl" class="w-full rounded-xl border border-slate-200 max-h-[60vh] object-contain bg-slate-100" />
+        </div>
+        <div v-else class="text-center py-8 text-slate-400">{{ $t('market.noReceipt') }}</div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -242,6 +352,7 @@ import {
     ClipboardList,
     Clock,
     CreditCard,
+    Eye,
     Package,
     Store,
     X,
@@ -250,8 +361,10 @@ import {
 import { computed, onMounted, ref, watch } from 'vue'
 import api from '../../services/api'
 import { useLanguageStore } from '../../stores/language'
+import { useToastStore } from '../../stores/toast'
 
 const { t } = useLanguageStore()
+const toast = useToastStore()
 
 const activeTab = ref('pending')
 const stats = ref({})
@@ -263,8 +376,32 @@ const showRejectModal = ref(false)
 const rejectingId = ref(null)
 const rejectReason = ref('')
 
+// Order Payments
+const orderPayments = ref([])
+const orderPaymentsLoading = ref(false)
+const orderPaymentFilter = ref(null)
+const pendingPaymentsCount = computed(() => orderPayments.value.filter(p => p.payment_status === 'pending').length)
+const filteredOrderPayments = computed(() => {
+  if (!orderPaymentFilter.value) return orderPayments.value
+  return orderPayments.value.filter(p => p.payment_status === orderPaymentFilter.value)
+})
+const paymentFilters = computed(() => [
+  { value: null, label: t('common.all') },
+  { value: 'pending', label: '⏳ ' + t('market.paymentPending') },
+  { value: 'verified', label: '✅ ' + t('market.paymentVerified') },
+  { value: 'rejected', label: '❌ ' + t('market.paymentRejected') },
+])
+
+// Receipt viewer
+const showReceiptModal = ref(false)
+const receiptUrl = ref(null)
+const receiptIsPdf = ref(false)
+const receiptLoading = ref(false)
+const receiptPayment = ref(null)
+
 const adminTabs = computed(() => [
   { value: 'pending', label: `📋 ${t('market.pendingApproval')}` },
+  { value: 'order-payments', label: `💰 ${t('market.orderPayments')}`, badge: pendingPaymentsCount.value || null },
   { value: 'listings', label: `📦 ${t('market.allListings')}` },
   { value: 'disputes', label: `⚠️ ${t('market.disputes')}` },
   { value: 'payouts', label: `💳 ${t('market.payouts')}` },
@@ -383,8 +520,77 @@ const processPayout = async (id, status) => {
   } catch (e) { alert(e.data?.detail || 'Error') }
 }
 
+// Order Payments
+const loadOrderPayments = async () => {
+  orderPaymentsLoading.value = true
+  try {
+    const res = await api.request('/market/order-payments')
+    orderPayments.value = res.items || []
+  } catch (e) {
+    console.error('Order payments load error:', e)
+  } finally {
+    orderPaymentsLoading.value = false
+  }
+}
+
+const viewOrderReceipt = async (payment) => {
+  receiptPayment.value = payment
+  receiptUrl.value = null
+  receiptIsPdf.value = false
+  receiptLoading.value = true
+  showReceiptModal.value = true
+  try {
+    const token = localStorage.getItem('access_token') || ''
+    const resp = await fetch(`/api/v1/market/orders/${payment.id}/receipt`, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    })
+    if (!resp.ok) throw new Error('Yuklab bo\'lmadi')
+    const contentType = resp.headers.get('content-type') || ''
+    receiptIsPdf.value = contentType.includes('pdf')
+    const blob = await resp.blob()
+    receiptUrl.value = URL.createObjectURL(blob)
+  } catch (e) {
+    console.error(e)
+    toast.error(t('market.receiptLoadError'))
+    showReceiptModal.value = false
+  } finally {
+    receiptLoading.value = false
+  }
+}
+
+const verifyOrderPayment = async (payment) => {
+  if (!confirm(t('market.confirmVerifyPayment'))) return
+  try {
+    await api.request(`/market/order-payments/${payment.id}?action=verify`, { method: 'PATCH' })
+    payment.payment_status = 'verified'
+    payment.payment_verified = true
+    payment.payment_rejected = false
+    toast.success(`${payment.buyer_name} — ${payment.title} to'lovi tasdiqlandi!`)
+    loadStats()
+  } catch (e) {
+    toast.error(e.message || t('common.error'))
+  }
+}
+
+const rejectOrderPayment = async (payment) => {
+  const reason = prompt(t('market.enterRejectReason'))
+  if (reason === null) return
+  try {
+    await api.request(`/market/order-payments/${payment.id}?action=reject&reject_reason=${encodeURIComponent(reason || '')}`, { method: 'PATCH' })
+    payment.payment_status = 'rejected'
+    payment.payment_rejected = true
+    payment.payment_verified = false
+    payment.payment_reject_reason = reason
+    toast.success(t('market.paymentRejectedSuccess'))
+    loadStats()
+  } catch (e) {
+    toast.error(e.message || t('common.error'))
+  }
+}
+
 watch(activeTab, (val) => {
   if (val === 'pending') loadPending()
+  if (val === 'order-payments') loadOrderPayments()
   if (val === 'listings') loadAllListings()
   if (val === 'disputes') loadDisputes()
   if (val === 'payouts') loadPayouts()
@@ -393,5 +599,6 @@ watch(activeTab, (val) => {
 onMounted(() => {
   loadStats()
   loadPending()
+  loadOrderPayments()
 })
 </script>

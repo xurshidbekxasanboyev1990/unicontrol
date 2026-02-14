@@ -2515,6 +2515,23 @@ export default {
         paymentHistory: 'Payment History',
         receiptSentWaitApproval: 'Receipt sent! Wait for admin approval.',
         revisionReason: 'Write the reason for revision...',
+
+        // Order Payments (admin)
+        orderPayments: 'Order Payments',
+        noOrderPayments: 'No order payments found',
+        paymentPending: 'Pending',
+        paymentVerified: 'Verified',
+        paymentRejected: 'Rejected',
+        verifyPayment: 'Verify',
+        rejectPayment: 'Reject',
+        viewReceipt: 'View Receipt',
+        confirmVerifyPayment: 'Verify this payment?',
+        enterRejectReason: 'Enter rejection reason:',
+        receiptLoadError: 'Error loading receipt',
+        paymentRejectedSuccess: 'Payment rejected',
+        noReceipt: 'Receipt not found',
+        receiptFile: 'Receipt file',
+        date: 'Date',
     },
 
     // ============ CONTRACTS ============

@@ -625,7 +625,23 @@ async def create_order(
                 sender_id=current_user.id,
             )
             db.add(notif)
-            await db.commit()
+
+        # Notify super admins about new order payment
+        admin_result = await db.execute(
+            select(User.id).where(User.role.in_(["superadmin", "admin"]), User.is_active == True)
+        )
+        admin_ids = [r[0] for r in admin_result.all()]
+        for aid in admin_ids:
+            notif = Notification(
+                user_id=aid,
+                title="Yangi buyurtma to'lovi tekshirish kutmoqda 💰",
+                message=f"{current_user.name} — {order.title} uchun {order.amount:,.0f} so'm to'lov cheki yubordi. Tekshiring!",
+                type=NotificationType.INFO,
+                priority=NotificationPriority.HIGH,
+                sender_id=current_user.id,
+            )
+            db.add(notif)
+        await db.commit()
     except Exception as e:
         logger.error(f"Order notification error: {e}")
 
@@ -682,6 +698,9 @@ async def list_orders(
             "delivery_note": order.delivery_note,
             "payment_receipt": order.payment_receipt,
             "payment_receipt_filename": order.payment_receipt_filename,
+            "payment_verified": order.payment_verified,
+            "payment_rejected": order.payment_rejected,
+            "payment_reject_reason": order.payment_reject_reason,
             "created_at": order.created_at.isoformat() if order.created_at else None,
         })
 
@@ -781,6 +800,9 @@ async def get_order(
         "delivery_note": order.delivery_note,
         "payment_receipt": order.payment_receipt,
         "payment_receipt_filename": order.payment_receipt_filename,
+        "payment_verified": order.payment_verified,
+        "payment_rejected": order.payment_rejected,
+        "payment_reject_reason": order.payment_reject_reason,
         "buyer_rating": order.buyer_rating,
         "buyer_review": order.buyer_review,
         "created_at": order.created_at.isoformat() if order.created_at else None,
@@ -813,6 +835,155 @@ async def get_order_receipt(
 
     from fastapi.responses import FileResponse
     return FileResponse(order.payment_receipt)
+
+
+# ==================== Admin Order Payment Verification ====================
+
+@router.get("/market/order-payments")
+async def list_order_payments(
+    status: Optional[str] = Query(None, pattern="^(pending|verified|rejected)$"),
+    page: int = Query(1, ge=1),
+    page_size: int = Query(50, ge=1, le=100),
+    current_user: User = Depends(require_admin),
+    db: AsyncSession = Depends(get_db)
+):
+    """Admin: list all orders with payment receipts for verification"""
+    from app.models.market import EscrowTransaction
+
+    query = select(MarketOrder).where(MarketOrder.payment_receipt.isnot(None))
+    count_query = select(func.count(MarketOrder.id)).where(MarketOrder.payment_receipt.isnot(None))
+
+    if status == "pending":
+        query = query.where(MarketOrder.payment_verified == False, MarketOrder.payment_rejected == False)
+        count_query = count_query.where(MarketOrder.payment_verified == False, MarketOrder.payment_rejected == False)
+    elif status == "verified":
+        query = query.where(MarketOrder.payment_verified == True)
+        count_query = count_query.where(MarketOrder.payment_verified == True)
+    elif status == "rejected":
+        query = query.where(MarketOrder.payment_rejected == True)
+        count_query = count_query.where(MarketOrder.payment_rejected == True)
+
+    total = (await db.execute(count_query)).scalar() or 0
+
+    query = query.order_by(MarketOrder.created_at.desc())
+    query = query.offset((page - 1) * page_size).limit(page_size)
+    result = await db.execute(query)
+    orders = result.scalars().all()
+
+    items = []
+    for order in orders:
+        buyer_name = (await db.execute(select(User.name).where(User.id == order.buyer_id))).scalar()
+        seller_name = (await db.execute(select(User.name).where(User.id == order.seller_id))).scalar()
+        escrow_result = await db.execute(select(EscrowTransaction).where(EscrowTransaction.order_id == order.id))
+        escrow = escrow_result.scalar_one_or_none()
+
+        # Determine payment_status
+        if order.payment_rejected:
+            payment_status = "rejected"
+        elif order.payment_verified:
+            payment_status = "verified"
+        else:
+            payment_status = "pending"
+
+        items.append({
+            "id": order.id,
+            "buyer_id": order.buyer_id,
+            "seller_id": order.seller_id,
+            "buyer_name": buyer_name or "?",
+            "seller_name": seller_name or "?",
+            "title": order.title,
+            "amount": order.amount,
+            "commission_amount": order.commission_amount,
+            "seller_amount": order.seller_amount,
+            "status": order.status.value if hasattr(order.status, 'value') else order.status,
+            "payment_status": payment_status,
+            "payment_receipt": order.payment_receipt,
+            "payment_receipt_filename": order.payment_receipt_filename,
+            "payment_verified": order.payment_verified,
+            "payment_rejected": order.payment_rejected,
+            "payment_reject_reason": order.payment_reject_reason,
+            "payment_verified_at": order.payment_verified_at.isoformat() if order.payment_verified_at else None,
+            "created_at": order.created_at.isoformat() if order.created_at else None,
+            "escrow": {
+                "amount": escrow.amount,
+                "commission": escrow.commission,
+                "seller_payout": escrow.seller_payout,
+                "status": escrow.status.value if hasattr(escrow.status, 'value') else escrow.status,
+            } if escrow else None,
+        })
+
+    return {"items": items, "total": total, "page": page, "page_size": page_size}
+
+
+@router.patch("/market/order-payments/{order_id}")
+async def verify_order_payment(
+    order_id: int,
+    action: str = Query(..., pattern="^(verify|reject)$"),
+    reject_reason: Optional[str] = Query(None),
+    current_user: User = Depends(require_superadmin),
+    db: AsyncSession = Depends(get_db)
+):
+    """Super admin: verify or reject an order payment"""
+    order = await MarketService.get_order(db, order_id)
+    if not order:
+        raise HTTPException(404, "Buyurtma topilmadi")
+
+    if not order.payment_receipt:
+        raise HTTPException(400, "Bu buyurtmada to'lov cheki yo'q")
+
+    if action == "verify":
+        order.payment_verified = True
+        order.payment_rejected = False
+        order.payment_verified_by = current_user.id
+        order.payment_verified_at = now_tashkent()
+        order.payment_reject_reason = None
+
+        # Notify buyer
+        notif = Notification(
+            user_id=order.buyer_id,
+            title="To'lov tasdiqlandi ✅",
+            message=f"\"{order.title}\" buyurtmangiz uchun to'lov tasdiqlandi!",
+            type=NotificationType.SUCCESS,
+            priority=NotificationPriority.HIGH,
+            sender_id=current_user.id,
+        )
+        db.add(notif)
+
+        # Notify seller
+        notif2 = Notification(
+            user_id=order.seller_id,
+            title="Buyurtma to'lovi tasdiqlandi ✅",
+            message=f"\"{order.title}\" buyurtma uchun to'lov admin tomonidan tasdiqlandi. Ishni boshlashingiz mumkin!",
+            type=NotificationType.SUCCESS,
+            priority=NotificationPriority.HIGH,
+            sender_id=current_user.id,
+        )
+        db.add(notif2)
+
+    else:
+        order.payment_rejected = True
+        order.payment_verified = False
+        order.payment_reject_reason = reject_reason
+
+        # Notify buyer about rejection
+        notif = Notification(
+            user_id=order.buyer_id,
+            title="To'lov rad etildi ❌",
+            message=f"\"{order.title}\" buyurtmangiz uchun to'lov rad etildi. Sabab: {reject_reason or 'ko`rsatilmagan'}",
+            type=NotificationType.WARNING,
+            priority=NotificationPriority.HIGH,
+            sender_id=current_user.id,
+        )
+        db.add(notif)
+
+    await db.commit()
+
+    return {
+        "id": order.id,
+        "payment_verified": order.payment_verified,
+        "payment_rejected": order.payment_rejected,
+        "message": "To'lov tasdiqlandi" if action == "verify" else "To'lov rad etildi"
+    }
 
 
 @router.post("/market/orders/{order_id}/accept")

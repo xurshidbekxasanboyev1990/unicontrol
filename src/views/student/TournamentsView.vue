@@ -491,21 +491,21 @@
 
 <script setup>
 import {
-  AlertCircle,
-  BookOpen,
-  Brain,
-  Calendar,
-  CheckCircle,
-  ClipboardCheck,
-  Clock,
-  Dumbbell,
-  FlaskConical,
-  Gift,
-  MapPin,
-  Palette,
-  Trophy,
-  UserPlus,
-  X
+    AlertCircle,
+    BookOpen,
+    Brain,
+    Calendar,
+    CheckCircle,
+    ClipboardCheck,
+    Clock,
+    Dumbbell,
+    FlaskConical,
+    Gift,
+    MapPin,
+    Palette,
+    Trophy,
+    UserPlus,
+    X
 } from 'lucide-vue-next'
 import { computed, onMounted, ref } from 'vue'
 import { useAuthStore } from '../../stores/auth'

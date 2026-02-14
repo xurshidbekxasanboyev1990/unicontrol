@@ -256,6 +256,11 @@ class MarketOrder(Base):
     # Payment receipt (buyer uploads proof of payment)
     payment_receipt: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)
     payment_receipt_filename: Mapped[Optional[str]] = mapped_column(String(200), nullable=True)
+    payment_verified: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False, server_default="false")
+    payment_verified_by: Mapped[Optional[int]] = mapped_column(ForeignKey("users.id"), nullable=True)
+    payment_verified_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
+    payment_rejected: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False, server_default="false")
+    payment_reject_reason: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)
 
     # Delivery file
     delivery_file: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)

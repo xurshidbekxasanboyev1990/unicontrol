@@ -2511,6 +2511,23 @@ export default {
         paymentHistory: 'История оплат',
         receiptSentWaitApproval: 'Чек отправлен! Ожидайте подтверждения админа.',
         revisionReason: 'Укажите причину доработки...',
+
+        // Order Payments (admin)
+        orderPayments: 'Оплата заказов',
+        noOrderPayments: 'Платежи по заказам не найдены',
+        paymentPending: 'На проверке',
+        paymentVerified: 'Подтверждено',
+        paymentRejected: 'Отклонено',
+        verifyPayment: 'Подтвердить',
+        rejectPayment: 'Отклонить',
+        viewReceipt: 'Посмотреть чек',
+        confirmVerifyPayment: 'Подтвердить этот платёж?',
+        enterRejectReason: 'Укажите причину отклонения:',
+        receiptLoadError: 'Ошибка при загрузке чека',
+        paymentRejectedSuccess: 'Платёж отклонён',
+        noReceipt: 'Чек не найден',
+        receiptFile: 'Файл чека',
+        date: 'Дата',
     },
 
     // ============ КОНТРАКТЫ ============

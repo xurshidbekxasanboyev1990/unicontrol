@@ -50,8 +50,8 @@ Sahifalar o'rtasida fade animatsiya:
 
 <script setup>
 import { onMounted, onUnmounted } from 'vue'
-import { useAuthStore } from './stores/auth'
 import ToastContainer from './components/ui/ToastContainer.vue'
+import { useAuthStore } from './stores/auth'
 
 const authStore = useAuthStore()
 
