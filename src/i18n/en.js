@@ -1845,6 +1845,17 @@ export default {
         startAnalysisCost: 'Each analysis costs approximately 2-10 UZS',
         startAnalysis: 'Start Analysis',
         analysisTakesTime: 'This may take a few seconds...',
+        // Paywall / Access
+        noAccess: 'AI Analysis Unavailable',
+        upgradeRequiredDesc: 'Upgrade your subscription plan to use AI analysis features.',
+        yourCurrentPlan: 'Your current plan',
+        availableInPlans: 'Available in these plans',
+        whatYouGet: 'What you get with AI Analysis',
+        featureAnalysis: 'Deep attendance analysis and insights',
+        featurePrediction: 'AI prediction — 7-day attendance forecast',
+        featureChat: 'Chat with AI assistant',
+        featureRecommendations: 'Personalized recommendations and tips',
+        upgradePlan: 'Upgrade Plan',
     },
 
     // ============ TELEGRAM BOT ============

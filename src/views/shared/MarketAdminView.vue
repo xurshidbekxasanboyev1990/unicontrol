@@ -119,8 +119,8 @@
 
     <!-- All Listings -->
     <div v-if="activeTab === 'listings'" class="space-y-4">
-      <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden">
-        <table class="w-full text-sm">
+      <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden overflow-x-auto">
+        <table class="w-full text-sm min-w-[600px]">
           <thead class="bg-slate-50 border-b border-slate-200">
             <tr>
               <th class="text-left p-4 text-slate-600 font-semibold">{{ $t('market.listingTitle') }}</th>

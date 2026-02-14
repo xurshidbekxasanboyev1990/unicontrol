@@ -9,6 +9,76 @@
       <p class="mt-4 text-slate-600 font-medium">{{ $t('ai.analyzing') }}</p>
     </div>
 
+    <!-- Paywall / Upgrade Required -->
+    <div v-else-if="!hasAIAccess" class="flex items-center justify-center py-12 px-4">
+      <div class="max-w-lg w-full bg-white rounded-3xl shadow-xl border border-slate-100 overflow-hidden">
+        <!-- Top gradient banner -->
+        <div class="bg-gradient-to-br from-emerald-500 via-teal-500 to-emerald-600 px-6 py-10 text-center relative">
+          <div class="absolute inset-0 opacity-10">
+            <div class="absolute top-4 left-8 w-20 h-20 border-2 border-white rounded-full"></div>
+            <div class="absolute bottom-6 right-10 w-14 h-14 border-2 border-white rounded-full"></div>
+            <div class="absolute top-10 right-20 w-8 h-8 border border-white rounded-full"></div>
+          </div>
+          <div class="relative z-10">
+            <div class="w-20 h-20 bg-white/20 backdrop-blur-sm rounded-2xl mx-auto mb-4 flex items-center justify-center">
+              <Lock class="w-10 h-10 text-white" />
+            </div>
+            <h2 class="text-2xl font-bold text-white mb-2">{{ $t('ai.noAccess') }}</h2>
+            <p class="text-emerald-100 text-sm leading-relaxed">{{ $t('ai.upgradeRequiredDesc') }}</p>
+          </div>
+        </div>
+        <!-- Content -->
+        <div class="px-6 py-8 space-y-6">
+          <!-- Current plan badge -->
+          <div v-if="currentPlan" class="flex items-center justify-center gap-2">
+            <span class="text-sm text-slate-500">{{ $t('ai.yourCurrentPlan') }}:</span>
+            <span class="px-3 py-1 bg-slate-100 text-slate-700 rounded-full text-sm font-semibold uppercase">{{ currentPlan }}</span>
+          </div>
+          <!-- Required plans -->
+          <div class="bg-emerald-50 border border-emerald-100 rounded-2xl p-5">
+            <div class="flex items-center gap-2 mb-3">
+              <Crown class="w-5 h-5 text-emerald-600" />
+              <span class="font-semibold text-slate-700 text-sm">{{ $t('ai.availableInPlans') }}</span>
+            </div>
+            <div class="flex flex-wrap gap-2">
+              <span v-for="plan in requiredPlans" :key="plan"
+                class="px-4 py-2 bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-xl text-sm font-bold uppercase shadow-sm">
+                {{ plan }}
+              </span>
+            </div>
+          </div>
+          <!-- Features list -->
+          <div class="space-y-3">
+            <p class="text-sm font-medium text-slate-600">{{ $t('ai.whatYouGet') }}:</p>
+            <div class="grid gap-2">
+              <div class="flex items-center gap-2 text-sm text-slate-600">
+                <Brain class="w-4 h-4 text-emerald-500 flex-shrink-0" />
+                <span>{{ $t('ai.featureAnalysis') }}</span>
+              </div>
+              <div class="flex items-center gap-2 text-sm text-slate-600">
+                <Sparkles class="w-4 h-4 text-emerald-500 flex-shrink-0" />
+                <span>{{ $t('ai.featurePrediction') }}</span>
+              </div>
+              <div class="flex items-center gap-2 text-sm text-slate-600">
+                <MessageCircle class="w-4 h-4 text-emerald-500 flex-shrink-0" />
+                <span>{{ $t('ai.featureChat') }}</span>
+              </div>
+              <div class="flex items-center gap-2 text-sm text-slate-600">
+                <Lightbulb class="w-4 h-4 text-emerald-500 flex-shrink-0" />
+                <span>{{ $t('ai.featureRecommendations') }}</span>
+              </div>
+            </div>
+          </div>
+          <!-- CTA button -->
+          <button @click="router.push(subscriptionRoute)"
+            class="w-full py-3.5 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white font-bold rounded-2xl transition-all shadow-lg shadow-emerald-200 hover:shadow-emerald-300 text-sm flex items-center justify-center gap-2">
+            <Zap class="w-5 h-5" />
+            {{ $t('ai.upgradePlan') }}
+          </button>
+        </div>
+      </div>
+    </div>
+
     <!-- Error State -->
     <div v-else-if="error" class="bg-red-50 border border-red-200 rounded-2xl p-6 text-center">
       <AlertTriangle class="w-10 h-10 text-red-400 mx-auto mb-3" />
@@ -715,9 +785,11 @@ import {
     Calendar,
     CheckCircle,
     Clock,
+    Crown,
     Info,
     Lightbulb,
     Loader2,
+    Lock,
     MessageCircle,
     Minus,
     RefreshCw,
@@ -731,12 +803,22 @@ import {
     Zap
 } from 'lucide-vue-next'
 import { computed, nextTick, onMounted, ref, watch } from 'vue'
+import { useRouter } from 'vue-router'
 import api from '../../services/api'
 
+const router = useRouter()
 const authStore = useAuthStore()
 const toast = useToastStore()
 const langStore = useLanguageStore()
 const { t } = langStore
+
+// Subscription route based on role
+const subscriptionRoute = computed(() => {
+  const role = authStore.user?.role
+  if (role === 'leader') return '/leader/subscription'
+  if (role === 'student') return '/student/subscription'
+  return '/leader/subscription'
+})
 
 // ---- State ----
 const loading = ref(true)
@@ -744,6 +826,11 @@ const error = ref(null)
 const isRefreshing = ref(false)
 const activeTab = ref('overview')
 const aiHealthy = ref(false)
+
+// Subscription / Access check
+const hasAIAccess = ref(true)
+const currentPlan = ref(null)
+const requiredPlans = ref([])
 
 // Current user/data
 const profile = ref(null)
@@ -910,6 +997,21 @@ async function initData() {
   error.value = null
 
   try {
+    // Avval obuna/huquqni tekshirish
+    try {
+      const accessResp = await api.aiCheckAccess()
+      hasAIAccess.value = accessResp?.has_access === true
+      currentPlan.value = accessResp?.current_plan || null
+      requiredPlans.value = accessResp?.required_plans || ['pro', 'unlimited']
+    } catch {
+      hasAIAccess.value = false
+    }
+
+    if (!hasAIAccess.value) {
+      loading.value = false
+      return
+    }
+
     profile.value = await api.getMe()
 
     // Load attendance data based on role

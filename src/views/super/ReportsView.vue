@@ -24,7 +24,7 @@
     </div>
 
     <!-- Summary Cards -->
-    <div class="grid grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4">
+    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4">
       <div class="bg-white rounded-2xl border border-slate-200 p-4 sm:p-5">
         <div class="flex items-center justify-between">
           <div>

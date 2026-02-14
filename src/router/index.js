@@ -160,7 +160,11 @@ const routes = [
       { path: 'market', name: 'leader-market', component: MarketView },
       { path: 'quizzes', name: 'leader-quizzes', component: QuizView },
       { path: 'ai-analysis', name: 'leader-ai-analysis', component: AIAnalysisView },
-      { path: 'credit-module', name: 'leader-credit-module', component: CreditModuleView }
+      { path: 'credit-module', name: 'leader-credit-module', component: CreditModuleView },
+      { path: 'library', name: 'leader-library', component: StudentLibrary },
+      { path: 'clubs', name: 'leader-clubs', component: StudentClubs },
+      { path: 'canteen', name: 'leader-canteen', component: StudentCanteen },
+      { path: 'tournaments', name: 'leader-tournaments', component: StudentTournaments }
     ]
   },
 

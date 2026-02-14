@@ -155,7 +155,7 @@
         </div>
 
         <!-- Actions -->
-        <div class="px-4 py-3 bg-slate-50 border-t border-slate-100 flex items-center justify-between gap-2">
+        <div class="px-4 py-3 bg-slate-50 border-t border-slate-100 flex flex-wrap items-center justify-between gap-2">
           <button
             @click="viewRegistrations(tournament)"
             class="flex items-center gap-1.5 px-3 py-1.5 text-sm text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors"
@@ -206,7 +206,7 @@
           <div class="absolute inset-0 bg-slate-900/50 backdrop-blur-sm" @click="closeModal"></div>
           <div class="relative bg-white rounded-3xl shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-hidden">
             <!-- Modal header -->
-            <div class="flex items-center justify-between p-6 border-b border-slate-100">
+            <div class="flex items-center justify-between p-4 sm:p-6 border-b border-slate-100">
               <h3 class="text-xl font-bold text-slate-800">
                 {{ isEditing ? $t('tournaments.editTournament') : $t('tournaments.createTournament') }}
               </h3>
@@ -702,7 +702,7 @@
 
                 <!-- Registrations list -->
                 <div class="overflow-x-auto">
-                  <table class="w-full">
+                  <table class="w-full min-w-[600px]">
                     <thead>
                       <tr class="text-left text-sm text-slate-500 border-b border-slate-200">
                         <th class="pb-3 font-medium">#</th>

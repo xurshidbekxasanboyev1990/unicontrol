@@ -99,8 +99,8 @@
               <p class="text-xl sm:text-3xl font-bold text-emerald-600">{{ formatNumber(stats.totalGroups) }}</p>
               <p class="text-xs sm:text-sm text-slate-500 mt-1">{{ $t('dashboard.groups') }}</p>
             </div>
-            <div class="w-12 h-12 bg-emerald-100 rounded-xl flex items-center justify-center">
-              <Layers class="w-6 h-6 text-emerald-600" />
+            <div class="w-10 h-10 sm:w-12 sm:h-12 bg-emerald-100 rounded-xl flex items-center justify-center">
+              <Layers class="w-5 h-5 sm:w-6 sm:h-6 text-emerald-600" />
             </div>
           </div>
           <div class="mt-3 flex items-center gap-1 text-xs">
@@ -110,14 +110,14 @@
         </div>
 
         <!-- Today Attendance -->
-        <div class="bg-white rounded-2xl border border-slate-200 p-5 hover:shadow-md transition-shadow">
+        <div class="bg-white rounded-2xl border border-slate-200 p-3 sm:p-5 hover:shadow-md transition-shadow">hadow">
           <div class="flex items-center justify-between">
             <div>
-              <p class="text-3xl font-bold text-amber-600">{{ todayAttendance.rate }}%</p>
-              <p class="text-sm text-slate-500 mt-1">{{ $t('dashboard.todayAttendance') }}</p>
+              <p class="text-xl sm:text-3xl font-bold text-amber-600">{{ todayAttendance.rate }}%</p>
+              <p class="text-xs sm:text-sm text-slate-500 mt-1">{{ $t('dashboard.todayAttendance') }}</p>
             </div>
-            <div class="w-12 h-12 bg-amber-100 rounded-xl flex items-center justify-center">
-              <CalendarCheck class="w-6 h-6 text-amber-600" />
+            <div class="w-10 h-10 sm:w-12 sm:h-12 bg-amber-100 rounded-xl flex items-center justify-center">
+              <CalendarCheck class="w-5 h-5 sm:w-6 sm:h-6 text-amber-600" />
             </div>
           </div>
           <div class="mt-3 flex items-center gap-1 text-xs">
@@ -161,7 +161,7 @@
       <!-- Row: Role Distribution + Today Attendance Detail -->
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <!-- Role Distribution -->
-        <div class="bg-white rounded-2xl border border-slate-200 p-6">
+        <div class="bg-white rounded-2xl border border-slate-200 p-4 sm:p-6">
           <h2 class="text-lg font-semibold text-slate-800 mb-4 flex items-center gap-2">
             <PieChart class="w-5 h-5 text-slate-400" />
             {{ $t('dashboard.roleDistribution') }}
@@ -190,29 +190,29 @@
         </div>
 
         <!-- Today Attendance Breakdown -->
-        <div class="bg-white rounded-2xl border border-slate-200 p-6">
+        <div class="bg-white rounded-2xl border border-slate-200 p-4 sm:p-6">
           <h2 class="text-lg font-semibold text-slate-800 mb-4 flex items-center gap-2">
             <CalendarCheck class="w-5 h-5 text-slate-400" />
             {{ $t('dashboard.todayAttendanceDetail') }}
           </h2>
           <div v-if="todayAttendance.total > 0" class="space-y-4">
             <!-- Attendance donut-like visual -->
-            <div class="flex items-center justify-center gap-8 py-4">
+            <div class="flex items-center justify-center gap-4 sm:gap-8 py-4">
               <div class="text-center">
-                <div class="w-20 h-20 rounded-full border-4 border-emerald-500 flex items-center justify-center bg-emerald-50">
-                  <span class="text-xl font-bold text-emerald-600">{{ todayAttendance.present }}</span>
+                <div class="w-16 h-16 sm:w-20 sm:h-20 rounded-full border-4 border-emerald-500 flex items-center justify-center bg-emerald-50">
+                  <span class="text-lg sm:text-xl font-bold text-emerald-600">{{ todayAttendance.present }}</span>
                 </div>
                 <p class="text-xs text-slate-500 mt-2">{{ $t('dashboard.presentLabel') }}</p>
               </div>
               <div class="text-center">
-                <div class="w-20 h-20 rounded-full border-4 border-rose-500 flex items-center justify-center bg-rose-50">
-                  <span class="text-xl font-bold text-rose-600">{{ todayAttendance.absent }}</span>
+                <div class="w-16 h-16 sm:w-20 sm:h-20 rounded-full border-4 border-rose-500 flex items-center justify-center bg-rose-50">
+                  <span class="text-lg sm:text-xl font-bold text-rose-600">{{ todayAttendance.absent }}</span>
                 </div>
                 <p class="text-xs text-slate-500 mt-2">{{ $t('dashboard.absentLabel') }}</p>
               </div>
               <div class="text-center">
-                <div class="w-20 h-20 rounded-full border-4 border-amber-500 flex items-center justify-center bg-amber-50">
-                  <span class="text-xl font-bold text-amber-600">{{ todayAttendance.late }}</span>
+                <div class="w-16 h-16 sm:w-20 sm:h-20 rounded-full border-4 border-amber-500 flex items-center justify-center bg-amber-50">
+                  <span class="text-lg sm:text-xl font-bold text-amber-600">{{ todayAttendance.late }}</span>
                 </div>
                 <p class="text-xs text-slate-500 mt-2">{{ $t('dashboard.lateLabel') }}</p>
               </div>
@@ -242,7 +242,7 @@
       <!-- Row: Monthly Attendance + Attendance Trend -->
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <!-- Monthly Attendance Stats -->
-        <div class="bg-white rounded-2xl border border-slate-200 p-6">
+        <div class="bg-white rounded-2xl border border-slate-200 p-4 sm:p-6">
           <h2 class="text-lg font-semibold text-slate-800 mb-4 flex items-center gap-2">
             <BarChart3 class="w-5 h-5 text-slate-400" />
             {{ $t('dashboard.monthlyStats') }}
@@ -281,7 +281,7 @@
         </div>
 
         <!-- Weekly Attendance Trend -->
-        <div class="bg-white rounded-2xl border border-slate-200 p-6">
+        <div class="bg-white rounded-2xl border border-slate-200 p-4 sm:p-6">
           <h2 class="text-lg font-semibold text-slate-800 mb-4 flex items-center gap-2">
             <TrendingUp class="w-5 h-5 text-slate-400" />
             {{ $t('dashboard.weeklyTrend') }}
@@ -325,7 +325,7 @@
       <!-- Row: Database Stats + Reports + System Health -->
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <!-- Database Stats -->
-        <div class="bg-white rounded-2xl border border-slate-200 p-6">
+        <div class="bg-white rounded-2xl border border-slate-200 p-4 sm:p-6">
           <h2 class="text-lg font-semibold text-slate-800 mb-4 flex items-center gap-2">
             <Database class="w-5 h-5 text-slate-400" />
             {{ $t('dashboard.databaseStats') }}
@@ -370,7 +370,7 @@
         </div>
 
         <!-- Reports Stats -->
-        <div class="bg-white rounded-2xl border border-slate-200 p-6">
+        <div class="bg-white rounded-2xl border border-slate-200 p-4 sm:p-6">
           <h2 class="text-lg font-semibold text-slate-800 mb-4 flex items-center gap-2">
             <FileBarChart class="w-5 h-5 text-slate-400" />
             {{ $t('dashboard.reportsSection') }}
@@ -411,7 +411,7 @@
         </div>
 
         <!-- System Health -->
-        <div class="bg-white rounded-2xl border border-slate-200 p-6">
+        <div class="bg-white rounded-2xl border border-slate-200 p-4 sm:p-6">
           <h2 class="text-lg font-semibold text-slate-800 mb-4 flex items-center gap-2">
             <Activity class="w-5 h-5 text-slate-400" />
             {{ $t('dashboard.systemStatus') }}

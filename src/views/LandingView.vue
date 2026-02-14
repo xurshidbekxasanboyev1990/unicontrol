@@ -810,7 +810,7 @@
         <!-- Top -->
         <div class="grid grid-cols-2 md:grid-cols-4 gap-6 sm:gap-10 mb-8 sm:mb-12">
           <!-- Brand -->
-          <div class="md:col-span-2 space-y-4 stagger-child">
+          <div class="col-span-2 space-y-4 stagger-child">
             <div class="flex items-center gap-3">
               <div class="w-12 h-12 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-2xl flex items-center justify-center">
                 <GraduationCap class="w-6 h-6 text-white" />

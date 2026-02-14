@@ -294,6 +294,7 @@ import {
 } from 'lucide-vue-next'
 import { computed, markRaw, onMounted, onUnmounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import api from '../services/api'
 import { useAuthStore } from '../stores/auth'
 import { useDataStore } from '../stores/data'
 import { useLanguageStore } from '../stores/language'
@@ -324,6 +325,7 @@ const getPollingTypes = () => {
 
 const isSidebarOpen = ref(false)
 const isDropdownOpen = ref(false)
+const hasAIAccess = ref(false)
 
 const getRoleName = computed(() => {
   const role = authStore.user?.role
@@ -398,6 +400,10 @@ const currentPageTitle = computed(() => {
     'admin-credit-module': () => t('layout.creditModule'),
     'super-credit-module': () => t('layout.creditModule'),
     'leader-ai-analysis': () => t('layout.aiAnalysis'),
+    'leader-library': () => t('layout.library'),
+    'leader-clubs': () => t('layout.clubs'),
+    'leader-canteen': () => t('layout.canteen'),
+    'leader-tournaments': () => t('layout.tournaments'),
     'admin-ai-analysis': () => t('layout.aiAnalysis'),
     'super-ai-analysis': () => t('layout.aiAnalysis'),
     'admin-holidays': () => t('layout.holidays'),
@@ -423,7 +429,7 @@ const menuSections = computed(() => {
       title: t('layout.services'),
       items: [
         { path: '/student/library', label: t('layout.library'), icon: markRaw(BookOpen) },
-        { path: '/student/ai-analysis', label: t('layout.aiAnalysis'), icon: markRaw(Brain) },
+        ...(hasAIAccess.value ? [{ path: '/student/ai-analysis', label: t('layout.aiAnalysis'), icon: markRaw(Brain) }] : []),
         { path: '/student/clubs', label: t('layout.clubs'), icon: markRaw(Palette) },
         { path: '/student/tournaments', label: t('layout.tournaments'), icon: markRaw(Trophy) },
         { path: '/student/canteen', label: t('layout.canteen'), icon: markRaw(UtensilsCrossed) },
@@ -460,7 +466,11 @@ const menuSections = computed(() => {
         { path: '/leader/schedule', label: t('layout.schedule'), icon: markRaw(Calendar) },
         { path: '/leader/reports', label: t('layout.reports'), icon: markRaw(FileText) },
         { path: '/leader/analytics', label: t('layout.analytics'), icon: markRaw(BarChart3) },
-        { path: '/leader/ai-analysis', label: t('layout.aiAnalysis'), icon: markRaw(Brain) },
+        ...(hasAIAccess.value ? [{ path: '/leader/ai-analysis', label: t('layout.aiAnalysis'), icon: markRaw(Brain) }] : []),
+        { path: '/leader/library', label: t('layout.library'), icon: markRaw(BookOpen) },
+        { path: '/leader/clubs', label: t('layout.clubs'), icon: markRaw(Palette) },
+        { path: '/leader/tournaments', label: t('layout.tournaments'), icon: markRaw(Trophy) },
+        { path: '/leader/canteen', label: t('layout.canteen'), icon: markRaw(UtensilsCrossed) },
         { path: '/leader/files', label: t('layout.files'), icon: markRaw(FolderOpen) },
         { path: '/leader/market', label: t('layout.market'), icon: markRaw(Store) },
         { path: '/leader/quizzes', label: t('layout.quizzes'), icon: markRaw(ClipboardList) },
@@ -604,10 +614,15 @@ const handleClickOutside = (e) => {
   }
 }
 
-onMounted(() => {
+onMounted(async () => {
   document.addEventListener('click', handleClickOutside)
   // Real-time polling ishga tushirish
   dataStore.startPolling(getPollingTypes())
+  // AI huquqini tekshirish (sidebar menu uchun)
+  try {
+    const accessResp = await api.aiCheckAccess()
+    hasAIAccess.value = accessResp?.has_access === true
+  } catch { hasAIAccess.value = false }
 })
 
 onUnmounted(() => {

@@ -74,10 +74,10 @@
         <div
           v-for="payment in filteredPayments"
           :key="payment.id"
-          class="bg-white rounded-2xl border border-slate-200 p-5 hover:shadow-lg transition-shadow"
+          class="bg-white rounded-2xl border border-slate-200 p-4 sm:p-5 hover:shadow-lg transition-shadow"
         >
-          <div class="flex items-start justify-between">
-            <div class="flex items-center gap-4">
+          <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+            <div class="flex items-center gap-3 sm:gap-4">
               <div :class="[
                 'w-12 h-12 rounded-xl flex items-center justify-center',
                 payment.status === 'approved' ? 'bg-emerald-100' :
@@ -97,7 +97,7 @@
                 <p class="text-xs text-slate-400 mt-1">{{ payment.paid_by_name || 'Noma\'lum' }} · {{ formatDateTime(payment.created_at) }}</p>
               </div>
             </div>
-            <div class="flex items-center gap-2">
+            <div class="flex items-center gap-2 flex-wrap">
               <button
                 v-if="payment.receipt_file"
                 @click="viewReceipt(payment)"
@@ -168,10 +168,10 @@
         <div
           v-for="payment in filteredMarketPayments"
           :key="'mp'+payment.id"
-          class="bg-white rounded-2xl border border-slate-200 p-5 hover:shadow-lg transition-shadow"
+          class="bg-white rounded-2xl border border-slate-200 p-4 sm:p-5 hover:shadow-lg transition-shadow"
         >
-          <div class="flex items-start justify-between">
-            <div class="flex items-center gap-4">
+          <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+            <div class="flex items-center gap-3 sm:gap-4">
               <div :class="[
                 'w-12 h-12 rounded-xl flex items-center justify-center',
                 payment.status === 'approved' ? 'bg-emerald-100' :
@@ -196,7 +196,7 @@
                 <p class="text-xs text-slate-400 mt-1">{{ formatDateTime(payment.created_at) }}</p>
               </div>
             </div>
-            <div class="flex items-center gap-2">
+            <div class="flex items-center gap-2 flex-wrap">
               <button
                 v-if="payment.receipt_file"
                 @click="viewMarketReceipt(payment)"

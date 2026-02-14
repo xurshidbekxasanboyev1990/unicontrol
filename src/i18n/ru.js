@@ -1843,6 +1843,17 @@ export default {
         startAnalysisCost: 'Каждый анализ стоит примерно 2-10 сум',
         startAnalysis: 'Начать анализ',
         analysisTakesTime: 'Это может занять несколько секунд...',
+        // Paywall / Access
+        noAccess: 'AI Анализ недоступен',
+        upgradeRequiredDesc: 'Обновите план подписки, чтобы использовать функции AI анализа.',
+        yourCurrentPlan: 'Ваш текущий план',
+        availableInPlans: 'Доступно в следующих планах',
+        whatYouGet: 'Что вы получите с AI анализом',
+        featureAnalysis: 'Глубокий анализ посещаемости и выводы',
+        featurePrediction: 'AI прогноз — обзор на 7 дней вперёд',
+        featureChat: 'Чат с AI помощником',
+        featureRecommendations: 'Персональные рекомендации и советы',
+        upgradePlan: 'Обновить подписку',
     },
 
     // ============ TELEGRAM БОТ ============

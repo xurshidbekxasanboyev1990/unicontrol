@@ -1366,6 +1366,10 @@ class ApiService {
 
     // ===== AI =====
 
+    async aiCheckAccess() {
+        return this.request('/ai/access')
+    }
+
     async aiGetUsage() {
         return this.request('/ai/usage')
     }

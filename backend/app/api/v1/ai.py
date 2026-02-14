@@ -27,6 +27,8 @@ from app.models.user import User, UserRole
 from app.models.student import Student
 from app.models.ai_usage import AIUsage
 from app.models.notification import Notification, NotificationType, NotificationPriority
+from app.models.subscription import GroupSubscription, SubscriptionStatus
+from app.models.group import Group
 
 router = APIRouter()
 
@@ -120,6 +122,74 @@ async def record_ai_usage(
     return cost
 
 
+# ================================================
+# SUBSCRIPTION CHECK — AI faqat Pro/Unlimited uchun
+# ================================================
+# AI Tahlil faqat "pro" va "unlimited" obunalarda mavjud
+AI_ALLOWED_PLANS = {"pro", "unlimited"}
+
+
+async def check_ai_subscription(db: AsyncSession, user: User):
+    """
+    Check if user's group has AI access (pro or unlimited plan).
+    Admin and superadmin always have access.
+    Raises 403 if subscription doesn't include AI.
+    """
+    # Admin va superadmin har doim ruxsat
+    if user.role in (UserRole.ADMIN, UserRole.SUPERADMIN):
+        return True
+
+    # Student yoki leader — guruh obunasini tekshirish
+    student_result = await db.execute(
+        select(Student).where(Student.user_id == user.id)
+    )
+    student = student_result.scalar_one_or_none()
+
+    if not student or not student.group_id:
+        raise HTTPException(
+            status_code=403,
+            detail={
+                "error": "no_group",
+                "message": "Guruh topilmadi. AI tahlildan foydalanish uchun guruhga biriktirilgan bo'lishingiz kerak."
+            }
+        )
+
+    # Guruh obunasini olish
+    sub_result = await db.execute(
+        select(GroupSubscription).where(
+            GroupSubscription.group_id == student.group_id,
+            GroupSubscription.status.in_([
+                SubscriptionStatus.ACTIVE.value,
+                SubscriptionStatus.TRIAL.value
+            ])
+        ).order_by(GroupSubscription.end_date.desc())
+    )
+    subscription = sub_result.scalar_one_or_none()
+
+    if not subscription:
+        raise HTTPException(
+            status_code=403,
+            detail={
+                "error": "no_subscription",
+                "message": "AI tahlildan foydalanish uchun obuna kerak. Pro yoki Unlimited rejaga o'ting.",
+                "required_plans": list(AI_ALLOWED_PLANS)
+            }
+        )
+
+    if subscription.plan_type not in AI_ALLOWED_PLANS:
+        raise HTTPException(
+            status_code=403,
+            detail={
+                "error": "plan_not_supported",
+                "message": f"AI tahlil faqat Pro va Unlimited obunalarda mavjud. Hozirgi rejangiz: {subscription.plan_type}.",
+                "current_plan": subscription.plan_type,
+                "required_plans": list(AI_ALLOWED_PLANS)
+            }
+        )
+
+    return True
+
+
 # Request/Response Models
 class StudentAnalysisRequest(BaseModel):
     """Request for student analysis."""
@@ -199,6 +269,50 @@ class ReportSummaryResponse(BaseModel):
     action_items: list[str]
 
 
+@router.get("/access")
+async def check_ai_access(
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_active_user)
+):
+    """
+    AI sahifasiga kirish huquqini tekshirish.
+    Returns: { has_access: bool, current_plan: str|null, required_plans: [...] }
+    """
+    # Admin va superadmin har doim ruxsat
+    if current_user.role in (UserRole.ADMIN, UserRole.SUPERADMIN):
+        return {"has_access": True, "current_plan": "admin", "required_plans": list(AI_ALLOWED_PLANS)}
+
+    # Student/Leader — guruh obunasini tekshirish
+    student_result = await db.execute(
+        select(Student).where(Student.user_id == current_user.id)
+    )
+    student = student_result.scalar_one_or_none()
+
+    if not student or not student.group_id:
+        return {"has_access": False, "current_plan": None, "required_plans": list(AI_ALLOWED_PLANS)}
+
+    sub_result = await db.execute(
+        select(GroupSubscription).where(
+            GroupSubscription.group_id == student.group_id,
+            GroupSubscription.status.in_([
+                SubscriptionStatus.ACTIVE.value,
+                SubscriptionStatus.TRIAL.value
+            ])
+        ).order_by(GroupSubscription.end_date.desc())
+    )
+    subscription = sub_result.scalar_one_or_none()
+
+    if not subscription:
+        return {"has_access": False, "current_plan": None, "required_plans": list(AI_ALLOWED_PLANS)}
+
+    has_access = subscription.plan_type in AI_ALLOWED_PLANS
+    return {
+        "has_access": has_access,
+        "current_plan": subscription.plan_type,
+        "required_plans": list(AI_ALLOWED_PLANS)
+    }
+
+
 @router.get("/usage")
 async def get_ai_usage(
     db: AsyncSession = Depends(get_db),
@@ -241,6 +355,9 @@ async def analyze_student(
     
     Students can only analyze themselves. Leaders and above can analyze any student.
     """
+    # Obuna tekshirish — faqat Pro/Unlimited
+    await check_ai_subscription(db, current_user)
+
     # Students can only analyze themselves
     if current_user.role == UserRole.STUDENT:
         student_result = await db.execute(
@@ -305,6 +422,9 @@ async def analyze_group(
     
     Requires leader role or higher.
     """
+    # Obuna tekshirish — faqat Pro/Unlimited
+    await check_ai_subscription(db, current_user)
+
     # Check AI limit
     usage = await check_ai_limit(db, current_user)
     
@@ -365,6 +485,9 @@ async def predict_attendance(
     
     Students can only predict their own attendance.
     """
+    # Obuna tekshirish — faqat Pro/Unlimited
+    await check_ai_subscription(db, current_user)
+
     # Students can only predict their own attendance
     if current_user.role == UserRole.STUDENT:
         if request.student_id:
@@ -404,6 +527,9 @@ async def ai_chat(
     """
     Chat with AI assistant.
     """
+    # Obuna tekshirish — faqat Pro/Unlimited
+    await check_ai_subscription(db, current_user)
+
     # Check AI limit
     usage = await check_ai_limit(db, current_user)
     
@@ -434,6 +560,9 @@ async def summarize_report(
     
     Requires leader role or higher.
     """
+    # Obuna tekshirish — faqat Pro/Unlimited
+    await check_ai_subscription(db, current_user)
+
     # Check AI limit
     usage = await check_ai_limit(db, current_user)
     
@@ -461,6 +590,9 @@ async def get_dashboard_insights(
     
     All authenticated users can get insights for their role.
     """
+    # Obuna tekshirish — faqat Pro/Unlimited
+    await check_ai_subscription(db, current_user)
+
     # Check AI limit
     usage = await check_ai_limit(db, current_user)
     
@@ -487,6 +619,9 @@ async def get_student_recommendations(
     
     Students can only get their own recommendations.
     """
+    # Obuna tekshirish — faqat Pro/Unlimited
+    await check_ai_subscription(db, current_user)
+
     # Students can only get their own recommendations
     if current_user.role == UserRole.STUDENT:
         student_result = await db.execute(
@@ -528,6 +663,9 @@ async def generate_notification_text(
     
     Requires leader role or higher.
     """
+    # Obuna tekshirish — faqat Pro/Unlimited
+    await check_ai_subscription(db, current_user)
+
     # Check AI limit
     usage = await check_ai_limit(db, current_user)
     

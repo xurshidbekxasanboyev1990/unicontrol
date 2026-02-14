@@ -1920,6 +1920,17 @@ export default {
         startAnalysisCost: 'Har bir tahlil taxminan 2-10 so\'m sarflaydi',
         startAnalysis: 'Tahlilni boshlash',
         analysisTakesTime: 'Bu bir necha soniya vaqt olishi mumkin...',
+        // Paywall / Access
+        noAccess: 'AI Tahlil mavjud emas',
+        upgradeRequiredDesc: 'AI tahlil funksiyasidan foydalanish uchun obuna rejangizni yangilang.',
+        yourCurrentPlan: 'Joriy rejangiz',
+        availableInPlans: 'Quyidagi rejalarda mavjud',
+        whatYouGet: 'AI tahlil bilan nimalar olasiz',
+        featureAnalysis: 'Chuqur davomat tahlili va xulosalar',
+        featurePrediction: 'AI bashorat — 7 kunlik oldindan ko\'rish',
+        featureChat: 'AI yordamchi bilan suhbat',
+        featureRecommendations: 'Shaxsiy tavsiyalar va maslahatlar',
+        upgradePlan: 'Obunani yangilash',
     },
 
     // ============ TELEGRAM BOT ============

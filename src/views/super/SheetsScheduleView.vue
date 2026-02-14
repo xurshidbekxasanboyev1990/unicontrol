@@ -173,13 +173,13 @@
       <template v-else-if="sheetDetail && viewMode === 'parsed'">
         <!-- Sheet Info -->
         <div class="bg-white rounded-2xl border border-slate-200 p-5">
-          <div class="flex items-center justify-between mb-4">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
             <div>
               <h3 class="font-bold text-lg text-slate-800">{{ sheetDetail.title }}</h3>
               <p class="text-sm text-slate-400">{{ sheetDetail.groups_count }} {{ $t('sheets.groups') }} · {{ sheetDetail.total_lessons }} {{ $t('sheets.lessons') }}</p>
             </div>
             <button @click="showSyncModal = true; syncSheetName = selectedSheetName"
-              class="bg-gradient-to-r from-indigo-500 to-purple-500 text-white px-4 py-2.5 rounded-xl text-sm font-semibold shadow-lg shadow-indigo-500/25 hover:shadow-xl transition-all flex items-center gap-2">
+              class="w-full sm:w-auto bg-gradient-to-r from-indigo-500 to-purple-500 text-white px-4 py-2.5 rounded-xl text-sm font-semibold shadow-lg shadow-indigo-500/25 hover:shadow-xl transition-all flex items-center justify-center gap-2">
               <Download class="w-4 h-4" />
               {{ $t('sheets.syncToDb') }}
             </button>

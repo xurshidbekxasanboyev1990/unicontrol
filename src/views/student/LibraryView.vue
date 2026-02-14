@@ -225,9 +225,9 @@
         class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm"
         @click.self="selectedBook = null"
       >
-        <div class="w-full max-w-3xl overflow-hidden rounded-2xl bg-white shadow-2xl">
-          <div class="flex">
-            <div class="w-1/3 bg-gradient-to-br from-blue-500 to-indigo-600 p-6">
+        <div class="w-full max-w-3xl overflow-hidden rounded-2xl bg-white shadow-2xl max-h-[90vh] overflow-y-auto">
+          <div class="flex flex-col sm:flex-row">
+            <div class="w-full sm:w-1/3 bg-gradient-to-br from-blue-500 to-indigo-600 p-4 sm:p-6">
               <div class="aspect-[3/4] overflow-hidden rounded-xl bg-white/20">
                 <img 
                   :src="selectedBook.cover" 
@@ -247,7 +247,7 @@
                 </button>
               </div>
               
-              <div class="mt-4 flex items-center gap-4">
+              <div class="mt-4 flex flex-wrap items-center gap-2 sm:gap-4">
                 <div class="flex items-center gap-1">
                   <Star v-for="i in 5" :key="i" :size="18" class="fill-yellow-400 text-yellow-400" />
                   <span class="ml-1 text-slate-600">{{ selectedBook.rating }}</span>

@@ -185,7 +185,7 @@
         </div>
 
         <div class="overflow-x-auto">
-          <table class="w-full">
+          <table class="w-full min-w-[600px]">
             <thead>
               <tr class="border-b border-slate-100 bg-slate-50">
                 <template v-if="detailTab === 'groups'">
@@ -322,7 +322,7 @@
       <!-- Reports list -->
       <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden">
         <div class="overflow-x-auto">
-          <table class="w-full">
+          <table class="w-full min-w-[700px]">
             <thead>
               <tr class="border-b border-slate-100 bg-slate-50">
                 <th class="text-left p-4 font-semibold text-slate-600 text-sm">{{ $t('reports.reportName') }}</th>

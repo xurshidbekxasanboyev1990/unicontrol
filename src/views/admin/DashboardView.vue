@@ -103,7 +103,7 @@
         <p class="text-sm text-slate-500 mt-1">{{ $t('students.addStudent') }}</p>
       </router-link>
 
-      <router-link to="/admin/groups" class="bg-white rounded-2xl border border-slate-200 p-5 hover:shadow-lg hover:border-violet-200 transition-all group">
+      <router-link to="/admin/groups" class="bg-white rounded-2xl border border-slate-200 p-4 sm:p-5 hover:shadow-lg hover:border-violet-200 transition-all group">
         <div class="w-12 h-12 bg-violet-100 rounded-xl flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
           <FolderPlus class="w-6 h-6 text-violet-600" />
         </div>
@@ -111,7 +111,7 @@
         <p class="text-sm text-slate-500 mt-1">{{ $t('groups.title') }}</p>
       </router-link>
 
-      <router-link to="/admin/reports" class="bg-white rounded-2xl border border-slate-200 p-5 hover:shadow-lg hover:border-emerald-200 transition-all group">
+      <router-link to="/admin/reports" class="bg-white rounded-2xl border border-slate-200 p-4 sm:p-5 hover:shadow-lg hover:border-emerald-200 transition-all group">
         <div class="w-12 h-12 bg-emerald-100 rounded-xl flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
           <BarChart3 class="w-6 h-6 text-emerald-600" />
         </div>
@@ -119,7 +119,7 @@
         <p class="text-sm text-slate-500 mt-1">{{ $t('analytics.title') }}</p>
       </router-link>
 
-      <router-link to="/admin/notifications" class="bg-white rounded-2xl border border-slate-200 p-5 hover:shadow-lg hover:border-amber-200 transition-all group">
+      <router-link to="/admin/notifications" class="bg-white rounded-2xl border border-slate-200 p-4 sm:p-5 hover:shadow-lg hover:border-amber-200 transition-all group">
         <div class="w-12 h-12 bg-amber-100 rounded-xl flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
           <Bell class="w-6 h-6 text-amber-600" />
         </div>
@@ -127,7 +127,7 @@
         <p class="text-sm text-slate-500 mt-1">{{ $t('notifications.sendNotification') }}</p>
       </router-link>
 
-      <router-link to="/admin/users" class="bg-white rounded-2xl border border-slate-200 p-5 hover:shadow-lg hover:border-rose-200 transition-all group">
+      <router-link to="/admin/users" class="bg-white rounded-2xl border border-slate-200 p-4 sm:p-5 hover:shadow-lg hover:border-rose-200 transition-all group">
         <div class="w-12 h-12 bg-rose-100 rounded-xl flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
           <Key class="w-6 h-6 text-rose-600" />
         </div>
@@ -139,7 +139,7 @@
     <!-- Charts Row -->
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
       <!-- Attendance by Group -->
-      <div class="bg-white rounded-2xl border border-slate-200 p-6">
+      <div class="bg-white rounded-2xl border border-slate-200 p-4 sm:p-6">
         <h2 class="text-lg font-semibold text-slate-800 mb-4">{{ $t('groups.title') }}</h2>
         <div class="space-y-4">
           <div v-for="group in groupAttendance" :key="group.name">
@@ -164,7 +164,7 @@
       </div>
 
       <!-- Contract Status -->
-      <div class="bg-white rounded-2xl border border-slate-200 p-6">
+      <div class="bg-white rounded-2xl border border-slate-200 p-4 sm:p-6">
         <h2 class="text-lg font-semibold text-slate-800 mb-4">{{ $t('subscription.title') }}</h2>
         <div class="flex items-center justify-center h-48">
           <div class="relative w-40 h-40">

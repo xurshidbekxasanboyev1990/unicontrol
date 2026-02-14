@@ -17,24 +17,26 @@
 
     <!-- Bot Info Card -->
     <div class="bg-gradient-to-r from-blue-500 to-cyan-600 rounded-2xl p-6 text-white shadow-xl shadow-blue-500/20">
-      <div class="flex items-center gap-4">
-        <div class="w-16 h-16 bg-white/20 rounded-2xl flex items-center justify-center">
-          <Bot class="w-8 h-8 text-white" />
-        </div>
-        <div class="flex-1">
-          <h2 class="text-xl font-bold">@unicontroluzbot</h2>
-          <p class="text-blue-100 text-sm mt-1">{{ $t('telegram.botName') }}</p>
-          <div class="flex items-center gap-2 mt-2">
-            <span class="inline-flex items-center gap-1.5 px-3 py-1 bg-white/20 rounded-full text-sm font-medium">
-              <span class="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"></span>
-              {{ $t('telegram.running') }}
-            </span>
+      <div class="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+        <div class="flex items-center gap-4 w-full sm:w-auto">
+          <div class="w-14 h-14 sm:w-16 sm:h-16 bg-white/20 rounded-2xl flex items-center justify-center shrink-0">
+            <Bot class="w-7 h-7 sm:w-8 sm:h-8 text-white" />
+          </div>
+          <div class="flex-1">
+            <h2 class="text-lg sm:text-xl font-bold">@unicontroluzbot</h2>
+            <p class="text-blue-100 text-sm mt-1">{{ $t('telegram.botName') }}</p>
+            <div class="flex items-center gap-2 mt-2">
+              <span class="inline-flex items-center gap-1.5 px-3 py-1 bg-white/20 rounded-full text-sm font-medium">
+                <span class="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"></span>
+                {{ $t('telegram.running') }}
+              </span>
+            </div>
           </div>
         </div>
         <a 
           href="https://t.me/unicontroluzbot"
           target="_blank"
-          class="px-5 py-2.5 bg-white text-blue-600 rounded-xl font-semibold hover:bg-blue-50 transition-colors"
+          class="w-full sm:w-auto text-center px-5 py-2.5 bg-white text-blue-600 rounded-xl font-semibold hover:bg-blue-50 transition-colors shrink-0"
         >
           {{ $t('telegram.openBot') }}
         </a>
@@ -65,7 +67,7 @@
           </div>
         </div>
       </div>
-      <div class="bg-white rounded-2xl border border-slate-200 p-6">
+      <div class="bg-white rounded-2xl border border-slate-200 p-4 sm:p-6">
         <div class="flex items-center gap-3 mb-2">
           <div class="w-10 h-10 bg-amber-100 rounded-xl flex items-center justify-center">
             <Zap class="w-5 h-5 text-amber-600" />
@@ -79,7 +81,7 @@
     </div>
 
     <!-- How it works -->
-    <div class="bg-white rounded-2xl border border-slate-200 p-6">
+    <div class="bg-white rounded-2xl border border-slate-200 p-4 sm:p-6">
       <h3 class="text-lg font-semibold text-slate-800 mb-4">{{ $t('telegram.howBotWorks') }}</h3>
       <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div class="space-y-4">
@@ -174,7 +176,7 @@
     </div>
 
     <!-- Bot commands info -->
-    <div class="bg-white rounded-2xl border border-slate-200 p-6">
+    <div class="bg-white rounded-2xl border border-slate-200 p-4 sm:p-6">
       <h3 class="text-lg font-semibold text-slate-800 mb-4">{{ $t('telegram.botCommands') }}</h3>
       <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
         <div class="flex items-center gap-3 p-3 bg-slate-50 rounded-xl">
