@@ -23,8 +23,26 @@
       </div>
     </div>
 
+    <!-- Holiday Banner -->
+    <div v-for="holiday in activeHolidays" :key="holiday.id"
+      class="bg-gradient-to-r from-amber-500 to-orange-500 rounded-2xl p-4 text-white relative overflow-hidden"
+    >
+      <div class="absolute top-0 right-0 w-28 h-28 bg-white/10 rounded-full -translate-y-8 translate-x-8"></div>
+      <div class="flex items-center gap-3 relative z-10">
+        <div class="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur flex-shrink-0">
+          <PartyPopper class="w-5 h-5" />
+        </div>
+        <div class="min-w-0">
+          <h3 class="font-bold text-base">{{ holiday.title }}</h3>
+          <p v-if="holiday.description" class="text-white/80 text-sm mt-0.5 line-clamp-1">{{ holiday.description }}</p>
+          <p class="text-white/70 text-xs mt-1">{{ holiday.start_date }} — {{ holiday.end_date }}</p>
+        </div>
+      </div>
+    </div>
+
     <!-- Loading -->
     <div v-if="loading" class="flex items-center justify-center py-24">
+
       <div class="text-center">
         <div class="w-12 h-12 border-4 border-emerald-200 border-t-emerald-500 rounded-full animate-spin mx-auto mb-4"></div>
         <p class="text-slate-500 font-medium">Jadval yuklanmoqda...</p>
@@ -242,14 +260,16 @@
 </template>
 
 <script setup>
-import { CalendarDays, Clock, Coffee, MapPin, Palette, User } from 'lucide-vue-next'
+import { CalendarDays, Clock, Coffee, MapPin, Palette, PartyPopper, User } from 'lucide-vue-next'
 import { computed, onMounted, ref } from 'vue'
 import api from '../../services/api'
 import { useAuthStore } from '../../stores/auth'
+import { useLanguageStore } from '../../stores/language'
 import { useToastStore } from '../../stores/toast'
 
 const authStore = useAuthStore()
 const toast = useToastStore()
+const { t } = useLanguageStore()
 
 const activeView = ref('Hafta')
 const days = ['Dushanba', 'Seshanba', 'Chorshanba', 'Payshanba', 'Juma', 'Shanba']
@@ -257,6 +277,7 @@ const timeSlots = ['08:30-09:50', '10:00-11:20', '12:00-13:20', '13:30-14:50', '
 
 const loading = ref(false)
 const schedule = ref([])
+const activeHolidays = ref([])
 
 // ============ DYNAMIC COLOR PALETTE ============
 // 18 vivid, visually distinct colors for auto-assignment to any subject
@@ -297,6 +318,12 @@ const getColor = (subject) => {
 // Load schedule on mount
 onMounted(async () => {
   await loadSchedule()
+  // Load active holidays
+  try {
+    activeHolidays.value = await api.getActiveHolidays() || []
+  } catch (e) {
+    console.error('Load holidays error:', e)
+  }
 })
 
 async function loadSchedule() {

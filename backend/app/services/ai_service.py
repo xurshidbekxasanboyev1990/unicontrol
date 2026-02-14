@@ -23,6 +23,8 @@ from app.models.user import User
 from app.models.group import Group
 from app.models.attendance import Attendance, AttendanceStatus
 from app.models.report import Report, ReportType, ReportStatus
+from app.models.schedule import Schedule, WeekDay
+from app.models.holiday import Holiday
 from app.core.exceptions import BadRequestException, ExternalAPIException, NotFoundException
 
 
@@ -315,9 +317,88 @@ Bu guruhni tahlil qilib, JSON formatda natija ber."""
         group_id: Optional[int] = None,
         days_ahead: int = 7
     ) -> Dict[str, Any]:
-        """Predict attendance patterns using AI."""
+        """Predict attendance patterns using AI. Only for actual class days."""
         
-        date_from = today_tashkent() - timedelta(days=60)
+        # ---- 1. Determine the relevant group_id ----
+        resolved_group_id = group_id
+        if student_id and not resolved_group_id:
+            st_result = await self.db.execute(
+                select(Student.group_id).where(Student.id == student_id)
+            )
+            resolved_group_id = st_result.scalar_one_or_none()
+        
+        # ---- 2. Get schedule days (which weekdays have classes) ----
+        class_days_set = set()  # e.g. {"monday", "tuesday", ...}
+        day_name_map = {
+            "monday": "Dushanba",
+            "tuesday": "Seshanba",
+            "wednesday": "Chorshanba",
+            "thursday": "Payshanba",
+            "friday": "Juma",
+            "saturday": "Shanba",
+            "sunday": "Yakshanba",
+        }
+        
+        if resolved_group_id:
+            sched_result = await self.db.execute(
+                select(Schedule.day_of_week)
+                .where(Schedule.group_id == resolved_group_id)
+                .where(Schedule.is_active == True)
+                .distinct()
+            )
+            sched_days = sched_result.scalars().all()
+            for d in sched_days:
+                if d:
+                    class_days_set.add(d.value if hasattr(d, 'value') else str(d).lower())
+        
+        # If no schedule found, default to Mon-Sat (no Sunday)
+        if not class_days_set:
+            class_days_set = {"monday", "tuesday", "wednesday", "thursday", "friday", "saturday"}
+        
+        # Remove Sunday explicitly (even if somehow in schedule)
+        # class_days_set.discard("sunday")  # uncomment if Sunday should always be excluded
+        
+        # ---- 3. Build list of upcoming class days ----
+        today = today_tashkent()
+        
+        # Load active holidays to exclude
+        holiday_result = await self.db.execute(
+            select(Holiday).where(
+                Holiday.is_active == True,
+                Holiday.end_date >= today,
+            )
+        )
+        active_holidays = holiday_result.scalars().all()
+        
+        def is_holiday(check_d):
+            """Check if a date falls within any active holiday"""
+            for h in active_holidays:
+                if h.start_date <= check_d <= h.end_date:
+                    return True
+            return False
+        
+        upcoming_class_days = []
+        python_weekday_map = {
+            0: "monday", 1: "tuesday", 2: "wednesday",
+            3: "thursday", 4: "friday", 5: "saturday", 6: "sunday"
+        }
+        
+        check_date = today + timedelta(days=1)
+        while len(upcoming_class_days) < days_ahead:
+            wd = python_weekday_map[check_date.weekday()]
+            if wd in class_days_set and not is_holiday(check_date):
+                upcoming_class_days.append({
+                    "date": check_date.strftime("%Y-%m-%d"),
+                    "weekday_en": wd,
+                    "weekday_uz": day_name_map.get(wd, wd),
+                })
+            check_date += timedelta(days=1)
+            # Safety: don't look more than 30 days ahead
+            if (check_date - today).days > 30:
+                break
+        
+        # ---- 4. Load historical attendance ----
+        date_from = today - timedelta(days=60)
         query = select(Attendance).where(Attendance.date >= date_from)
         
         if student_id:
@@ -335,39 +416,51 @@ Bu guruhni tahlil qilib, JSON formatda natija ber."""
         
         current_rate = round(present / total * 100, 1) if total > 0 else 0
         
+        # Weekly rates only for class days
         weekly = {}
         for a in attendances:
-            week_day = a.date.strftime("%A")
-            if week_day not in weekly:
-                weekly[week_day] = {"total": 0, "present": 0}
-            weekly[week_day]["total"] += 1
+            wd = python_weekday_map[a.date.weekday()]
+            uz_day = day_name_map.get(wd, wd)
+            if uz_day not in weekly:
+                weekly[uz_day] = {"total": 0, "present": 0}
+            weekly[uz_day]["total"] += 1
             if a.status == AttendanceStatus.PRESENT:
-                weekly[week_day]["present"] += 1
+                weekly[uz_day]["present"] += 1
         
         weekly_rates = {}
         for day, data in weekly.items():
             weekly_rates[day] = round(data["present"] / data["total"] * 100, 1) if data["total"] > 0 else 0
         
+        # Build the list of days to predict (in Uzbek)
+        days_to_predict = [d["weekday_uz"] + f" ({d['date']})" for d in upcoming_class_days]
+        class_days_uz = [day_name_map[d] for d in sorted(class_days_set) if d in day_name_map]
+        
         system_prompt = """Sen davomat bashorat qiluvchi AI tizimisiz. Berilgan tarixiy ma'lumotlardan foydalanib bashorat qil.
+
+MUHIM: Faqat dars bo'lgan kunlar uchun bashorat qil. Dam olish kunlari va dars bo'lmagan kunlarni QOSHMA.
 
 JSON format:
 {
-    "predictions": [{"day": "Dushanba", "predicted_rate": 85, "reason": "Sabab"}],
+    "predictions": [{"day": "Dushanba (2026-02-16)", "predicted_rate": 85, "reason": "Sabab"}],
     "confidence": 75,
     "factors": ["Omil 1", "Omil 2"],
     "overall_prediction": "Umumiy bashorat matni"
 }
 
-O'zbek tilida javob ber."""
+O'zbek tilida javob ber. predictions massivida FAQAT quyidagi kunlar bo'lsin."""
 
         user_prompt = f"""Davomat bashorati:
 
 Hozirgi davomat: {current_rate}%
 Tarixiy ma'lumotlar (60 kun): {total} yozuv
 Kelgan: {present}, Kelmagan: {absent}, Kechikkan: {late}
-Hafta kunlari bo'yicha: {json.dumps(weekly_rates, ensure_ascii=False)}
+Dars kunlari: {', '.join(class_days_uz)}
+Hafta kunlari bo'yicha davomat: {json.dumps(weekly_rates, ensure_ascii=False)}
 
-{days_ahead} kun oldinga bashorat qil. JSON formatda javob ber."""
+FAQAT quyidagi dars kunlari uchun bashorat qil (boshqa kun QO'SHMA):
+{', '.join(days_to_predict)}
+
+JSON formatda javob ber."""
 
         content, tokens = await self._call_openai(
             system_prompt, user_prompt,
@@ -385,11 +478,22 @@ Hafta kunlari bo'yicha: {json.dumps(weekly_rates, ensure_ascii=False)}
                 "overall_prediction": content
             }
         
+        # Filter out any non-class days that AI might still include
+        valid_uz_days = set(class_days_uz)
+        filtered_predictions = []
+        for pred in result_data.get("predictions", []):
+            day_text = pred.get("day", "")
+            # Check if prediction day matches a class day
+            is_valid = any(uz_day in day_text for uz_day in valid_uz_days)
+            if is_valid:
+                filtered_predictions.append(pred)
+        
         return {
-            "predictions": result_data.get("predictions", []),
+            "predictions": filtered_predictions,
             "confidence": result_data.get("confidence", 50),
             "factors": result_data.get("factors", []),
             "overall_prediction": result_data.get("overall_prediction", ""),
+            "class_days": class_days_uz,
             "tokens_used": tokens
         }
 

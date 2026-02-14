@@ -20,38 +20,150 @@
     </div>
 
     <!-- ========================================
-         TABS: Yuborish / Tarix
+         TABS: Kelgan / Yuborish / Tarix
          ======================================== -->
-    <div class="flex rounded-xl bg-slate-100 p-1 w-fit">
+    <div class="flex flex-wrap rounded-xl bg-slate-100 p-1 w-fit gap-1">
+      <button
+        @click="activeTab = 'inbox'"
+        class="rounded-lg px-3 sm:px-5 py-2 sm:py-2.5 text-sm font-medium transition-all relative"
+        :class="activeTab === 'inbox' 
+          ? 'bg-white text-emerald-600 shadow' 
+          : 'text-slate-600 hover:text-slate-800'"
+      >
+        <Bell :size="16" class="inline mr-1 sm:mr-2" />
+        <span class="hidden sm:inline">{{ $t('notifications.inbox') }}</span>
+        <span class="sm:hidden">{{ $t('notifications.inbox') }}</span>
+        <span v-if="unreadInbox > 0" class="ml-1.5 inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full bg-rose-500 text-white text-xs font-bold">
+          {{ unreadInbox > 99 ? '99+' : unreadInbox }}
+        </span>
+      </button>
       <button
         @click="activeTab = 'compose'"
-        class="rounded-lg px-5 py-2.5 text-sm font-medium transition-all"
+        class="rounded-lg px-3 sm:px-5 py-2 sm:py-2.5 text-sm font-medium transition-all"
         :class="activeTab === 'compose' 
           ? 'bg-white text-emerald-600 shadow' 
           : 'text-slate-600 hover:text-slate-800'"
       >
-        <PenLine :size="16" class="inline mr-2" />
+        <PenLine :size="16" class="inline mr-1 sm:mr-2" />
         {{ $t('notifications.send') }}
       </button>
       <button
         @click="activeTab = 'history'"
-        class="rounded-lg px-5 py-2.5 text-sm font-medium transition-all"
+        class="rounded-lg px-3 sm:px-5 py-2 sm:py-2.5 text-sm font-medium transition-all"
         :class="activeTab === 'history' 
           ? 'bg-white text-emerald-600 shadow' 
           : 'text-slate-600 hover:text-slate-800'"
       >
-        <History :size="16" class="inline mr-2" />
+        <History :size="16" class="inline mr-1 sm:mr-2" />
         {{ $t('notifications.allMessages') }}
       </button>
     </div>
 
     <!-- ========================================
+         KELGAN XABARLAR (Inbox Tab)
+         ======================================== -->
+    <div v-if="activeTab === 'inbox'" class="space-y-4">
+      <!-- Inbox Actions -->
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div class="flex items-center gap-3">
+          <select
+            v-model="inboxFilter"
+            class="rounded-xl border border-slate-200 bg-white px-3 sm:px-4 py-2 sm:py-2.5 text-sm text-slate-700 focus:border-emerald-500 focus:outline-none"
+          >
+            <option value="all">{{ $t('notifications.allMessages') }}</option>
+            <option value="unread">{{ $t('notifications.unreadOnly') }}</option>
+            <option value="read">{{ $t('notifications.readOnly') }}</option>
+          </select>
+          <span class="text-xs sm:text-sm text-slate-500">
+            {{ filteredInbox.length }} {{ $t('notifications.messages') }}
+          </span>
+        </div>
+        <button
+          v-if="unreadInbox > 0"
+          @click="markAllRead"
+          class="flex items-center gap-1.5 text-xs sm:text-sm text-emerald-600 hover:text-emerald-700 font-medium transition-colors"
+        >
+          <CheckCheck :size="16" />
+          {{ $t('notifications.markAllRead') }}
+        </button>
+      </div>
+
+      <!-- Inbox Loading -->
+      <div v-if="inboxLoading" class="flex items-center justify-center py-12">
+        <div class="w-8 h-8 rounded-full border-3 border-emerald-200 border-t-emerald-500 animate-spin"></div>
+      </div>
+
+      <!-- Inbox List -->
+      <div v-else-if="filteredInbox.length" class="space-y-2 sm:space-y-3">
+        <div
+          v-for="notif in filteredInbox"
+          :key="notif.id"
+          @click="openNotification(notif)"
+          class="rounded-xl sm:rounded-2xl border bg-white p-3 sm:p-4 shadow-sm transition-all hover:shadow-md cursor-pointer"
+          :class="notif.is_read ? 'border-slate-200' : 'border-emerald-200 bg-emerald-50/30'"
+        >
+          <div class="flex items-start gap-3">
+            <!-- Type Icon -->
+            <div
+              class="flex-shrink-0 w-9 h-9 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl flex items-center justify-center"
+              :class="getTypeClass(notif.type)"
+            >
+              <component :is="getTypeIcon(notif.type)" :size="18" />
+            </div>
+
+            <!-- Content -->
+            <div class="flex-1 min-w-0">
+              <div class="flex items-start justify-between gap-2">
+                <div class="min-w-0 flex-1">
+                  <h3 class="text-sm font-semibold text-slate-800 truncate" :class="{ 'font-bold': !notif.is_read }">
+                    {{ notif.title }}
+                  </h3>
+                  <p class="text-xs sm:text-sm text-slate-600 mt-0.5 line-clamp-2">{{ notif.message }}</p>
+                </div>
+                <!-- Unread dot -->
+                <div v-if="!notif.is_read" class="flex-shrink-0 w-2.5 h-2.5 rounded-full bg-emerald-500 mt-1.5"></div>
+              </div>
+
+              <div class="flex flex-wrap items-center gap-2 sm:gap-3 mt-2">
+                <!-- Sender -->
+                <div v-if="notif.sender_name" class="flex items-center gap-1">
+                  <Users :size="12" class="text-slate-400" />
+                  <span class="text-xs text-slate-500">{{ notif.sender_name }}</span>
+                </div>
+                <!-- Date -->
+                <div class="flex items-center gap-1">
+                  <Clock :size="12" class="text-slate-400" />
+                  <span class="text-xs text-slate-500">{{ formatNotifDate(notif.created_at) }}</span>
+                </div>
+                <!-- Type badge -->
+                <span class="text-xs px-2 py-0.5 rounded-full font-medium"
+                      :class="getTypeBadgeClass(notif.type)">
+                  {{ getTypeLabel(notif.type) }}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Empty Inbox -->
+      <div
+        v-else
+        class="flex flex-col items-center justify-center rounded-xl sm:rounded-2xl border border-dashed border-slate-300 bg-slate-50 py-12 sm:py-16"
+      >
+        <Bell :size="40" class="mb-3 text-slate-300" />
+        <p class="text-base sm:text-lg font-medium text-slate-500">{{ $t('notifications.noNotifications') }}</p>
+        <p class="text-xs sm:text-sm text-slate-400">{{ $t('notifications.noNotificationsDesc') }}</p>
+      </div>
+    </div>
+
+    <!-- ========================================
          TEZ YUBORISH QISMI (Compose Tab)
          ======================================== -->
-    <div v-if="activeTab === 'compose'" class="grid gap-6 lg:grid-cols-3">
+    <div v-if="activeTab === 'compose'" class="grid gap-4 sm:gap-6 lg:grid-cols-3">
       <!-- Xabar yozish formasi -->
-      <div class="lg:col-span-2 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-        <h2 class="mb-4 flex items-center gap-2 text-lg font-semibold text-slate-800">
+      <div class="lg:col-span-2 rounded-2xl border border-slate-200 bg-white p-4 sm:p-6 shadow-sm">
+        <h2 class="mb-4 flex items-center gap-2 text-base sm:text-lg font-semibold text-slate-800">
           <PenLine :size="20" class="text-emerald-500" />
           {{ $t('notifications.newMessage') }}
         </h2>
@@ -372,29 +484,31 @@
  */
 
 import { useAuthStore } from '@/stores/auth'
+import { useDataStore } from '@/stores/data'
 import { useToastStore } from '@/stores/toast'
 import {
-    AlertTriangle,
-    Bell,
-    CheckCheck,
-    CheckCircle,
-    Clock,
-    History,
-    Info,
-    MessageSquare,
-    PenLine,
-    RefreshCw,
-    Send,
-    Trash2,
-    Users,
-    X,
-    Zap
+  AlertTriangle,
+  Bell,
+  CheckCheck,
+  CheckCircle,
+  Clock,
+  History,
+  Info,
+  MessageSquare,
+  PenLine,
+  RefreshCw,
+  Send,
+  Trash2,
+  Users,
+  X,
+  Zap
 } from 'lucide-vue-next'
 import { computed, markRaw, onMounted, ref } from 'vue'
 import api from '../../services/api'
 
 // ==================== STORES ====================
 const authStore = useAuthStore()
+const dataStore = useDataStore()
 const toast = useToastStore()
 
 // Language
@@ -409,8 +523,13 @@ const loading = ref(true)
 const error = ref(null)
 const sending = ref(false)
 
-// Tab: 'compose' yoki 'history'
-const activeTab = ref('compose')
+// Tab: 'inbox', 'compose' yoki 'history'
+const activeTab = ref('inbox')
+
+// Inbox state
+const inboxNotifications = ref([])
+const inboxLoading = ref(false)
+const inboxFilter = ref('all')
 
 // Filter
 const historyFilter = ref('all')
@@ -554,13 +673,44 @@ const filteredHistory = computed(() => {
   return messageHistory.value.filter(m => m.type === historyFilter.value)
 })
 
+// Inbox: o'qilmagan xabarlar soni
+const unreadInbox = computed(() => {
+  return inboxNotifications.value.filter(n => !n.is_read).length
+})
+
+// Inbox: filtrlangan xabarlar
+const filteredInbox = computed(() => {
+  if (inboxFilter.value === 'unread') return inboxNotifications.value.filter(n => !n.is_read)
+  if (inboxFilter.value === 'read') return inboxNotifications.value.filter(n => n.is_read)
+  return inboxNotifications.value
+})
+
 // ==================== LOAD DATA ====================
+
+const loadInbox = async () => {
+  inboxLoading.value = true
+  try {
+    const response = await api.getNotifications({ page_size: 100 })
+    if (response?.items) {
+      inboxNotifications.value = response.items
+    } else if (Array.isArray(response)) {
+      inboxNotifications.value = response
+    }
+  } catch (e) {
+    console.warn('Could not load inbox:', e)
+  } finally {
+    inboxLoading.value = false
+  }
+}
 
 const loadData = async () => {
   loading.value = true
   error.value = null
   
   try {
+    // Load inbox notifications
+    await loadInbox()
+
     // Get group info from dashboard API
     const dashboardResp = await api.request('/dashboard/leader')
     const groupId = dashboardResp?.group?.id
@@ -578,16 +728,6 @@ const loadData = async () => {
       } catch (e) {
         console.warn('Could not load students:', e)
         groupStudents.value = []
-      }
-      
-      // Load sent notifications (own notifications for history)
-      try {
-        const notifResponse = await api.getNotifications({ page_size: 50 })
-        const notifItems = notifResponse?.items || []
-        // Show any notifications that were sent to the leader (received)
-        // For history we use local state as backend doesn't track "sent by me"
-      } catch (e) {
-        console.warn('Could not load notification history:', e)
       }
     } else {
       error.value = t('notifications.groupInfoNotFound')
@@ -761,7 +901,8 @@ function getTypeClass(type) {
     info: 'bg-blue-100 text-blue-600',
     warning: 'bg-yellow-100 text-yellow-600',
     success: 'bg-green-100 text-green-600',
-    alert: 'bg-red-100 text-red-600'
+    alert: 'bg-red-100 text-red-600',
+    urgent: 'bg-red-100 text-red-600'
   }
   return classes[type] || classes.info
 }
@@ -772,9 +913,88 @@ function getTypeIcon(type) {
     info: Info,
     warning: AlertTriangle,
     success: CheckCircle,
-    alert: Bell
+    alert: Bell,
+    urgent: Bell
   }
   return icons[type] || Info
+}
+
+// Tur bo'yicha badge class
+function getTypeBadgeClass(type) {
+  const classes = {
+    info: 'bg-blue-100 text-blue-700',
+    warning: 'bg-yellow-100 text-yellow-700',
+    success: 'bg-green-100 text-green-700',
+    alert: 'bg-red-100 text-red-700',
+    urgent: 'bg-red-100 text-red-700'
+  }
+  return classes[type] || classes.info
+}
+
+// Tur bo'yicha label
+function getTypeLabel(type) {
+  const labels = {
+    info: t('notifications.info'),
+    warning: t('notifications.warning'),
+    success: t('notifications.success'),
+    alert: t('notifications.alert'),
+    urgent: t('notifications.alert')
+  }
+  return labels[type] || type
+}
+
+// Sanani formatlash
+function formatNotifDate(dateStr) {
+  if (!dateStr) return ''
+  try {
+    const d = new Date(dateStr)
+    const now = new Date()
+    const diffMs = now - d
+    const diffMins = Math.floor(diffMs / 60000)
+    const diffHours = Math.floor(diffMs / 3600000)
+    const diffDays = Math.floor(diffMs / 86400000)
+
+    if (diffMins < 1) return t('notifications.justNow')
+    if (diffMins < 60) return t('notifications.minutesAgo', { min: diffMins })
+    if (diffHours < 24) return t('notifications.hoursAgo', { hours: diffHours })
+    if (diffDays < 7) return t('notifications.daysAgo', { days: diffDays })
+    return d.toLocaleDateString('uz-UZ', { day: '2-digit', month: '2-digit', year: 'numeric' })
+  } catch {
+    return dateStr
+  }
+}
+
+// Bildirishnomani ochish — o'qilgan deb belgilash
+async function openNotification(notif) {
+  if (!notif.is_read) {
+    try {
+      await api.markNotificationRead(notif.id)
+      notif.is_read = true
+      notif.read = true
+      // dataStore'dagi countni ham kamaytirish
+      if (dataStore.unreadCount > 0) {
+        dataStore.unreadCount--
+      }
+    } catch (e) {
+      console.warn('Could not mark as read:', e)
+    }
+  }
+}
+
+// Hammasini o'qilgan deb belgilash
+async function markAllRead() {
+  try {
+    await api.markAllNotificationsRead()
+    inboxNotifications.value.forEach(n => {
+      n.is_read = true
+      n.read = true
+    })
+    dataStore.unreadCount = 0
+    toast.success(t('notifications.allMarkedRead'))
+  } catch (e) {
+    console.error('Mark all read error:', e)
+    toast.error(t('notifications.markAllReadError'))
+  }
 }
 
 // Initialize

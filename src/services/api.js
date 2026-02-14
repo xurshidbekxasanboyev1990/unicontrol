@@ -1337,6 +1337,39 @@ class ApiService {
 
     // ===== AI =====
 
+    // ===== HOLIDAYS (Bayramlar / Dam olish kunlari) =====
+    async getHolidays(params = {}) {
+        const query = params.active_only !== undefined ? `?active_only=${params.active_only}` : ''
+        return this.request(`/holidays${query}`)
+    }
+
+    async getActiveHolidays() {
+        return this.request('/holidays/active')
+    }
+
+    async checkDateHoliday(checkDate) {
+        const query = checkDate ? `?check_date=${checkDate}` : ''
+        return this.request(`/holidays/check${query}`)
+    }
+
+    async createHoliday(data) {
+        return this.request('/holidays', { method: 'POST', body: data })
+    }
+
+    async updateHoliday(id, data) {
+        return this.request(`/holidays/${id}`, { method: 'PUT', body: data })
+    }
+
+    async deleteHoliday(id) {
+        return this.request(`/holidays/${id}`, { method: 'DELETE' })
+    }
+
+    // ===== AI =====
+
+    async aiGetUsage() {
+        return this.request('/ai/usage')
+    }
+
     async aiAnalyzeStudent(data) {
         return this.request('/ai/analyze/student', { method: 'POST', body: data })
     }

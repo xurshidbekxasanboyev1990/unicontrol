@@ -38,18 +38,65 @@
             class="flex items-center gap-2 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 px-4 py-2.5 text-white text-sm font-medium transition-all hover:from-emerald-600 hover:to-teal-700 disabled:opacity-50 shadow-lg shadow-emerald-500/20"
           >
             <RefreshCw :size="16" :class="{ 'animate-spin': isRefreshing }" />
-            <span>{{ $t('common.refresh') }}</span>
+            <span class="hidden sm:inline">{{ $t('common.refresh') }}</span>
           </button>
         </div>
       </div>
 
+      <!-- AI Usage Limit Card -->
+      <div v-if="aiUsage" class="bg-white rounded-2xl border border-slate-200 p-4 shadow-sm">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl flex items-center justify-center"
+                 :class="aiUsage.is_limit_reached ? 'bg-rose-100' : aiUsage.percentage_used >= 80 ? 'bg-amber-100' : 'bg-emerald-100'">
+              <Zap :size="20"
+                      :class="aiUsage.is_limit_reached ? 'text-rose-600' : aiUsage.percentage_used >= 80 ? 'text-amber-600' : 'text-emerald-600'" />
+            </div>
+            <div>
+              <div class="flex items-center gap-2">
+                <h3 class="text-sm font-semibold text-slate-700">{{ $t('ai.usageLimit') }}</h3>
+                <span class="text-xs px-2 py-0.5 rounded-full font-medium"
+                      :class="aiUsage.is_limit_reached ? 'bg-rose-100 text-rose-700' : aiUsage.percentage_used >= 80 ? 'bg-amber-100 text-amber-700' : 'bg-emerald-100 text-emerald-700'">
+                  {{ aiUsage.is_limit_reached ? $t('ai.limitReached') : Math.round(aiUsage.percentage_used) + '%' }}
+                </span>
+              </div>
+              <p class="text-xs text-slate-500 mt-0.5">
+                {{ aiUsage.request_count }} / {{ aiUsage.max_requests || '—' }} {{ $t('ai.requests') }}
+              </p>
+            </div>
+          </div>
+          <div class="w-full sm:flex-1 sm:max-w-xs">
+            <div class="h-2.5 overflow-hidden rounded-full bg-slate-100">
+              <div class="h-full rounded-full transition-all duration-700"
+                   :class="aiUsage.is_limit_reached ? 'bg-rose-500' : aiUsage.percentage_used >= 80 ? 'bg-amber-500' : 'bg-emerald-500'"
+                   :style="{ width: Math.min(100, aiUsage.percentage_used) + '%' }"></div>
+            </div>
+            <div class="flex justify-between mt-1">
+              <span class="text-xs text-slate-400">0</span>
+              <span class="text-xs font-medium" :class="aiUsage.is_limit_reached ? 'text-rose-500' : 'text-slate-500'">
+                {{ aiUsage.remaining_requests || 0 }} {{ $t('ai.requestsLeft') }}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Limit Reached Banner -->
+      <div v-if="aiUsage?.is_limit_reached" class="bg-rose-50 border border-rose-200 rounded-xl sm:rounded-2xl p-3 sm:p-4 flex items-start gap-2.5 sm:gap-3">
+        <Zap :size="20" class="text-rose-500 mt-0.5 flex-shrink-0" />
+        <div>
+          <p class="text-sm font-semibold text-rose-700">{{ $t('ai.limitReachedTitle') }}</p>
+          <p class="text-xs text-rose-600 mt-0.5">{{ $t('ai.limitReachedDesc') }}</p>
+        </div>
+      </div>
+
       <!-- Tabs -->
-      <div class="flex flex-wrap gap-1 p-1 bg-slate-100 rounded-xl">
+      <div class="flex flex-wrap gap-1 p-1 bg-slate-100 rounded-xl overflow-x-auto">
         <button
           v-for="tab in tabs"
           :key="tab.key"
           @click="activeTab = tab.key"
-          class="flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-all"
+          class="flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-4 py-2 sm:py-2.5 rounded-lg text-xs sm:text-sm font-medium transition-all"
           :class="activeTab === tab.key
             ? 'bg-white text-emerald-700 shadow-sm'
             : 'text-slate-500 hover:text-slate-700 hover:bg-white/50'"
@@ -61,31 +108,61 @@
 
       <!-- ====== TAB: OVERVIEW ====== -->
       <div v-if="activeTab === 'overview'" class="space-y-6">
-        <!-- AI Summary Card -->
-        <div class="rounded-2xl bg-gradient-to-br from-emerald-500 via-emerald-600 to-teal-700 p-6 text-white shadow-xl relative overflow-hidden">
+        <!-- Start AI Analysis Button (shown when not yet analyzed) -->
+        <div v-if="!aiAnalysisLoaded && !aiAnalysisLoading" class="bg-white rounded-2xl border border-slate-200 p-5 sm:p-8 shadow-sm text-center">
+          <div class="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-gradient-to-br from-emerald-100 to-teal-100 flex items-center justify-center mx-auto mb-3 sm:mb-4">
+            <Brain :size="28" class="text-emerald-600 sm:hidden" />
+            <Brain :size="32" class="text-emerald-600 hidden sm:block" />
+          </div>
+          <h3 class="text-base sm:text-lg font-bold text-slate-800 mb-1.5 sm:mb-2">{{ $t('ai.startAnalysisTitle') }}</h3>
+          <p class="text-xs sm:text-sm text-slate-500 mb-1">{{ $t('ai.startAnalysisDesc') }}</p>
+          <p class="text-xs text-slate-400 mb-4 sm:mb-5">{{ $t('ai.startAnalysisCost') }}</p>
+          <button
+            @click="startAIAnalysis"
+            :disabled="aiUsage?.is_limit_reached"
+            class="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-emerald-500 to-teal-600 text-white rounded-xl text-sm font-medium hover:from-emerald-600 hover:to-teal-700 transition-all shadow-lg shadow-emerald-500/20 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <Sparkles :size="18" />
+            {{ $t('ai.startAnalysis') }}
+          </button>
+        </div>
+
+        <!-- AI Analysis Loading -->
+        <div v-if="aiAnalysisLoading" class="bg-white rounded-2xl border border-slate-200 p-6 sm:p-12 shadow-sm text-center">
+          <div class="relative mx-auto w-16 h-16 mb-4">
+            <div class="w-16 h-16 rounded-full border-4 border-emerald-200 border-t-emerald-500 animate-spin"></div>
+            <Brain class="w-7 h-7 text-emerald-600 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" />
+          </div>
+          <p class="text-slate-600 font-medium">{{ $t('ai.analyzing') }}</p>
+          <p class="text-xs text-slate-400 mt-1">{{ $t('ai.analysisTakesTime') }}</p>
+        </div>
+
+        <!-- AI Summary Card (shown after analysis) -->
+        <div v-if="aiAnalysisLoaded && !aiAnalysisLoading" class="rounded-2xl bg-gradient-to-br from-emerald-500 via-emerald-600 to-teal-700 p-4 sm:p-6 text-white shadow-xl relative overflow-hidden">
           <div class="absolute -top-10 -right-10 w-32 h-32 bg-white/10 rounded-full blur-2xl"></div>
           <div class="absolute -bottom-10 -left-10 w-32 h-32 bg-white/10 rounded-full blur-2xl"></div>
-          <div class="relative flex items-start gap-4">
-            <div class="flex h-14 w-14 items-center justify-center rounded-2xl bg-white/20 backdrop-blur flex-shrink-0">
-              <Sparkles :size="28" />
+          <div class="relative flex items-start gap-3 sm:gap-4">
+            <div class="flex h-11 w-11 sm:h-14 sm:w-14 items-center justify-center rounded-xl sm:rounded-2xl bg-white/20 backdrop-blur flex-shrink-0">
+              <Sparkles :size="22" class="sm:hidden" />
+              <Sparkles :size="28" class="hidden sm:block" />
             </div>
             <div class="flex-1 min-w-0">
-              <h2 class="text-xl font-bold">{{ summaryTitle }}</h2>
-              <p class="mt-2 text-emerald-100 leading-relaxed text-sm">{{ summaryText }}</p>
+              <h2 class="text-lg sm:text-xl font-bold">{{ summaryTitle }}</h2>
+              <p class="mt-1.5 sm:mt-2 text-emerald-100 leading-relaxed text-xs sm:text-sm">{{ summaryText }}</p>
             </div>
           </div>
 
           <!-- Stats Row -->
-          <div class="relative mt-6 grid gap-2" :class="isStudentRole ? 'grid-cols-3' : 'grid-cols-2 sm:grid-cols-4'">
-            <div v-for="stat in headerStats" :key="stat.label" class="rounded-xl bg-white/10 p-3 backdrop-blur text-center">
-              <p class="text-xl sm:text-2xl font-bold">{{ stat.value }}</p>
-              <p class="text-xs text-emerald-200 mt-0.5">{{ stat.label }}</p>
+          <div class="relative mt-4 sm:mt-6 grid gap-2" :class="isStudentRole ? 'grid-cols-3' : 'grid-cols-2 sm:grid-cols-4'">
+            <div v-for="stat in headerStats" :key="stat.label" class="rounded-xl bg-white/10 p-2 sm:p-3 backdrop-blur text-center">
+              <p class="text-lg sm:text-2xl font-bold">{{ stat.value }}</p>
+              <p class="text-[10px] sm:text-xs text-emerald-200 mt-0.5 leading-tight">{{ stat.label }}</p>
             </div>
           </div>
         </div>
 
-        <!-- Quick Metrics -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <!-- Quick Metrics (after analysis) -->
+        <div v-if="aiAnalysisLoaded" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <div v-for="metric in metrics" :key="metric.label"
                class="bg-white rounded-2xl border border-slate-200 p-4 shadow-sm hover:shadow-md transition-shadow">
             <div class="flex items-center justify-between mb-3">
@@ -107,7 +184,7 @@
         </div>
 
         <!-- AI Insights -->
-        <div v-if="insights.length" class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
+        <div v-if="aiAnalysisLoaded && insights.length" class="bg-white rounded-2xl border border-slate-200 p-4 sm:p-6 shadow-sm">
           <div class="flex items-center gap-2 mb-4">
             <Brain :size="20" class="text-emerald-600" />
             <h3 class="font-semibold text-slate-800">{{ $t('ai.aiInsights') }}</h3>
@@ -127,14 +204,14 @@
         </div>
 
         <!-- Recommendations -->
-        <div v-if="recommendations.length" class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
+        <div v-if="aiAnalysisLoaded && recommendations.length" class="bg-white rounded-2xl border border-slate-200 p-4 sm:p-6 shadow-sm">
           <div class="flex items-center gap-2 mb-4">
             <Lightbulb :size="20" class="text-amber-500" />
             <h3 class="font-semibold text-slate-800">{{ $t('ai.aiRecommendations') }}</h3>
           </div>
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-2 sm:gap-3">
             <div v-for="(rec, i) in recommendations" :key="i"
-                 class="flex items-start gap-3 p-4 bg-amber-50 rounded-xl border border-amber-100">
+                 class="flex items-start gap-2.5 sm:gap-3 p-3 sm:p-4 bg-amber-50 rounded-xl border border-amber-100">
               <div class="flex-shrink-0 w-8 h-8 rounded-lg bg-amber-100 flex items-center justify-center">
                 <span class="text-amber-600 text-sm font-bold">{{ i + 1 }}</span>
               </div>
@@ -156,14 +233,14 @@
         <!-- Attendance Overview -->
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <!-- Attendance Stats -->
-          <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
+          <div class="bg-white rounded-2xl border border-slate-200 p-4 sm:p-6 shadow-sm">
             <div class="flex items-center gap-3 mb-4">
-              <div class="w-12 h-12 rounded-xl bg-emerald-100 flex items-center justify-center">
-                <TrendingUp :size="24" class="text-emerald-600" />
+              <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-emerald-100 flex items-center justify-center">
+                <TrendingUp :size="20" class="text-emerald-600" />
               </div>
               <div>
-                <h3 class="font-semibold text-slate-800">{{ $t('ai.attendanceAnalysis') }}</h3>
-                <p class="text-sm text-slate-500">{{ $t('ai.last30days') }}</p>
+                <h3 class="text-sm sm:text-base font-semibold text-slate-800">{{ $t('ai.attendanceAnalysis') }}</h3>
+                <p class="text-xs sm:text-sm text-slate-500">{{ $t('ai.last30days') }}</p>
               </div>
             </div>
 
@@ -214,14 +291,14 @@
           </div>
 
           <!-- Subject Stats (Student) / Student List (Leader/Admin) -->
-          <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
+          <div class="bg-white rounded-2xl border border-slate-200 p-4 sm:p-6 shadow-sm">
             <div class="flex items-center gap-3 mb-4">
-              <div class="w-12 h-12 rounded-xl bg-blue-100 flex items-center justify-center">
-                <BookOpen :size="24" class="text-blue-600" />
+              <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-blue-100 flex items-center justify-center">
+                <BookOpen :size="20" class="text-blue-600" />
               </div>
               <div>
-                <h3 class="font-semibold text-slate-800">{{ isStudentRole ? $t('ai.bySubjects') : $t('ai.byStudents') }}</h3>
-                <p class="text-sm text-slate-500">{{ $t('ai.attendanceDistribution') }}</p>
+                <h3 class="text-sm sm:text-base font-semibold text-slate-800">{{ isStudentRole ? $t('ai.bySubjects') : $t('ai.byStudents') }}</h3>
+                <p class="text-xs sm:text-sm text-slate-500">{{ $t('ai.attendanceDistribution') }}</p>
               </div>
             </div>
 
@@ -245,17 +322,17 @@
         </div>
 
         <!-- Weekly Trend -->
-        <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
+        <div class="bg-white rounded-2xl border border-slate-200 p-4 sm:p-6 shadow-sm">
           <div class="flex items-center gap-3 mb-4">
-            <div class="w-12 h-12 rounded-xl bg-indigo-100 flex items-center justify-center">
-              <BarChart3 :size="24" class="text-indigo-600" />
+            <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-indigo-100 flex items-center justify-center">
+              <BarChart3 :size="20" class="text-indigo-600" />
             </div>
             <div>
-              <h3 class="font-semibold text-slate-800">{{ $t('ai.weeklyTrend') }}</h3>
-              <p class="text-sm text-slate-500">{{ $t('ai.last4weeks') }}</p>
+              <h3 class="text-sm sm:text-base font-semibold text-slate-800">{{ $t('ai.weeklyTrend') }}</h3>
+              <p class="text-xs sm:text-sm text-slate-500">{{ $t('ai.last4weeks') }}</p>
             </div>
           </div>
-          <div class="flex items-end justify-between gap-3 sm:gap-4 h-40 mt-6">
+          <div class="flex items-end justify-between gap-2 sm:gap-4 h-32 sm:h-40 mt-4 sm:mt-6">
             <div v-for="week in weeklyData" :key="week.label" class="flex-1 flex flex-col items-center gap-2">
               <div class="w-full bg-slate-100 rounded-t-lg relative" style="height: 120px;">
                 <div class="absolute bottom-0 left-0 right-0 rounded-t-lg transition-all duration-700"
@@ -279,10 +356,10 @@
 
         <template v-else>
           <!-- Prediction Button -->
-          <div v-if="!predictions.length" class="bg-white rounded-2xl border border-slate-200 p-8 shadow-sm text-center">
-            <Activity :size="48" class="text-emerald-300 mx-auto mb-4" />
-            <h3 class="text-lg font-semibold text-slate-700 mb-2">{{ $t('ai.attendancePrediction') }}</h3>
-            <p class="text-sm text-slate-500 mb-4">{{ $t('ai.predictionDesc') }}</p>
+          <div v-if="!predictions.length" class="bg-white rounded-2xl border border-slate-200 p-5 sm:p-8 shadow-sm text-center">
+            <Activity :size="40" class="text-emerald-300 mx-auto mb-3 sm:mb-4" />
+            <h3 class="text-base sm:text-lg font-semibold text-slate-700 mb-2">{{ $t('ai.attendancePrediction') }}</h3>
+            <p class="text-xs sm:text-sm text-slate-500 mb-4">{{ $t('ai.predictionDesc') }}</p>
             <button @click="loadPredictions"
                     class="px-6 py-2.5 bg-gradient-to-r from-emerald-500 to-teal-600 text-white rounded-xl text-sm font-medium hover:from-emerald-600 hover:to-teal-700 transition-all shadow-lg shadow-emerald-500/20">
               {{ $t('ai.generatePrediction') }}
@@ -292,15 +369,15 @@
           <!-- Predictions List -->
           <div v-else class="space-y-4">
             <!-- Overall Prediction -->
-            <div v-if="predictionSummary" class="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-2xl border border-blue-200 p-6">
+            <div v-if="predictionSummary" class="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-2xl border border-blue-200 p-4 sm:p-6">
               <div class="flex items-center gap-2 mb-3">
                 <Activity :size="20" class="text-blue-600" />
                 <h3 class="font-semibold text-slate-800">{{ $t('ai.overallPrediction') }}</h3>
               </div>
               <p class="text-slate-600 text-sm leading-relaxed">{{ predictionSummary }}</p>
-              <div v-if="predictionConfidence" class="mt-3 flex items-center gap-2">
+              <div v-if="predictionConfidence" class="mt-3 flex flex-wrap items-center gap-2">
                 <span class="text-xs text-slate-500">{{ $t('ai.confidence') }}:</span>
-                <div class="flex-1 h-2 bg-blue-100 rounded-full max-w-48">
+                <div class="flex-1 h-2 bg-blue-100 rounded-full max-w-32 sm:max-w-48">
                   <div class="h-full bg-blue-500 rounded-full transition-all" :style="{ width: predictionConfidence + '%' }"></div>
                 </div>
                 <span class="text-xs font-medium text-blue-600">{{ predictionConfidence }}%</span>
@@ -308,24 +385,24 @@
             </div>
 
             <!-- Day-by-day Predictions -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-3">
               <div v-for="(pred, i) in predictions" :key="i"
-                   class="bg-white rounded-xl border border-slate-200 p-4 shadow-sm hover:shadow-md transition-shadow">
-                <div class="flex items-center justify-between mb-2">
-                  <div class="flex items-center gap-2">
-                    <Calendar :size="16" class="text-blue-500" />
-                    <span class="font-medium text-slate-700 text-sm">{{ pred.day || pred.title }}</span>
+                   class="bg-white rounded-xl border border-slate-200 p-3 sm:p-4 shadow-sm hover:shadow-md transition-shadow">
+                <div class="flex items-center justify-between mb-1.5 sm:mb-2">
+                  <div class="flex items-center gap-1.5 sm:gap-2 min-w-0 flex-1 mr-2">
+                    <Calendar :size="14" class="text-blue-500 flex-shrink-0" />
+                    <span class="font-medium text-slate-700 text-xs sm:text-sm truncate">{{ pred.day || pred.title }}</span>
                   </div>
-                  <span class="text-lg font-bold" :class="getTextColor(pred.predicted_rate || pred.value)">
+                  <span class="text-base sm:text-lg font-bold flex-shrink-0" :class="getTextColor(pred.predicted_rate || pred.value)">
                     {{ pred.predicted_rate || pred.value }}%
                   </span>
                 </div>
-                <p v-if="pred.reason || pred.description" class="text-xs text-slate-500">{{ pred.reason || pred.description }}</p>
+                <p v-if="pred.reason || pred.description" class="text-xs text-slate-500 line-clamp-2">{{ pred.reason || pred.description }}</p>
               </div>
             </div>
 
             <!-- Factors -->
-            <div v-if="predictionFactors.length" class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
+            <div v-if="predictionFactors.length" class="bg-white rounded-2xl border border-slate-200 p-4 sm:p-6 shadow-sm">
               <div class="flex items-center gap-2 mb-3">
                 <Target :size="18" class="text-emerald-600" />
                 <h4 class="font-semibold text-slate-800 text-sm">{{ $t('ai.keyFactors') }}</h4>
@@ -352,14 +429,14 @@
 
       <!-- ====== TAB: CHAT ====== -->
       <div v-if="activeTab === 'chat'" class="space-y-4">
-        <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
+        <div class="bg-white rounded-2xl border border-slate-200 p-4 sm:p-6 shadow-sm">
           <div class="flex items-center gap-3 mb-4">
-            <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center">
-              <Sparkles :size="24" class="text-white" />
+            <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center">
+              <Sparkles :size="20" class="text-white" />
             </div>
             <div>
-              <h3 class="font-semibold text-slate-800">{{ $t('ai.aiAssistant') }}</h3>
-              <p class="text-sm text-slate-500">{{ $t('ai.askQuestion') }}</p>
+              <h3 class="text-sm sm:text-base font-semibold text-slate-800">{{ $t('ai.aiAssistant') }}</h3>
+              <p class="text-xs sm:text-sm text-slate-500">{{ $t('ai.askQuestion') }}</p>
             </div>
           </div>
 
@@ -367,7 +444,7 @@
           <div ref="chatContainer" class="space-y-3 mb-4 max-h-96 overflow-y-auto scroll-smooth" v-if="chatMessages.length">
             <div v-for="(msg, i) in chatMessages" :key="i" :class="msg.role === 'user' ? 'text-right' : 'text-left'">
               <div :class="[
-                'inline-block max-w-[85%] rounded-2xl px-4 py-2.5 text-sm leading-relaxed',
+                'inline-block max-w-[92%] sm:max-w-[85%] rounded-2xl px-3 sm:px-4 py-2 sm:py-2.5 text-sm leading-relaxed',
                 msg.role === 'user'
                   ? 'bg-emerald-500 text-white rounded-br-md'
                   : 'bg-slate-100 text-slate-700 rounded-bl-md'
@@ -422,23 +499,23 @@
       <!-- ====== TAB: GROUP ANALYSIS (Leader/Admin/Super only) ====== -->
       <div v-if="activeTab === 'group' && !isStudentRole" class="space-y-6">
         <!-- Group Analysis Loading -->
-        <div v-if="groupAnalysisLoading" class="bg-white rounded-2xl border border-slate-200 p-12 shadow-sm text-center">
+        <div v-if="groupAnalysisLoading" class="bg-white rounded-2xl border border-slate-200 p-6 sm:p-12 shadow-sm text-center">
           <Loader2 class="w-8 h-8 animate-spin text-emerald-500 mx-auto mb-3" />
           <p class="text-slate-500">{{ $t('ai.analyzingGroup') }}</p>
         </div>
 
         <template v-else-if="groupAnalysis">
           <!-- Group Summary -->
-          <div class="bg-gradient-to-r from-teal-50 to-emerald-50 rounded-2xl border border-emerald-200 p-6">
+          <div class="bg-gradient-to-r from-teal-50 to-emerald-50 rounded-2xl border border-emerald-200 p-4 sm:p-6">
             <div class="flex items-center gap-2 mb-3">
               <UsersIcon :size="20" class="text-emerald-600" />
               <h3 class="font-semibold text-slate-800">{{ $t('ai.groupSummary') }}</h3>
             </div>
             <p class="text-slate-600 text-sm leading-relaxed">{{ groupAnalysis.summary }}</p>
-            <div class="mt-4 flex items-center gap-4">
+            <div class="mt-3 sm:mt-4 flex flex-wrap items-center gap-2 sm:gap-4">
               <div class="flex items-center gap-2">
-                <span class="text-sm text-slate-500">{{ $t('ai.avgAttendance') }}:</span>
-                <span class="font-bold text-lg" :class="getTextColor(groupAnalysis.average_attendance)">
+                <span class="text-xs sm:text-sm text-slate-500">{{ $t('ai.avgAttendance') }}:</span>
+                <span class="font-bold text-base sm:text-lg" :class="getTextColor(groupAnalysis.average_attendance)">
                   {{ groupAnalysis.average_attendance }}%
                 </span>
               </div>
@@ -446,9 +523,9 @@
           </div>
 
           <!-- Top Performers & At Risk -->
-          <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
             <!-- Top Performers -->
-            <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
+            <div class="bg-white rounded-2xl border border-slate-200 p-4 sm:p-6 shadow-sm">
               <div class="flex items-center gap-2 mb-4">
                 <Award :size="20" class="text-yellow-500" />
                 <h3 class="font-semibold text-slate-800">{{ $t('ai.topPerformers') }}</h3>
@@ -470,7 +547,7 @@
             </div>
 
             <!-- At Risk -->
-            <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
+            <div class="bg-white rounded-2xl border border-slate-200 p-4 sm:p-6 shadow-sm">
               <div class="flex items-center gap-2 mb-4">
                 <AlertTriangle :size="20" class="text-rose-500" />
                 <h3 class="font-semibold text-slate-800">{{ $t('ai.atRiskStudents') }}</h3>
@@ -492,7 +569,7 @@
           </div>
 
           <!-- Group Trends -->
-          <div v-if="groupAnalysis.trends?.length" class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
+          <div v-if="groupAnalysis.trends?.length" class="bg-white rounded-2xl border border-slate-200 p-4 sm:p-6 shadow-sm">
             <div class="flex items-center gap-2 mb-4">
               <TrendingUp :size="20" class="text-indigo-600" />
               <h3 class="font-semibold text-slate-800">{{ $t('ai.trends') }}</h3>
@@ -507,7 +584,7 @@
           </div>
 
           <!-- Group Recommendations -->
-          <div v-if="groupAnalysis.recommendations?.length" class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
+          <div v-if="groupAnalysis.recommendations?.length" class="bg-white rounded-2xl border border-slate-200 p-4 sm:p-6 shadow-sm">
             <div class="flex items-center gap-2 mb-4">
               <Lightbulb :size="20" class="text-amber-500" />
               <h3 class="font-semibold text-slate-800">{{ $t('ai.groupRecommendations') }}</h3>
@@ -533,10 +610,10 @@
         </template>
 
         <!-- No Group -->
-        <div v-else class="bg-white rounded-2xl border border-slate-200 p-8 shadow-sm text-center">
-          <UsersIcon :size="48" class="text-slate-200 mx-auto mb-4" />
-          <h3 class="text-lg font-semibold text-slate-700 mb-2">{{ $t('ai.groupAnalysis') }}</h3>
-          <p class="text-sm text-slate-500 mb-4">{{ $t('ai.groupAnalysisDesc') }}</p>
+        <div v-else class="bg-white rounded-2xl border border-slate-200 p-5 sm:p-8 shadow-sm text-center">
+          <UsersIcon :size="40" class="text-slate-200 mx-auto mb-3 sm:mb-4" />
+          <h3 class="text-base sm:text-lg font-semibold text-slate-700 mb-2">{{ $t('ai.groupAnalysis') }}</h3>
+          <p class="text-xs sm:text-sm text-slate-500 mb-4">{{ $t('ai.groupAnalysisDesc') }}</p>
           <button @click="loadGroupAnalysis"
                   class="px-6 py-2.5 bg-gradient-to-r from-emerald-500 to-teal-600 text-white rounded-xl text-sm font-medium hover:from-emerald-600 hover:to-teal-700 transition-all shadow-lg shadow-emerald-500/20">
             {{ $t('ai.startGroupAnalysis') }}
@@ -547,25 +624,25 @@
       <!-- ====== TAB: RISK ANALYSIS ====== -->
       <div v-if="activeTab === 'risk'" class="space-y-6">
         <!-- Risk Level Card -->
-        <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
-          <div class="flex items-center gap-3 mb-6">
-            <div class="w-12 h-12 rounded-xl flex items-center justify-center"
+        <div class="bg-white rounded-2xl border border-slate-200 p-4 sm:p-6 shadow-sm">
+          <div class="flex items-center gap-3 mb-4 sm:mb-6">
+            <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center"
                  :class="riskLevel === 'low' ? 'bg-emerald-100' : riskLevel === 'medium' ? 'bg-amber-100' : 'bg-rose-100'">
-              <Target :size="24" :class="riskLevel === 'low' ? 'text-emerald-600' : riskLevel === 'medium' ? 'text-amber-600' : 'text-rose-600'" />
+              <Target :size="20" :class="riskLevel === 'low' ? 'text-emerald-600' : riskLevel === 'medium' ? 'text-amber-600' : 'text-rose-600'" />
             </div>
             <div>
-              <h3 class="font-semibold text-slate-800">{{ $t('ai.riskLevel') }}</h3>
-              <p class="text-sm text-slate-500">{{ $t('ai.riskAssessment') }}</p>
+              <h3 class="text-sm sm:text-base font-semibold text-slate-800">{{ $t('ai.riskLevel') }}</h3>
+              <p class="text-xs sm:text-sm text-slate-500">{{ $t('ai.riskAssessment') }}</p>
             </div>
           </div>
 
           <!-- Risk Badge -->
-          <div class="flex items-center gap-4 mb-6">
-            <div class="px-5 py-3 rounded-2xl font-bold text-lg"
+          <div class="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 mb-6">
+            <div class="px-4 sm:px-5 py-2.5 sm:py-3 rounded-2xl font-bold text-base sm:text-lg w-fit"
                  :class="riskLevel === 'low' ? 'bg-emerald-100 text-emerald-700' : riskLevel === 'medium' ? 'bg-amber-100 text-amber-700' : 'bg-rose-100 text-rose-700'">
               {{ riskLabel }}
             </div>
-            <div v-if="riskPrediction" class="text-sm text-slate-600">{{ riskPrediction }}</div>
+            <div v-if="riskPrediction" class="text-xs sm:text-sm text-slate-600">{{ riskPrediction }}</div>
           </div>
 
           <!-- Risk Factors -->
@@ -602,7 +679,7 @@
         </div>
 
         <!-- Motivation -->
-        <div v-if="aiMotivation" class="bg-gradient-to-r from-emerald-50 to-teal-50 rounded-2xl border border-emerald-200 p-6">
+        <div v-if="aiMotivation" class="bg-gradient-to-r from-emerald-50 to-teal-50 rounded-2xl border border-emerald-200 p-4 sm:p-6">
           <div class="flex items-start gap-3">
             <Sparkles :size="20" class="text-emerald-600 mt-0.5 flex-shrink-0" />
             <div>
@@ -650,7 +727,8 @@ import {
     TrendingDown,
     TrendingUp,
     Users as UsersIcon,
-    XCircle
+    XCircle,
+    Zap
 } from 'lucide-vue-next'
 import { computed, nextTick, onMounted, ref, watch } from 'vue'
 import api from '../../services/api'
@@ -672,6 +750,9 @@ const profile = ref(null)
 const records = ref([])
 const groupId = ref(null)
 
+// AI Usage/Limit
+const aiUsage = ref(null)
+
 // AI Analysis state
 const aiSummary = ref('')
 const aiStrengths = ref([])
@@ -687,6 +768,10 @@ const recommendations = ref([])
 // Group analysis
 const groupAnalysis = ref(null)
 const groupAnalysisLoading = ref(false)
+
+// AI analysis state control
+const aiAnalysisLoaded = ref(false)
+const aiAnalysisLoading = ref(false)
 
 // Predictions
 const predictions = ref([])
@@ -862,11 +947,14 @@ async function initData() {
       }
     }
 
+    // Load AI usage/limits (non-blocking)
+    loadAIUsage()
+
     // Check AI health (non-blocking)
     checkAIHealth()
 
-    // Load AI analysis (non-blocking)
-    loadAIAnalysis()
+    // Build local insights from attendance data (FREE - no API call)
+    buildLocalInsights()
 
   } catch (e) {
     console.error('Init error:', e)
@@ -939,6 +1027,14 @@ function buildAdminMetrics(data) {
   ]
 }
 
+async function loadAIUsage() {
+  try {
+    aiUsage.value = await api.aiGetUsage()
+  } catch (e) {
+    console.warn('AI usage load error:', e)
+  }
+}
+
 async function checkAIHealth() {
   try {
     const resp = await api.aiHealthCheck()
@@ -946,6 +1042,19 @@ async function checkAIHealth() {
   } catch {
     aiHealthy.value = false
   }
+}
+
+async function startAIAnalysis() {
+  if (aiUsage.value?.is_limit_reached) {
+    toast.error(t('ai.limitReachedTitle'))
+    return
+  }
+  aiAnalysisLoading.value = true
+  await loadAIAnalysis()
+  aiAnalysisLoading.value = false
+  aiAnalysisLoaded.value = true
+  // Refresh usage after AI calls
+  loadAIUsage()
 }
 
 async function loadAIAnalysis() {
@@ -1028,11 +1137,6 @@ async function loadAIAnalysis() {
       } else {
         buildLocalInsights()
       }
-
-      // Auto-load group analysis for leaders
-      if (authStore.isLeader && groupId.value) {
-        loadGroupAnalysis()
-      }
     }
   } catch (e) {
     console.warn('AI analysis error:', e)
@@ -1054,6 +1158,10 @@ function buildLocalInsights() {
 
 // ---- Group Analysis ----
 async function loadGroupAnalysis() {
+  if (aiUsage.value?.is_limit_reached) {
+    toast.error(t('ai.limitReachedTitle'))
+    return
+  }
   const gId = groupId.value
   if (!gId && !authStore.isAdmin && !authStore.isSuperAdmin) return
 
@@ -1079,8 +1187,12 @@ async function loadGroupAnalysis() {
     const resp = await api.aiAnalyzeGroup({ group_id: targetGroupId })
     groupAnalysis.value = resp
     toast.success(t('ai.analysisComplete'))
+    loadAIUsage()
   } catch (e) {
     console.error('Group analysis error:', e)
+    if (e?.message?.includes('429') || e?.message?.includes('limit')) {
+      aiUsage.value = { ...aiUsage.value, is_limit_reached: true }
+    }
     toast.error(e?.message || t('ai.analysisError'))
   } finally {
     groupAnalysisLoading.value = false
@@ -1089,6 +1201,10 @@ async function loadGroupAnalysis() {
 
 // ---- Predictions ----
 async function loadPredictions() {
+  if (aiUsage.value?.is_limit_reached) {
+    toast.error(t('ai.limitReachedTitle'))
+    return
+  }
   predictionLoading.value = true
   try {
     const body = { days_ahead: 7 }
@@ -1103,8 +1219,12 @@ async function loadPredictions() {
     predictionSummary.value = resp.overall_prediction || ''
     predictionConfidence.value = resp.confidence || 0
     predictionFactors.value = resp.factors || []
+    loadAIUsage()
   } catch (e) {
     console.error('Prediction error:', e)
+    if (e?.message?.includes('429') || e?.message?.includes('limit')) {
+      aiUsage.value = { ...aiUsage.value, is_limit_reached: true }
+    }
     toast.error(e?.message || t('ai.predictionError'))
   } finally {
     predictionLoading.value = false
@@ -1115,6 +1235,11 @@ async function loadPredictions() {
 async function sendChat() {
   const msg = chatInput.value.trim()
   if (!msg || chatLoading.value) return
+
+  if (aiUsage.value?.is_limit_reached) {
+    toast.error(t('ai.limitReachedTitle'))
+    return
+  }
 
   chatMessages.value.push({ role: 'user', content: msg })
   chatInput.value = ''
@@ -1138,8 +1263,12 @@ async function sendChat() {
 
     chatMessages.value.push({ role: 'assistant', content: result.response })
     chatSuggestions.value = result.suggestions || []
+    loadAIUsage()
   } catch (e) {
     chatMessages.value.push({ role: 'assistant', content: t('ai.chatError') })
+    if (e?.message?.includes('429') || e?.message?.includes('limit')) {
+      aiUsage.value = { ...aiUsage.value, is_limit_reached: true }
+    }
   } finally {
     chatLoading.value = false
     await nextTick()
@@ -1165,8 +1294,11 @@ async function refreshAll() {
   recommendations.value = []
   predictions.value = []
   groupAnalysis.value = null
+  aiAnalysisLoaded.value = false
+  aiAnalysisLoading.value = false
 
   await initData()
+  await loadAIUsage()
   isRefreshing.value = false
   toast.success(t('ai.refreshed'))
 }

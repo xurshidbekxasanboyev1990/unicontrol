@@ -59,7 +59,7 @@ class SubscriptionPlan(Base):
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
     sort_order: Mapped[int] = mapped_column(Integer, default=0)
 
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(TASHKENT_TZ))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(TASHKENT_TZ))
 
 
 class GroupSubscription(Base):
@@ -83,9 +83,9 @@ class GroupSubscription(Base):
     end_date: Mapped[date] = mapped_column(Date, nullable=False)
     is_trial: Mapped[bool] = mapped_column(Boolean, default=False)
 
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(TASHKENT_TZ))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(TASHKENT_TZ))
     updated_at: Mapped[datetime] = mapped_column(
-        DateTime, default=lambda: datetime.now(TASHKENT_TZ), onupdate=lambda: datetime.now(TASHKENT_TZ)
+        DateTime(timezone=True), default=lambda: datetime.now(TASHKENT_TZ), onupdate=lambda: datetime.now(TASHKENT_TZ)
     )
 
     # Relationships
@@ -123,9 +123,9 @@ class SubscriptionPayment(Base):
         ForeignKey("users.id", ondelete="SET NULL"),
         nullable=True
     )
-    approved_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
+    approved_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
 
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(TASHKENT_TZ))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(TASHKENT_TZ))
 
     # Relationships
     group = relationship("Group", backref="payments")
@@ -143,6 +143,6 @@ class SubscriptionSettings(Base):
     trial_end_date: Mapped[Optional[date]] = mapped_column(Date, nullable=True)  # sinov muddati tugash sanasi
     is_subscription_enabled: Mapped[bool] = mapped_column(Boolean, default=True)
     updated_at: Mapped[datetime] = mapped_column(
-        DateTime, default=lambda: datetime.now(TASHKENT_TZ), onupdate=lambda: datetime.now(TASHKENT_TZ)
+        DateTime(timezone=True), default=lambda: datetime.now(TASHKENT_TZ), onupdate=lambda: datetime.now(TASHKENT_TZ)
     )
     updated_by: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)

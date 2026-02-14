@@ -77,6 +77,8 @@ from app.models.subscription import (
     PaymentStatus,
 )
 from app.models.landing import LandingSettings
+from app.models.ai_usage import AIUsage
+from app.models.holiday import Holiday, HolidayType
 
 __all__ = [
     # User
@@ -172,4 +174,9 @@ __all__ = [
     "PaymentStatus",
     # Landing
     "LandingSettings",
+    # AI Usage
+    "AIUsage",
+    # Holiday
+    "Holiday",
+    "HolidayType",
 ]

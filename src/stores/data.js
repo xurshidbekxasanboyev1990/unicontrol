@@ -107,26 +107,43 @@ export const useDataStore = defineStore('data', () => {
   const statsLoading = ref(false)
 
   // === CACHE ===
-  const POLLING_INTERVAL = 15000 // 15 sekund
+  const POLLING_INTERVAL = 60000 // 60 sekund (1 daqiqa)
+  const NOTIFICATION_POLL_INTERVAL = 30000 // 30 sekund — faqat bildirishnomalar uchun
   const cache = ref({
-    groups: { data: null, timestamp: null, ttl: 15000 },
-    students: { data: null, timestamp: null, ttl: 15000 },
-    stats: { data: null, timestamp: null, ttl: 10000 }
+    groups: { data: null, timestamp: null, ttl: 120000 },    // 2 daqiqa
+    students: { data: null, timestamp: null, ttl: 120000 },  // 2 daqiqa
+    stats: { data: null, timestamp: null, ttl: 60000 },      // 1 daqiqa
+    notifications: { data: null, timestamp: null, ttl: 30000 } // 30 sekund
   })
 
   // === REAL-TIME POLLING ===
   let pollingTimer = null
+  let notifPollingTimer = null
   let visibilityHandler = null
   const pollingActive = ref(false)
   // Qaysi data turlarini kuzatish kerakligini saqlaydi
   const activeSubscriptions = ref(new Set())
 
   /**
+   * Faqat bildirishnomalar sonini tekshirish (yengil so'rov)
+   */
+  const pollNotificationsOnly = async () => {
+    try {
+      const result = await api.getUnreadNotificationCount()
+      if (typeof result === 'number') {
+        unreadCount.value = result
+      } else if (result && typeof result.count === 'number') {
+        unreadCount.value = result.count
+      }
+    } catch { /* silent */ }
+  }
+
+  /**
    * Real-time polling ni ishga tushirish
-   * Sahifa ochilganda chaqiriladi, har POLLING_INTERVAL da yangilaydi
+   * Sahifa ochilganda chaqiriladi
+   * - Og'ir ma'lumotlar (groups, students, stats) har 60 sekundda
+   * - Bildirishnomalar har 30 sekundda (yengil endpoint)
    * @param {Array<string>} dataTypes - kuzatish kerak bo'lgan turlar
-   *   Masalan: ['groups', 'students', 'stats', 'notifications', 'attendance', 
-   *             'schedule', 'clubs', 'subjects', 'directions', 'tournaments', 'reports']
    */
   const startPolling = (dataTypes = ['groups', 'students', 'stats', 'notifications']) => {
     // Avval eski polling ni to'xtatish
@@ -138,17 +155,25 @@ export const useDataStore = defineStore('data', () => {
     // Birinchi marta darhol yuklash
     pollOnce()
 
-    // Keyingi yuklashlarni interval bilan
+    // Og'ir ma'lumotlar uchun sekin interval (60s)
     pollingTimer = setInterval(() => {
       if (document.visibilityState === 'visible') {
         pollOnce()
       }
     }, POLLING_INTERVAL)
 
+    // Bildirishnomalar uchun tezroq interval (30s) — yengil endpoint
+    if (dataTypes.includes('notifications')) {
+      notifPollingTimer = setInterval(() => {
+        if (document.visibilityState === 'visible') {
+          pollNotificationsOnly()
+        }
+      }, NOTIFICATION_POLL_INTERVAL)
+    }
+
     // Tab ko'rinishida bo'lsa refresh
     visibilityHandler = () => {
       if (document.visibilityState === 'visible') {
-        clearCache()
         pollOnce()
       }
     }
@@ -163,6 +188,10 @@ export const useDataStore = defineStore('data', () => {
       clearInterval(pollingTimer)
       pollingTimer = null
     }
+    if (notifPollingTimer) {
+      clearInterval(notifPollingTimer)
+      notifPollingTimer = null
+    }
     if (visibilityHandler) {
       document.removeEventListener('visibilitychange', visibilityHandler)
       visibilityHandler = null
@@ -174,15 +203,23 @@ export const useDataStore = defineStore('data', () => {
   /**
    * Bir martalik poll — barcha active subscriptions ni yangilaydi
    * Loading indikatori ko'rsatmaydi (background refresh)
+   * Cache TTL ni hurmat qiladi — agar cache hali yangi bo'lsa, skip qiladi
    */
   const pollOnce = async () => {
     const subs = activeSubscriptions.value
     const promises = []
+    const now = Date.now()
 
-    if (subs.has('groups')) promises.push(fetchGroups({}, true).catch(() => { }))
-    if (subs.has('students')) promises.push(fetchStudents({}, true).catch(() => { }))
-    if (subs.has('stats')) promises.push(fetchDashboardStats().catch(() => { }))
-    if (subs.has('notifications')) promises.push(fetchNotifications().catch(() => { }))
+    // Cache bor turlar — faqat TTL tugaganda yuklaydi
+    const shouldFetch = (type) => {
+      const c = cache.value[type]
+      return !c || !c.data || !c.timestamp || (now - c.timestamp >= (c.ttl || 60000))
+    }
+
+    if (subs.has('groups') && shouldFetch('groups')) promises.push(fetchGroups({}, true).catch(() => { }))
+    if (subs.has('students') && shouldFetch('students')) promises.push(fetchStudents({}, true).catch(() => { }))
+    if (subs.has('stats') && shouldFetch('stats')) promises.push(fetchDashboardStats().catch(() => { }))
+    if (subs.has('notifications') && shouldFetch('notifications')) promises.push(fetchNotifications().catch(() => { }))
     if (subs.has('attendance')) promises.push(fetchAttendance().catch(() => { }))
     if (subs.has('schedule')) promises.push(fetchSchedule().catch(() => { }))
     if (subs.has('clubs')) promises.push(fetchClubs().catch(() => { }))
@@ -191,7 +228,9 @@ export const useDataStore = defineStore('data', () => {
     if (subs.has('tournaments')) promises.push(fetchTournaments().catch(() => { }))
     if (subs.has('reports')) promises.push(fetchReports().catch(() => { }))
 
-    await Promise.allSettled(promises)
+    if (promises.length > 0) {
+      await Promise.allSettled(promises)
+    }
   }
 
   /**
@@ -262,7 +301,7 @@ export const useDataStore = defineStore('data', () => {
     try {
       const response = await api.getGroups({
         page: params.page || 1,
-        page_size: params.pageSize || params.page_size || 500,
+        page_size: params.pageSize || params.page_size || 100,
         search: params.search,
         is_active: params.is_active,
         course_year: params.course_year,
@@ -287,7 +326,7 @@ export const useDataStore = defineStore('data', () => {
       cache.value.groups = {
         data: groups.value,
         timestamp: Date.now(),
-        ttl: 60000
+        ttl: 120000
       }
 
       return groups.value
@@ -478,7 +517,7 @@ export const useDataStore = defineStore('data', () => {
     try {
       const response = await api.getStudents({
         page: params.page || 1,
-        page_size: params.pageSize || params.page_size || 20000,
+        page_size: params.pageSize || params.page_size || 200,
         search: params.search,
         group_id: params.group_id || params.groupId,
         is_active: params.is_active
@@ -502,7 +541,7 @@ export const useDataStore = defineStore('data', () => {
         cache.value.students = {
           data: students.value,
           timestamp: Date.now(),
-          ttl: 60000
+          ttl: 120000
         }
       }
 
@@ -900,7 +939,14 @@ export const useDataStore = defineStore('data', () => {
     userId: n.user_id ?? n.userId,
   })
 
-  const fetchNotifications = async (params = {}) => {
+  const fetchNotifications = async (params = {}, forceReload = false) => {
+    // Cache tekshirish
+    const cacheEntry = cache.value.notifications
+    if (!forceReload && cacheEntry && cacheEntry.data &&
+      cacheEntry.timestamp && Date.now() - cacheEntry.timestamp < cacheEntry.ttl) {
+      return cacheEntry.data
+    }
+
     notificationsLoading.value = true
 
     try {
@@ -917,6 +963,13 @@ export const useDataStore = defineStore('data', () => {
       } else if (Array.isArray(response)) {
         notifications.value = response.map(mapNotification)
         unreadCount.value = notifications.value.filter(n => !n.read && !n.isRead).length
+      }
+
+      // Cache yangilash
+      cache.value.notifications = {
+        data: notifications.value,
+        timestamp: Date.now(),
+        ttl: 30000
       }
 
       return notifications.value
@@ -1119,7 +1172,7 @@ export const useDataStore = defineStore('data', () => {
       cache.value.stats = {
         data: response,
         timestamp: Date.now(),
-        ttl: 30000
+        ttl: 60000
       }
 
       return response
@@ -1305,6 +1358,7 @@ export const useDataStore = defineStore('data', () => {
     cache.value.groups.timestamp = null
     cache.value.students.timestamp = null
     cache.value.stats.timestamp = null
+    cache.value.notifications.timestamp = null
   }
 
   /**

@@ -9,6 +9,7 @@ Endpoints:
 - GET /statistics/contracts - Contract statistics (placeholder)
 """
 
+import time
 from datetime import date, datetime, timedelta
 from typing import Optional
 
@@ -25,6 +26,9 @@ from app.config import today_tashkent
 
 router = APIRouter()
 
+# Simple in-memory cache for dashboard stats
+_dashboard_cache = {"data": None, "timestamp": 0, "ttl": 30}  # 30 sekund
+
 
 @router.get("/dashboard")
 async def get_dashboard_stats(
@@ -33,7 +37,12 @@ async def get_dashboard_stats(
 ):
     """
     Get general dashboard statistics.
+    Uses in-memory cache (30s TTL) to reduce DB load.
     """
+    now = time.time()
+    if _dashboard_cache["data"] and (now - _dashboard_cache["timestamp"] < _dashboard_cache["ttl"]):
+        return _dashboard_cache["data"]
+
     # Total students
     students_result = await db.execute(select(func.count(Student.id)))
     total_students = students_result.scalar() or 0
@@ -59,13 +68,19 @@ async def get_dashboard_stats(
     )
     today_attendance = today_attendance_result.scalar() or 0
     
-    return {
+    result = {
         "total_students": total_students,
         "total_groups": total_groups,
         "total_users": total_users,
         "active_students": active_students,
         "today_attendance": today_attendance
     }
+
+    # Cache saqlash
+    _dashboard_cache["data"] = result
+    _dashboard_cache["timestamp"] = now
+
+    return result
 
 
 @router.get("/attendance")

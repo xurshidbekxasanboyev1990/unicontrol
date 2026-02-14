@@ -167,6 +167,22 @@ class UniControlAPI:
             f"/telegram/bot-check-subscription/{group_id}"
         )
 
+    # ==================== Holidays API ====================
+
+    async def get_active_holidays(self) -> List[Dict[str, Any]]:
+        """Get currently active holidays."""
+        result = await self._request("GET", "/telegram/holidays/active")
+        return result if isinstance(result, list) else []
+
+    async def check_date_holiday(self, check_date: str) -> Optional[Dict[str, Any]]:
+        """Check if a specific date is a holiday."""
+        result = await self._request(
+            "GET",
+            "/telegram/holidays/check",
+            params={"check_date": check_date}
+        )
+        return result
+
     # ==================== Bot Specific API ====================
     
     async def register_telegram_chat(

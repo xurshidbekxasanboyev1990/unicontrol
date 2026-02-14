@@ -41,6 +41,7 @@ from app.api.v1 import (
     landing,
     contracts,
     quizzes,
+    holidays,
 )
 
 api_router = APIRouter()
@@ -251,4 +252,11 @@ api_router.include_router(
     quizzes.router,
     prefix="/quizzes",
     tags=["Quizzes"]
+)
+
+# Holidays (Bayramlar / Dam olish kunlari)
+api_router.include_router(
+    holidays.router,
+    prefix="/holidays",
+    tags=["Holidays"]
 )

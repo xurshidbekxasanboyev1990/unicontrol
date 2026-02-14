@@ -79,13 +79,19 @@
             :key="plan.id"
             :class="[
               'relative rounded-2xl border-2 p-5 transition-all cursor-pointer hover:shadow-lg',
-              selectedPlan?.id === plan.id
-                ? 'border-emerald-500 bg-emerald-50 shadow-lg shadow-emerald-500/10'
-                : 'border-slate-200 bg-white hover:border-emerald-300'
+              isCurrentPlan(plan.plan_type)
+                ? 'border-emerald-500 bg-emerald-50 shadow-lg shadow-emerald-500/10 ring-2 ring-emerald-500/20'
+                : selectedPlan?.id === plan.id
+                  ? 'border-teal-400 bg-teal-50 shadow-lg shadow-teal-400/10'
+                  : 'border-slate-200 bg-white hover:border-emerald-300'
             ]"
             @click="selectedPlan = plan"
           >
-            <div v-if="plan.plan_type === 'pro'" class="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 bg-gradient-to-r from-amber-500 to-orange-500 text-white text-xs font-bold rounded-full">
+            <!-- Current plan badge -->
+            <div v-if="isCurrentPlan(plan.plan_type)" class="absolute -top-3 right-3 px-3 py-1 bg-emerald-500 text-white text-xs font-bold rounded-full shadow-md">
+              ✓ {{ $t('subscription.active') }}
+            </div>
+            <div v-if="plan.plan_type === 'pro' && !isCurrentPlan(plan.plan_type)" class="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 bg-gradient-to-r from-amber-500 to-orange-500 text-white text-xs font-bold rounded-full">
               {{ $t('subscription.premium') }}
             </div>
             <div class="text-center mb-4">
@@ -122,9 +128,9 @@
                 {{ feature }}
               </li>
             </ul>
-            <div v-if="selectedPlan?.id === plan.id" class="mt-4 text-center">
-              <span class="inline-flex items-center gap-1 px-3 py-1 bg-emerald-500 text-white text-sm font-medium rounded-full">
-                <Check class="w-4 h-4" /> {{ $t('common.active') }}
+            <div v-if="selectedPlan?.id === plan.id && !isCurrentPlan(plan.plan_type)" class="mt-4 text-center">
+              <span class="inline-flex items-center gap-1 px-3 py-1 bg-teal-500 text-white text-sm font-medium rounded-full">
+                <Check class="w-4 h-4" /> {{ $t('common.selected') || 'Tanlangan' }}
               </span>
             </div>
           </div>
@@ -294,6 +300,10 @@ const myPayments = ref([])
 const getPlanLabel = (type) => {
   const labels = { start: 'Start', plus: 'Plus', pro: 'Pro', unlimited: 'Unlimited', trial: 'Sinov' }
   return labels[type] || type
+}
+
+const isCurrentPlan = (planType) => {
+  return subscription.value && !isBlocked.value && subscription.value.plan_type === planType
 }
 
 const getPlanIcon = (type) => {

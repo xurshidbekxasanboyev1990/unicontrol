@@ -256,40 +256,41 @@
 
 <script setup>
 import {
-  BarChart3,
-  Bell,
-  BookOpen,
-  Bot,
-  Brain,
-  Building2,
-  Calculator,
-  Calendar,
-  ChevronDown,
-  ChevronRight,
-  ClipboardCheck,
-  ClipboardList,
-  CreditCard,
-  FileSpreadsheet,
-  FileText,
-  FolderOpen,
-  GraduationCap,
-  HelpCircle,
-  Home,
-  LayoutDashboard,
-  LogOut,
-  Menu,
-  Palette,
-  Search,
-  Send,
-  Settings,
-  Shield,
-  ShieldCheck,
-  Store,
-  Trophy,
-  User,
-  UserCircle,
-  Users,
-  UtensilsCrossed
+    BarChart3,
+    Bell,
+    BookOpen,
+    Bot,
+    Brain,
+    Building2,
+    Calculator,
+    Calendar,
+    CalendarOff,
+    ChevronDown,
+    ChevronRight,
+    ClipboardCheck,
+    ClipboardList,
+    CreditCard,
+    FileSpreadsheet,
+    FileText,
+    FolderOpen,
+    GraduationCap,
+    HelpCircle,
+    Home,
+    LayoutDashboard,
+    LogOut,
+    Menu,
+    Palette,
+    Search,
+    Send,
+    Settings,
+    Shield,
+    ShieldCheck,
+    Store,
+    Trophy,
+    User,
+    UserCircle,
+    Users,
+    UtensilsCrossed
 } from 'lucide-vue-next'
 import { computed, markRaw, onMounted, onUnmounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
@@ -305,18 +306,19 @@ const lang = useLanguageStore()
 const { t } = lang
 
 // Rolga qarab qaysi ma'lumotlarni polling qilish kerakligini aniqlash
+// Faqat zarur ma'lumotlarni kuzatamiz — kam so'rov = tez ishlash
 const getPollingTypes = () => {
   const role = authStore.user?.role
-  const base = ['notifications']
-  if (role === 'superadmin') {
-    return [...base, 'groups', 'students', 'stats', 'clubs', 'subjects', 'directions', 'tournaments']
-  } else if (role === 'admin') {
-    return [...base, 'groups', 'students', 'stats', 'clubs', 'tournaments', 'subjects']
+  // Barcha rollar uchun bildirishnomalar + dashboard stats
+  const base = ['notifications', 'stats']
+  if (role === 'superadmin' || role === 'admin') {
+    // Admin/superadmin uchun faqat guruhlar va stats (boshqalar sahifada yuklanadi)
+    return [...base, 'groups']
   } else if (role === 'leader') {
-    return [...base, 'groups', 'students', 'stats', 'attendance', 'schedule']
+    return [...base, 'attendance']
   } else {
     // student
-    return [...base, 'schedule', 'attendance', 'clubs', 'tournaments']
+    return [...base, 'schedule']
   }
 }
 
@@ -398,6 +400,8 @@ const currentPageTitle = computed(() => {
     'leader-ai-analysis': () => t('layout.aiAnalysis'),
     'admin-ai-analysis': () => t('layout.aiAnalysis'),
     'super-ai-analysis': () => t('layout.aiAnalysis'),
+    'admin-holidays': () => t('layout.holidays'),
+    'super-holidays': () => t('layout.holidays'),
   }
   const fn = titles[route.name]
   return fn ? fn() : t('layout.controlPanel')
@@ -487,6 +491,7 @@ const menuSections = computed(() => {
         { path: '/admin/clubs', label: t('layout.clubs'), icon: markRaw(Palette) },
         { path: '/admin/tournaments', label: t('layout.tournaments'), icon: markRaw(Trophy) },
         { path: '/admin/subjects', label: t('layout.subjects'), icon: markRaw(BookOpen) },
+        { path: '/admin/holidays', label: t('layout.holidays'), icon: markRaw(CalendarOff) },
         { path: '/admin/contracts', label: t('layout.contracts'), icon: markRaw(FileSpreadsheet) },
         { path: '/admin/ai-analysis', label: t('layout.aiAnalysis'), icon: markRaw(Brain) },
         { path: '/admin/credit-module', label: t('layout.creditModule'), icon: markRaw(Calculator) }
@@ -535,6 +540,7 @@ const menuSections = computed(() => {
         { path: '/super/market', label: t('layout.market'), icon: markRaw(Store) },
         { path: '/super/telegram-bot', label: t('layout.telegramBot'), icon: markRaw(Bot) },
         { path: '/super/sheets-schedule', label: t('layout.sheetsSchedule'), icon: markRaw(Calendar) },
+        { path: '/super/holidays', label: t('layout.holidays'), icon: markRaw(CalendarOff) },
         { path: '/super/ai-analysis', label: t('layout.aiAnalysis'), icon: markRaw(Brain) },
         { path: '/super/credit-module', label: t('layout.creditModule'), icon: markRaw(Calculator) }
       ]

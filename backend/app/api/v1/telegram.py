@@ -2,7 +2,7 @@
 Telegram Bot API Routes
 Webhook endpoints for Telegram bot integration
 """
-from fastapi import APIRouter, HTTPException, Header, Depends, BackgroundTasks
+from fastapi import APIRouter, HTTPException, Header, Depends, BackgroundTasks, Query
 from pydantic import BaseModel
 from typing import Optional, List
 from datetime import datetime
@@ -799,3 +799,66 @@ async def create_birthday_notification(
     await db.commit()
     
     return {"success": True, "notification_id": notification.id}
+
+
+# ==================== Holiday Check (Bot) ====================
+
+@router.get("/holidays/active")
+async def bot_get_active_holidays(
+    db: AsyncSession = Depends(get_db),
+    _: bool = Depends(verify_bot_token)
+):
+    """Bot uchun: hozirgi va kelgusi faol bayramlarni olish"""
+    from app.models.holiday import Holiday
+    today = today_tashkent()
+    result = await db.execute(
+        select(Holiday).where(
+            Holiday.is_active == True,
+            Holiday.end_date >= today
+        ).order_by(Holiday.start_date.asc())
+    )
+    holidays = result.scalars().all()
+    return [
+        {
+            "id": h.id,
+            "title": h.title,
+            "description": h.description,
+            "holiday_type": h.holiday_type,
+            "start_date": h.start_date.isoformat(),
+            "end_date": h.end_date.isoformat(),
+        }
+        for h in holidays
+    ]
+
+
+@router.get("/holidays/check")
+async def bot_check_date_holiday(
+    check_date: Optional[str] = Query(None, description="YYYY-MM-DD"),
+    db: AsyncSession = Depends(get_db),
+    _: bool = Depends(verify_bot_token)
+):
+    """Bot uchun: berilgan sana bayrammi tekshirish"""
+    from app.models.holiday import Holiday
+    from datetime import date as date_type
+    
+    target = date_type.fromisoformat(check_date) if check_date else today_tashkent()
+    result = await db.execute(
+        select(Holiday).where(
+            Holiday.is_active == True,
+            Holiday.start_date <= target,
+            Holiday.end_date >= target
+        )
+    )
+    holiday = result.scalar_one_or_none()
+    if holiday:
+        return {
+            "is_holiday": True,
+            "holiday": {
+                "title": holiday.title,
+                "description": holiday.description,
+                "holiday_type": holiday.holiday_type,
+                "start_date": holiday.start_date.isoformat(),
+                "end_date": holiday.end_date.isoformat(),
+            }
+        }
+    return {"is_holiday": False}

@@ -1,5 +1,14 @@
 <template>
   <div class="space-y-6">
+    <!-- Holiday Warning Banner -->
+    <div v-if="holidayToday" class="bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-2xl p-4 flex items-start gap-3">
+      <PartyPopper class="w-6 h-6 text-amber-500 flex-shrink-0 mt-0.5" />
+      <div>
+        <p class="font-semibold text-amber-800">{{ holidayToday.title || t('holidays.holidayNotice') }}</p>
+        <p class="text-sm text-amber-600 mt-1">{{ t('holidays.noClassesToday') }}</p>
+      </div>
+    </div>
+
     <!-- Header -->
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
       <div>
@@ -531,6 +540,7 @@ import {
     Lock,
     MapPin,
     MessageSquare,
+    PartyPopper,
     RotateCcw,
     Save,
     Timer,
@@ -540,14 +550,18 @@ import {
 import { computed, onMounted, reactive, ref, watch } from 'vue'
 import api from '../../services/api'
 import { useAuthStore } from '../../stores/auth'
+import { useLanguageStore } from '../../stores/language'
 import { useToastStore } from '../../stores/toast'
 
 const authStore = useAuthStore()
 const toast = useToastStore()
+const langStore = useLanguageStore()
+const { t } = langStore
 
 // ============ STATE ============
 const loading = ref(true)
 const saving = ref(false)
+const holidayToday = ref(null)
 const showSummary = ref(false)
 const showReasonModal = ref(false)
 const selectedDate = ref(new Date().toISOString().split('T')[0])
@@ -731,10 +745,25 @@ watch(selectedDate, async () => {
   selectedLesson.value = null
   Object.keys(lessonAttendanceSaved).forEach(k => delete lessonAttendanceSaved[k])
   initializeAttendance()
+  // Bayramni tekshirish
+  holidayToday.value = null
+  try {
+    const result = await api.checkDateHoliday(selectedDate.value)
+    if (result && result.is_holiday) {
+      holidayToday.value = result.holiday || result
+    }
+  } catch { /* silent */ }
   await loadAttendanceForDate()
 })
 
-onMounted(() => {
+onMounted(async () => {
+  // Bayramlarni tekshirish
+  try {
+    const result = await api.checkDateHoliday(selectedDate.value)
+    if (result && result.is_holiday) {
+      holidayToday.value = result.holiday || result
+    }
+  } catch { /* silent */ }
   loadGroupData()
 })
 

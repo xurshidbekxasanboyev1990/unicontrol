@@ -303,6 +303,7 @@ export default {
         allRightsReserved: '© 2026 Uni Control. Barcha huquqlar himoyalangan.',
         takeAttendance: 'Davomat olish',
         creditModule: 'Kredit Modul',
+        holidays: 'Bayramlar',
     },
 
     // ============ DASHBOARD ============
@@ -964,6 +965,39 @@ export default {
         days: 'kun',
     },
 
+    // ============ BAYRAMLAR / DAM OLISH ============
+    holidays: {
+        title: 'Bayramlar va dam olish kunlari',
+        subtitle: 'Bayram va dam olish kunlarini boshqarish',
+        addHoliday: 'Dam olish qo\'shish',
+        editHoliday: 'Tahrirlash',
+        deleteConfirm: 'Haqiqatan ham o\'chirmoqchimisiz?',
+        noHolidays: 'Bayramlar topilmadi',
+        noHolidaysDesc: 'Hali bayram yoki dam olish kuni qo\'shilmagan',
+        name: 'Nomi',
+        namePlaceholder: 'Masalan: Navruz bayrami',
+        description: 'Tavsif',
+        descriptionPlaceholder: 'Administratsiya tomonidan dam olish e\'lon qilingan...',
+        type: 'Turi',
+        typeHoliday: 'Bayram',
+        typeOffDay: 'Dam olish kuni',
+        typeExam: 'Imtihon davri',
+        typeOther: 'Boshqa',
+        startDate: 'Boshlanish sanasi',
+        endDate: 'Tugash sanasi',
+        isActive: 'Faol',
+        inactive: 'Faol emas',
+        days: 'kun',
+        currentlyActive: 'Hozir amalda',
+        created: 'Dam olish kuni qo\'shildi',
+        updated: 'O\'zgartirildi',
+        deleted: 'O\'chirildi',
+        saveError: 'Saqlashda xatolik',
+        deleteError: 'O\'chirishda xatolik',
+        holidayNotice: '🎉 Administratsiya tomonidan: {title}',
+        noClassesToday: 'Bugun darslar yo\'q',
+    },
+
     // ============ BILDIRISHNOMALAR ============
     notifications: {
         title: 'Bildirishnomalar',
@@ -1053,6 +1087,15 @@ export default {
         examHistoryText: 'Dasturlash fanidan yakuniy imtihon 15-fevral kuni...',
         congratsHistory: 'Tabriklaymiz!',
         congratsHistoryText: 'Aliyev Jasur, semestrda eng yaxshi natija...',
+        // Inbox
+        inbox: 'Kelgan xabarlar',
+        unreadOnly: 'Faqat o\'qilmaganlar',
+        readOnly: 'Faqat o\'qilganlar',
+        messages: 'ta xabar',
+        noNotificationsDesc: 'Sizga hali hech qanday bildirishnoma yuborilmagan',
+        allMarkedRead: 'Barcha xabarlar o\'qilgan deb belgilandi',
+        markAllReadError: 'O\'qilgan deb belgilashda xatolik',
+        justNow: 'Hozirgina',
     },
 
     // ============ PROFIL ============
@@ -1865,6 +1908,18 @@ export default {
         activeUsers: 'Faol foydalanuvchilar',
         student: 'Talaba',
         role: 'Rol',
+        // Usage limits
+        usageLimit: 'AI foydalanish limiti',
+        limitReached: 'Limit tugadi',
+        requests: 'so\'rov',
+        requestsLeft: 'so\'rov qoldi',
+        limitReachedTitle: 'Oylik AI limiti tugadi ⚡',
+        limitReachedDesc: 'Sizning oylik AI so\'rovlar limiti tugagan. Limit keyingi oyning boshida qayta tiklanadi.',
+        startAnalysisTitle: 'AI tahlilni boshlash',
+        startAnalysisDesc: 'Sun\'iy intellekt yordamida chuqur tahlil olish uchun quyidagi tugmani bosing.',
+        startAnalysisCost: 'Har bir tahlil taxminan 2-10 so\'m sarflaydi',
+        startAnalysis: 'Tahlilni boshlash',
+        analysisTakesTime: 'Bu bir necha soniya vaqt olishi mumkin...',
     },
 
     // ============ TELEGRAM BOT ============

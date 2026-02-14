@@ -302,6 +302,7 @@ export default {
         allRightsReserved: '© 2026 Uni Control. All rights reserved.',
         takeAttendance: 'Take Attendance',
         creditModule: 'Credit Module',
+        holidays: 'Holidays',
     },
 
     // ============ DASHBOARD ============
@@ -961,6 +962,39 @@ export default {
         days: 'days',
     },
 
+    // ============ HOLIDAYS / OFF-DAYS ============
+    holidays: {
+        title: 'Holidays & Off-Days',
+        subtitle: 'Manage holidays and off-days',
+        addHoliday: 'Add Holiday',
+        editHoliday: 'Edit Holiday',
+        deleteConfirm: 'Are you sure you want to delete?',
+        noHolidays: 'No holidays found',
+        noHolidaysDesc: 'No holidays or off-days have been added yet',
+        name: 'Name',
+        namePlaceholder: 'e.g. Navruz Holiday',
+        description: 'Description',
+        descriptionPlaceholder: 'Administration announced an off-day...',
+        type: 'Type',
+        typeHoliday: 'Holiday',
+        typeOffDay: 'Off-Day',
+        typeExam: 'Exam Period',
+        typeOther: 'Other',
+        startDate: 'Start Date',
+        endDate: 'End Date',
+        isActive: 'Active',
+        inactive: 'Inactive',
+        days: 'days',
+        currentlyActive: 'Currently Active',
+        created: 'Holiday added',
+        updated: 'Updated',
+        deleted: 'Deleted',
+        saveError: 'Save error',
+        deleteError: 'Delete error',
+        holidayNotice: '🎉 From Administration: {title}',
+        noClassesToday: 'No classes today',
+    },
+
     // ============ NOTIFICATIONS ============
     notifications: {
         title: 'Notifications',
@@ -1048,6 +1082,15 @@ export default {
         examHistoryText: 'Programming final exam on February 15...',
         congratsHistory: 'Congratulations!',
         congratsHistoryText: 'Aliyev Jasur, best result of the semester...',
+        // Inbox
+        inbox: 'Inbox',
+        unreadOnly: 'Unread only',
+        readOnly: 'Read only',
+        messages: 'messages',
+        noNotificationsDesc: 'No notifications have been sent to you yet',
+        allMarkedRead: 'All messages marked as read',
+        markAllReadError: 'Error marking as read',
+        justNow: 'Just now',
     },
 
     // ============ PROFILE ============
@@ -1790,6 +1833,18 @@ export default {
         activeUsers: 'Active users',
         student: 'Student',
         role: 'Role',
+        // Usage limits
+        usageLimit: 'AI Usage Limit',
+        limitReached: 'Limit reached',
+        requests: 'requests',
+        requestsLeft: 'requests left',
+        limitReachedTitle: 'Monthly AI limit reached ⚡',
+        limitReachedDesc: 'Your monthly AI request limit has been reached. The limit resets at the beginning of next month.',
+        startAnalysisTitle: 'Start AI Analysis',
+        startAnalysisDesc: 'Press the button below to get a deep analysis using artificial intelligence.',
+        startAnalysisCost: 'Each analysis costs approximately 2-10 UZS',
+        startAnalysis: 'Start Analysis',
+        analysisTakesTime: 'This may take a few seconds...',
     },
 
     // ============ TELEGRAM BOT ============

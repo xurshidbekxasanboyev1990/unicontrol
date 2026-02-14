@@ -20,6 +20,7 @@ async def cmd_attendance(message: Message):
     """
     Handle /attendance command.
     Shows today's attendance for subscribed group.
+    If today is a holiday, shows holiday notice first.
     """
     chat_id = message.chat.id
     
@@ -40,6 +41,24 @@ async def cmd_attendance(message: Message):
             parse_mode="HTML"
         )
         return
+    
+    # Check if today is a holiday
+    try:
+        today_str = date.today().isoformat()
+        holiday_info = await api.check_date_holiday(today_str)
+        if holiday_info and holiday_info.get("is_holiday"):
+            h = holiday_info.get("holiday", {})
+            holiday_text = (
+                f"🎉 <b>Bugun bayram/dam olish kuni!</b>\n"
+                f"📌 {h.get('title', 'Dam olish')}\n"
+            )
+            if h.get('description'):
+                holiday_text += f"📝 {h['description']}\n"
+            holiday_text += f"📅 {h.get('start_date', '')} — {h.get('end_date', '')}\n\n"
+            holiday_text += "ℹ️ Bugun darslar bo'lmasligi mumkin.\n\n"
+            await message.answer(holiday_text, parse_mode="HTML")
+    except Exception as e:
+        logger.debug(f"Holiday check failed: {e}")
     
     # Show loading
     loading_msg = await message.answer(
