@@ -427,7 +427,8 @@
     <!-- Summary Modal -->
     <Teleport to="body">
       <div v-if="showSummary" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm" @click.self="showSummary = false">
-        <div class="bg-white rounded-3xl shadow-2xl max-w-md w-full overflow-hidden">
+        <div class="relative bg-white rounded-3xl shadow-2xl max-w-md w-full overflow-hidden">
+          <button @click="showSummary = false" class="absolute top-4 right-4 p-1 text-white/80 hover:text-white hover:bg-white/20 rounded-lg transition-colors z-10"><X class="w-5 h-5" /></button>
           <div class="bg-gradient-to-r from-emerald-500 to-teal-500 p-6 text-white text-center">
             <div class="w-16 h-16 bg-white/20 rounded-2xl mx-auto flex items-center justify-center mb-4">
               <CheckCircle class="w-8 h-8" />
@@ -463,7 +464,8 @@
     <!-- Change Reason Modal (for post-lesson edits) -->
     <Teleport to="body">
       <div v-if="showReasonModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm" @click.self="cancelReasonModal">
-        <div class="bg-white rounded-3xl shadow-2xl max-w-md w-full overflow-hidden">
+        <div class="relative bg-white rounded-3xl shadow-2xl max-w-md w-full overflow-hidden">
+          <button @click="cancelReasonModal" class="absolute top-4 right-4 p-1 text-white/80 hover:text-white hover:bg-white/20 rounded-lg transition-colors z-10"><X class="w-5 h-5" /></button>
           <div class="bg-gradient-to-r from-amber-500 to-orange-500 p-6 text-white">
             <div class="flex items-center gap-4">
               <div class="w-14 h-14 bg-white/20 rounded-2xl flex items-center justify-center">
@@ -545,6 +547,7 @@ import {
     Save,
     Timer,
     User,
+    X,
     XCircle
 } from 'lucide-vue-next'
 import { computed, onMounted, reactive, ref, watch } from 'vue'

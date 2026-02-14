@@ -217,8 +217,11 @@
 
     <!-- Reject Modal -->
     <div v-if="showRejectModal" class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" @click.self="showRejectModal = false">
-      <div class="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl">
-        <h2 class="text-xl font-bold text-slate-800 mb-4">{{ $t('market.rejectReason') }}</h2>
+      <div class="relative bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl">
+        <div class="flex items-center justify-between mb-4">
+          <h2 class="text-xl font-bold text-slate-800">{{ $t('market.rejectReason') }}</h2>
+          <button @click="showRejectModal = false" class="p-1 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"><X class="w-5 h-5" /></button>
+        </div>
         <textarea v-model="rejectReason" rows="3"
           class="w-full border border-slate-200 rounded-xl px-4 py-2.5 mb-3 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
           :placeholder="$t('market.rejectReasonPlaceholder')"></textarea>
@@ -241,6 +244,7 @@ import {
     CreditCard,
     Package,
     Store,
+    X,
     XCircle
 } from 'lucide-vue-next'
 import { computed, onMounted, ref, watch } from 'vue'

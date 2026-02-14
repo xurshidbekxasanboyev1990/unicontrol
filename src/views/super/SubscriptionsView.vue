@@ -648,6 +648,7 @@
         <div v-if="showDeleteConfirm" class="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div class="absolute inset-0 bg-slate-900/50 backdrop-blur-sm" @click="showDeleteConfirm = false"></div>
           <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6">
+            <button @click="showDeleteConfirm = false" class="absolute top-3 right-3 p-1 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors z-10"><X class="w-5 h-5" /></button>
             <div class="text-center mb-4">
               <div class="w-12 h-12 bg-rose-100 rounded-xl flex items-center justify-center mx-auto mb-3">
                 <Trash2 class="w-6 h-6 text-rose-600" />
@@ -682,6 +683,7 @@
         <div v-if="showStatusModal" class="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div class="absolute inset-0 bg-slate-900/50 backdrop-blur-sm" @click="showStatusModal = false"></div>
           <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-md p-6">
+            <button @click="showStatusModal = false" class="absolute top-3 right-3 p-1 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors z-10"><X class="w-5 h-5" /></button>
             <div class="flex items-center gap-3 mb-4">
               <div :class="[
                 'w-10 h-10 rounded-xl flex items-center justify-center',
@@ -773,6 +775,7 @@
         <div v-if="showRejectModal" class="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div class="absolute inset-0 bg-slate-900/50 backdrop-blur-sm" @click="showRejectModal = false"></div>
           <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-md p-6">
+            <button @click="showRejectModal = false" class="absolute top-3 right-3 p-1 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors z-10"><X class="w-5 h-5" /></button>
             <h3 class="text-lg font-semibold text-slate-800 mb-4">{{ $t('subscription.rejectPayment') }}</h3>
             <textarea
               v-model="rejectNote"

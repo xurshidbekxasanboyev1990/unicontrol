@@ -117,7 +117,8 @@
         class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm"
         @click.self="showMessageModal = false"
       >
-        <div class="mx-4 w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl">
+        <div class="relative mx-4 w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl">
+          <button @click="showMessageModal = false" class="absolute top-3 right-3 p-1 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors z-10"><X class="w-5 h-5" /></button>
           <div class="flex items-center gap-3 mb-4">
             <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-purple-100">
               <Gift :size="24" class="text-purple-600" />
@@ -368,6 +369,7 @@ import {
     Gift, Send,
     TrendingUp,
     Users,
+    X,
     XCircle, Zap
 } from 'lucide-vue-next'
 import { computed, onMounted, ref } from 'vue'

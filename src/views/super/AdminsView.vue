@@ -316,7 +316,8 @@
         class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
         @click.self="showDeleteConfirm = false"
       >
-        <div class="bg-white rounded-2xl max-w-sm w-full p-6 text-center">
+        <div class="relative bg-white rounded-2xl max-w-sm w-full p-6 text-center">
+          <button @click="showDeleteConfirm = false" class="absolute top-3 right-3 p-1 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors z-10"><X class="w-5 h-5" /></button>
           <div class="w-16 h-16 bg-rose-100 rounded-full flex items-center justify-center mx-auto mb-4">
             <AlertTriangle class="w-8 h-8 text-rose-500" />
           </div>

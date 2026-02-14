@@ -174,6 +174,7 @@
         <div v-if="showDirectionModal" class="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div class="absolute inset-0 bg-slate-900/50 backdrop-blur-sm" @click="showDirectionModal = false"></div>
           <div class="relative bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden">
+            <button @click="showDirectionModal = false" class="absolute top-4 right-4 p-1 text-white/80 hover:text-white hover:bg-white/20 rounded-lg transition-colors z-10"><X class="w-5 h-5" /></button>
             <div class="bg-gradient-to-r from-blue-500 to-indigo-500 p-6 text-white">
               <h3 class="text-xl font-bold">{{ isEditingDirection ? $t('subjects.editDirection') : $t('subjects.newDirection') }}</h3>
               <p class="text-white/80 text-sm mt-1">{{ $t('subjects.enterDirectionInfo') }}</p>
@@ -237,6 +238,7 @@
         <div v-if="showSubjectsModal" class="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div class="absolute inset-0 bg-slate-900/50 backdrop-blur-sm" @click="showSubjectsModal = false"></div>
           <div class="relative bg-white rounded-3xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">
+            <button @click="showSubjectsModal = false" class="absolute top-4 right-4 p-1 text-white/80 hover:text-white hover:bg-white/20 rounded-lg transition-colors z-10"><X class="w-5 h-5" /></button>
             <!-- Header -->
             <div class="bg-gradient-to-r from-emerald-500 to-teal-500 p-6 text-white shrink-0">
               <div class="flex items-center gap-4">
@@ -372,6 +374,7 @@
         <div v-if="showDeleteDirectionModal" class="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div class="absolute inset-0 bg-slate-900/50 backdrop-blur-sm" @click="showDeleteDirectionModal = false"></div>
           <div class="relative bg-white rounded-3xl shadow-2xl w-full max-w-sm p-6 text-center">
+            <button @click="showDeleteDirectionModal = false" class="absolute top-3 right-3 p-1 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors z-10"><X class="w-5 h-5" /></button>
             <div class="w-16 h-16 bg-rose-100 rounded-full flex items-center justify-center mx-auto mb-4">
               <Trash2 class="w-8 h-8 text-rose-500" />
             </div>
@@ -404,6 +407,7 @@
         <div v-if="showDeleteSubjectModal" class="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div class="absolute inset-0 bg-slate-900/50 backdrop-blur-sm" @click="showDeleteSubjectModal = false"></div>
           <div class="relative bg-white rounded-3xl shadow-2xl w-full max-w-sm p-6 text-center">
+            <button @click="showDeleteSubjectModal = false" class="absolute top-3 right-3 p-1 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors z-10"><X class="w-5 h-5" /></button>
             <div class="w-16 h-16 bg-rose-100 rounded-full flex items-center justify-center mx-auto mb-4">
               <Trash2 class="w-8 h-8 text-rose-500" />
             </div>

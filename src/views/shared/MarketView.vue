@@ -522,9 +522,12 @@
 
     <!-- Create Listing Modal -->
     <div v-if="showCreateModal" class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" @click.self="showCreateModal = false">
-      <div class="bg-white rounded-3xl max-w-lg w-full max-h-[90vh] overflow-y-auto shadow-2xl">
+      <div class="relative bg-white rounded-3xl max-w-lg w-full max-h-[90vh] overflow-y-auto shadow-2xl">
         <div class="p-6">
-          <h2 class="text-xl font-bold text-slate-800 mb-4">{{ editingListing ? $t('market.editListing') : $t('market.createListing') }}</h2>
+          <div class="flex items-center justify-between mb-4">
+            <h2 class="text-xl font-bold text-slate-800">{{ editingListing ? $t('market.editListing') : $t('market.createListing') }}</h2>
+            <button @click="showCreateModal = false" class="p-1 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"><X class="w-5 h-5" /></button>
+          </div>
           <div class="space-y-3">
             <div>
               <label class="text-sm font-medium text-slate-700">{{ $t('market.listingTitle') }}</label>
@@ -575,9 +578,12 @@
 
     <!-- Place Order Modal -->
     <div v-if="showOrderModal" class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" @click.self="showOrderModal = false">
-      <div class="bg-white rounded-3xl max-w-lg w-full shadow-2xl">
+      <div class="relative bg-white rounded-3xl max-w-lg w-full shadow-2xl">
         <div class="p-6">
-          <h2 class="text-xl font-bold text-slate-800 mb-4">{{ $t('market.placeOrder') }}</h2>
+          <div class="flex items-center justify-between mb-4">
+            <h2 class="text-xl font-bold text-slate-800">{{ $t('market.placeOrder') }}</h2>
+            <button @click="showOrderModal = false" class="p-1 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"><X class="w-5 h-5" /></button>
+          </div>
 
           <!-- Step 1: Requirements -->
           <div v-if="orderStep === 1">
@@ -765,7 +771,8 @@
 
     <!-- 🎯 Tariff Upgrade Modal — Premium Design -->
     <div v-if="showTariffModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4" @click.self="showTariffModal = false">
-      <div class="bg-white rounded-3xl max-w-4xl w-full shadow-2xl overflow-hidden max-h-[95vh] overflow-y-auto">
+      <div class="relative bg-white rounded-3xl max-w-4xl w-full shadow-2xl overflow-hidden max-h-[95vh] overflow-y-auto">
+        <button @click="showTariffModal = false" class="absolute top-4 right-4 p-1 text-white/80 hover:text-white hover:bg-white/20 rounded-lg transition-colors z-10"><X class="w-5 h-5" /></button>
         <!-- Modal Header -->
         <div class="bg-gradient-to-r from-violet-600 via-purple-600 to-indigo-600 p-6 text-white text-center relative overflow-hidden">
           <div class="absolute -top-10 -left-10 w-40 h-40 bg-white/10 rounded-full blur-2xl"></div>
@@ -1011,8 +1018,11 @@
 
     <!-- Deliver Modal -->
     <div v-if="showDeliverModal" class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" @click.self="showDeliverModal = false">
-      <div class="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl">
-        <h2 class="text-xl font-bold text-slate-800 mb-4">📦 {{ $t('market.deliverWork') }}</h2>
+      <div class="relative bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl">
+        <div class="flex items-center justify-between mb-4">
+          <h2 class="text-xl font-bold text-slate-800">📦 {{ $t('market.deliverWork') }}</h2>
+          <button @click="showDeliverModal = false" class="p-1 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"><X class="w-5 h-5" /></button>
+        </div>
         <textarea v-model="deliverForm.note" rows="3" class="w-full border border-slate-200 rounded-xl px-4 py-2.5 mb-3 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500" :placeholder="$t('market.deliveryNote')"></textarea>
         <div class="flex gap-3">
           <button @click="showDeliverModal = false" class="flex-1 border border-slate-200 rounded-xl py-2.5 text-slate-600 font-medium hover:bg-slate-50 transition-colors">{{ $t('common.cancel') }}</button>
@@ -1023,8 +1033,11 @@
 
     <!-- Accept Delivery Modal -->
     <div v-if="showAcceptDeliveryModal" class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" @click.self="showAcceptDeliveryModal = false">
-      <div class="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl">
-        <h2 class="text-xl font-bold text-slate-800 mb-4">✅ {{ $t('market.acceptDelivery') }}</h2>
+      <div class="relative bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl">
+        <div class="flex items-center justify-between mb-4">
+          <h2 class="text-xl font-bold text-slate-800">✅ {{ $t('market.acceptDelivery') }}</h2>
+          <button @click="showAcceptDeliveryModal = false" class="p-1 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"><X class="w-5 h-5" /></button>
+        </div>
         <div class="mb-3">
           <label class="text-sm font-medium text-slate-700">{{ $t('market.rating') }}</label>
           <div class="flex gap-1 mt-1">
@@ -1043,8 +1056,11 @@
 
     <!-- Revision Modal -->
     <div v-if="showRevisionModal" class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" @click.self="showRevisionModal = false">
-      <div class="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl">
-        <h2 class="text-xl font-bold text-slate-800 mb-4">🔄 {{ $t('market.requestRevision') }}</h2>
+      <div class="relative bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl">
+        <div class="flex items-center justify-between mb-4">
+          <h2 class="text-xl font-bold text-slate-800">🔄 {{ $t('market.requestRevision') }}</h2>
+          <button @click="showRevisionModal = false" class="p-1 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"><X class="w-5 h-5" /></button>
+        </div>
         <textarea v-model="revisionReason" rows="3" class="w-full border border-slate-200 rounded-xl px-4 py-2.5 mb-3 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500" :placeholder="$t('market.revisionReason')"></textarea>
         <div class="flex gap-3">
           <button @click="showRevisionModal = false" class="flex-1 border border-slate-200 rounded-xl py-2.5 text-slate-600 font-medium hover:bg-slate-50 transition-colors">{{ $t('common.cancel') }}</button>
@@ -1055,8 +1071,11 @@
 
     <!-- Dispute Modal -->
     <div v-if="showDisputeModal" class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" @click.self="showDisputeModal = false">
-      <div class="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl">
-        <h2 class="text-xl font-bold text-slate-800 mb-4">⚠️ {{ $t('market.openDispute') }}</h2>
+      <div class="relative bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl">
+        <div class="flex items-center justify-between mb-4">
+          <h2 class="text-xl font-bold text-slate-800">⚠️ {{ $t('market.openDispute') }}</h2>
+          <button @click="showDisputeModal = false" class="p-1 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"><X class="w-5 h-5" /></button>
+        </div>
         <div class="bg-rose-50 border border-rose-100 text-rose-700 text-sm p-4 rounded-xl mb-3">
           {{ $t('market.disputeWarning') }}
         </div>

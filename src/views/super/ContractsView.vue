@@ -316,7 +316,8 @@
 
     <!-- Import Modal -->
     <div v-if="showImportModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50" @click.self="showImportModal = false">
-      <div class="bg-white rounded-2xl shadow-xl w-full max-w-lg mx-4 overflow-hidden">
+      <div class="relative bg-white rounded-2xl shadow-xl w-full max-w-lg mx-4 overflow-hidden">
+        <button @click="showImportModal = false" class="absolute top-4 right-4 p-1 text-emerald-600 hover:text-emerald-800 hover:bg-emerald-100 rounded-lg transition-colors z-10"><X class="w-5 h-5" /></button>
         <div class="bg-emerald-50 px-6 py-4 border-b border-emerald-100">
           <h3 class="text-lg font-bold text-emerald-800 flex items-center gap-2">
             <Upload class="w-5 h-5" />
@@ -602,7 +603,8 @@
 
     <!-- Delete Confirmation -->
     <div v-if="showDeleteModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50" @click.self="showDeleteModal = false">
-      <div class="bg-white rounded-2xl shadow-xl w-full max-w-sm mx-4 p-6 text-center">
+      <div class="relative bg-white rounded-2xl shadow-xl w-full max-w-sm mx-4 p-6 text-center">
+        <button @click="showDeleteModal = false" class="absolute top-3 right-3 p-1 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors z-10"><X class="w-5 h-5" /></button>
         <div class="w-14 h-14 mx-auto mb-4 rounded-full bg-red-100 flex items-center justify-center">
           <Trash2 class="w-7 h-7 text-red-500" />
         </div>

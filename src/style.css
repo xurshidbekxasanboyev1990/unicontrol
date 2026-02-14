@@ -21,6 +21,16 @@ body {
   overflow-x: hidden;
 }
 
+/* Modal open — block body scroll */
+body.modal-open {
+  overflow: hidden !important;
+  position: fixed;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+}
+
 #app {
   width: 100%;
   margin: 0;

@@ -217,6 +217,7 @@
       <div v-if="showDeleteModal" class="fixed inset-0 z-50 flex items-center justify-center p-4" @click.self="showDeleteModal = false">
         <div class="fixed inset-0 bg-black/50 backdrop-blur-sm" @click="showDeleteModal = false"></div>
         <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-md p-6">
+          <button @click="showDeleteModal = false" class="absolute top-3 right-3 p-1 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors z-10"><X class="w-5 h-5" /></button>
           <div class="text-center">
             <div class="w-16 h-16 bg-rose-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
               <Trash2 class="w-8 h-8 text-rose-500" />

@@ -226,6 +226,7 @@
         <div v-if="showRegisterModal" class="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div class="absolute inset-0 bg-slate-900/50 backdrop-blur-sm" @click="showRegisterModal = false"></div>
           <div class="relative bg-white rounded-3xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-hidden">
+            <button @click="showRegisterModal = false" class="absolute top-4 right-4 p-1 text-white/80 hover:text-white hover:bg-white/20 rounded-lg transition-colors z-10"><X class="w-5 h-5" /></button>
             <!-- Modal header -->
             <div :class="['p-6 text-white relative overflow-hidden', getCategoryGradient(selectedTournament?.category)]">
               <div class="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2"></div>
@@ -467,6 +468,7 @@
         <div v-if="showSuccessModal" class="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div class="absolute inset-0 bg-slate-900/50 backdrop-blur-sm" @click="showSuccessModal = false"></div>
           <div class="relative bg-white rounded-3xl shadow-2xl w-full max-w-md p-8 text-center">
+            <button @click="showSuccessModal = false" class="absolute top-3 right-3 p-1 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors z-10"><X class="w-5 h-5" /></button>
             <div class="w-20 h-20 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-5 animate-bounce-gentle">
               <CheckCircle class="w-10 h-10 text-emerald-500" />
             </div>
@@ -502,7 +504,8 @@ import {
   MapPin,
   Palette,
   Trophy,
-  UserPlus
+  UserPlus,
+  X
 } from 'lucide-vue-next'
 import { computed, onMounted, ref } from 'vue'
 import { useAuthStore } from '../../stores/auth'

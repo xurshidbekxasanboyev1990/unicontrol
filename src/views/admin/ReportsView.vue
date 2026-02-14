@@ -398,7 +398,8 @@
       class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
       @click.self="showRejectModal = false"
     >
-      <div class="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl">
+      <div class="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl relative">
+        <button @click="showRejectModal = false" class="absolute top-3 right-3 p-1 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors z-10"><XIcon class="w-5 h-5" /></button>
         <h3 class="text-lg font-bold text-slate-800 mb-4">{{ $t('reports.rejectTitle') }}</h3>
         <textarea
           v-model="rejectReason"

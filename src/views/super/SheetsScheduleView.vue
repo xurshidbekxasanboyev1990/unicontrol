@@ -389,7 +389,8 @@
 
     <!-- ===================== SYNC MODAL ===================== -->
     <div v-if="showSyncModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4" @click.self="showSyncModal = false">
-      <div class="bg-white rounded-3xl max-w-lg w-full shadow-2xl overflow-hidden">
+      <div class="relative bg-white rounded-3xl max-w-lg w-full shadow-2xl overflow-hidden">
+        <button @click="showSyncModal = false" class="absolute top-4 right-4 p-1 text-white/80 hover:text-white hover:bg-white/20 rounded-lg transition-colors z-10"><X class="w-5 h-5" /></button>
         <div class="bg-gradient-to-r from-indigo-500 to-purple-500 p-5 text-white text-center">
           <Download class="w-10 h-10 mx-auto mb-2 opacity-80" />
           <h2 class="text-xl font-bold">{{ $t('sheets.syncToDatabase') }}</h2>

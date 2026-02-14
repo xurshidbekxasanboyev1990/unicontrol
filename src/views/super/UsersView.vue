@@ -602,7 +602,8 @@
         class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm"
         @click.self="showDeleteModal = false"
       >
-        <div class="w-full max-w-sm rounded-2xl bg-white p-6 shadow-2xl">
+        <div class="w-full max-w-sm rounded-2xl bg-white p-6 shadow-2xl relative">
+          <button @click="showDeleteModal = false" class="absolute top-3 right-3 p-1 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors z-10"><X :size="20" /></button>
           <div class="text-center mb-4">
             <div class="mx-auto w-16 h-16 rounded-full bg-rose-100 flex items-center justify-center mb-4">
               <AlertTriangle :size="32" class="text-rose-500" />

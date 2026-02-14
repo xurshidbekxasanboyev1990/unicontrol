@@ -49,15 +49,49 @@ Sahifalar o'rtasida fade animatsiya:
 </template>
 
 <script setup>
-import { onMounted } from 'vue'
+import { onMounted, onUnmounted } from 'vue'
 import { useAuthStore } from './stores/auth'
 import ToastContainer from './components/ui/ToastContainer.vue'
 
 const authStore = useAuthStore()
 
+// ---- Body scroll lock for modals ----
+let scrollY = 0
+let observer = null
+
+function checkModals() {
+  // z-50 + fixed inset-0 = modal overlay
+  const modals = document.querySelectorAll('.fixed.inset-0.z-50')
+  const hasVisibleModal = Array.from(modals).some(el => {
+    return el.offsetParent !== null || el.style.display !== 'none'
+  })
+  
+  if (hasVisibleModal && !document.body.classList.contains('modal-open')) {
+    scrollY = window.scrollY
+    document.body.classList.add('modal-open')
+    document.body.style.top = `-${scrollY}px`
+  } else if (!hasVisibleModal && document.body.classList.contains('modal-open')) {
+    document.body.classList.remove('modal-open')
+    document.body.style.top = ''
+    window.scrollTo(0, scrollY)
+  }
+}
+
 // Ilova yuklanganda localStorage'dan auth holatini tekshirish
 onMounted(() => {
   authStore.checkAuth()
+  
+  // MutationObserver — DOM o'zgarganda modallarni tekshirish
+  observer = new MutationObserver(() => {
+    requestAnimationFrame(checkModals)
+  })
+  observer.observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ['class', 'style'] })
+})
+
+onUnmounted(() => {
+  if (observer) observer.disconnect()
+  document.body.classList.remove('modal-open')
+  document.body.style.top = ''
 })
 </script>
 
