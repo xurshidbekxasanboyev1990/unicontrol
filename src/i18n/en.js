@@ -1091,6 +1091,21 @@ export default {
         allMarkedRead: 'All messages marked as read',
         markAllReadError: 'Error marking as read',
         justNow: 'Just now',
+        // Admin notifications - separate tabs
+        manageNotifications: 'Manage announcements and notifications',
+        announcementsTab: 'Announcements',
+        personalTab: 'Notifications',
+        allAnnouncements: 'All Announcements',
+        noAnnouncements: 'No announcements yet',
+        toEveryone: 'Everyone',
+        personalNotifications: 'Personal Notifications',
+        noPersonalNotifications: 'No notifications',
+        payments: 'Payments',
+        systemNotifs: 'System',
+        from: 'From',
+        sendError: 'Send error',
+        announcementTitlePlaceholder: 'Announcement title...',
+        announcementTextPlaceholder: 'Write announcement text...',
     },
 
     // ============ PROFILE ============

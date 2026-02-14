@@ -1089,6 +1089,21 @@ export default {
         allMarkedRead: 'Все сообщения отмечены как прочитанные',
         markAllReadError: 'Ошибка при отметке как прочитанные',
         justNow: 'Только что',
+        // Admin notifications - separate tabs
+        manageNotifications: 'Управление объявлениями и уведомлениями',
+        announcementsTab: 'Объявления',
+        personalTab: 'Уведомления',
+        allAnnouncements: 'Все объявления',
+        noAnnouncements: 'Объявлений пока нет',
+        toEveryone: 'Всем',
+        personalNotifications: 'Личные уведомления',
+        noPersonalNotifications: 'Уведомлений нет',
+        payments: 'Платежи',
+        systemNotifs: 'Система',
+        from: 'От',
+        sendError: 'Ошибка отправки',
+        announcementTitlePlaceholder: 'Заголовок объявления...',
+        announcementTextPlaceholder: 'Напишите текст объявления...',
     },
 
     // ============ ПРОФИЛЬ ============

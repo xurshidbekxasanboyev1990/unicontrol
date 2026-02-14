@@ -3,165 +3,323 @@
     <!-- Header -->
     <div>
       <h1 class="text-xl sm:text-2xl font-bold text-slate-800">{{ $t('notifications.title') }}</h1>
-      <p class="text-sm text-slate-500">{{ $t('notifications.broadcast') }}</p>
+      <p class="text-sm text-slate-500">{{ $t('notifications.manageNotifications') }}</p>
     </div>
 
-    <!-- Compose New -->
-    <div class="bg-white rounded-2xl border border-slate-200 p-6">
-      <h2 class="text-lg font-semibold text-slate-800 mb-4 flex items-center gap-2">
-        <PenLine class="w-5 h-5 text-violet-500" />
-        {{ $t('notifications.newMessage') }}
-      </h2>
-
-      <div class="space-y-4">
-        <div>
-          <label class="block text-sm font-medium text-slate-700 mb-2">{{ $t('notifications.subjectLabel') }}</label>
-          <input 
-            v-model="newNotification.title"
-            type="text"
-            placeholder="E'lon sarlavhasi..."
-            class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-violet-500 focus:ring-2 focus:ring-violet-500/20 outline-none"
-          />
-        </div>
-        <div>
-          <label class="block text-sm font-medium text-slate-700 mb-2">{{ $t('notifications.messageText') }}</label>
-          <textarea 
-            v-model="newNotification.message"
-            rows="4"
-            placeholder="E'lon matnini yozing..."
-            class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-violet-500 focus:ring-2 focus:ring-violet-500/20 outline-none resize-none"
-          ></textarea>
-        </div>
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div>
-            <label class="block text-sm font-medium text-slate-700 mb-2">{{ $t('notifications.selectGroup') }}</label>
-            <select 
-              v-model="newNotification.group"
-              class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-violet-500 focus:ring-2 focus:ring-violet-500/20 outline-none"
-            >
-              <option value="">{{ $t('notifications.allGroups') }}</option>
-              <option v-for="group in dataStore.groups" :key="group.id" :value="group.name">
-                {{ group.name }}
-              </option>
-            </select>
-          </div>
-          <div>
-            <label class="block text-sm font-medium text-slate-700 mb-2">{{ $t('notifications.type') }}</label>
-            <div class="flex gap-2">
-              <label 
-                v-for="type in notificationTypes" 
-                :key="type.value"
-                class="flex-1 flex items-center justify-center gap-2 px-3 py-3 rounded-xl border cursor-pointer transition-colors"
-                :class="newNotification.type === type.value 
-                  ? 'border-violet-500 bg-violet-50 text-violet-700' 
-                  : 'border-slate-200 hover:border-violet-200'"
-              >
-                <input 
-                  type="radio" 
-                  :value="type.value" 
-                  v-model="newNotification.type"
-                  class="hidden"
-                />
-                <component :is="type.icon" class="w-4 h-4" />
-                <span class="text-sm">{{ type.label }}</span>
-              </label>
-            </div>
-          </div>
-        </div>
-        <div class="flex justify-end">
-          <button 
-            @click="sendNotification"
-            :disabled="!canSend"
-            class="px-6 py-3 bg-violet-500 text-white rounded-xl font-medium hover:bg-violet-600 transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            <Send class="w-4 h-4" />
-            Yuborish
-          </button>
-        </div>
-      </div>
-    </div>
-
-    <!-- All Notifications -->
-    <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden">
-      <div class="p-6 border-b border-slate-100 flex items-center justify-between">
-        <h2 class="text-lg font-semibold text-slate-800">Barcha e'lonlar</h2>
-        <span class="text-sm text-slate-500">{{ notifications.length }} ta</span>
-      </div>
-
-      <div class="divide-y divide-slate-100">
-        <div 
-          v-for="notification in sortedNotifications" 
-          :key="notification.id"
-          class="p-4 flex items-start gap-4"
+    <!-- Main Tabs: E'lonlar vs Bildirishnomalar -->
+    <div class="flex gap-2 overflow-x-auto pb-2">
+      <button
+        @click="activeSection = 'announcements'"
+        class="flex items-center gap-2 whitespace-nowrap rounded-xl px-5 py-2.5 text-sm font-medium transition-all"
+        :class="activeSection === 'announcements'
+          ? 'bg-violet-500 text-white shadow-lg shadow-violet-500/25'
+          : 'bg-slate-100 text-slate-600 hover:bg-slate-200'"
+      >
+        <Megaphone class="w-4 h-4" />
+        {{ $t('notifications.announcementsTab') }}
+        <span 
+          v-if="announcements.length > 0"
+          class="rounded-full px-2 py-0.5 text-xs"
+          :class="activeSection === 'announcements' ? 'bg-white/20' : 'bg-slate-200'"
         >
-          <div 
-            class="w-10 h-10 rounded-xl flex items-center justify-center"
-            :class="getTypeClass(notification.type)"
-          >
-            <component :is="getTypeIcon(notification.type)" class="w-5 h-5" />
+          {{ announcements.length }}
+        </span>
+      </button>
+      <button
+        @click="activeSection = 'notifications'"
+        class="flex items-center gap-2 whitespace-nowrap rounded-xl px-5 py-2.5 text-sm font-medium transition-all"
+        :class="activeSection === 'notifications'
+          ? 'bg-blue-500 text-white shadow-lg shadow-blue-500/25'
+          : 'bg-slate-100 text-slate-600 hover:bg-slate-200'"
+      >
+        <Bell class="w-4 h-4" />
+        {{ $t('notifications.personalTab') }}
+        <span 
+          v-if="unreadPersonalCount > 0"
+          class="rounded-full px-2 py-0.5 text-xs"
+          :class="activeSection === 'notifications' ? 'bg-white/20' : 'bg-red-100 text-red-600'"
+        >
+          {{ unreadPersonalCount }}
+        </span>
+      </button>
+    </div>
+
+    <!-- ===================== ANNOUNCEMENTS SECTION ===================== -->
+    <template v-if="activeSection === 'announcements'">
+      <!-- Compose New Announcement -->
+      <div class="bg-white rounded-2xl border border-slate-200 p-6">
+        <h2 class="text-lg font-semibold text-slate-800 mb-4 flex items-center gap-2">
+          <PenLine class="w-5 h-5 text-violet-500" />
+          {{ $t('notifications.newMessage') }}
+        </h2>
+
+        <div class="space-y-4">
+          <div>
+            <label class="block text-sm font-medium text-slate-700 mb-2">{{ $t('notifications.subjectLabel') }}</label>
+            <input 
+              v-model="newNotification.title"
+              type="text"
+              :placeholder="$t('notifications.announcementTitlePlaceholder')"
+              class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-violet-500 focus:ring-2 focus:ring-violet-500/20 outline-none"
+            />
           </div>
-          <div class="flex-1 min-w-0">
-            <div class="flex items-center gap-2">
-              <h3 class="font-semibold text-slate-800">{{ notification.title }}</h3>
-              <span 
-                v-if="notification.group"
-                class="px-2 py-0.5 bg-slate-100 text-slate-600 rounded text-xs"
+          <div>
+            <label class="block text-sm font-medium text-slate-700 mb-2">{{ $t('notifications.messageText') }}</label>
+            <textarea 
+              v-model="newNotification.message"
+              rows="4"
+              :placeholder="$t('notifications.announcementTextPlaceholder')"
+              class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-violet-500 focus:ring-2 focus:ring-violet-500/20 outline-none resize-none"
+            ></textarea>
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-sm font-medium text-slate-700 mb-2">{{ $t('notifications.selectGroup') }}</label>
+              <select 
+                v-model="newNotification.group"
+                class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-violet-500 focus:ring-2 focus:ring-violet-500/20 outline-none"
               >
-                {{ notification.group }}
-              </span>
-              <span 
-                v-else
-                class="px-2 py-0.5 bg-violet-100 text-violet-600 rounded text-xs"
-              >
-                Hammaga
-              </span>
+                <option value="">{{ $t('notifications.allGroups') }}</option>
+                <option v-for="group in dataStore.groups" :key="group.id" :value="group.name">
+                  {{ group.name }}
+                </option>
+              </select>
             </div>
-            <p class="text-sm text-slate-600 mt-1">{{ notification.message }}</p>
-            <p class="text-xs text-slate-400 mt-2">{{ formatDate(notification.date) }}</p>
+            <div>
+              <label class="block text-sm font-medium text-slate-700 mb-2">{{ $t('notifications.type') }}</label>
+              <div class="flex gap-2">
+                <label 
+                  v-for="type in announcementTypes" 
+                  :key="type.value"
+                  class="flex-1 flex items-center justify-center gap-2 px-3 py-3 rounded-xl border cursor-pointer transition-colors"
+                  :class="newNotification.type === type.value 
+                    ? 'border-violet-500 bg-violet-50 text-violet-700' 
+                    : 'border-slate-200 hover:border-violet-200'"
+                >
+                  <input 
+                    type="radio" 
+                    :value="type.value" 
+                    v-model="newNotification.type"
+                    class="hidden"
+                  />
+                  <component :is="type.icon" class="w-4 h-4" />
+                  <span class="text-sm">{{ type.label }}</span>
+                </label>
+              </div>
+            </div>
           </div>
-          <button 
-            @click="deleteNotification(notification.id)"
-            class="p-2 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-colors"
-          >
-            <Trash2 class="w-4 h-4" />
-          </button>
+          <div class="flex justify-end">
+            <button 
+              @click="sendNotification"
+              :disabled="!canSend"
+              class="px-6 py-3 bg-violet-500 text-white rounded-xl font-medium hover:bg-violet-600 transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <Send class="w-4 h-4" />
+              {{ $t('notifications.send') }}
+            </button>
+          </div>
         </div>
       </div>
 
-      <div v-if="notifications.length === 0" class="p-12 text-center">
-        <BellOff class="w-12 h-12 text-slate-300 mx-auto mb-4" />
-        <p class="text-slate-500">Hali e'lon yo'q</p>
+      <!-- Announcements List -->
+      <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden">
+        <div class="p-6 border-b border-slate-100 flex items-center justify-between">
+          <h2 class="text-lg font-semibold text-slate-800 flex items-center gap-2">
+            <Megaphone class="w-5 h-5 text-violet-500" />
+            {{ $t('notifications.allAnnouncements') }}
+          </h2>
+          <span class="text-sm text-slate-500">{{ announcements.length }} ta</span>
+        </div>
+
+        <div class="divide-y divide-slate-100">
+          <div 
+            v-for="notification in sortedAnnouncements" 
+            :key="notification.id"
+            class="p-4 flex items-start gap-4"
+          >
+            <div 
+              class="w-10 h-10 rounded-xl flex items-center justify-center"
+              :class="getTypeClass(notification.type)"
+            >
+              <component :is="getTypeIcon(notification.type)" class="w-5 h-5" />
+            </div>
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center gap-2 flex-wrap">
+                <h3 class="font-semibold text-slate-800">{{ notification.title }}</h3>
+                <span 
+                  v-if="notification.group"
+                  class="px-2 py-0.5 bg-slate-100 text-slate-600 rounded text-xs"
+                >
+                  {{ notification.group }}
+                </span>
+                <span 
+                  v-else
+                  class="px-2 py-0.5 bg-violet-100 text-violet-600 rounded text-xs"
+                >
+                  {{ $t('notifications.toEveryone') }}
+                </span>
+              </div>
+              <p class="text-sm text-slate-600 mt-1">{{ notification.message }}</p>
+              <p class="text-xs text-slate-400 mt-2">{{ formatDate(notification.date) }}</p>
+            </div>
+            <button 
+              @click="deleteNotification(notification.id, 'announcement')"
+              class="p-2 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-colors"
+            >
+              <Trash2 class="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+
+        <div v-if="announcements.length === 0" class="p-12 text-center">
+          <Megaphone class="w-12 h-12 text-slate-300 mx-auto mb-4" />
+          <p class="text-slate-500">{{ $t('notifications.noAnnouncements') }}</p>
+        </div>
       </div>
-    </div>
+    </template>
+
+    <!-- ===================== PERSONAL NOTIFICATIONS SECTION ===================== -->
+    <template v-if="activeSection === 'notifications'">
+      <!-- Filter Tabs for notification types -->
+      <div class="flex gap-2 overflow-x-auto pb-2">
+        <button
+          v-for="tab in notifFilterTabs"
+          :key="tab.id"
+          @click="notifFilter = tab.id"
+          class="flex items-center gap-2 whitespace-nowrap rounded-xl px-4 py-2 text-sm font-medium transition-all"
+          :class="notifFilter === tab.id 
+            ? 'bg-blue-500 text-white' 
+            : 'bg-slate-100 text-slate-600 hover:bg-slate-200'"
+        >
+          <component :is="tab.icon" class="w-4 h-4" />
+          {{ tab.name }}
+          <span 
+            v-if="tab.count > 0"
+            class="rounded-full px-2 py-0.5 text-xs"
+            :class="notifFilter === tab.id ? 'bg-white/20' : 'bg-slate-200'"
+          >
+            {{ tab.count }}
+          </span>
+        </button>
+      </div>
+
+      <!-- Notifications List -->
+      <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden">
+        <div class="p-6 border-b border-slate-100 flex items-center justify-between">
+          <h2 class="text-lg font-semibold text-slate-800 flex items-center gap-2">
+            <Bell class="w-5 h-5 text-blue-500" />
+            {{ $t('notifications.personalNotifications') }}
+          </h2>
+          <div class="flex items-center gap-3">
+            <span class="text-sm text-slate-500">{{ filteredPersonalNotifications.length }} ta</span>
+            <button 
+              v-if="personalNotifications.some(n => !n.isRead)"
+              @click="markAllAsRead"
+              class="text-sm text-blue-500 hover:text-blue-600 flex items-center gap-1"
+            >
+              <CheckCheck class="w-4 h-4" />
+              {{ $t('notifications.markAllRead') }}
+            </button>
+          </div>
+        </div>
+
+        <div class="divide-y divide-slate-100">
+          <div 
+            v-for="notification in filteredPersonalNotifications" 
+            :key="notification.id"
+            class="p-4 flex items-start gap-4 transition-colors"
+            :class="notification.isRead ? '' : 'bg-blue-50/50'"
+          >
+            <div 
+              class="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+              :class="getTypeClass(notification.type)"
+            >
+              <component :is="getTypeIcon(notification.type)" class="w-5 h-5" />
+            </div>
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center gap-2 flex-wrap">
+                <h3 class="font-semibold text-slate-800">{{ notification.title }}</h3>
+                <span 
+                  class="px-2 py-0.5 rounded text-xs"
+                  :class="getTypeBadgeClass(notification.type)"
+                >
+                  {{ getTypeLabel(notification.type) }}
+                </span>
+                <span v-if="!notification.isRead" class="w-2 h-2 rounded-full bg-blue-500"></span>
+              </div>
+              <p class="text-sm text-slate-600 mt-1">{{ notification.message }}</p>
+              <div class="flex items-center gap-3 mt-2">
+                <p class="text-xs text-slate-400">{{ formatDate(notification.date) }}</p>
+                <span v-if="notification.senderName" class="text-xs text-slate-400">
+                  {{ $t('notifications.from') }}: {{ notification.senderName }}
+                </span>
+              </div>
+            </div>
+            <div class="flex flex-col gap-1">
+              <button
+                v-if="!notification.isRead"
+                @click="markAsRead(notification.id)"
+                class="p-2 text-slate-400 hover:text-blue-500 hover:bg-blue-50 rounded-lg transition-colors"
+                :title="$t('notifications.markAsRead')"
+              >
+                <Check class="w-4 h-4" />
+              </button>
+              <button 
+                @click="deleteNotification(notification.id, 'personal')"
+                class="p-2 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-colors"
+              >
+                <Trash2 class="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div v-if="filteredPersonalNotifications.length === 0" class="p-12 text-center">
+          <BellOff class="w-12 h-12 text-slate-300 mx-auto mb-4" />
+          <p class="text-slate-500">{{ $t('notifications.noPersonalNotifications') }}</p>
+        </div>
+      </div>
+    </template>
   </div>
 </template>
 
 <script setup>
 /**
- * Admin Notifications - Real API Integration
- * E'lonlar yuborish va boshqarish
+ * Admin Notifications - Separated Announcements & Personal Notifications
+ * E'lonlar va bildirishnomalar alohida boshqariladi
  */
 import {
     AlertCircle,
     AlertTriangle,
+    Bell,
     BellOff,
+    Check,
+    CheckCheck,
+    CreditCard,
     Info,
+    Megaphone,
     PenLine,
     Send,
+    ShieldCheck,
     Trash2
 } from 'lucide-vue-next'
 import { computed, markRaw, onMounted, reactive, ref } from 'vue'
 import api from '../../services/api'
 import { useDataStore } from '../../stores/data'
+import { useLanguageStore } from '../../stores/language'
 import { useToastStore } from '../../stores/toast'
 
 const dataStore = useDataStore()
 const toast = useToastStore()
+const { t } = useLanguageStore()
 
 // State
 const loading = ref(true)
 const sending = ref(false)
-const notifications = ref([])
+const activeSection = ref('announcements')
+const notifFilter = ref('all')
+const announcements = ref([])
+const personalNotifications = ref([])
 
 const newNotification = reactive({
   title: '',
@@ -170,13 +328,26 @@ const newNotification = reactive({
   group: ''
 })
 
-const notificationTypes = [
-  { value: 'info', label: 'Ma\'lumot', icon: markRaw(Info) },
-  { value: 'warning', label: 'Ogohlantirish', icon: markRaw(AlertTriangle) },
-  { value: 'announcement', label: 'E\'lon', icon: markRaw(AlertCircle) }
+// Announcement types (for compose form)
+const announcementTypes = [
+  { value: 'info', label: t('notifications.info'), icon: markRaw(Info) },
+  { value: 'warning', label: t('notifications.warning'), icon: markRaw(AlertTriangle) },
+  { value: 'announcement', label: t('notifications.announcements'), icon: markRaw(AlertCircle) }
 ]
 
-// Load notifications from API
+// Personal notification type = everything except announcement-like broadcasts
+const announcementNotifTypes = ['announcement', 'info', 'warning']
+// Personal types: payment, success, error, system, schedule, attendance, etc.
+
+// Notification filter tabs
+const notifFilterTabs = computed(() => [
+  { id: 'all', name: t('common.all'), icon: markRaw(Bell), count: personalNotifications.value.filter(n => !n.isRead).length },
+  { id: 'payment', name: t('notifications.payments'), icon: markRaw(CreditCard), count: personalNotifications.value.filter(n => n.type === 'payment' && !n.isRead).length },
+  { id: 'success', name: t('notifications.success'), icon: markRaw(ShieldCheck), count: personalNotifications.value.filter(n => n.type === 'success' && !n.isRead).length },
+  { id: 'system', name: t('notifications.systemNotifs'), icon: markRaw(Info), count: personalNotifications.value.filter(n => ['system', 'error'].includes(n.type) && !n.isRead).length }
+])
+
+// Load all notifications and separate them
 async function loadNotifications() {
   loading.value = true
   try {
@@ -185,23 +356,42 @@ async function loadNotifications() {
       await dataStore.fetchGroups()
     }
     
-    // Load notifications from API
+    // Load ALL notifications from API
     try {
-      const response = await api.getNotifications({ page_size: 100 })
+      const response = await api.getNotifications({ page_size: 200 })
       if (response?.items) {
-        notifications.value = response.items.map(n => ({
+        const allNotifs = response.items.map(n => ({
           id: n.id,
           title: n.title,
           message: n.message || n.content,
           type: n.type || 'info',
           group: n.group_name || null,
           date: n.created_at,
-          senderName: n.sender_name || null
+          senderName: n.sender_name || null,
+          isRead: n.is_read || false,
+          senderId: n.sender_id || null
         }))
+        
+        // Separate: announcements are broadcast messages (type = announcement, info, warning) 
+        // that have sender_id (meaning admin sent them) or group target
+        // Personal notifications are system-generated (payment, success, error, etc.)
+        announcements.value = allNotifs.filter(n => {
+          // Announcement types that admin broadcasts
+          return ['announcement'].includes(n.type) || 
+                 // Also include info/warning that were sent by someone (broadcast)
+                 (['info', 'warning'].includes(n.type) && n.senderId)
+        })
+        
+        personalNotifications.value = allNotifs.filter(n => {
+          // Everything that's NOT an announcement broadcast
+          return !(['announcement'].includes(n.type) || 
+                   (['info', 'warning'].includes(n.type) && n.senderId))
+        })
       }
     } catch (e) {
       console.log('Notifications API error:', e)
-      notifications.value = []
+      announcements.value = []
+      personalNotifications.value = []
     }
   } catch (err) {
     console.error('Load notifications error:', err)
@@ -210,8 +400,25 @@ async function loadNotifications() {
   }
 }
 
-const sortedNotifications = computed(() => {
-  return [...notifications.value].sort((a, b) => new Date(b.date) - new Date(a.date))
+// Computed
+const sortedAnnouncements = computed(() => {
+  return [...announcements.value].sort((a, b) => new Date(b.date) - new Date(a.date))
+})
+
+const filteredPersonalNotifications = computed(() => {
+  let notifs = [...personalNotifications.value]
+  if (notifFilter.value !== 'all') {
+    if (notifFilter.value === 'system') {
+      notifs = notifs.filter(n => ['system', 'error'].includes(n.type))
+    } else {
+      notifs = notifs.filter(n => n.type === notifFilter.value)
+    }
+  }
+  return notifs.sort((a, b) => new Date(b.date) - new Date(a.date))
+})
+
+const unreadPersonalCount = computed(() => {
+  return personalNotifications.value.filter(n => !n.isRead).length
 })
 
 const canSend = computed(() => {
@@ -224,7 +431,6 @@ const sendNotification = async () => {
   sending.value = true
   try {
     if (newNotification.group) {
-      // Send to specific group - find group and use broadcast
       const group = dataStore.groups.find(g => g.name === newNotification.group)
       if (group) {
         await api.broadcastNotification({
@@ -235,7 +441,6 @@ const sendNotification = async () => {
         })
       }
     } else {
-      // Broadcast to all users
       await api.broadcastNotification({
         title: newNotification.title,
         message: newNotification.message,
@@ -244,36 +449,60 @@ const sendNotification = async () => {
       })
     }
     
-    // Refresh notifications list
     await loadNotifications()
     
-    // Reset form
     newNotification.title = ''
     newNotification.message = ''
     newNotification.type = 'info'
     newNotification.group = ''
     
-    toast.success('E\'lon muvaffaqiyatli yuborildi!')
+    toast.success(t('notifications.sentSuccess'))
   } catch (err) {
     console.error('Send notification error:', err)
-    toast.error('Yuborishda xatolik: ' + (err.message || 'Noma\'lum xatolik'))
+    toast.error(t('notifications.sendError') + ': ' + (err.message || ''))
   } finally {
     sending.value = false
   }
 }
 
-const deleteNotification = async (id) => {
+const deleteNotification = async (id, source) => {
   try {
     await api.deleteNotification(id)
-    // Remove from local list
-    const index = notifications.value.findIndex(n => n.id === id)
-    if (index !== -1) {
-      notifications.value.splice(index, 1)
+    if (source === 'announcement') {
+      const index = announcements.value.findIndex(n => n.id === id)
+      if (index !== -1) announcements.value.splice(index, 1)
+    } else {
+      const index = personalNotifications.value.findIndex(n => n.id === id)
+      if (index !== -1) personalNotifications.value.splice(index, 1)
     }
-    toast.success('E\'lon o\'chirildi')
+    toast.success(t('notifications.messageDeleted'))
   } catch (err) {
     console.error('Delete notification error:', err)
-    toast.error('O\'chirishda xatolik')
+    toast.error(t('notifications.deleteError'))
+  }
+}
+
+const markAsRead = async (id) => {
+  try {
+    await api.markNotificationRead(id)
+    const notif = personalNotifications.value.find(n => n.id === id)
+    if (notif) notif.isRead = true
+  } catch (err) {
+    console.error('Mark as read error:', err)
+  }
+}
+
+const markAllAsRead = async () => {
+  try {
+    // Mark all personal notifications as read
+    const unread = personalNotifications.value.filter(n => !n.isRead)
+    for (const n of unread) {
+      await api.markNotificationRead(n.id)
+      n.isRead = true
+    }
+    toast.success(t('notifications.allMarkedRead'))
+  } catch (err) {
+    console.error('Mark all read error:', err)
   }
 }
 
@@ -293,7 +522,11 @@ const getTypeClass = (type) => {
     warning: 'bg-amber-100 text-amber-600',
     announcement: 'bg-violet-100 text-violet-600',
     error: 'bg-rose-100 text-rose-600',
-    success: 'bg-emerald-100 text-emerald-600'
+    success: 'bg-emerald-100 text-emerald-600',
+    payment: 'bg-green-100 text-green-600',
+    system: 'bg-slate-100 text-slate-600',
+    schedule: 'bg-purple-100 text-purple-600',
+    attendance: 'bg-orange-100 text-orange-600'
   }
   return classes[type] || classes.info
 }
@@ -302,11 +535,43 @@ const getTypeIcon = (type) => {
   const icons = {
     info: markRaw(Info),
     warning: markRaw(AlertTriangle),
-    announcement: markRaw(AlertCircle),
+    announcement: markRaw(Megaphone),
     error: markRaw(AlertCircle),
-    success: markRaw(Info)
+    success: markRaw(ShieldCheck),
+    payment: markRaw(CreditCard),
+    system: markRaw(Info),
+    schedule: markRaw(Bell),
+    attendance: markRaw(AlertTriangle)
   }
   return icons[type] || icons.info
+}
+
+const getTypeBadgeClass = (type) => {
+  const classes = {
+    info: 'bg-blue-100 text-blue-600',
+    warning: 'bg-amber-100 text-amber-600',
+    error: 'bg-rose-100 text-rose-600',
+    success: 'bg-emerald-100 text-emerald-600',
+    payment: 'bg-green-100 text-green-600',
+    system: 'bg-slate-100 text-slate-600',
+    schedule: 'bg-purple-100 text-purple-600',
+    attendance: 'bg-orange-100 text-orange-600'
+  }
+  return classes[type] || 'bg-slate-100 text-slate-600'
+}
+
+const getTypeLabel = (type) => {
+  const labels = {
+    info: t('notifications.info'),
+    warning: t('notifications.warning'),
+    error: t('notifications.alert'),
+    success: t('notifications.success'),
+    payment: t('notifications.payments'),
+    system: t('notifications.systemNotifs'),
+    schedule: t('notifications.scheduleChanges'),
+    attendance: t('notifications.attendanceWarning')
+  }
+  return labels[type] || type
 }
 
 // Initialize

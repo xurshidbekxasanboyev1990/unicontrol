@@ -1096,6 +1096,21 @@ export default {
         allMarkedRead: 'Barcha xabarlar o\'qilgan deb belgilandi',
         markAllReadError: 'O\'qilgan deb belgilashda xatolik',
         justNow: 'Hozirgina',
+        // Admin notifications - separate tabs
+        manageNotifications: 'E\'lonlar va bildirishnomalarni boshqarish',
+        announcementsTab: 'E\'lonlar',
+        personalTab: 'Bildirishnomalar',
+        allAnnouncements: 'Barcha e\'lonlar',
+        noAnnouncements: 'Hali e\'lon yo\'q',
+        toEveryone: 'Hammaga',
+        personalNotifications: 'Shaxsiy bildirishnomalar',
+        noPersonalNotifications: 'Bildirishnomalar yo\'q',
+        payments: 'To\'lovlar',
+        systemNotifs: 'Tizim',
+        from: 'Kimdan',
+        sendError: 'Yuborishda xatolik',
+        announcementTitlePlaceholder: 'E\'lon sarlavhasi...',
+        announcementTextPlaceholder: 'E\'lon matnini yozing...',
     },
 
     // ============ PROFIL ============
