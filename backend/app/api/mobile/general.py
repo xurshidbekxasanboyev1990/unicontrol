@@ -106,14 +106,16 @@ async def mobile_schedule_today(
         if group:
             group_id = group.id
 
-    if not group_id:
-        return {"date": str(today_tashkent()), "classes": []}
-
     today = today_tashkent()
+    day_name = today.strftime("%A").upper()
+
+    if not group_id:
+        return {"date": str(today), "day": day_name, "classes": []}
+
     try:
         weekday = WeekDay(today.strftime("%A").lower())
     except Exception:
-        return {"date": str(today), "classes": []}
+        return {"date": str(today), "day": day_name, "classes": []}
 
     schedules = await db.execute(
         select(Schedule).where(
@@ -159,8 +161,18 @@ async def mobile_schedule_week(
             if group:
                 group_id = group.id
 
+    today = today_tashkent()
+    # Calculate Monday of current week
+    week_start = today - timedelta(days=today.weekday())
+
     if not group_id:
-        return {d.name: [] for d in WeekDay}
+        return {
+            "week_start": str(week_start),
+            "days": [
+                {"day": d.name, "date": str(week_start + timedelta(days=i)), "classes": []}
+                for i, d in enumerate(WeekDay)
+            ],
+        }
 
     schedules = await db.execute(
         select(Schedule).where(
@@ -169,9 +181,12 @@ async def mobile_schedule_week(
         ).order_by(Schedule.day_of_week, Schedule.start_time)
     )
 
-    week_schedule = {d.name: [] for d in WeekDay}
+    week_data = {}
+    for d in WeekDay:
+        week_data[d.name] = []
+
     for s in schedules.scalars().all():
-        week_schedule[s.day_of_week.name].append({
+        week_data[s.day_of_week.name].append({
             "id": s.id,
             "subject": s.subject,
             "start_time": s.start_time.strftime("%H:%M"),
@@ -181,7 +196,17 @@ async def mobile_schedule_week(
             "is_cancelled": s.is_cancelled,
         })
 
-    return week_schedule
+    return {
+        "week_start": str(week_start),
+        "days": [
+            {
+                "day": d.name,
+                "date": str(week_start + timedelta(days=i)),
+                "classes": week_data.get(d.name, []),
+            }
+            for i, d in enumerate(WeekDay)
+        ],
+    }
 
 
 # ==========================================
