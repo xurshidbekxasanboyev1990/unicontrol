@@ -69,6 +69,7 @@ import AdminClubs from '../views/admin/ClubsView.vue'
 import AdminContracts from '../views/admin/ContractsView.vue'
 import AdminDashboard from '../views/admin/DashboardView.vue'
 import AdminGroups from '../views/admin/GroupsView.vue'
+import AdminImport from '../views/admin/ImportView.vue'
 import AdminHolidays from '../views/admin/HolidaysView.vue'
 import AdminNotifications from '../views/admin/NotificationsView.vue'
 import AdminReports from '../views/admin/ReportsView.vue'
@@ -81,6 +82,7 @@ import AdminUsers from '../views/admin/UsersView.vue'
 import SuperAdmins from '../views/super/AdminsView.vue'
 import SuperContracts from '../views/super/ContractsView.vue'
 import SuperDashboard from '../views/super/DashboardView.vue'
+import SuperHelpManage from '../views/super/HelpManageView.vue'
 import SuperLandingSettings from '../views/super/LandingSettingsView.vue'
 import SuperLogs from '../views/super/LogsView.vue'
 import SuperReports from '../views/super/ReportsView.vue'
@@ -187,6 +189,7 @@ const routes = [
       { path: 'tournaments', name: 'admin-tournaments', component: AdminTournaments },
       { path: 'subjects', name: 'admin-subjects', component: AdminSubjects },
       { path: 'holidays', name: 'admin-holidays', component: AdminHolidays },
+      { path: 'import', name: 'admin-import', component: AdminImport },
       { path: 'profile', name: 'admin-profile', component: StudentProfile },
       { path: 'settings', name: 'admin-settings', component: StudentSettings },
       { path: 'help', name: 'admin-help', component: StudentHelp },
@@ -223,7 +226,11 @@ const routes = [
       { path: 'help', name: 'super-help', component: StudentHelp },
       { path: 'market', name: 'super-market', component: MarketAdminView },
       { path: 'ai-analysis', name: 'super-ai-analysis', component: AIAnalysisView },
-      { path: 'credit-module', name: 'super-credit-module', component: CreditModuleView }
+      { path: 'credit-module', name: 'super-credit-module', component: CreditModuleView },
+      { path: 'help-manage', name: 'super-help-manage', component: SuperHelpManage },
+      { path: 'import', name: 'super-import', component: AdminImport },
+      { path: 'subjects', name: 'super-subjects', component: AdminSubjects },
+      { path: 'clubs', name: 'super-clubs', component: AdminClubs }
     ]
   },
 
