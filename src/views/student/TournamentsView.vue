@@ -9,7 +9,7 @@
           <Trophy class="w-8 h-8" />
           <span class="text-sm font-medium opacity-90">{{ $t('tournaments.title') }}</span>
         </div>
-        <h1 class="text-2xl md:text-3xl font-bold">{{ $t('tournaments.title') }}</h1>
+        <h1 class="text-xl sm:text-2xl font-bold">{{ $t('tournaments.title') }}</h1>
         <p class="text-white/80 mt-2 max-w-xl">
           {{ $t('tournaments.noTournamentsDesc') }}
         </p>

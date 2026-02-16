@@ -110,7 +110,7 @@
         </div>
 
         <!-- Today Attendance -->
-        <div class="bg-white rounded-2xl border border-slate-200 p-3 sm:p-5 hover:shadow-md transition-shadow">hadow">
+        <div class="bg-white rounded-2xl border border-slate-200 p-3 sm:p-5 hover:shadow-md transition-shadow">
           <div class="flex items-center justify-between">
             <div>
               <p class="text-xl sm:text-3xl font-bold text-amber-600">{{ todayAttendance.rate }}%</p>

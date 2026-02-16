@@ -63,7 +63,7 @@
           <div class="flex items-center justify-between">
             <div>
               <p class="text-emerald-100">{{ formattedDate }}</p>
-              <h2 class="text-2xl font-bold mt-1">{{ todayName }}</h2>
+              <h2 class="text-xl sm:text-2xl font-bold mt-1">{{ todayName }}</h2>
             </div>
             <div class="w-14 h-14 bg-white/20 backdrop-blur rounded-2xl flex items-center justify-center">
               <CalendarDays class="w-7 h-7" />

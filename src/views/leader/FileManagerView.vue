@@ -3,8 +3,8 @@
     <!-- Header -->
     <div class="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
       <div>
-        <h1 class="text-2xl font-bold text-slate-800 md:text-3xl">{{ $t('files.title') }}</h1>
-        <p class="text-slate-500">{{ $t('files.manageFiles') }}</p>
+        <h1 class="text-xl sm:text-2xl font-bold text-slate-800">{{ $t('files.title') }}</h1>
+        <p class="text-sm sm:text-base text-slate-500">{{ $t('files.manageFiles') }}</p>
       </div>
       
       <div class="flex items-center gap-2 sm:gap-3 flex-wrap">

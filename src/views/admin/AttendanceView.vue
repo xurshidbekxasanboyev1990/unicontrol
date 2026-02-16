@@ -3,8 +3,8 @@
     <!-- Header -->
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
       <div>
-        <h1 class="text-2xl font-bold text-slate-800">{{ $t('attendance.management') }}</h1>
-        <p class="text-slate-500">{{ $t('attendance.managementDesc') }}</p>
+        <h1 class="text-xl sm:text-2xl font-bold text-slate-800">{{ $t('attendance.management') }}</h1>
+        <p class="text-sm sm:text-base text-slate-500">{{ $t('attendance.managementDesc') }}</p>
       </div>
       <div class="flex items-center gap-3">
         <button @click="exportToExcel" class="px-4 py-2.5 bg-emerald-500 text-white rounded-xl hover:bg-emerald-600 transition-colors flex items-center gap-2">
@@ -81,44 +81,44 @@
           </div>
         </div>
       </div>
-      <div class="bg-gradient-to-br from-emerald-50 to-emerald-100/50 rounded-2xl p-5 border border-emerald-200/50">
+      <div class="bg-gradient-to-br from-emerald-50 to-emerald-100/50 rounded-2xl p-3 sm:p-5 border border-emerald-200/50">
         <div class="flex items-center justify-between">
           <div>
-            <p class="text-2xl font-bold text-emerald-600">{{ stats.present }}</p>
-            <p class="text-sm text-emerald-700 font-medium">{{ $t('attendance.statusPresent') }}</p>
+            <p class="text-xl sm:text-2xl font-bold text-emerald-600">{{ stats.present }}</p>
+            <p class="text-xs sm:text-sm text-emerald-700 font-medium">{{ $t('attendance.statusPresent') }}</p>
           </div>
           <div class="w-10 h-10 bg-emerald-200/50 rounded-xl flex items-center justify-center">
             <CheckCircle class="w-5 h-5 text-emerald-500" />
           </div>
         </div>
       </div>
-      <div class="bg-gradient-to-br from-rose-50 to-rose-100/50 rounded-2xl p-5 border border-rose-200/50">
+      <div class="bg-gradient-to-br from-rose-50 to-rose-100/50 rounded-2xl p-3 sm:p-5 border border-rose-200/50">
         <div class="flex items-center justify-between">
           <div>
-            <p class="text-2xl font-bold text-rose-600">{{ stats.absent }}</p>
-            <p class="text-sm text-rose-700 font-medium">{{ $t('attendance.statusAbsent') }}</p>
+            <p class="text-xl sm:text-2xl font-bold text-rose-600">{{ stats.absent }}</p>
+            <p class="text-xs sm:text-sm text-rose-700 font-medium">{{ $t('attendance.statusAbsent') }}</p>
           </div>
           <div class="w-10 h-10 bg-rose-200/50 rounded-xl flex items-center justify-center">
             <XCircle class="w-5 h-5 text-rose-500" />
           </div>
         </div>
       </div>
-      <div class="bg-gradient-to-br from-amber-50 to-amber-100/50 rounded-2xl p-5 border border-amber-200/50">
+      <div class="bg-gradient-to-br from-amber-50 to-amber-100/50 rounded-2xl p-3 sm:p-5 border border-amber-200/50">
         <div class="flex items-center justify-between">
           <div>
-            <p class="text-2xl font-bold text-amber-600">{{ stats.late }}</p>
-            <p class="text-sm text-amber-700 font-medium">{{ $t('attendance.statusLate') }}</p>
+            <p class="text-xl sm:text-2xl font-bold text-amber-600">{{ stats.late }}</p>
+            <p class="text-xs sm:text-sm text-amber-700 font-medium">{{ $t('attendance.statusLate') }}</p>
           </div>
           <div class="w-10 h-10 bg-amber-200/50 rounded-xl flex items-center justify-center">
             <Clock class="w-5 h-5 text-amber-500" />
           </div>
         </div>
       </div>
-      <div class="bg-gradient-to-br from-blue-50 to-blue-100/50 rounded-2xl p-5 border border-blue-200/50">
+      <div class="bg-gradient-to-br from-blue-50 to-blue-100/50 rounded-2xl p-3 sm:p-5 border border-blue-200/50">
         <div class="flex items-center justify-between">
           <div>
-            <p class="text-2xl font-bold text-blue-600">{{ stats.excused }}</p>
-            <p class="text-sm text-blue-700 font-medium">{{ $t('attendance.statusExcused') }}</p>
+            <p class="text-xl sm:text-2xl font-bold text-blue-600">{{ stats.excused }}</p>
+            <p class="text-xs sm:text-sm text-blue-700 font-medium">{{ $t('attendance.statusExcused') }}</p>
           </div>
           <div class="w-10 h-10 bg-blue-200/50 rounded-xl flex items-center justify-center">
             <FileText class="w-5 h-5 text-blue-500" />

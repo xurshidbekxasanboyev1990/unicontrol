@@ -35,8 +35,8 @@
          ======================================== -->
     <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
       <div>
-        <h1 class="text-2xl font-bold text-slate-800">{{ $t('reports.title') }}</h1>
-        <p class="text-slate-500">{{ currentGroup?.name }} - {{ $t('reports.groupReports') }}</p>
+        <h1 class="text-xl sm:text-2xl font-bold text-slate-800">{{ $t('reports.title') }}</h1>
+        <p class="text-sm sm:text-base text-slate-500">{{ currentGroup?.name }} - {{ $t('reports.groupReports') }}</p>
       </div>
       
       <button

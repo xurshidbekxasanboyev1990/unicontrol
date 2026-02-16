@@ -9,65 +9,65 @@
           <Store class="w-8 h-8" />
           <span class="text-sm font-medium opacity-90">UniMarket Admin</span>
         </div>
-        <h1 class="text-2xl md:text-3xl font-bold">{{ $t('market.adminTitle') }}</h1>
+        <h1 class="text-xl sm:text-2xl font-bold">{{ $t('market.adminTitle') }}</h1>
         <p class="text-white/80 mt-2">{{ $t('market.adminSubtitle') }}</p>
       </div>
     </div>
 
     <!-- Stats -->
     <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
-      <div class="bg-white rounded-2xl border border-slate-200 p-5">
+      <div class="bg-white rounded-2xl border border-slate-200 p-3 sm:p-5">
         <div class="flex items-center justify-between">
           <div>
-            <p class="text-sm text-slate-500">{{ $t('market.totalListings') }}</p>
-            <p class="text-2xl font-bold text-slate-800">{{ stats.total_listings || 0 }}</p>
+            <p class="text-xs sm:text-sm text-slate-500">{{ $t('market.totalListings') }}</p>
+            <p class="text-xl sm:text-2xl font-bold text-slate-800">{{ stats.total_listings || 0 }}</p>
           </div>
-          <div class="w-12 h-12 bg-emerald-100 rounded-xl flex items-center justify-center">
-            <Package class="w-6 h-6 text-emerald-600" />
+          <div class="w-10 h-10 sm:w-12 sm:h-12 bg-emerald-100 rounded-xl flex items-center justify-center">
+            <Package class="w-5 h-5 sm:w-6 sm:h-6 text-emerald-600" />
           </div>
         </div>
       </div>
-      <div class="bg-white rounded-2xl border border-slate-200 p-5">
+      <div class="bg-white rounded-2xl border border-slate-200 p-3 sm:p-5">
         <div class="flex items-center justify-between">
           <div>
-            <p class="text-sm text-slate-500">{{ $t('market.pendingApproval') }}</p>
-            <p class="text-2xl font-bold text-amber-600">{{ stats.pending_listings || 0 }}</p>
+            <p class="text-xs sm:text-sm text-slate-500">{{ $t('market.pendingApproval') }}</p>
+            <p class="text-xl sm:text-2xl font-bold text-amber-600">{{ stats.pending_listings || 0 }}</p>
           </div>
-          <div class="w-12 h-12 bg-amber-100 rounded-xl flex items-center justify-center">
-            <Clock class="w-6 h-6 text-amber-600" />
+          <div class="w-10 h-10 sm:w-12 sm:h-12 bg-amber-100 rounded-xl flex items-center justify-center">
+            <Clock class="w-5 h-5 sm:w-6 sm:h-6 text-amber-600" />
           </div>
         </div>
       </div>
-      <div class="bg-white rounded-2xl border border-slate-200 p-5 cursor-pointer hover:shadow-md transition-all" @click="activeTab = 'order-payments'">
+      <div class="bg-white rounded-2xl border border-slate-200 p-3 sm:p-5 cursor-pointer hover:shadow-md transition-all" @click="activeTab = 'order-payments'">
         <div class="flex items-center justify-between">
           <div>
-            <p class="text-sm text-slate-500">{{ $t('market.orderPayments') }}</p>
-            <p class="text-2xl font-bold" :class="stats.pending_payments ? 'text-orange-600' : 'text-slate-400'">{{ stats.pending_payments || 0 }}</p>
+            <p class="text-xs sm:text-sm text-slate-500">{{ $t('market.orderPayments') }}</p>
+            <p class="text-xl sm:text-2xl font-bold" :class="stats.pending_payments ? 'text-orange-600' : 'text-slate-400'">{{ stats.pending_payments || 0 }}</p>
           </div>
-          <div class="w-12 h-12 rounded-xl flex items-center justify-center" :class="stats.pending_payments ? 'bg-orange-100' : 'bg-slate-100'">
-            <CreditCard class="w-6 h-6" :class="stats.pending_payments ? 'text-orange-600' : 'text-slate-400'" />
+          <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center" :class="stats.pending_payments ? 'bg-orange-100' : 'bg-slate-100'">
+            <CreditCard class="w-5 h-5 sm:w-6 sm:h-6" :class="stats.pending_payments ? 'text-orange-600' : 'text-slate-400'" />
           </div>
         </div>
       </div>
-      <div class="bg-white rounded-2xl border border-slate-200 p-5">
+      <div class="bg-white rounded-2xl border border-slate-200 p-3 sm:p-5">
         <div class="flex items-center justify-between">
           <div>
-            <p class="text-sm text-slate-500">{{ $t('market.activeOrders') }}</p>
-            <p class="text-2xl font-bold text-blue-600">{{ stats.active_orders || 0 }}</p>
+            <p class="text-xs sm:text-sm text-slate-500">{{ $t('market.activeOrders') }}</p>
+            <p class="text-xl sm:text-2xl font-bold text-blue-600">{{ stats.active_orders || 0 }}</p>
           </div>
-          <div class="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
-            <ClipboardList class="w-6 h-6 text-blue-600" />
+          <div class="w-10 h-10 sm:w-12 sm:h-12 bg-blue-100 rounded-xl flex items-center justify-center">
+            <ClipboardList class="w-5 h-5 sm:w-6 sm:h-6 text-blue-600" />
           </div>
         </div>
       </div>
-      <div class="bg-white rounded-2xl border border-slate-200 p-5">
+      <div class="bg-white rounded-2xl border border-slate-200 p-3 sm:p-5">
         <div class="flex items-center justify-between">
           <div>
-            <p class="text-sm text-slate-500">{{ $t('market.openDisputes') }}</p>
-            <p class="text-2xl font-bold text-rose-600">{{ stats.open_disputes || 0 }}</p>
+            <p class="text-xs sm:text-sm text-slate-500">{{ $t('market.openDisputes') }}</p>
+            <p class="text-xl sm:text-2xl font-bold text-rose-600">{{ stats.open_disputes || 0 }}</p>
           </div>
-          <div class="w-12 h-12 bg-rose-100 rounded-xl flex items-center justify-center">
-            <AlertTriangle class="w-6 h-6 text-rose-600" />
+          <div class="w-10 h-10 sm:w-12 sm:h-12 bg-rose-100 rounded-xl flex items-center justify-center">
+            <AlertTriangle class="w-5 h-5 sm:w-6 sm:h-6 text-rose-600" />
           </div>
         </div>
       </div>

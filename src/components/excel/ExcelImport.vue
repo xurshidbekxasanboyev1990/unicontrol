@@ -17,15 +17,15 @@
     </div>
 
     <!-- Steps indicator -->
-    <div class="flex items-center gap-2 mb-8">
+    <div class="flex items-center gap-2 mb-8 overflow-x-auto pb-2">
       <div 
         v-for="step in 4" 
         :key="step"
-        class="flex items-center gap-2"
+        class="flex items-center gap-1.5 sm:gap-2 shrink-0"
       >
         <div 
           :class="[
-            'w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium transition-all',
+            'w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center text-xs sm:text-sm font-medium transition-all',
             currentStep >= step 
               ? 'bg-emerald-500 text-white' 
               : 'bg-slate-100 text-slate-400'
@@ -35,12 +35,12 @@
           <span v-else>{{ step }}</span>
         </div>
         <span :class="[
-          'text-sm font-medium',
+          'text-xs sm:text-sm font-medium hidden sm:inline',
           currentStep >= step ? 'text-slate-800' : 'text-slate-400'
         ]">
           {{ stepNames[step - 1] }}
         </span>
-        <ChevronRight v-if="step < 4" class="w-4 h-4 text-slate-300 mx-2" />
+        <ChevronRight v-if="step < 4" class="w-4 h-4 text-slate-300 mx-1 sm:mx-2" />
       </div>
     </div>
 

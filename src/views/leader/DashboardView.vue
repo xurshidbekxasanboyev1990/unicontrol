@@ -159,7 +159,7 @@
     <!-- Header -->
     <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
       <div>
-        <h1 class="text-2xl font-bold text-slate-800 md:text-3xl">{{ $t('layout.dashboard') }}</h1>
+        <h1 class="text-xl sm:text-2xl font-bold text-slate-800 md:text-3xl">{{ $t('layout.dashboard') }}</h1>
         <p class="text-slate-500">{{ currentGroup?.name }} <span v-if="currentGroup?.specialty" class="text-emerald-600">({{ currentGroup?.specialty }})</span> - {{ $t('dashboard.todayStatus') }}</p>
       </div>
       
@@ -187,11 +187,11 @@
       </div>
 
       <!-- Darslar -->
-      <div class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+      <div class="rounded-xl border border-slate-200 bg-white p-4 sm:p-5 shadow-sm">
         <div class="flex items-start justify-between">
           <div>
             <p class="text-sm text-slate-500">{{ $t('dashboard.lessons') }}</p>
-            <p class="mt-1 text-3xl font-bold text-slate-800">{{ todayLessons.length }}</p>
+            <p class="mt-1 text-2xl sm:text-3xl font-bold text-slate-800">{{ todayLessons.length }}</p>
             <p class="mt-1 text-xs text-slate-400">{{ $t('dashboard.today') }}</p>
           </div>
           <div class="rounded-lg bg-purple-100 p-2.5">
@@ -201,11 +201,11 @@
       </div>
 
       <!-- Davomat xulosasi (mini) -->
-      <div class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+      <div class="rounded-xl border border-slate-200 bg-white p-4 sm:p-5 shadow-sm">
         <div class="flex items-start justify-between">
           <div>
             <p class="text-sm text-slate-500">{{ $t('attendance.todayAttendance') }}</p>
-            <p class="mt-1 text-3xl font-bold text-slate-800">{{ presentToday }}/{{ groupStudents.length }}</p>
+            <p class="mt-1 text-2xl sm:text-3xl font-bold text-slate-800">{{ presentToday }}/{{ groupStudents.length }}</p>
             <p class="mt-1 text-xs text-slate-400">{{ $t('attendance.present') }}</p>
           </div>
           <div class="rounded-lg bg-blue-100 p-2.5">
@@ -215,11 +215,11 @@
       </div>
 
       <!-- Tezkor statistika -->
-      <div class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+      <div class="rounded-xl border border-slate-200 bg-white p-4 sm:p-5 shadow-sm">
         <div class="flex items-start justify-between">
           <div>
             <p class="text-sm text-slate-500">{{ $t('attendance.absent') }}</p>
-            <p class="mt-1 text-3xl font-bold text-slate-800">{{ absentToday }}</p>
+            <p class="mt-1 text-2xl sm:text-3xl font-bold text-slate-800">{{ absentToday }}</p>
             <p class="mt-1 text-xs text-slate-400">{{ $t('dashboard.today') }}</p>
           </div>
           <div class="rounded-lg bg-red-100 p-2.5">

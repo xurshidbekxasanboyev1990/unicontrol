@@ -3,8 +3,8 @@
     <!-- Header -->
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
       <div>
-        <h1 class="text-2xl font-bold text-slate-800">{{ $t('tournaments.title') }}</h1>
-        <p class="text-slate-500 mt-1">{{ $t('tournaments.manageDesc') }}</p>
+        <h1 class="text-xl sm:text-2xl font-bold text-slate-800">{{ $t('tournaments.title') }}</h1>
+        <p class="text-sm sm:text-base text-slate-500 mt-1">{{ $t('tournaments.manageDesc') }}</p>
       </div>
       <button
         @click="openCreateModal"

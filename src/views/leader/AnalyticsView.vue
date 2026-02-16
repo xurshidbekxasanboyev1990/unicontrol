@@ -23,8 +23,8 @@
     <template v-else>
       <!-- Header -->
       <div class="mb-6">
-        <h1 class="text-2xl font-bold text-slate-800 md:text-3xl">{{ $t('analytics.title') }}</h1>
-        <p class="text-slate-500">{{ currentGroup?.name }} - {{ $t('analytics.subtitle') }}</p>
+        <h1 class="text-xl sm:text-2xl font-bold text-slate-800">{{ $t('analytics.title') }}</h1>
+        <p class="text-sm sm:text-base text-slate-500">{{ currentGroup?.name }} - {{ $t('analytics.subtitle') }}</p>
       </div>
 
     <!-- Date Range Filter -->
@@ -67,8 +67,8 @@
       >
         <div class="flex items-center justify-between">
           <div>
-            <p class="text-sm text-slate-500">{{ card.title }}</p>
-            <p class="mt-1 text-2xl font-bold text-slate-800">{{ card.value }}</p>
+            <p class="text-xs sm:text-sm text-slate-500">{{ card.title }}</p>
+            <p class="mt-1 text-xl sm:text-2xl font-bold text-slate-800">{{ card.value }}</p>
           </div>
           <div 
             class="rounded-lg p-3"
