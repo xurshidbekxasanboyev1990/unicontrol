@@ -271,16 +271,13 @@ async function uploadSchedule() {
   result.value = null
 
   try {
-    const formData = new FormData()
-    formData.append('file', selectedFile.value)
-    formData.append('semester', semester.value)
-    formData.append('academic_year', academicYear.value)
-    formData.append('clear_existing', clearExisting.value)
-
-    const response = await api.post('/excel/import/schedules', formData, {
-      headers: { 'Content-Type': 'multipart/form-data' }
-    })
-    result.value = response.data
+    const response = await api.importSchedulesFromExcel(
+      selectedFile.value,
+      academicYear.value,
+      semester.value,
+      clearExisting.value
+    )
+    result.value = response
   } catch (err) {
     error.value = err.response?.data?.detail || err.message || 'Xatolik yuz berdi'
   } finally {

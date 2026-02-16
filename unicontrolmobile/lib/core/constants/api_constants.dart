@@ -68,6 +68,7 @@ class ApiConstants {
   // Reports endpoints
   static const String reports = '/reports';
   static const String reportById = '/reports/{id}';
+  static const String reportSubmit = '/reports/submit';
 
   // Notifications endpoints
   static const String notifications = '/notifications';
@@ -94,11 +95,6 @@ class ApiConstants {
   static const String users = '/users';
   static const String userById = '/users/{id}';
   static const String changePassword = '/auth/change-password';
-
-  // Reports endpoints
-  static const String reports = '/reports';
-  static const String reportById = '/reports/{id}';
-  static const String reportSubmit = '/reports/submit';
 
   // System endpoints
   static const String health = '/health';

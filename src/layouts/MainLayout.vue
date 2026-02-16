@@ -279,6 +279,7 @@ import {
     CreditCard,
     FileSpreadsheet,
     FileText,
+    FileUp,
     FolderOpen,
     GraduationCap,
     HelpCircle,
@@ -416,6 +417,8 @@ const currentPageTitle = computed(() => {
     'super-ai-analysis': () => t('layout.aiAnalysis'),
     'admin-holidays': () => t('layout.holidays'),
     'super-holidays': () => t('layout.holidays'),
+    'admin-import': () => t('importData.title') || 'Import',
+    'super-import': () => t('importData.title') || 'Import',
   }
   const fn = titles[route.name]
   return fn ? fn() : t('layout.controlPanel')
@@ -511,6 +514,7 @@ const menuSections = computed(() => {
         { path: '/admin/subjects', label: t('layout.subjects'), icon: markRaw(BookOpen) },
         { path: '/admin/holidays', label: t('layout.holidays'), icon: markRaw(CalendarOff) },
         { path: '/admin/contracts', label: t('layout.contracts'), icon: markRaw(FileSpreadsheet) },
+        { path: '/admin/import', label: t('importData.title') || 'Import', icon: markRaw(FileUp) },
         { path: '/admin/ai-analysis', label: t('layout.aiAnalysis'), icon: markRaw(Brain) },
         { path: '/admin/credit-module', label: t('layout.creditModule'), icon: markRaw(Calculator) }
       ]
@@ -551,6 +555,7 @@ const menuSections = computed(() => {
         { path: '/super/students', label: t('layout.students'), icon: markRaw(Users) },
         { path: '/super/groups', label: t('layout.groups'), icon: markRaw(Building2) },
         { path: '/super/contracts', label: t('layout.contracts'), icon: markRaw(FileSpreadsheet) },
+        { path: '/super/import', label: t('importData.title') || 'Import', icon: markRaw(FileUp) },
         { path: '/super/tournaments', label: t('layout.tournaments'), icon: markRaw(Trophy) },
         { path: '/super/reports', label: t('layout.reports'), icon: markRaw(BarChart3) },
         { path: '/super/notifications', label: t('layout.notifications'), icon: markRaw(Send), badge: dataStore.unreadCount > 0 ? String(dataStore.unreadCount) : null },
