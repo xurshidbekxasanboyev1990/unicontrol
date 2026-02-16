@@ -80,7 +80,7 @@ class Settings(BaseSettings):
     # ====================
     # CORS
     # ====================
-    CORS_ORIGINS: str = 'http://localhost:5173,http://localhost:5174,http://127.0.0.1:5173,http://127.0.0.1:5174,http://localhost:3000,http://127.0.0.1:3000,http://192.168.213.3:5173,http://192.168.213.3:8000,http://192.168.213.3'
+    CORS_ORIGINS: str = 'http://localhost:5173,http://localhost:5174,http://127.0.0.1:5173,http://127.0.0.1:5174,http://localhost:3000,http://127.0.0.1:3000,http://192.168.213.3:5173,http://192.168.213.3:8000,http://192.168.213.3,https://unicontrol.uz,https://www.unicontrol.uz'
     CORS_ALLOW_CREDENTIALS: bool = True
     
     @field_validator("CORS_ORIGINS", mode="before")

@@ -1,12 +1,11 @@
 # ========================================
-# UniControl - Docker Compose (Production)
+# UniControl - Docker Compose (LOCAL)
 # ========================================
-# unicontrol.uz domeni uchun production konfiguratsiya
-#
-# Ishga tushirish: docker compose up -d
-# Bot bilan: docker compose --profile bot up -d
-# To'xtatish: docker compose down
-# Loglarni ko'rish: docker compose logs -f
+# Mahalliy ishlab chiqish uchun
+# Ishga tushirish: docker compose -f docker-compose.local.yml up -d
+# Bot bilan: docker compose -f docker-compose.local.yml --profile bot up -d
+# Adminer bilan: docker compose -f docker-compose.local.yml --profile tools up -d
+# To'xtatish: docker compose -f docker-compose.local.yml down
 
 services:
   # ============================================
@@ -15,20 +14,20 @@ services:
   db:
     image: postgres:15-alpine
     container_name: unicontrol_db
-    restart: always
+    restart: unless-stopped
     environment:
-      POSTGRES_USER: ${DB_USER:?DB_USER required}
-      POSTGRES_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD required}
+      POSTGRES_USER: ${DB_USER:-unicontrol}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-unicontrol_secret_2026}
       POSTGRES_DB: ${DB_NAME:-unicontrol}
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "${DB_PORT:-5555}:5432"
     healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME:-unicontrol}" ]
-      interval: 10s
+      test: [ "CMD-SHELL", "pg_isready -U ${DB_USER:-unicontrol} -d ${DB_NAME:-unicontrol}" ]
+      interval: 5s
       timeout: 5s
       retries: 10
-    networks:
-      - internal
 
   # ============================================
   # Redis Cache
@@ -36,17 +35,17 @@ services:
   redis:
     image: redis:7-alpine
     container_name: unicontrol_redis
-    restart: always
-    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
+    restart: unless-stopped
+    command: redis-server --appendonly yes
     volumes:
       - redis_data:/data
+    ports:
+      - "${REDIS_PORT:-6666}:6379"
     healthcheck:
       test: [ "CMD", "redis-cli", "ping" ]
-      interval: 10s
+      interval: 5s
       timeout: 5s
       retries: 10
-    networks:
-      - internal
 
   # ============================================
   # Backend API (FastAPI)
@@ -56,27 +55,25 @@ services:
       context: ./backend
       dockerfile: Dockerfile
     container_name: unicontrol_backend
-    restart: always
+    restart: unless-stopped
     env_file:
       - .env
     environment:
-      - ENVIRONMENT=production
-      - DEBUG=false
-      - DATABASE_URL=postgresql+asyncpg://${DB_USER}:${DB_PASSWORD}@db:5432/${DB_NAME:-unicontrol}
+      - ENVIRONMENT=development
+      - DEBUG=true
+      - DATABASE_URL=postgresql+asyncpg://${DB_USER:-unicontrol}:${DB_PASSWORD:-unicontrol_secret_2026}@db:5432/${DB_NAME:-unicontrol}
       - REDIS_URL=redis://redis:6379/0
-      - CORS_ORIGINS=https://unicontrol.uz,https://www.unicontrol.uz,http://unicontrol.uz,http://www.unicontrol.uz
+      - CORS_ORIGINS=http://localhost:3000,http://localhost:5173,http://localhost:5174,http://192.168.213.3:5173,http://192.168.213.3:8000,http://192.168.213.3
       - DB_HOST=db
       - DB_PORT=5432
-      - DB_USER=${DB_USER}
-      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_USER=${DB_USER:-unicontrol}
+      - DB_PASSWORD=${DB_PASSWORD:-unicontrol_secret_2026}
       - DB_NAME=${DB_NAME:-unicontrol}
-      - SECRET_KEY=${SECRET_KEY:?SECRET_KEY required}
       - TELEGRAM_BOT_TOKEN=${BOT_TOKEN:-}
-    expose:
-      - "8000"
+    ports:
+      - "${BACKEND_PORT:-8000}:8000"
     volumes:
       - backend_uploads:/app/uploads
-      - backend_logs:/app/logs
     depends_on:
       db:
         condition: service_healthy
@@ -88,14 +85,6 @@ services:
       timeout: 10s
       retries: 5
       start_period: 60s
-    deploy:
-      resources:
-        limits:
-          cpus: '1.0'
-          memory: 1024M
-    networks:
-      - internal
-      - web
 
   # ============================================
   # Frontend (Vue.js + Nginx)
@@ -108,32 +97,12 @@ services:
         VITE_API_URL: /api/v1
         VITE_DEMO_MODE: "false"
     container_name: unicontrol_frontend
-    restart: always
+    restart: unless-stopped
     ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
-      - ./certbot/conf:/etc/letsencrypt:ro
-      - ./certbot/www:/var/www/certbot:ro
+      - "${FRONTEND_PORT:-5173}:80"
     depends_on:
       backend:
         condition: service_healthy
-    networks:
-      - web
-
-  # ============================================
-  # Certbot (SSL sertifikatlar)
-  # ============================================
-  certbot:
-    image: certbot/certbot:latest
-    container_name: unicontrol_certbot
-    volumes:
-      - ./certbot/conf:/etc/letsencrypt
-      - ./certbot/www:/var/www/certbot
-    entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done;'"
-    profiles:
-      - ssl
 
   # ============================================
   # Telegram Bot (ixtiyoriy)
@@ -143,7 +112,7 @@ services:
       context: ./unicontrol-bot
       dockerfile: Dockerfile
     container_name: unicontrol_bot
-    restart: always
+    restart: unless-stopped
     environment:
       - BOT_TOKEN=${BOT_TOKEN:-}
       - API_BASE_URL=http://backend:8000/api/v1
@@ -156,10 +125,22 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
-    networks:
-      - internal
     profiles:
       - bot
+
+  # ============================================
+  # Adminer (Database UI) - ixtiyoriy
+  # ============================================
+  adminer:
+    image: adminer:latest
+    container_name: unicontrol_adminer
+    restart: unless-stopped
+    ports:
+      - "${ADMINER_PORT:-8080}:8080"
+    depends_on:
+      - db
+    profiles:
+      - tools
 
 volumes:
   postgres_data:
@@ -174,9 +155,5 @@ volumes:
     driver: local
 
 networks:
-  internal:
-    name: unicontrol_internal
-    driver: bridge
-  web:
-    name: unicontrol_web
-    driver: bridge
+  default:
+    name: unicontrol_local_network
