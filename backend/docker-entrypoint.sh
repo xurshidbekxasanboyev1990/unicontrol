@@ -28,7 +28,7 @@ import os
 async def check_db():
     try:
         conn = await asyncpg.connect(
-            host=os.getenv('DB_HOST', 'db'),
+            host=os.getenv('DB_HOST', 'unicontrol_db'),
             port=int(os.getenv('DB_PORT', '5432')),
             user=os.getenv('DB_USER', 'unicontrol'),
             password=os.getenv('DB_PASSWORD', 'unicontrol_secret_2026'),

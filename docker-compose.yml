@@ -2,9 +2,13 @@
 # UniControl - Docker Compose (Production)
 # ========================================
 # unicontrol.uz domeni uchun production konfiguratsiya
+# External network: xurshid (barcha servislar shu networkda)
 #
-# Ishga tushirish: docker compose up -d
-# Bot bilan: docker compose --profile bot up -d
+# Ishga tushirish:
+#   1. docker network create xurshid (agar yo'q bo'lsa)
+#   2. docker compose up -d
+#   Bot bilan: docker compose --profile bot up -d
+#
 # To'xtatish: docker compose down
 # Loglarni ko'rish: docker compose logs -f
 
@@ -15,20 +19,22 @@ services:
   db:
     image: postgres:15-alpine
     container_name: unicontrol_db
-    restart: always
+    restart: unless-stopped
+    env_file:
+      - .env
     environment:
-      POSTGRES_USER: ${DB_USER:?DB_USER required}
-      POSTGRES_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD required}
+      POSTGRES_USER: ${DB_USER:-unicontrol}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-unicontrol_secret_2026}
       POSTGRES_DB: ${DB_NAME:-unicontrol}
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME:-unicontrol}" ]
+      test: [ "CMD-SHELL", "pg_isready -U ${DB_USER:-unicontrol} -d ${DB_NAME:-unicontrol}" ]
       interval: 10s
       timeout: 5s
       retries: 10
     networks:
-      - internal
+      - xurshid
 
   # ============================================
   # Redis Cache
@@ -36,7 +42,7 @@ services:
   redis:
     image: redis:7-alpine
     container_name: unicontrol_redis
-    restart: always
+    restart: unless-stopped
     command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
     volumes:
       - redis_data:/data
@@ -46,7 +52,7 @@ services:
       timeout: 5s
       retries: 10
     networks:
-      - internal
+      - xurshid
 
   # ============================================
   # Backend API (FastAPI)
@@ -56,24 +62,22 @@ services:
       context: ./backend
       dockerfile: Dockerfile
     container_name: unicontrol_backend
-    restart: always
+    restart: unless-stopped
     env_file:
       - .env
     environment:
       - ENVIRONMENT=production
       - DEBUG=false
-      - DATABASE_URL=postgresql+asyncpg://${DB_USER}:${DB_PASSWORD}@db:5432/${DB_NAME:-unicontrol}
-      - REDIS_URL=redis://redis:6379/0
+      - DATABASE_URL=postgresql+asyncpg://${DB_USER:-unicontrol}:${DB_PASSWORD:-unicontrol_secret_2026}@unicontrol_db:5432/${DB_NAME:-unicontrol}
+      - REDIS_URL=redis://unicontrol_redis:6379/0
       - CORS_ORIGINS=https://unicontrol.uz,https://www.unicontrol.uz,http://unicontrol.uz,http://www.unicontrol.uz
-      - DB_HOST=db
+      - DB_HOST=unicontrol_db
       - DB_PORT=5432
-      - DB_USER=${DB_USER}
-      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_USER=${DB_USER:-unicontrol}
+      - DB_PASSWORD=${DB_PASSWORD:-unicontrol_secret_2026}
       - DB_NAME=${DB_NAME:-unicontrol}
-      - SECRET_KEY=${SECRET_KEY:?SECRET_KEY required}
+      - SECRET_KEY=${SECRET_KEY:-unicontrol-secret-key-2026-production}
       - TELEGRAM_BOT_TOKEN=${BOT_TOKEN:-}
-    expose:
-      - "8000"
     volumes:
       - backend_uploads:/app/uploads
       - backend_logs:/app/logs
@@ -88,14 +92,8 @@ services:
       timeout: 10s
       retries: 5
       start_period: 60s
-    deploy:
-      resources:
-        limits:
-          cpus: '1.0'
-          memory: 1024M
     networks:
-      - internal
-      - web
+      - xurshid
 
   # ============================================
   # Frontend (Vue.js + Nginx)
@@ -108,32 +106,14 @@ services:
         VITE_API_URL: /api/v1
         VITE_DEMO_MODE: "false"
     container_name: unicontrol_frontend
-    restart: always
+    restart: unless-stopped
     ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
-      - ./certbot/conf:/etc/letsencrypt:ro
-      - ./certbot/www:/var/www/certbot:ro
+      - "${FRONTEND_PORT:-3000}:80"
     depends_on:
       backend:
         condition: service_healthy
     networks:
-      - web
-
-  # ============================================
-  # Certbot (SSL sertifikatlar)
-  # ============================================
-  certbot:
-    image: certbot/certbot:latest
-    container_name: unicontrol_certbot
-    volumes:
-      - ./certbot/conf:/etc/letsencrypt
-      - ./certbot/www:/var/www/certbot
-    entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done;'"
-    profiles:
-      - ssl
+      - xurshid
 
   # ============================================
   # Telegram Bot (ixtiyoriy)
@@ -143,11 +123,13 @@ services:
       context: ./unicontrol-bot
       dockerfile: Dockerfile
     container_name: unicontrol_bot
-    restart: always
+    restart: unless-stopped
+    env_file:
+      - .env
     environment:
       - BOT_TOKEN=${BOT_TOKEN:-}
-      - API_BASE_URL=http://backend:8000/api/v1
-      - REDIS_URL=redis://redis:6379/1
+      - API_BASE_URL=http://unicontrol_backend:8000/api/v1
+      - REDIS_URL=redis://unicontrol_redis:6379/1
       - DATABASE_URL=sqlite+aiosqlite:///./data/bot.db
     volumes:
       - bot_data:/app/data
@@ -157,7 +139,7 @@ services:
       redis:
         condition: service_healthy
     networks:
-      - internal
+      - xurshid
     profiles:
       - bot
 
@@ -174,9 +156,5 @@ volumes:
     driver: local
 
 networks:
-  internal:
-    name: unicontrol_internal
-    driver: bridge
-  web:
-    name: unicontrol_web
-    driver: bridge
+  xurshid:
+    external: true
