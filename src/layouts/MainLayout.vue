@@ -396,7 +396,6 @@ const currentPageTitle = computed(() => {
     'super-help': () => t('layout.help'),
     'super-subscriptions': () => t('layout.subscriptions'),
     'super-telegram-bot': () => t('layout.telegramBot'),
-    'super-sheets-schedule': () => t('layout.sheetsSchedule'),
     'super-contracts': () => t('layout.contracts'),
     'admin-contracts': () => t('layout.contracts'),
     'leader-contracts': () => t('layout.contracts'),
@@ -558,7 +557,6 @@ const menuSections = computed(() => {
         { path: '/super/subscriptions', label: t('layout.subscriptions'), icon: markRaw(CreditCard) },
         { path: '/super/market', label: t('layout.market'), icon: markRaw(Store) },
         { path: '/super/telegram-bot', label: t('layout.telegramBot'), icon: markRaw(Bot) },
-        { path: '/super/sheets-schedule', label: t('layout.sheetsSchedule'), icon: markRaw(Calendar) },
         { path: '/super/holidays', label: t('layout.holidays'), icon: markRaw(CalendarOff) },
         { path: '/super/ai-analysis', label: t('layout.aiAnalysis'), icon: markRaw(Brain) },
         { path: '/super/credit-module', label: t('layout.creditModule'), icon: markRaw(Calculator) }

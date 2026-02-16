@@ -129,12 +129,6 @@ class Settings(BaseSettings):
     TELEGRAM_BOT_WEBHOOK_SECRET: Optional[str] = None
     
     # ====================
-    # GOOGLE SHEETS
-    # ====================
-    GOOGLE_SHEETS_CREDENTIALS_PATH: str = "./kuafjadvalbot-8ea862c40108.json"
-    GOOGLE_SHEETS_SPREADSHEET_ID: str = "19VtQQe7M8lTqcAF9aIRABuSZ1jtEtI03"
-    
-    # ====================
     # REDIS
     # ====================
     REDIS_URL: str = "redis://localhost:6379/0"

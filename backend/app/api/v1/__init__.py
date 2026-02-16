@@ -37,7 +37,6 @@ from app.api.v1 import (
     faqs,
     subscriptions,
     market,
-    sheets,
     landing,
     contracts,
     quizzes,
@@ -232,13 +231,6 @@ api_router.include_router(
 api_router.include_router(
     market.router,
     tags=["UniMarket"]
-)
-
-# Google Sheets Schedule
-api_router.include_router(
-    sheets.router,
-    prefix="/sheets",
-    tags=["Google Sheets"]
 )
 
 # Landing Page Settings

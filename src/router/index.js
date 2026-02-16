@@ -87,7 +87,6 @@ import SuperLandingSettings from '../views/super/LandingSettingsView.vue'
 import SuperLogs from '../views/super/LogsView.vue'
 import SuperReports from '../views/super/ReportsView.vue'
 import SuperSettings from '../views/super/SettingsView.vue'
-import SuperSheetsSchedule from '../views/super/SheetsScheduleView.vue'
 import SuperSubscriptions from '../views/super/SubscriptionsView.vue'
 import SuperTelegramBot from '../views/super/TelegramBotView.vue'
 import SuperUsers from '../views/super/UsersView.vue'
@@ -218,7 +217,6 @@ const routes = [
       { path: 'tournaments', name: 'super-tournaments', component: AdminTournaments },
       { path: 'subscriptions', name: 'super-subscriptions', component: SuperSubscriptions },
       { path: 'telegram-bot', name: 'super-telegram-bot', component: SuperTelegramBot },
-      { path: 'sheets-schedule', name: 'super-sheets-schedule', component: SuperSheetsSchedule },
       { path: 'holidays', name: 'super-holidays', component: AdminHolidays },
       { path: 'users', name: 'super-users', component: SuperUsers },
       { path: 'contracts', name: 'super-contracts', component: SuperContracts },

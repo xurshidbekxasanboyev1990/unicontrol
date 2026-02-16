@@ -140,13 +140,13 @@ DAY_MAP = {
 
 # Default lesson time slots (standard schedule)
 DEFAULT_TIME_SLOTS = {
-    1: ("08:30", "10:00"),
-    2: ("10:10", "11:40"),
-    3: ("12:20", "13:50"),
-    4: ("14:00", "15:30"),
-    5: ("15:40", "17:10"),
-    6: ("17:20", "18:50"),
-    7: ("19:00", "20:30"),
+    1: ("08:30", "09:50"),
+    2: ("10:00", "11:20"),
+    3: ("12:00", "13:20"),
+    4: ("13:30", "14:50"),
+    5: ("15:00", "16:20"),
+    6: ("16:30", "17:50"),
+    7: ("18:00", "19:20"),
 }
 
 
@@ -1044,6 +1044,72 @@ class ExcelService:
 
         return records
 
+    # Regex to parse cell content: "Subject (type) Teacher Room"
+    _CELL_TYPE_RE = re.compile(
+        r"^(.+?)\s*\((ma.ruza|amaliy|laboratoriya|seminar)\)\s*(.*)",
+        re.IGNORECASE,
+    )
+    # Regex to extract room from the rest after teacher name
+    _CELL_ROOM_RE = re.compile(
+        r"^(.+?)\s+(\d{2,4}-xona\s+[A-Z]\s+bino|Sport\s+zal\s+[A-Z]\s+bino|"
+        r"L-\d+\s+[A-Z]\s+bino|Faollar\s+zali\s+[A-Z]\s+bino)$",
+        re.IGNORECASE,
+    )
+    # Map type keywords to ScheduleType
+    _CELL_TYPE_MAP = {
+        "ma'ruza": ScheduleType.LECTURE,
+        "ma`ruza": ScheduleType.LECTURE,
+        "maruza": ScheduleType.LECTURE,
+        "amaliy": ScheduleType.PRACTICE,
+        "laboratoriya": ScheduleType.LAB,
+        "seminar": ScheduleType.SEMINAR,
+    }
+
+    def _parse_cell_content(self, raw: str):
+        """
+        Parse schedule cell content.
+
+        Formats supported:
+        1. "Subject (type) Teacher Room"  — e.g.  Falsafa (ma'ruza) Ustoz 307-xona A bino
+        2. "Subject\\nTeacher\\nRoom"       — newline-separated
+        3. "Subject"                        — subject only (e.g. Kelajak soati Faollar zali A bino)
+
+        Returns (subject, schedule_type, teacher, room)
+        """
+        text = raw.strip()
+        if not text or text == "-":
+            return None, None, None, None
+
+        # --- Format 2: newline-separated ---
+        if "\n" in text:
+            lines = text.split("\n")
+            subject = lines[0].strip()
+            teacher = lines[1].strip() if len(lines) > 1 else None
+            room = lines[2].strip() if len(lines) > 2 else None
+            return subject, ScheduleType.LECTURE, teacher, room
+
+        # --- Format 1: "Subject (type) Teacher Room" ---
+        m = self._CELL_TYPE_RE.match(text)
+        if m:
+            subject = m.group(1).strip()
+            stype_raw = m.group(2).strip().lower().replace("\u2018", "'").replace("\u2019", "'")
+            stype = self._CELL_TYPE_MAP.get(stype_raw, ScheduleType.LECTURE)
+            rest = m.group(3).strip()
+
+            teacher = None
+            room = None
+            if rest:
+                rm = self._CELL_ROOM_RE.match(rest)
+                if rm:
+                    teacher = rm.group(1).strip()
+                    room = rm.group(2).strip()
+                else:
+                    teacher = rest
+            return subject, stype, teacher, room
+
+        # --- Format 3: plain string, no type ---
+        return text, ScheduleType.LECTURE, None, None
+
     def _parse_grid_schedule(
         self,
         ws,
@@ -1051,46 +1117,75 @@ class ExcelService:
         group_name_map: Dict[str, str],
     ) -> List[Dict[str, Any]]:
         """
-        Parse Google Sheets grid format where:
-        - Row 1: group names as column headers (starting from col 3+)
-        - Column 1: Day of week
-        - Column 2: Lesson number / time
-        - Cells: "Subject\\nTeacher\\nRoom" or just "Subject"
+        Parse grid format where:
+        - Row 1: department/direction name (merged) — SKIPPED
+        - Row 2: group names as column headers (col 4+)
+        - Column A: Day of week
+        - Column B: Lesson number
+        - Column C: Time range (e.g. "08:30-09:50")
+        - Column D+: Cell content = "Subject (type) Teacher Room"
+
+        Also supports legacy format where groups are in row 1.
         """
         records: List[Dict[str, Any]] = []
 
-        # Detect group columns (row 1, col 3+)
+        # --- Detect group row: try row 2 first, then row 1 ---
         group_cols: Dict[int, tuple] = {}
+        group_header_row = 2  # default: groups in row 2
+
+        skip_values = {"kun", "day", "para", "vaqt", "time", "hafta kuni", ""}
+
         for col_idx in range(1, ws.max_column + 1):
-            val = ws.cell(1, col_idx).value
+            val = ws.cell(2, col_idx).value
             if not val:
                 continue
             name = str(val).strip()
-            # Skip day/time headers
-            if name.lower() in ("kun", "day", "para", "vaqt", "time", "", "hafta kuni"):
+            if name.lower() in skip_values:
                 continue
-
             matched = fuzzy_match_group(name, group_lookup)
             if matched:
                 group_cols[col_idx] = (name, group_lookup[matched].id, matched)
                 group_name_map[name] = matched
             else:
-                group_cols[col_idx] = (name, None, None)
+                # Only add as unmatched group if it looks like a group name
+                # (contains digits + dash pattern typical for groups)
+                if re.search(r'\d{2}[-_]\d{2}', name):
+                    group_cols[col_idx] = (name, None, None)
+
+        # Fallback: if no groups found in row 2, try row 1 (legacy format)
+        if not group_cols:
+            group_header_row = 1
+            for col_idx in range(1, ws.max_column + 1):
+                val = ws.cell(1, col_idx).value
+                if not val:
+                    continue
+                name = str(val).strip()
+                if name.lower() in skip_values:
+                    continue
+                matched = fuzzy_match_group(name, group_lookup)
+                if matched:
+                    group_cols[col_idx] = (name, group_lookup[matched].id, matched)
+                    group_name_map[name] = matched
+                else:
+                    if re.search(r'\d{2}[-_]\d{2}', name):
+                        group_cols[col_idx] = (name, None, None)
 
         if not group_cols:
             return records
 
-        # Parse rows
+        data_start_row = group_header_row + 1
+
+        # --- Parse data rows ---
         current_day = None
-        for row_idx in range(2, ws.max_row + 1):
-            # Check if col 1 has a day
+        for row_idx in range(data_start_row, ws.max_row + 1):
+            # Column A: day of week
             day_val = ws.cell(row_idx, 1).value
             if day_val:
                 d = parse_day(day_val)
                 if d:
                     current_day = d
 
-            # Check lesson number in col 2
+            # Column B: lesson number
             lesson_val = ws.cell(row_idx, 2).value
             lesson_num = None
             if lesson_val is not None:
@@ -1098,6 +1193,17 @@ class ExcelService:
                     lesson_num = int(float(str(lesson_val)))
                 except (ValueError, TypeError):
                     pass
+
+            # Column C: time range (e.g. "08:30-09:50")
+            time_val = ws.cell(row_idx, 3).value
+            start_time = None
+            end_time = None
+            if time_val:
+                time_str = str(time_val).strip()
+                parts = re.split(r'[-–—]', time_str)
+                if len(parts) == 2:
+                    start_time = parse_time(parts[0].strip())
+                    end_time = parse_time(parts[1].strip())
 
             if not current_day:
                 continue
@@ -1108,12 +1214,9 @@ class ExcelService:
                 if not cell_val:
                     continue
 
-                lines = str(cell_val).strip().split("\n")
-                subject = lines[0].strip() if lines else ""
-                teacher = lines[1].strip() if len(lines) > 1 else None
-                room = lines[2].strip() if len(lines) > 2 else None
+                subject, stype, teacher, room = self._parse_cell_content(str(cell_val))
 
-                if not subject or subject == "-":
+                if not subject:
                     continue
 
                 records.append({
@@ -1125,9 +1228,9 @@ class ExcelService:
                     "subject": subject,
                     "teacher": teacher,
                     "room": room,
-                    "start_time": None,
-                    "end_time": None,
-                    "schedule_type": ScheduleType.LECTURE,
+                    "start_time": start_time,
+                    "end_time": end_time,
+                    "schedule_type": stype or ScheduleType.LECTURE,
                 })
 
         return records
