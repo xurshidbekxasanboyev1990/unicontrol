@@ -7,11 +7,13 @@ Author: UniControl Team
 Version: 1.0.0
 """
 
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, Request, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import get_db
 from app.services.auth_service import AuthService
+from app.services.activity_logger import log_activity, get_client_ip
+from app.models.activity_log import ActivityAction
 from app.schemas.user import (
     UserLogin,
     Token,
@@ -29,6 +31,7 @@ router = APIRouter()
 @router.post("/login", response_model=Token)
 async def login(
     credentials: UserLogin,
+    request: Request,
     db: AsyncSession = Depends(get_db)
 ):
     """
@@ -37,7 +40,35 @@ async def login(
     Returns access and refresh tokens.
     """
     service = AuthService(db)
-    return await service.login(credentials)
+    try:
+        result = await service.login(credentials)
+        # Log successful login
+        user_id = None
+        if hasattr(result, 'user') and result.user:
+            user_id = result.user.id
+        elif isinstance(result, dict):
+            user_id = result.get("user", {}).get("id")
+        await log_activity(
+            db=db,
+            action=ActivityAction.LOGIN,
+            description=f"Tizimga kirdi: {credentials.login}",
+            user_id=user_id,
+            ip_address=get_client_ip(request),
+            user_agent=request.headers.get("user-agent", "")[:500],
+            context={"login": credentials.login}
+        )
+        return result
+    except Exception as e:
+        # Log failed login
+        await log_activity(
+            db=db,
+            action=ActivityAction.LOGIN_FAILED,
+            description=f"Tizimga kirish muvaffaqiyatsiz: {credentials.login}",
+            ip_address=get_client_ip(request),
+            user_agent=request.headers.get("user-agent", "")[:500],
+            context={"login": credentials.login, "error": str(e)}
+        )
+        raise
 
 
 @router.post("/refresh", response_model=Token)

@@ -8,11 +8,13 @@ Version: 1.0.0
 """
 
 from typing import Optional
-from fastapi import APIRouter, Depends, Query, status
+from fastapi import APIRouter, Depends, Query, Request, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import get_db
 from app.services.user_service import UserService
+from app.services.activity_logger import log_activity, get_client_ip
+from app.models.activity_log import ActivityAction
 from app.schemas.user import UserCreate, UserUpdate, UserResponse
 from app.core.dependencies import get_current_active_user, require_admin, require_superadmin
 from app.models.user import User, UserRole
@@ -64,6 +66,7 @@ async def list_users(
 @router.post("", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
 async def create_user(
     user_data: UserCreate,
+    request: Request,
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(require_admin)
 ):
@@ -74,6 +77,13 @@ async def create_user(
     """
     service = UserService(db)
     user = await service.create(user_data)
+    await log_activity(
+        db=db, action=ActivityAction.CREATE,
+        description=f"Foydalanuvchi yaratildi: {user.name} ({user.role.value})",
+        user_id=current_user.id, entity_type="user", entity_id=user.id,
+        ip_address=get_client_ip(request),
+        new_data={"name": user.name, "role": user.role.value, "email": user.email}
+    )
     return UserResponse.model_validate(user)
 
 
@@ -100,6 +110,7 @@ async def get_user(
 async def update_user(
     user_id: int,
     user_data: UserUpdate,
+    request: Request,
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_active_user)
 ):
@@ -111,12 +122,19 @@ async def update_user(
     """
     service = UserService(db)
     user = await service.update(user_id, user_data, current_user)
+    await log_activity(
+        db=db, action=ActivityAction.UPDATE,
+        description=f"Foydalanuvchi yangilandi: {user.name}",
+        user_id=current_user.id, entity_type="user", entity_id=user_id,
+        ip_address=get_client_ip(request)
+    )
     return UserResponse.model_validate(user)
 
 
 @router.delete("/{user_id}")
 async def delete_user(
     user_id: int,
+    request: Request,
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(require_superadmin)
 ):
@@ -126,13 +144,23 @@ async def delete_user(
     Requires superadmin role.
     """
     service = UserService(db)
+    # Get user info before deletion
+    user = await service.get_by_id(user_id)
+    user_name = user.name if user else f"ID:{user_id}"
     await service.delete(user_id, current_user)
+    await log_activity(
+        db=db, action=ActivityAction.DELETE,
+        description=f"Foydalanuvchi o'chirildi: {user_name}",
+        user_id=current_user.id, entity_type="user", entity_id=user_id,
+        ip_address=get_client_ip(request)
+    )
     return {"message": "User deleted successfully"}
 
 
 @router.post("/{user_id}/activate")
 async def activate_user(
     user_id: int,
+    request: Request,
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(require_admin)
 ):
@@ -143,12 +171,19 @@ async def activate_user(
     """
     service = UserService(db)
     user = await service.activate(user_id)
+    await log_activity(
+        db=db, action=ActivityAction.USER_ACTIVATE,
+        description=f"Foydalanuvchi faollashtirildi: {user.name}",
+        user_id=current_user.id, entity_type="user", entity_id=user_id,
+        ip_address=get_client_ip(request)
+    )
     return {"message": "User activated", "user": UserResponse.model_validate(user)}
 
 
 @router.post("/{user_id}/deactivate")
 async def deactivate_user(
     user_id: int,
+    request: Request,
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(require_admin)
 ):
@@ -159,6 +194,12 @@ async def deactivate_user(
     """
     service = UserService(db)
     user = await service.deactivate(user_id, current_user)
+    await log_activity(
+        db=db, action=ActivityAction.USER_DEACTIVATE,
+        description=f"Foydalanuvchi o'chirildi (deaktivatsiya): {user.name}",
+        user_id=current_user.id, entity_type="user", entity_id=user_id,
+        ip_address=get_client_ip(request)
+    )
     return {"message": "User deactivated", "user": UserResponse.model_validate(user)}
 
 

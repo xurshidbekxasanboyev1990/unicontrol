@@ -793,6 +793,23 @@ class ApiService {
         return this.request(`/logs${buildQuery(params)}`)
     }
 
+    async getLogStats() {
+        return this.request('/logs/stats')
+    }
+
+    async deleteLog(id) {
+        return this.request(`/logs/${id}`, { method: 'DELETE' })
+    }
+
+    async clearLogs() {
+        return this.request('/logs', { method: 'DELETE' })
+    }
+
+    // ===== GLOBAL SEARCH =====
+    async globalSearch(query, limit = 20) {
+        return this.request(`/search?q=${encodeURIComponent(query)}&limit=${limit}`)
+    }
+
     // ===== SETTINGS =====
     async getSettings() {
         return this.request('/settings')

@@ -137,16 +137,20 @@
           <div class="flex items-center gap-3">
             <!-- Search -->
             <div class="hidden md:flex items-center">
-              <div class="relative group">
-                <Search class="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-emerald-500 transition-colors" />
-                <input
-                  type="text"
-                  :placeholder="t('common.search')"
-                  class="w-72 pl-11 pr-4 py-2.5 bg-slate-100/80 border border-transparent rounded-xl text-sm placeholder-slate-400 focus:outline-none focus:bg-white focus:border-emerald-300 focus:ring-4 focus:ring-emerald-500/10 transition-all duration-200"
-                />
-                <kbd class="absolute right-3 top-1/2 -translate-y-1/2 px-2 py-0.5 bg-slate-200/80 text-slate-400 text-xs rounded font-mono">⌘K</kbd>
-              </div>
+              <button
+                @click="showSearch = true"
+                class="relative group flex items-center w-72 pl-11 pr-4 py-2.5 bg-slate-100/80 border border-transparent rounded-xl text-sm text-slate-400 hover:bg-white hover:border-slate-200 transition-all duration-200 text-left"
+              >
+                <Search class="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                {{ t('common.search') }}...
+                <kbd class="absolute right-3 top-1/2 -translate-y-1/2 px-2 py-0.5 bg-slate-200/80 text-slate-400 text-xs rounded font-mono">Ctrl+K</kbd>
+              </button>
             </div>
+
+            <!-- Mobile Search Button -->
+            <button @click="showSearch = true" class="md:hidden p-2.5 text-slate-600 hover:bg-slate-100 rounded-xl transition-colors">
+              <Search class="w-5 h-5" />
+            </button>
 
             <!-- Notifications -->
             <button 
@@ -251,6 +255,9 @@
         </div>
       </footer>
     </div>
+
+    <!-- Search Modal -->
+    <SearchModal v-model="showSearch" />
   </div>
 </template>
 
@@ -294,6 +301,7 @@ import {
 } from 'lucide-vue-next'
 import { computed, markRaw, onMounted, onUnmounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import SearchModal from '../components/layout/SearchModal.vue'
 import api from '../services/api'
 import { useAuthStore } from '../stores/auth'
 import { useDataStore } from '../stores/data'
@@ -326,6 +334,7 @@ const getPollingTypes = () => {
 const isSidebarOpen = ref(false)
 const isDropdownOpen = ref(false)
 const hasAIAccess = ref(false)
+const showSearch = ref(false)
 
 const getRoleName = computed(() => {
   const role = authStore.user?.role
@@ -614,8 +623,16 @@ const handleClickOutside = (e) => {
   }
 }
 
+const handleKeyboard = (e) => {
+  if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+    e.preventDefault()
+    showSearch.value = !showSearch.value
+  }
+}
+
 onMounted(async () => {
   document.addEventListener('click', handleClickOutside)
+  document.addEventListener('keydown', handleKeyboard)
   // Real-time polling ishga tushirish
   dataStore.startPolling(getPollingTypes())
   // AI huquqini tekshirish (sidebar menu uchun)
@@ -627,6 +644,7 @@ onMounted(async () => {
 
 onUnmounted(() => {
   document.removeEventListener('click', handleClickOutside)
+  document.removeEventListener('keydown', handleKeyboard)
   // Polling to'xtatish
   dataStore.stopPolling()
 })

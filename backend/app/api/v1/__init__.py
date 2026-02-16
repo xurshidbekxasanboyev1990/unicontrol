@@ -42,6 +42,7 @@ from app.api.v1 import (
     contracts,
     quizzes,
     holidays,
+    search,
 )
 
 api_router = APIRouter()
@@ -197,6 +198,13 @@ api_router.include_router(
     logs.router,
     prefix="/logs",
     tags=["Logs"]
+)
+
+# Global Search
+api_router.include_router(
+    search.router,
+    prefix="/search",
+    tags=["Search"]
 )
 
 # Statistics
