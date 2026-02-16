@@ -124,7 +124,7 @@
       <!-- Week View -->
       <template v-else>
         <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden overflow-x-auto">
-          <div class="grid grid-cols-6 border-b border-slate-100 min-w-[640px]">
+          <div class="grid grid-cols-7 border-b border-slate-100 min-w-[800px]">
             <div class="p-4 bg-slate-50"></div>
             <div 
               v-for="day in weekDays" 
@@ -139,10 +139,13 @@
           <div 
             v-for="timeSlot in timeSlots" 
             :key="timeSlot"
-            class="grid grid-cols-6 border-b border-slate-100 last:border-0 min-w-[640px]"
+            class="grid grid-cols-7 border-b border-slate-100 last:border-0 min-w-[800px]"
           >
             <div class="p-4 text-sm font-medium text-slate-500 bg-slate-50 flex items-center justify-center">
-              {{ timeSlot }}
+              <div class="text-center">
+                <div class="font-bold text-slate-700">{{ timeSlot.split('-')[0] }}</div>
+                <div class="text-xs text-slate-400">{{ timeSlot.split('-')[1] }}</div>
+              </div>
             </div>
             <div 
               v-for="day in weekDays" 
@@ -157,7 +160,8 @@
                 @click="selectLesson(getLessonAt(day, timeSlot))"
               >
                 <p class="font-medium truncate">{{ getLessonAt(day, timeSlot).subject || getLessonAt(day, timeSlot).subjectName }}</p>
-                <p class="text-xs opacity-80 truncate">{{ getLessonAt(day, timeSlot).room || getLessonAt(day, timeSlot).roomNumber }}</p>
+                <p v-if="getLessonAt(day, timeSlot).teacher" class="text-xs opacity-80 truncate">{{ getLessonAt(day, timeSlot).teacher }}</p>
+                <p class="text-xs opacity-70 truncate">{{ getLessonAt(day, timeSlot).room || getLessonAt(day, timeSlot).roomNumber }}</p>
               </div>
             </div>
           </div>
@@ -260,8 +264,8 @@ const schedule = ref([])
 const selectedLesson = ref(null)
 const groupInfo = ref(null)
 
-const weekDays = ['Dushanba', 'Seshanba', 'Chorshanba', 'Payshanba', 'Juma']
-const timeSlots = ['08:30', '10:00', '12:00', '13:30', '15:00']
+const weekDays = ['Dushanba', 'Seshanba', 'Chorshanba', 'Payshanba', 'Juma', 'Shanba']
+const timeSlots = ['08:30-09:50', '10:00-11:20', '12:00-13:20', '13:30-14:50', '15:00-16:20', '16:30-17:50', '18:00-19:20']
 
 const subjectColors = [
   'bg-gradient-to-br from-blue-500 to-blue-600',
@@ -349,6 +353,8 @@ async function loadSchedule() {
         for (const [dayKey, lessons] of Object.entries(response)) {
           if (Array.isArray(lessons)) {
             lessons.forEach(lesson => {
+              // Filter out cancelled lessons
+              if (lesson.is_cancelled) return
               allLessons.push(normalizeScheduleItem({
                 ...lesson,
                 day: dayMapping[dayKey] || dayKey
@@ -358,7 +364,7 @@ async function loadSchedule() {
         }
         schedule.value = allLessons
       } else if (Array.isArray(response)) {
-        schedule.value = response.map(s => normalizeScheduleItem(s))
+        schedule.value = response.filter(s => !s.is_cancelled).map(s => normalizeScheduleItem(s))
       }
     } catch (e) {
       // Fallback to list endpoint
@@ -416,13 +422,14 @@ const isToday = (day) => {
   return days[new Date().getDay()] === day
 }
 
-const getLessonAt = (day, time) => {
+const getLessonAt = (day, timeSlot) => {
+  const slotStart = timeSlot.split('-')[0]?.trim()
   return schedule.value.find(s => {
     const lessonDay = s.day || s.dayName
     const lessonTime = s.time || s.startTime || ''
-    // Match start time: lessonTime could be "08:30" or "08:30-10:00"
+    // Match by full time range or just start time
     const startTime = lessonTime.split('-')[0]?.trim()
-    return lessonDay === day && startTime === time
+    return lessonDay === day && startTime === slotStart
   })
 }
 

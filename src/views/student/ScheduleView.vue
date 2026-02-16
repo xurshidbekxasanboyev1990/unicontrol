@@ -273,7 +273,7 @@ const { t } = useLanguageStore()
 
 const activeView = ref('Hafta')
 const days = ['Dushanba', 'Seshanba', 'Chorshanba', 'Payshanba', 'Juma', 'Shanba']
-const timeSlots = ['08:30-09:50', '10:00-11:20', '12:00-13:20', '13:30-14:50', '15:00-16:20']
+const timeSlots = ['08:30-09:50', '10:00-11:20', '12:00-13:20', '13:30-14:50', '15:00-16:20', '16:30-17:50', '18:00-19:20']
 
 const loading = ref(false)
 const schedule = ref([])
@@ -359,7 +359,9 @@ async function loadSchedule() {
         }
       }
       
-      schedule.value = items.map(s => {
+      schedule.value = items
+        .filter(s => !s.is_cancelled)
+        .map(s => {
         let timeStr = ''
         if (s.time_range) {
           timeStr = s.time_range.replace(/\s/g, '')
@@ -433,7 +435,11 @@ const uniqueSubjects = computed(() => {
 const isToday = (day) => day === currentDayName.value
 
 const getLesson = (day, time) => {
-  return schedule.value.find(s => s.day === day && s.time === time)
+  const slotStart = time.split('-')[0]?.trim()
+  return schedule.value.find(s => {
+    const lessonStart = (s.time || '').split('-')[0]?.trim()
+    return s.day === day && (s.time === time || lessonStart === slotStart)
+  })
 }
 </script>
 

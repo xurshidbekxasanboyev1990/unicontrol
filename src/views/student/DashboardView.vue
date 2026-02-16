@@ -411,14 +411,21 @@ async function loadDashboard() {
           if (items.length === 0 && scheduleResp.items) items = scheduleResp.items
           if (items.length === 0 && scheduleResp.data) items = scheduleResp.data
         }
-        scheduleList.value = items.map(s => ({
-          id: s.id,
-          day: s.day || dayMap[s.day_of_week] || s.day_of_week || '',
-          time: s.time || s.time_range || (s.start_time && s.end_time ? `${s.start_time}-${s.end_time}` : ''),
-          subject: s.subject || s.subject_name || '',
-          teacher: s.teacher || s.teacher_name || '',
-          room: s.room || s.classroom || s.location || ''
-        }))
+        scheduleList.value = items
+          .filter(s => !s.is_cancelled)
+          .map(s => {
+          // Build time string: strip spaces and seconds
+          let timeStr = s.time || s.time_range || (s.start_time && s.end_time ? `${s.start_time}-${s.end_time}` : '')
+          timeStr = timeStr.replace(/\s/g, '').replace(/(\d{2}:\d{2}):\d{2}/g, '$1')
+          return {
+            id: s.id,
+            day: s.day || dayMap[s.day_of_week] || s.day_of_week || '',
+            time: timeStr,
+            subject: s.subject || s.subject_name || '',
+            teacher: s.teacher || s.teacher_name || '',
+            room: s.room || s.classroom || s.location || ''
+          }
+        })
       } catch (e) {
         console.log('Schedule not available:', e.message)
       }
@@ -583,9 +590,21 @@ function getLessonStatus(lesson) {
 }
 
 function getLessonStatusClass(lesson) {
-  const status = getLessonStatus(lesson)
-  if (status === 'Hozir') return 'bg-green-100 text-green-600'
-  if (status === 'Tugadi') return 'bg-slate-100 text-slate-500'
+  const now = new Date()
+  const timeStr = lesson.time || lesson.start_time || ''
+  if (!timeStr.includes('-')) return 'bg-blue-100 text-blue-600'
+  
+  const [startHour, startMin] = timeStr.split('-')[0].split(':').map(Number)
+  const [endHour, endMin] = timeStr.split('-')[1].split(':').map(Number)
+  
+  const startTime = new Date()
+  startTime.setHours(startHour, startMin, 0)
+  
+  const endTime = new Date()
+  endTime.setHours(endHour, endMin, 0)
+  
+  if (now > endTime) return 'bg-slate-100 text-slate-500'
+  if (now >= startTime) return 'bg-green-100 text-green-600'
   return 'bg-blue-100 text-blue-600'
 }
 

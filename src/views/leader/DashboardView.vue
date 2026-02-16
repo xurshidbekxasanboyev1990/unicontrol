@@ -450,10 +450,15 @@ async function loadDashboard() {
         for (const [dayKey, lessons] of Object.entries(scheduleResp || {})) {
           if (Array.isArray(lessons)) {
             lessons.forEach(lesson => {
+              // Skip cancelled lessons
+              if (lesson.is_cancelled) return
+              // Build time string: strip spaces and seconds
+              let timeStr = lesson.time_range || `${lesson.start_time || ''}-${lesson.end_time || ''}`
+              timeStr = timeStr.replace(/\s/g, '').replace(/(\d{2}:\d{2}):\d{2}/g, '$1')
               allLessons.push({
                 ...lesson,
                 day: dayMapping[dayKey] || dayKey,
-                time: lesson.time_range || `${lesson.start_time || ''}-${lesson.end_time || ''}`,
+                time: timeStr,
                 room: lesson.room || lesson.location || '',
                 teacher: lesson.teacher_name || ''
               })
@@ -671,9 +676,21 @@ function getLessonStatus(lesson) {
 }
 
 function getLessonStatusClass(lesson) {
-  const status = getLessonStatus(lesson)
-  if (status === 'Davom etmoqda') return 'bg-green-100 text-green-600'
-  if (status === 'Tugadi') return 'bg-slate-200 text-slate-500'
+  const now = new Date()
+  const timeStr = lesson.time || lesson.start_time || ''
+  if (!timeStr.includes('-')) return 'bg-blue-100 text-blue-600'
+  
+  const [startHour, startMin] = timeStr.split('-')[0].split(':').map(Number)
+  const [endHour, endMin] = timeStr.split('-')[1].split(':').map(Number)
+  
+  const startTime = new Date()
+  startTime.setHours(startHour, startMin, 0)
+  
+  const endTime = new Date()
+  endTime.setHours(endHour, endMin, 0)
+  
+  if (now > endTime) return 'bg-slate-200 text-slate-500'
+  if (now >= startTime) return 'bg-green-100 text-green-600'
   return 'bg-blue-100 text-blue-600'
 }
 

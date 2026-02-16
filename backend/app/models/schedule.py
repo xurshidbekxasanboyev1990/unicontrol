@@ -219,6 +219,11 @@ class Schedule(Base):
         return f"<Schedule(id={self.id}, subject='{self.subject}', group_id={self.group_id})>"
     
     @property
+    def group_name(self) -> Optional[str]:
+        """Get group name from relationship."""
+        return self.group.name if self.group else None
+    
+    @property
     def duration_minutes(self) -> int:
         """Get class duration in minutes."""
         start_dt = datetime.combine(today_tashkent(), self.start_time)
