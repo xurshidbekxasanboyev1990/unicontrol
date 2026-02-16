@@ -1,23 +1,37 @@
-version: "3.8"
+# ========================================
+# UniControl Bot - Standalone Docker Compose
+# ========================================
+# Botni alohida ishga tushirish uchun (saytdan keyin)
+# Sayt ishlayotgan bo'lishi kerak!
+#
+# Ishga tushirish:
+#   docker compose up -d --build
+# To'xtatish:
+#   docker compose down
+# Loglarni ko'rish:
+#   docker compose logs -f
 
 services:
   bot:
     build: .
-    container_name: unicontrol-bot
+    container_name: unicontrol_bot
     restart: unless-stopped
     env_file:
       - .env
     environment:
-      - API_BASE_URL=http://unicontrol_backend:8000
-    networks:
-      - unicontrol_network
+      - BOT_TOKEN=${BOT_TOKEN}
+      - API_BASE_URL=http://unicontrol_backend:8000/api/v1
+      - REDIS_URL=redis://unicontrol_redis:6379/1
+      - DATABASE_URL=sqlite+aiosqlite:///./data/bot.db
     volumes:
-      - bot-data:/app/data
+      - bot_data:/app/data
+    networks:
+      - xurshid
 
 volumes:
-  bot-data:
-
+  bot_data:
+    driver: local
 
 networks:
-  unicontrol_network:
+  xurshid:
     external: true

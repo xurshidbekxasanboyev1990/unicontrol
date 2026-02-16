@@ -6,8 +6,10 @@
 #
 # Ishga tushirish:
 #   1. docker network create xurshid (agar yo'q bo'lsa)
-#   2. docker compose up -d
-#   Bot bilan: docker compose --profile bot up -d
+#   2. docker compose up -d --build
+#
+# Botni alohida ishga tushirish (sayt ishlayotganidan keyin):
+#   cd unicontrol-bot && docker compose up -d --build
 #
 # To'xtatish: docker compose down
 # Loglarni ko'rish: docker compose logs -f
@@ -116,32 +118,11 @@ services:
       - xurshid
 
   # ============================================
-  # Telegram Bot (ixtiyoriy)
+  # Telegram Bot — ALOHIDA ISHGA TUSHIRILADI!
   # ============================================
-  bot:
-    build:
-      context: ./unicontrol-bot
-      dockerfile: Dockerfile
-    container_name: unicontrol_bot
-    restart: unless-stopped
-    env_file:
-      - .env
-    environment:
-      - BOT_TOKEN=${BOT_TOKEN:-}
-      - API_BASE_URL=http://unicontrol_backend:8000/api/v1
-      - REDIS_URL=redis://unicontrol_redis:6379/1
-      - DATABASE_URL=sqlite+aiosqlite:///./data/bot.db
-    volumes:
-      - bot_data:/app/data
-    depends_on:
-      backend:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-    networks:
-      - xurshid
-    profiles:
-      - bot
+  # Bot unicontrol-bot/ papkasidan alohida deploy qilinadi:
+  #   cd unicontrol-bot && docker compose up -d --build
+  # Bot xurshid network orqali backend va redis ga ulanadi
 
 volumes:
   postgres_data:
@@ -151,8 +132,6 @@ volumes:
   backend_logs:
     driver: local
   backend_uploads:
-    driver: local
-  bot_data:
     driver: local
 
 networks:
