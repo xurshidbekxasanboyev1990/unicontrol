@@ -85,10 +85,11 @@ async def get_mobile_dashboard(
     
     # This month's stats
     month_start = today.replace(day=1)
+    from sqlalchemy import Integer, case
     month_stats = await db.execute(
         select(
             func.count(Attendance.id).label('total'),
-            func.sum(func.cast(Attendance.status == AttendanceStatus.PRESENT, int)).label('present')
+            func.sum(case((Attendance.status == AttendanceStatus.PRESENT, 1), else_=0)).label('present')
         ).where(
             Attendance.student_id == student.id,
             Attendance.date >= month_start

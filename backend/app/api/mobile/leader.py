@@ -68,11 +68,12 @@ async def get_leader_mobile_dashboard(
     students_count = students_result.scalar() or 0
     
     # Today's attendance
+    from sqlalchemy import case
     today_attendance = await db.execute(
         select(
             func.count(Attendance.id).label('marked'),
-            func.sum(func.cast(Attendance.status == AttendanceStatus.PRESENT, int)).label('present'),
-            func.sum(func.cast(Attendance.status == AttendanceStatus.ABSENT, int)).label('absent')
+            func.sum(case((Attendance.status == AttendanceStatus.PRESENT, 1), else_=0)).label('present'),
+            func.sum(case((Attendance.status == AttendanceStatus.ABSENT, 1), else_=0)).label('absent')
         ).join(Student).where(
             Student.group_id == group.id,
             Attendance.date == today
@@ -383,8 +384,8 @@ async def get_week_stats(
         select(
             Attendance.date,
             func.count(Attendance.id).label('total'),
-            func.sum(func.cast(Attendance.status == AttendanceStatus.PRESENT, int)).label('present'),
-            func.sum(func.cast(Attendance.status == AttendanceStatus.ABSENT, int)).label('absent')
+            func.sum(case((Attendance.status == AttendanceStatus.PRESENT, 1), else_=0)).label('present'),
+            func.sum(case((Attendance.status == AttendanceStatus.ABSENT, 1), else_=0)).label('absent')
         ).join(Student).where(
             Student.group_id == group.id,
             Attendance.date >= week_start
