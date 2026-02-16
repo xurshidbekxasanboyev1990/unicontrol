@@ -87,6 +87,16 @@ async def create_user(
     return UserResponse.model_validate(user)
 
 
+@router.get("/me", response_model=UserResponse)
+async def get_current_user_profile(
+    current_user: User = Depends(get_current_active_user)
+):
+    """
+    Get current authenticated user profile.
+    """
+    return UserResponse.model_validate(current_user)
+
+
 @router.get("/{user_id}", response_model=UserResponse)
 async def get_user(
     user_id: int,

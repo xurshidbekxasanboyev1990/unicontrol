@@ -197,6 +197,20 @@ async def mark_as_read(
     return NotificationResponse(**_notification_to_response(notification))
 
 
+@router.put("/{notification_id}/read", response_model=NotificationResponse)
+async def mark_as_read_put(
+    notification_id: int,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_active_user)
+):
+    """
+    Mark notification as read (PUT alias for mobile compatibility).
+    """
+    service = NotificationService(db)
+    notification = await service.mark_as_read(notification_id, current_user.id)
+    return NotificationResponse(**_notification_to_response(notification))
+
+
 @router.post("/read-all")
 async def mark_all_as_read(
     db: AsyncSession = Depends(get_db),
@@ -204,6 +218,19 @@ async def mark_all_as_read(
 ):
     """
     Mark all notifications as read.
+    """
+    service = NotificationService(db)
+    count = await service.mark_all_as_read(current_user.id)
+    return {"message": f"Marked {count} notifications as read"}
+
+
+@router.put("/read-all")
+async def mark_all_as_read_put(
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_active_user)
+):
+    """
+    Mark all notifications as read (PUT alias for mobile compatibility).
     """
     service = NotificationService(db)
     count = await service.mark_all_as_read(current_user.id)

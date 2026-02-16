@@ -9,7 +9,7 @@ Version: 1.0.0
 
 from typing import Optional
 from datetime import date
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, Query, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func
 from pydantic import BaseModel
@@ -54,7 +54,7 @@ async def get_leader_mobile_dashboard(
     group = result.scalar_one_or_none()
     
     if not group:
-        return {"error": "No group assigned"}
+        raise HTTPException(status_code=403, detail="No group assigned")
     
     today = today_tashkent()
     
@@ -82,7 +82,7 @@ async def get_leader_mobile_dashboard(
     
     # Today's classes
     from app.models.schedule import WeekDay
-    weekday = WeekDay(today.isoweekday())
+    weekday = WeekDay(today.strftime("%A").lower())
     classes_count = await db.execute(
         select(func.count(Schedule.id)).where(
             Schedule.group_id == group.id,
@@ -122,7 +122,7 @@ async def get_group_students(
     group = result.scalar_one_or_none()
     
     if not group:
-        return {"error": "No group assigned"}
+        raise HTTPException(status_code=403, detail="No group assigned")
     
     students = await db.execute(
         select(Student).where(
@@ -156,7 +156,7 @@ async def get_today_attendance(
     group = result.scalar_one_or_none()
     
     if not group:
-        return {"error": "No group assigned"}
+        raise HTTPException(status_code=403, detail="No group assigned")
     
     today = today_tashkent()
     
@@ -325,7 +325,7 @@ async def get_leader_today_schedule(
     group = result.scalar_one_or_none()
     
     if not group:
-        return {"error": "No group assigned"}
+        raise HTTPException(status_code=403, detail="No group assigned")
     
     from app.models.schedule import WeekDay
     today = today_tashkent()
@@ -372,7 +372,7 @@ async def get_week_stats(
     group = result.scalar_one_or_none()
     
     if not group:
-        return {"error": "No group assigned"}
+        raise HTTPException(status_code=403, detail="No group assigned")
     
     from datetime import timedelta
     today = today_tashkent()
@@ -442,7 +442,7 @@ async def send_group_notification(
                 user_id=student.user_id,
                 title=title,
                 message=message,
-                notification_type=NotificationType.INFO
+                type=NotificationType.INFO
             )
             db.add(notification)
             count += 1

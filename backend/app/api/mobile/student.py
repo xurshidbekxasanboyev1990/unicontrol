@@ -9,7 +9,7 @@ Version: 1.0.0
 
 from typing import Optional
 from datetime import date
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, Query, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func
 
@@ -39,7 +39,7 @@ async def get_student_profile(
     student = result.scalar_one_or_none()
     
     if not student:
-        return {"error": "Student profile not found"}
+        raise HTTPException(status_code=404, detail="Student profile not found")
     
     return {
         "id": student.id,
@@ -68,7 +68,7 @@ async def get_mobile_dashboard(
     student = result.scalar_one_or_none()
     
     if not student:
-        return {"error": "Student profile not found"}
+        raise HTTPException(status_code=404, detail="Student profile not found")
     
     today = today_tashkent()
     
@@ -96,7 +96,7 @@ async def get_mobile_dashboard(
     
     # Today's schedule count
     from app.models.schedule import WeekDay
-    weekday = WeekDay(today.isoweekday())
+    weekday = WeekDay(today.strftime("%A").lower())
     schedule_count = await db.execute(
         select(func.count(Schedule.id)).where(
             Schedule.group_id == student.group_id,
@@ -137,7 +137,7 @@ async def get_attendance_history(
     student = result.scalar_one_or_none()
     
     if not student:
-        return {"error": "Student profile not found"}
+        raise HTTPException(status_code=404, detail="Student profile not found")
     
     from datetime import timedelta
     start_date = today_tashkent() - timedelta(days=days)
@@ -183,7 +183,7 @@ async def get_today_schedule(
     student = result.scalar_one_or_none()
     
     if not student:
-        return {"error": "Student profile not found"}
+        raise HTTPException(status_code=404, detail="Student profile not found")
     
     from app.models.schedule import WeekDay
     today = today_tashkent()
@@ -230,7 +230,7 @@ async def get_week_schedule(
     student = result.scalar_one_or_none()
     
     if not student:
-        return {"error": "Student profile not found"}
+        raise HTTPException(status_code=404, detail="Student profile not found")
     
     from app.models.schedule import WeekDay
     
@@ -295,7 +295,7 @@ async def get_notifications(
                 "id": n.id,
                 "title": n.title,
                 "message": n.message,
-                "type": n.notification_type.value if n.notification_type else "info",
+                "type": n.type.value if n.type else "info",
                 "is_read": n.is_read,
                 "created_at": n.created_at.isoformat()
             }

@@ -9,7 +9,7 @@ group/notifications helpers used by the mobile app.
 
 from typing import Optional
 from datetime import date, timedelta
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, Query, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func
 
@@ -57,7 +57,7 @@ async def mobile_schedule(
     student_res = await db.execute(select(Student).where(Student.user_id == current_user.id))
     student = student_res.scalar_one_or_none()
     if not student:
-        return {"error": "Student profile not found"}
+        raise HTTPException(status_code=404, detail="Student profile not found")
 
     schedules = await db.execute(
         select(Schedule).where(Schedule.group_id == student.group_id, Schedule.is_active == True).order_by(Schedule.day_of_week, Schedule.start_time)
@@ -101,18 +101,18 @@ async def mobile_attendance(
         student_row = await db.execute(select(Student).where(Student.id == student_id))
         target = student_row.scalar_one_or_none()
         if not target:
-            return {"error": "Student not found"}
+            raise HTTPException(status_code=404, detail="Student not found")
         from app.models.group import Group
         grp = await db.execute(select(Group).where(Group.leader_id == current_user.id))
         if not grp.scalar_one_or_none():
-            return {"error": "Not allowed"}
+            raise HTTPException(status_code=403, detail="Not allowed")
 
     # Default to current student's records
     if not student_id:
         row = await db.execute(select(Student).where(Student.user_id == current_user.id))
         student = row.scalar_one_or_none()
         if not student:
-            return {"error": "Student profile not found"}
+            raise HTTPException(status_code=404, detail="Student profile not found")
         student_id = student.id
 
     start_date = today_tashkent() - timedelta(days=days)
