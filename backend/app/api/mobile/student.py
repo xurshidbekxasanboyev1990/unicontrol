@@ -187,7 +187,8 @@ async def get_today_schedule(
     
     from app.models.schedule import WeekDay
     today = today_tashkent()
-    weekday = WeekDay(today.isoweekday())
+    # Convert weekday to WeekDay enum using locale-independent name
+    weekday = WeekDay(today.strftime("%A").lower())
     
     schedules = await db.execute(
         select(Schedule).where(
@@ -204,7 +205,7 @@ async def get_today_schedule(
         "classes": [
             {
                 "id": s.id,
-                "subject": s.subject_name,
+                "subject": s.subject,
                 "start_time": s.start_time.strftime("%H:%M"),
                 "end_time": s.end_time.strftime("%H:%M"),
                 "room": s.room,
@@ -246,7 +247,7 @@ async def get_week_schedule(
     for s in schedules.scalars().all():
         week_schedule[s.day_of_week.name].append({
             "id": s.id,
-            "subject": s.subject_name,
+            "subject": s.subject,
             "start_time": s.start_time.strftime("%H:%M"),
             "end_time": s.end_time.strftime("%H:%M"),
             "room": s.room,

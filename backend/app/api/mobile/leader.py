@@ -329,7 +329,8 @@ async def get_leader_today_schedule(
     
     from app.models.schedule import WeekDay
     today = today_tashkent()
-    weekday = WeekDay(today.isoweekday())
+    # Convert weekday to WeekDay enum using weekday name
+    weekday = WeekDay(today.strftime("%A").lower())
     
     schedules = await db.execute(
         select(Schedule).where(
@@ -345,7 +346,7 @@ async def get_leader_today_schedule(
         "classes": [
             {
                 "id": s.id,
-                "subject": s.subject_name,
+                "subject": s.subject,
                 "start_time": s.start_time.strftime("%H:%M"),
                 "end_time": s.end_time.strftime("%H:%M"),
                 "room": s.room,

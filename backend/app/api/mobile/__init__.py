@@ -14,6 +14,7 @@ from app.api.mobile import (
     student,
     leader,
     push,
+    general,
 )
 
 mobile_router = APIRouter()
@@ -44,4 +45,11 @@ mobile_router.include_router(
     push.router,
     prefix="/push",
     tags=["Push Notifications"]
+)
+
+# General unprefixed mobile endpoints (legacy clients expect paths like /api/mobile/schedule)
+mobile_router.include_router(
+    general.router,
+    prefix="",
+    tags=["Mobile General"]
 )
