@@ -72,11 +72,30 @@ class Schedule extends Equatable {
   }
 
   factory Schedule.fromJson(Map<String, dynamic> json) {
+    // Handle day_of_week: can be int or string (e.g., "MONDAY")
+    int parsedDayOfWeek = 1;
+    final dayValue = json['day_of_week'] ?? json['day'];
+    if (dayValue is int) {
+      parsedDayOfWeek = dayValue;
+    } else if (dayValue is String) {
+      // Map string day names to int (1=Monday ... 7=Sunday)
+      final dayMap = {
+        'monday': 1, 'MONDAY': 1,
+        'tuesday': 2, 'TUESDAY': 2,
+        'wednesday': 3, 'WEDNESDAY': 3,
+        'thursday': 4, 'THURSDAY': 4,
+        'friday': 5, 'FRIDAY': 5,
+        'saturday': 6, 'SATURDAY': 6,
+        'sunday': 7, 'SUNDAY': 7,
+      };
+      parsedDayOfWeek = dayMap[dayValue] ?? int.tryParse(dayValue) ?? 1;
+    }
+
     return Schedule(
       id: json['id'] as int,
       groupId: json['group_id'] as int?,
       groupName: json['group_name'] as String?,
-      dayOfWeek: json['day_of_week'] as int? ?? json['day'] as int? ?? 1,
+      dayOfWeek: parsedDayOfWeek,
       startTime: json['start_time'] as String? ?? '',
       endTime: json['end_time'] as String? ?? '',
       subject: json['subject'] as String? ?? json['subject_name'] as String? ?? '',
@@ -84,7 +103,7 @@ class Schedule extends Equatable {
       room: json['room'] as String?,
       building: json['building'] as String?,
       type: json['type'] as String?,
-      isActive: json['is_active'] as bool? ?? true,
+      isActive: json['is_active'] as bool? ?? json['is_cancelled'] != true,
       createdAt: json['created_at'] != null
           ? DateTime.tryParse(json['created_at'] as String)
           : null,

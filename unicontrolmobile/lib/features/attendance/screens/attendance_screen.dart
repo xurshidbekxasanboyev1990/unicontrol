@@ -1,5 +1,5 @@
 /// Attendance Screen
-/// Davomat ko'rish va boshqarish ekrani
+/// Davomat ko'rish ekrani (Barcha rollar uchun)
 library;
 
 import 'package:flutter/material.dart';
@@ -7,11 +7,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
-import '../../../core/theme/app_theme.dart';
+import '../../../core/theme/app_colors.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../../data/providers/auth_provider.dart';
 import '../../../data/providers/data_provider.dart';
 import '../../../data/models/attendance_model.dart';
+import '../../../services/api_service.dart';
 
 class AttendanceScreen extends ConsumerStatefulWidget {
   const AttendanceScreen({super.key});
@@ -21,7 +22,10 @@ class AttendanceScreen extends ConsumerStatefulWidget {
 }
 
 class _AttendanceScreenState extends ConsumerState<AttendanceScreen> {
-  DateTime _selectedDate = DateTime.now();
+  bool _isLoading = false;
+  List<Attendance> _records = [];
+  AttendanceStats? _stats;
+  String _selectedFilter = 'all';
 
   @override
   void initState() {
@@ -29,250 +33,245 @@ class _AttendanceScreenState extends ConsumerState<AttendanceScreen> {
     _loadAttendance();
   }
 
-  void _loadAttendance() {
-    final dateStr = DateFormat('yyyy-MM-dd').format(_selectedDate);
-    ref.read(attendanceProvider.notifier).fetchAttendance(date: dateStr);
+  Future<void> _loadAttendance() async {
+    setState(() => _isLoading = true);
+
+    try {
+      final user = ref.read(currentUserProvider);
+      final role = user?.role;
+
+      // Load attendance records
+      final records = await apiService.getAttendance(days: 30);
+      
+      // Load stats
+      AttendanceStats? stats;
+      try {
+        stats = await apiService.getAttendanceStats(days: 30);
+      } catch (_) {}
+
+      if (mounted) {
+        setState(() {
+          _records = records;
+          _stats = stats;
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isLoading = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Xatolik: $e')),
+        );
+      }
+    }
   }
 
-  void _changeDate(int days) {
-    setState(() {
-      _selectedDate = _selectedDate.add(Duration(days: days));
-    });
-    _loadAttendance();
+  List<Attendance> get _filteredRecords {
+    if (_selectedFilter == 'all') return _records;
+    return _records
+        .where((r) => r.status.value == _selectedFilter)
+        .toList();
   }
 
   @override
   Widget build(BuildContext context) {
     final user = ref.watch(currentUserProvider);
-    final attendanceState = ref.watch(attendanceProvider);
-    final isLeaderOrAdmin = user?.canManageStudents == true;
+    final isLeaderOrAdmin =
+        user?.role == UserRole.leader || user?.role == UserRole.admin;
 
     return Scaffold(
-      backgroundColor: AppTheme.backgroundLight,
       appBar: AppBar(
         title: const Text('Davomat'),
-        backgroundColor: AppTheme.backgroundLight,
+        centerTitle: true,
         actions: [
           if (isLeaderOrAdmin)
             IconButton(
-              icon: const Icon(Icons.add_circle_outline),
-              onPressed: () => context.push('/attendance/mark'),
+              icon: const Icon(Icons.edit_calendar),
               tooltip: 'Davomat olish',
+              onPressed: () => context.go('/attendance/mark'),
             ),
         ],
       ),
-      body: Column(
-        children: [
-          // Date Selector
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            color: Colors.white,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                IconButton(
-                  icon: const Icon(Icons.chevron_left),
-                  onPressed: () => _changeDate(-1),
-                ),
-                GestureDetector(
-                  onTap: () async {
-                    final picked = await showDatePicker(
-                      context: context,
-                      initialDate: _selectedDate,
-                      firstDate: DateTime(2024),
-                      lastDate: DateTime.now(),
-                    );
-                    if (picked != null) {
-                      setState(() => _selectedDate = picked);
-                      _loadAttendance();
-                    }
-                  },
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 8,
-                    ),
-                    decoration: BoxDecoration(
-                      color: AppTheme.primaryColor.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: Row(
-                      children: [
-                        const Icon(
-                          Icons.calendar_today,
-                          size: 18,
-                          color: AppTheme.primaryColor,
-                        ),
-                        const SizedBox(width: 8),
-                        Text(
-                          _formatDate(_selectedDate),
-                          style: const TextStyle(
-                            color: AppTheme.primaryColor,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-                IconButton(
-                  icon: const Icon(Icons.chevron_right),
-                  onPressed: _selectedDate.isBefore(
-                    DateTime.now().subtract(const Duration(days: 1)),
-                  )
-                      ? () => _changeDate(1)
-                      : null,
-                ),
-              ],
-            ),
-          ),
+      body: RefreshIndicator(
+        onRefresh: _loadAttendance,
+        child: _isLoading
+            ? const Center(child: CircularProgressIndicator())
+            : CustomScrollView(
+                slivers: [
+                  // Stats card
+                  if (_stats != null)
+                    SliverToBoxAdapter(child: _buildStatsCard()),
 
-          // Stats Summary
-          _buildStatsSummary(attendanceState.records),
+                  // Filter chips
+                  SliverToBoxAdapter(child: _buildFilterChips()),
 
-          // Attendance List
-          Expanded(
-            child: attendanceState.isLoading
-                ? const Center(child: CircularProgressIndicator())
-                : attendanceState.error != null
-                    ? Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            const Icon(
-                              Icons.error_outline,
-                              size: 48,
-                              color: AppTheme.errorColor,
-                            ),
-                            const SizedBox(height: 8),
-                            Text(attendanceState.error!),
-                            const SizedBox(height: 16),
-                            ElevatedButton(
-                              onPressed: _loadAttendance,
-                              child: const Text('Qayta urinish'),
-                            ),
-                          ],
-                        ),
-                      )
-                    : attendanceState.records.isEmpty
-                        ? Center(
+                  // Records list
+                  _filteredRecords.isEmpty
+                      ? SliverFillRemaining(
+                          child: Center(
                             child: Column(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
                                 Icon(
-                                  Icons.fact_check_outlined,
+                                  Icons.event_busy,
                                   size: 64,
-                                  color: AppTheme.textTertiary.withValues(alpha: 0.5),
+                                  color: AppColors.slate300,
                                 ),
                                 const SizedBox(height: 16),
-                                const Text(
-                                  'Bu sana uchun davomat yo\'q',
+                                Text(
+                                  'Davomat yozuvlari topilmadi',
                                   style: TextStyle(
-                                    color: AppTheme.textSecondary,
+                                    color: AppColors.textSecondary,
                                     fontSize: 16,
                                   ),
                                 ),
                               ],
                             ),
-                          )
-                        : RefreshIndicator(
-                            onRefresh: () async => _loadAttendance(),
-                            child: ListView.builder(
-                              padding: const EdgeInsets.all(16),
-                              itemCount: attendanceState.records.length,
-                              itemBuilder: (context, index) {
-                                final record = attendanceState.records[index];
+                          ),
+                        )
+                      : SliverPadding(
+                          padding: const EdgeInsets.symmetric(horizontal: 16),
+                          sliver: SliverList(
+                            delegate: SliverChildBuilderDelegate(
+                              (context, index) {
+                                final record = _filteredRecords[index];
                                 return _buildAttendanceCard(record);
                               },
+                              childCount: _filteredRecords.length,
                             ),
                           ),
-          ),
-        ],
+                        ),
+                ],
+              ),
       ),
-      floatingActionButton: isLeaderOrAdmin
-          ? FloatingActionButton.extended(
-              onPressed: () => context.push('/attendance/mark'),
-              icon: const Icon(Icons.how_to_reg),
-              label: const Text('Davomat olish'),
-              backgroundColor: AppTheme.primaryColor,
-            )
-          : null,
     );
   }
 
-  String _formatDate(DateTime date) {
-    if (date.isAtSameMomentAs(DateTime(
-      DateTime.now().year,
-      DateTime.now().month,
-      DateTime.now().day,
-    ))) {
-      return 'Bugun';
-    }
-    return DateFormat('d MMMM, yyyy', 'uz').format(date);
-  }
-
-  Widget _buildStatsSummary(List<Attendance> records) {
-    final present = records.where((r) => r.isPresent).length;
-    final absent = records.where((r) => r.isAbsent).length;
-    final late = records.where((r) => r.isLate).length;
-    final excused = records.where((r) => r.isExcused).length;
-
+  Widget _buildStatsCard() {
+    final stats = _stats!;
     return Container(
       margin: const EdgeInsets.all(16),
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppTheme.borderColor),
+        gradient: LinearGradient(
+          colors: [AppColors.primary, AppColors.teal],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.primary.withOpacity(0.3),
+            blurRadius: 12,
+            offset: const Offset(0, 6),
+          ),
+        ],
       ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _buildStatItem('Keldi', present, AppTheme.presentColor),
-          _buildStatItem('Kelmadi', absent, AppTheme.absentColor),
-          _buildStatItem('Kechikdi', late, AppTheme.lateColor),
-          _buildStatItem('Sababli', excused, AppTheme.excusedColor),
+          Text(
+            'Davomat statistikasi',
+            style: TextStyle(
+              color: Colors.white.withOpacity(0.9),
+              fontSize: 14,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Text(
+                '${stats.attendanceRate.toStringAsFixed(1)}%',
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 36,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const Spacer(),
+              _buildMiniStat('✅', stats.presentDays, 'Keldi'),
+              const SizedBox(width: 16),
+              _buildMiniStat('❌', stats.absentDays, 'Kelmadi'),
+              const SizedBox(width: 16),
+              _buildMiniStat('⏰', stats.lateDays, 'Kechikdi'),
+            ],
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildStatItem(String label, int count, Color color) {
+  Widget _buildMiniStat(String emoji, int count, String label) {
     return Column(
       children: [
-        Container(
-          width: 40,
-          height: 40,
-          decoration: BoxDecoration(
-            color: color.withValues(alpha: 0.1),
-            borderRadius: BorderRadius.circular(10),
-          ),
-          child: Center(
-            child: Text(
-              count.toString(),
-              style: TextStyle(
-                color: color,
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ),
-        ),
+        Text(emoji, style: const TextStyle(fontSize: 20)),
         const SizedBox(height: 4),
         Text(
-          label,
+          '$count',
           style: const TextStyle(
+            color: Colors.white,
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        Text(
+          label,
+          style: TextStyle(
+            color: Colors.white.withOpacity(0.8),
             fontSize: 11,
-            color: AppTheme.textSecondary,
           ),
         ),
       ],
     );
   }
 
+  Widget _buildFilterChips() {
+    final filters = [
+      {'value': 'all', 'label': 'Barchasi'},
+      {'value': 'present', 'label': '✅ Keldi'},
+      {'value': 'absent', 'label': '❌ Kelmadi'},
+      {'value': 'late', 'label': '⏰ Kechikdi'},
+      {'value': 'excused', 'label': '📋 Sababli'},
+    ];
+
+    return Container(
+      height: 48,
+      margin: const EdgeInsets.only(bottom: 8),
+      child: ListView.builder(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        itemCount: filters.length,
+        itemBuilder: (context, index) {
+          final filter = filters[index];
+          final isSelected = _selectedFilter == filter['value'];
+
+          return Padding(
+            padding: const EdgeInsets.only(right: 8),
+            child: FilterChip(
+              label: Text(filter['label']!),
+              selected: isSelected,
+              onSelected: (selected) {
+                setState(() {
+                  _selectedFilter = filter['value']!;
+                });
+              },
+              selectedColor: AppColors.primary.withOpacity(0.15),
+              checkmarkColor: AppColors.primary,
+              labelStyle: TextStyle(
+                color: isSelected ? AppColors.primary : AppColors.textSecondary,
+                fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
   Widget _buildAttendanceCard(Attendance record) {
     final statusColor = _getStatusColor(record.status);
-    final statusIcon = _getStatusIcon(record.status);
+    final dateStr = DateFormat('dd.MM.yyyy').format(record.date);
 
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
@@ -280,80 +279,86 @@ class _AttendanceScreenState extends ConsumerState<AttendanceScreen> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppTheme.borderColor),
+        border: Border.all(
+          color: statusColor.withOpacity(0.3),
+          width: 1,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
       child: Row(
         children: [
-          // Avatar
+          // Status icon
           Container(
-            width: 48,
-            height: 48,
+            width: 44,
+            height: 44,
             decoration: BoxDecoration(
-              color: statusColor.withValues(alpha: 0.1),
+              color: statusColor.withOpacity(0.1),
               borderRadius: BorderRadius.circular(12),
             ),
-            child: Icon(
-              statusIcon,
-              color: statusColor,
-              size: 24,
+            child: Center(
+              child: Text(
+                record.statusEmoji,
+                style: const TextStyle(fontSize: 22),
+              ),
             ),
           ),
           const SizedBox(width: 12),
-
-          // Name and status
+          // Info
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  record.studentName ?? 'Talaba #${record.studentId}',
+                  dateStr,
                   style: const TextStyle(
                     fontWeight: FontWeight.w600,
                     fontSize: 15,
+                    color: AppColors.textPrimary,
                   ),
                 ),
-                const SizedBox(height: 4),
-                Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 2,
-                      ),
-                      decoration: BoxDecoration(
-                        color: statusColor.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(6),
-                      ),
-                      child: Text(
-                        record.statusLabel,
-                        style: TextStyle(
-                          color: statusColor,
-                          fontSize: 12,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ),
-                    if (record.groupName != null) ...[
-                      const SizedBox(width: 8),
-                      Text(
-                        record.groupName!,
-                        style: const TextStyle(
-                          color: AppTheme.textTertiary,
-                          fontSize: 12,
-                        ),
-                      ),
-                    ],
-                  ],
+                const SizedBox(height: 2),
+                Text(
+                  record.statusLabel,
+                  style: TextStyle(
+                    color: statusColor,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w500,
+                  ),
                 ),
+                if (record.notes != null && record.notes!.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 4),
+                    child: Text(
+                      record.notes!,
+                      style: TextStyle(
+                        color: AppColors.textSecondary,
+                        fontSize: 12,
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
               ],
             ),
           ),
-
-          // Emoji
-          Text(
-            record.statusEmoji,
-            style: const TextStyle(fontSize: 24),
-          ),
+          // Student name (if available)
+          if (record.studentName != null)
+            Padding(
+              padding: const EdgeInsets.only(left: 8),
+              child: Text(
+                record.studentName!,
+                style: TextStyle(
+                  color: AppColors.textSecondary,
+                  fontSize: 12,
+                ),
+              ),
+            ),
         ],
       ),
     );
@@ -362,27 +367,13 @@ class _AttendanceScreenState extends ConsumerState<AttendanceScreen> {
   Color _getStatusColor(AttendanceStatus status) {
     switch (status) {
       case AttendanceStatus.present:
-        return AppTheme.presentColor;
+        return AppColors.success;
       case AttendanceStatus.absent:
-        return AppTheme.absentColor;
+        return AppColors.error;
       case AttendanceStatus.late:
-        return AppTheme.lateColor;
+        return AppColors.warning;
       case AttendanceStatus.excused:
-        return AppTheme.excusedColor;
-    }
-  }
-
-  IconData _getStatusIcon(AttendanceStatus status) {
-    switch (status) {
-      case AttendanceStatus.present:
-        return Icons.check_circle;
-      case AttendanceStatus.absent:
-        return Icons.cancel;
-      case AttendanceStatus.late:
-        return Icons.access_time;
-      case AttendanceStatus.excused:
-        return Icons.description;
+        return AppColors.info;
     }
   }
 }
-

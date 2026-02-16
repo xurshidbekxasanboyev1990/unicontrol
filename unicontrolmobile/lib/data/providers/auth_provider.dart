@@ -102,8 +102,8 @@ class AuthNotifier extends StateNotifier<AuthState> {
     state = state.copyWith(isLoading: true, error: null);
 
     try {
-      await apiService.login(loginText, password);
-      final user = await apiService.getMe();
+      // Login returns user directly from response
+      final user = await apiService.login(loginText, password);
 
       await _storage.write(key: StorageKeys.user, value: jsonEncode(user.toJson()));
 

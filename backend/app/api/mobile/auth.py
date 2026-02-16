@@ -163,3 +163,28 @@ async def get_current_user_mobile(
         "phone": current_user.phone,
         "is_active": current_user.is_active
     }
+
+
+class ChangePasswordRequest(BaseModel):
+    """Change password request."""
+    current_password: str
+    new_password: str
+
+
+@router.put("/change-password")
+@router.post("/change-password")
+async def mobile_change_password(
+    request: ChangePasswordRequest,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_active_user),
+):
+    """
+    Change current user's password.
+    """
+    service = AuthService(db)
+    await service.change_password(
+        current_user,
+        request.current_password,
+        request.new_password,
+    )
+    return {"message": "Parol muvaffaqiyatli yangilandi"}

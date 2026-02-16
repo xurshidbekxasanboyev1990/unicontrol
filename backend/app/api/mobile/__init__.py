@@ -4,7 +4,7 @@ UniControl - Mobile API Routes
 Mobile application endpoints.
 
 Author: UniControl Team
-Version: 1.0.0
+Version: 2.0.0
 """
 
 from fastapi import APIRouter
@@ -15,6 +15,10 @@ from app.api.mobile import (
     leader,
     push,
     general,
+    dashboard,
+    clubs,
+    tournaments,
+    reports,
 )
 
 mobile_router = APIRouter()
@@ -40,6 +44,34 @@ mobile_router.include_router(
     tags=["Mobile Leader"]
 )
 
+# Dashboard (unified)
+mobile_router.include_router(
+    dashboard.router,
+    prefix="/dashboard",
+    tags=["Mobile Dashboard"]
+)
+
+# Clubs
+mobile_router.include_router(
+    clubs.router,
+    prefix="/clubs",
+    tags=["Mobile Clubs"]
+)
+
+# Tournaments
+mobile_router.include_router(
+    tournaments.router,
+    prefix="/tournaments",
+    tags=["Mobile Tournaments"]
+)
+
+# Reports
+mobile_router.include_router(
+    reports.router,
+    prefix="/reports",
+    tags=["Mobile Reports"]
+)
+
 # Push Notifications
 mobile_router.include_router(
     push.router,
@@ -47,7 +79,7 @@ mobile_router.include_router(
     tags=["Push Notifications"]
 )
 
-# General unprefixed mobile endpoints (legacy clients expect paths like /api/mobile/schedule)
+# General unprefixed mobile endpoints (schedule, attendance, groups, notifications/unread-count)
 mobile_router.include_router(
     general.router,
     prefix="",

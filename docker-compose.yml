@@ -116,7 +116,6 @@ services:
         condition: service_healthy
     networks:
       - xurshid
-
   # ============================================
   # Telegram Bot — ALOHIDA ISHGA TUSHIRILADI!
   # ============================================

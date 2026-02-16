@@ -1,12 +1,13 @@
 /// Main Shell
-/// Bottom navigation bilan asosiy layout
+/// Zamonaviy Bottom navigation bilan asosiy layout
 library;
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../core/theme/app_theme.dart';
+import '../core/theme/app_colors.dart';
 import '../data/providers/auth_provider.dart';
 import '../data/providers/data_provider.dart';
 
@@ -26,25 +27,25 @@ class _MainShellState extends ConsumerState<MainShell> {
     _NavItem(
       path: '/dashboard',
       icon: Icons.dashboard_outlined,
-      activeIcon: Icons.dashboard,
+      activeIcon: Icons.dashboard_rounded,
       label: 'Bosh sahifa',
     ),
     _NavItem(
       path: '/schedule',
       icon: Icons.calendar_today_outlined,
-      activeIcon: Icons.calendar_today,
+      activeIcon: Icons.calendar_today_rounded,
       label: 'Jadval',
     ),
     _NavItem(
       path: '/attendance',
       icon: Icons.fact_check_outlined,
-      activeIcon: Icons.fact_check,
+      activeIcon: Icons.fact_check_rounded,
       label: 'Davomat',
     ),
     _NavItem(
       path: '/profile',
-      icon: Icons.person_outline,
-      activeIcon: Icons.person,
+      icon: Icons.person_outline_rounded,
+      activeIcon: Icons.person_rounded,
       label: 'Profil',
     ),
   ];
@@ -53,25 +54,25 @@ class _MainShellState extends ConsumerState<MainShell> {
     _NavItem(
       path: '/dashboard',
       icon: Icons.dashboard_outlined,
-      activeIcon: Icons.dashboard,
+      activeIcon: Icons.dashboard_rounded,
       label: 'Bosh sahifa',
     ),
     _NavItem(
       path: '/attendance',
       icon: Icons.fact_check_outlined,
-      activeIcon: Icons.fact_check,
+      activeIcon: Icons.fact_check_rounded,
       label: 'Davomat',
     ),
     _NavItem(
       path: '/schedule',
       icon: Icons.calendar_today_outlined,
-      activeIcon: Icons.calendar_today,
+      activeIcon: Icons.calendar_today_rounded,
       label: 'Jadval',
     ),
     _NavItem(
       path: '/profile',
-      icon: Icons.person_outline,
-      activeIcon: Icons.person,
+      icon: Icons.person_outline_rounded,
+      activeIcon: Icons.person_rounded,
       label: 'Profil',
     ),
   ];
@@ -80,25 +81,25 @@ class _MainShellState extends ConsumerState<MainShell> {
     _NavItem(
       path: '/dashboard',
       icon: Icons.dashboard_outlined,
-      activeIcon: Icons.dashboard,
+      activeIcon: Icons.dashboard_rounded,
       label: 'Dashboard',
     ),
     _NavItem(
       path: '/attendance',
       icon: Icons.fact_check_outlined,
-      activeIcon: Icons.fact_check,
+      activeIcon: Icons.fact_check_rounded,
       label: 'Davomat',
     ),
     _NavItem(
       path: '/schedule',
       icon: Icons.calendar_today_outlined,
-      activeIcon: Icons.calendar_today,
+      activeIcon: Icons.calendar_today_rounded,
       label: 'Jadval',
     ),
     _NavItem(
       path: '/profile',
-      icon: Icons.person_outline,
-      activeIcon: Icons.person,
+      icon: Icons.person_outline_rounded,
+      activeIcon: Icons.person_rounded,
       label: 'Profil',
     ),
   ];
@@ -140,6 +141,7 @@ class _MainShellState extends ConsumerState<MainShell> {
 
   void _onItemTapped(int index) {
     if (index != _currentIndex) {
+      HapticFeedback.lightImpact();
       setState(() => _currentIndex = index);
       context.go(_navItems[index].path);
     }
@@ -152,20 +154,23 @@ class _MainShellState extends ConsumerState<MainShell> {
 
     return Scaffold(
       body: widget.child,
+      extendBody: true,
       bottomNavigationBar: Container(
+        margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
         decoration: BoxDecoration(
-          color: AppTheme.surfaceLight,
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(24),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.05),
-              blurRadius: 10,
-              offset: const Offset(0, -5),
+              color: Colors.black.withOpacity(0.08),
+              blurRadius: 30,
+              offset: const Offset(0, 10),
             ),
           ],
         ),
         child: SafeArea(
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: navItems.asMap().entries.map((entry) {
@@ -226,16 +231,24 @@ class _NavBarItem extends StatelessWidget {
       onTap: onTap,
       behavior: HitTestBehavior.opaque,
       child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
+        duration: const Duration(milliseconds: 250),
+        curve: Curves.easeOutCubic,
         padding: EdgeInsets.symmetric(
-          horizontal: isSelected ? 16 : 12,
-          vertical: 8,
+          horizontal: isSelected ? 18 : 14,
+          vertical: 10,
         ),
         decoration: BoxDecoration(
-          color: isSelected
-              ? AppTheme.primaryColor.withValues(alpha: 0.1)
-              : Colors.transparent,
-          borderRadius: BorderRadius.circular(12),
+          gradient: isSelected ? AppColors.primaryGradient : null,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: isSelected
+              ? [
+                  BoxShadow(
+                    color: AppColors.primary.withOpacity(0.3),
+                    blurRadius: 12,
+                    offset: const Offset(0, 4),
+                  ),
+                ]
+              : null,
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
@@ -243,26 +256,36 @@ class _NavBarItem extends StatelessWidget {
             Stack(
               clipBehavior: Clip.none,
               children: [
-                Icon(
-                  icon,
-                  color: isSelected
-                      ? AppTheme.primaryColor
-                      : AppTheme.textTertiary,
-                  size: 24,
+                AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  child: Icon(
+                    icon,
+                    color: isSelected ? Colors.white : AppColors.textTertiary,
+                    size: isSelected ? 26 : 24,
+                  ),
                 ),
                 if (badge != null)
                   Positioned(
-                    right: -8,
-                    top: -4,
+                    right: -10,
+                    top: -6,
                     child: Container(
                       padding: const EdgeInsets.all(4),
-                      decoration: const BoxDecoration(
-                        color: AppTheme.errorColor,
+                      decoration: BoxDecoration(
+                        gradient: const LinearGradient(
+                          colors: [AppColors.error, AppColors.rose],
+                        ),
                         shape: BoxShape.circle,
+                        border: Border.all(color: Colors.white, width: 2),
+                        boxShadow: [
+                          BoxShadow(
+                            color: AppColors.error.withOpacity(0.4),
+                            blurRadius: 6,
+                          ),
+                        ],
                       ),
                       constraints: const BoxConstraints(
-                        minWidth: 16,
-                        minHeight: 16,
+                        minWidth: 18,
+                        minHeight: 18,
                       ),
                       child: Text(
                         badge! > 99 ? '99+' : badge.toString(),
@@ -277,21 +300,33 @@ class _NavBarItem extends StatelessWidget {
                   ),
               ],
             ),
-            if (isSelected) ...[
-              const SizedBox(width: 8),
-              Text(
-                label,
-                style: const TextStyle(
-                  color: AppTheme.primaryColor,
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
+            AnimatedSize(
+              duration: const Duration(milliseconds: 200),
+              curve: Curves.easeOutCubic,
+              child: SizedBox(
+                width: isSelected ? null : 0,
+                child: AnimatedOpacity(
+                  duration: const Duration(milliseconds: 200),
+                  opacity: isSelected ? 1 : 0,
+                  child: Padding(
+                    padding: EdgeInsets.only(left: isSelected ? 10 : 0),
+                    child: Text(
+                      label,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.clip,
+                    ),
+                  ),
                 ),
               ),
-            ],
+            ),
           ],
         ),
       ),
     );
   }
 }
-

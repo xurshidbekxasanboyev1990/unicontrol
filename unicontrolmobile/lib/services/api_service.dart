@@ -1,5 +1,6 @@
 /// API Service
-/// Backend API bilan aloqa qilish uchun asosiy servis
+/// Backend Mobile API bilan aloqa qilish uchun yagona servis
+/// Barcha endpointlar /api/mobile orqali ishlaydi
 library;
 
 import 'package:dio/dio.dart';
@@ -33,18 +34,14 @@ class ApiService {
       },
     ));
 
-    // Request interceptor
     _dio.interceptors.add(InterceptorsWrapper(
       onRequest: (options, handler) async {
-        // Token qo'shish
         if (_accessToken != null) {
           options.headers['Authorization'] = 'Bearer $_accessToken';
         }
-
         if (kDebugMode) {
           _logger.d('REQUEST: ${options.method} ${options.path}');
         }
-
         return handler.next(options);
       },
       onResponse: (response, handler) {
@@ -58,12 +55,10 @@ class ApiService {
           _logger.e('ERROR: ${error.response?.statusCode} ${error.requestOptions.path}');
         }
 
-        // 401 - token muddati tugagan
         if (error.response?.statusCode == 401 && !_isRefreshing) {
           try {
             final refreshed = await refreshTokens();
             if (refreshed) {
-              // Qayta so'rov yuborish
               final opts = error.requestOptions;
               opts.headers['Authorization'] = 'Bearer $_accessToken';
               final response = await _dio.fetch(opts);
@@ -78,9 +73,12 @@ class ApiService {
       },
     ));
 
-    // Token larni yuklash
     _loadTokens();
   }
+
+  // ==========================================
+  // TOKEN MANAGEMENT
+  // ==========================================
 
   Future<void> _loadTokens() async {
     _accessToken = await _storage.read(key: StorageKeys.accessToken);
@@ -110,32 +108,28 @@ class ApiService {
   // ==========================================
 
   /// Login
-  Future<Map<String, dynamic>> login(String username, String password) async {
+  Future<User> login(String username, String password) async {
     try {
-      _logger.d('Attempting login: $username to ${ApiConstants.baseUrl}${ApiConstants.login}');
-
       final response = await _dio.post(
         ApiConstants.login,
         data: {
           'username': username,
           'password': password,
-          'device_token': null, // Firebase token - keyinchalik qo'shiladi
+          'device_token': null,
           'device_type': 'android',
         },
       );
 
       final data = response.data;
-      _logger.d('Login success: ${data.keys}');
-
       final accessToken = data['access_token'] as String;
       final refreshToken = data['refresh_token'] as String? ?? '';
 
       await _saveTokens(accessToken, refreshToken);
       await _storage.write(key: StorageKeys.isLoggedIn, value: 'true');
 
-      return data;
+      final userData = data['user'] as Map<String, dynamic>;
+      return User.fromJson(userData);
     } on DioException catch (e) {
-      _logger.e('Login error: ${e.response?.statusCode} - ${e.response?.data}');
       throw _handleError(e);
     }
   }
@@ -202,333 +196,10 @@ class ApiService {
   }
 
   // ==========================================
-  // STUDENTS ENDPOINTS
-  // ==========================================
-
-  /// Get students list
-  Future<List<Student>> getStudents({
-    int page = 1,
-    int pageSize = 20,
-    String? search,
-    int? groupId,
-  }) async {
-    try {
-      final response = await _dio.get(
-        ApiConstants.students,
-        queryParameters: {
-          'page': page,
-          'page_size': pageSize,
-          if (search != null && search.isNotEmpty) 'search': search,
-          if (groupId != null) 'group_id': groupId,
-        },
-      );
-
-      final data = response.data;
-      final items = data['items'] ?? data['students'] ?? data;
-
-      if (items is List) {
-        return items.map((e) => Student.fromJson(e)).toList();
-      }
-      return [];
-    } on DioException catch (e) {
-      throw _handleError(e);
-    }
-  }
-
-  /// Get student by ID
-  Future<Student> getStudent(int id) async {
-    try {
-      final response = await _dio.get(
-        ApiConstants.studentById.replaceAll('{id}', id.toString()),
-      );
-      return Student.fromJson(response.data);
-    } on DioException catch (e) {
-      throw _handleError(e);
-    }
-  }
-
-  /// Create student
-  Future<Student> createStudent(Map<String, dynamic> data) async {
-    try {
-      final response = await _dio.post(ApiConstants.students, data: data);
-      return Student.fromJson(response.data);
-    } on DioException catch (e) {
-      throw _handleError(e);
-    }
-  }
-
-  /// Update student
-  Future<Student> updateStudent(int id, Map<String, dynamic> data) async {
-    try {
-      final response = await _dio.put(
-        ApiConstants.studentById.replaceAll('{id}', id.toString()),
-        data: data,
-      );
-      return Student.fromJson(response.data);
-    } on DioException catch (e) {
-      throw _handleError(e);
-    }
-  }
-
-  /// Delete student
-  Future<void> deleteStudent(int id) async {
-    try {
-      await _dio.delete(
-        ApiConstants.studentById.replaceAll('{id}', id.toString()),
-      );
-    } on DioException catch (e) {
-      throw _handleError(e);
-    }
-  }
-
-  // ==========================================
-  // GROUPS ENDPOINTS
-  // ==========================================
-
-  /// Get groups list
-  Future<List<Group>> getGroups({
-    int page = 1,
-    int pageSize = 100,
-    String? search,
-    bool? activeOnly,
-  }) async {
-    try {
-      final response = await _dio.get(
-        ApiConstants.groups,
-        queryParameters: {
-          'page': page,
-          'page_size': pageSize,
-          if (search != null && search.isNotEmpty) 'search': search,
-          if (activeOnly != null) 'active_only': activeOnly,
-        },
-      );
-
-      final data = response.data;
-      final items = data['items'] ?? data['groups'] ?? data;
-
-      if (items is List) {
-        return items.map((e) => Group.fromJson(e)).toList();
-      }
-      return [];
-    } on DioException catch (e) {
-      throw _handleError(e);
-    }
-  }
-
-  /// Get group by ID
-  Future<Group> getGroup(int id) async {
-    try {
-      final response = await _dio.get(
-        ApiConstants.groupById.replaceAll('{id}', id.toString()),
-      );
-      return Group.fromJson(response.data);
-    } on DioException catch (e) {
-      throw _handleError(e);
-    }
-  }
-
-  /// Get group students
-  Future<List<Student>> getGroupStudents(int groupId) async {
-    try {
-      final response = await _dio.get(
-        ApiConstants.groupStudents.replaceAll('{id}', groupId.toString()),
-      );
-
-      final data = response.data;
-      final items = data['items'] ?? data['students'] ?? data;
-
-      if (items is List) {
-        return items.map((e) => Student.fromJson(e)).toList();
-      }
-      return [];
-    } on DioException catch (e) {
-      throw _handleError(e);
-    }
-  }
-
-  // ==========================================
-  // ATTENDANCE ENDPOINTS
-  // ==========================================
-
-  /// Get attendance records
-  Future<List<Attendance>> getAttendance({
-    int? groupId,
-    int? studentId,
-    String? date,
-    String? startDate,
-    String? endDate,
-  }) async {
-    try {
-      final response = await _dio.get(
-        ApiConstants.attendance,
-        queryParameters: {
-          if (groupId != null) 'group_id': groupId,
-          if (studentId != null) 'student_id': studentId,
-          if (date != null) 'date': date,
-          if (startDate != null) 'start_date': startDate,
-          if (endDate != null) 'end_date': endDate,
-        },
-      );
-
-      final data = response.data;
-      final items = data['items'] ?? data['attendance'] ?? data;
-
-      if (items is List) {
-        return items.map((e) => Attendance.fromJson(e)).toList();
-      }
-      return [];
-    } on DioException catch (e) {
-      throw _handleError(e);
-    }
-  }
-
-  /// Mark attendance
-  Future<void> markAttendance(List<Map<String, dynamic>> records) async {
-    try {
-      await _dio.post(
-        ApiConstants.attendance,
-        data: {'records': records},
-      );
-    } on DioException catch (e) {
-      throw _handleError(e);
-    }
-  }
-
-  /// Get attendance statistics
-  Future<AttendanceStats> getAttendanceStats({
-    int? groupId,
-    int? studentId,
-    String? startDate,
-    String? endDate,
-  }) async {
-    try {
-      final response = await _dio.get(
-        ApiConstants.attendanceStats,
-        queryParameters: {
-          if (groupId != null) 'group_id': groupId,
-          if (studentId != null) 'student_id': studentId,
-          if (startDate != null) 'start_date': startDate,
-          if (endDate != null) 'end_date': endDate,
-        },
-      );
-      return AttendanceStats.fromJson(response.data);
-    } on DioException catch (e) {
-      throw _handleError(e);
-    }
-  }
-
-  // ==========================================
-  // SCHEDULE ENDPOINTS
-  // ==========================================
-
-  /// Get schedule
-  Future<List<Schedule>> getSchedule({int? groupId, int? dayOfWeek}) async {
-    try {
-      final response = await _dio.get(
-        ApiConstants.schedule,
-        queryParameters: {
-          if (groupId != null) 'group_id': groupId,
-          if (dayOfWeek != null) 'day_of_week': dayOfWeek,
-        },
-      );
-
-      final data = response.data;
-      final items = data['items'] ?? data['schedule'] ?? data;
-
-      if (items is List) {
-        return items.map((e) => Schedule.fromJson(e)).toList();
-      }
-      return [];
-    } on DioException catch (e) {
-      throw _handleError(e);
-    }
-  }
-
-  /// Get today's schedule
-  Future<List<Schedule>> getTodaySchedule() async {
-    try {
-      final response = await _dio.get(ApiConstants.scheduleToday);
-
-      final data = response.data;
-      final items = data['items'] ?? data['schedule'] ?? data;
-
-      if (items is List) {
-        return items.map((e) => Schedule.fromJson(e)).toList();
-      }
-      return [];
-    } on DioException catch (e) {
-      throw _handleError(e);
-    }
-  }
-
-  // ==========================================
-  // NOTIFICATIONS ENDPOINTS
-  // ==========================================
-
-  /// Get notifications
-  Future<List<AppNotification>> getNotifications({
-    int page = 1,
-    int pageSize = 20,
-    bool? unreadOnly,
-  }) async {
-    try {
-      final response = await _dio.get(
-        ApiConstants.notifications,
-        queryParameters: {
-          'page': page,
-          'page_size': pageSize,
-          if (unreadOnly != null) 'unread_only': unreadOnly,
-        },
-      );
-
-      final data = response.data;
-      final items = data['items'] ?? data['notifications'] ?? data;
-
-      if (items is List) {
-        return items.map((e) => AppNotification.fromJson(e)).toList();
-      }
-      return [];
-    } on DioException catch (e) {
-      throw _handleError(e);
-    }
-  }
-
-  /// Get unread count
-  Future<int> getUnreadNotificationCount() async {
-    try {
-      final response = await _dio.get(ApiConstants.notificationUnreadCount);
-      final data = response.data;
-      return data['count'] as int? ?? data as int? ?? 0;
-    } on DioException catch (e) {
-      throw _handleError(e);
-    }
-  }
-
-  /// Mark notification as read
-  Future<void> markNotificationRead(int id) async {
-    try {
-      await _dio.put(
-        ApiConstants.notificationRead.replaceAll('{id}', id.toString()),
-      );
-    } on DioException catch (e) {
-      throw _handleError(e);
-    }
-  }
-
-  /// Mark all notifications as read
-  Future<void> markAllNotificationsRead() async {
-    try {
-      await _dio.put(ApiConstants.notificationReadAll);
-    } on DioException catch (e) {
-      throw _handleError(e);
-    }
-  }
-
-  // ==========================================
   // DASHBOARD ENDPOINTS
   // ==========================================
 
-  /// Get dashboard stats
+  /// Get unified dashboard stats (role-based)
   Future<DashboardStats> getDashboardStats() async {
     try {
       final response = await _dio.get(ApiConstants.dashboardStats);
@@ -539,187 +210,7 @@ class ApiService {
   }
 
   // ==========================================
-  // REPORTS ENDPOINTS
-  // ==========================================
-
-  /// Get reports
-  Future<List<Report>> getReports({
-    int page = 1,
-    int pageSize = 20,
-    int? groupId,
-    String? status,
-    String? startDate,
-    String? endDate,
-  }) async {
-    try {
-      final response = await _dio.get(
-        ApiConstants.reports,
-        queryParameters: {
-          'page': page,
-          'page_size': pageSize,
-          if (groupId != null) 'group_id': groupId,
-          if (status != null) 'status': status,
-          if (startDate != null) 'start_date': startDate,
-          if (endDate != null) 'end_date': endDate,
-        },
-      );
-
-      final data = response.data;
-      final items = data['items'] ?? data['reports'] ?? data;
-
-      if (items is List) {
-        return items.map((e) => Report.fromJson(e)).toList();
-      }
-      return [];
-    } on DioException catch (e) {
-      throw _handleError(e);
-    }
-  }
-
-  /// Submit report
-  Future<Report> submitReport(Map<String, dynamic> data) async {
-    try {
-      final response = await _dio.post(ApiConstants.reportSubmit, data: data);
-      return Report.fromJson(response.data);
-    } on DioException catch (e) {
-      throw _handleError(e);
-    }
-  }
-
-  // ==========================================
-  // CLUBS ENDPOINTS
-  // ==========================================
-
-  /// Get clubs
-  Future<List<Club>> getClubs({bool? activeOnly}) async {
-    try {
-      final response = await _dio.get(
-        ApiConstants.clubs,
-        queryParameters: {
-          if (activeOnly != null) 'active_only': activeOnly,
-        },
-      );
-
-      final data = response.data;
-      final items = data['items'] ?? data['clubs'] ?? data;
-
-      if (items is List) {
-        return items.map((e) => Club.fromJson(e)).toList();
-      }
-      return [];
-    } on DioException catch (e) {
-      throw _handleError(e);
-    }
-  }
-
-  /// Join club
-  Future<void> joinClub(int clubId) async {
-    try {
-      await _dio.post(
-        ApiConstants.clubJoin.replaceAll('{id}', clubId.toString()),
-      );
-    } on DioException catch (e) {
-      throw _handleError(e);
-    }
-  }
-
-  /// Leave club
-  Future<void> leaveClub(int clubId) async {
-    try {
-      await _dio.post(
-        ApiConstants.clubLeave.replaceAll('{id}', clubId.toString()),
-      );
-    } on DioException catch (e) {
-      throw _handleError(e);
-    }
-  }
-
-  // ==========================================
-  // TOURNAMENTS ENDPOINTS
-  // ==========================================
-
-  /// Get tournaments
-  Future<List<Tournament>> getTournaments({String? status}) async {
-    try {
-      final response = await _dio.get(
-        ApiConstants.tournaments,
-        queryParameters: {
-          if (status != null) 'status': status,
-        },
-      );
-
-      final data = response.data;
-      final items = data['items'] ?? data['tournaments'] ?? data;
-
-      if (items is List) {
-        return items.map((e) => Tournament.fromJson(e)).toList();
-      }
-      return [];
-    } on DioException catch (e) {
-      throw _handleError(e);
-    }
-  }
-
-  /// Register for tournament
-  Future<void> registerForTournament(int tournamentId) async {
-    try {
-      await _dio.post(
-        ApiConstants.tournamentRegister.replaceAll('{id}', tournamentId.toString()),
-      );
-    } on DioException catch (e) {
-      throw _handleError(e);
-    }
-  }
-
-  // ==========================================
-  // ERROR HANDLING
-  // ==========================================
-
-  String _handleError(DioException e) {
-    if (e.response != null) {
-      final data = e.response!.data;
-      if (data is Map<String, dynamic>) {
-        // Backend xato xabarlarini olish
-        final detail = data['detail'];
-        if (detail is String) return detail;
-        if (detail is Map) return detail['message']?.toString() ?? 'Xatolik yuz berdi';
-        return data['error'] as String? ??
-               data['message'] as String? ??
-               'Xatolik yuz berdi';
-      }
-    }
-
-    switch (e.type) {
-      case DioExceptionType.connectionTimeout:
-      case DioExceptionType.sendTimeout:
-      case DioExceptionType.receiveTimeout:
-        return 'Ulanish vaqti tugadi. Internetni tekshiring.';
-      case DioExceptionType.connectionError:
-        return 'Serverga ulanib bo\'lmadi.\nInternet ulanishini tekshiring.';
-      case DioExceptionType.badResponse:
-        switch (e.response?.statusCode) {
-          case 400:
-            return 'Noto\'g\'ri so\'rov';
-          case 401:
-            return 'Login yoki parol noto\'g\'ri';
-          case 403:
-            return 'Ruxsat yo\'q';
-          case 404:
-            return 'Ma\'lumot topilmadi';
-          case 422:
-            return 'Noto\'g\'ri ma\'lumot formati';
-          case 500:
-            return 'Server xatosi';
-          default:
-            return 'Xatolik: ${e.response?.statusCode}';
-        }
-      default:
-        return 'Noma\'lum xatolik yuz berdi';
-    }
-  }
-
-  // ==========================================
-  // MOBILE STUDENT ENDPOINTS
+  // STUDENT MOBILE ENDPOINTS
   // ==========================================
 
   /// Get student profile
@@ -728,7 +219,8 @@ class ApiService {
       final response = await _dio.get(ApiConstants.studentProfile);
       return response.data;
     } on DioException catch (e) {
-      throw _handleError(e);
+      _logger.e('getStudentProfile error: ${e.response?.statusCode}');
+      return {'error': _handleError(e)};
     }
   }
 
@@ -738,7 +230,14 @@ class ApiService {
       final response = await _dio.get(ApiConstants.studentDashboard);
       return response.data;
     } on DioException catch (e) {
-      throw _handleError(e);
+      _logger.e('getStudentDashboard error: ${e.response?.statusCode}');
+      return {
+        'student_name': 'Foydalanuvchi',
+        'today_status': 'not_marked',
+        'attendance_rate': 0.0,
+        'today_classes': 0,
+        'unread_notifications': 0,
+      };
     }
   }
 
@@ -749,9 +248,10 @@ class ApiService {
         ApiConstants.studentAttendance,
         queryParameters: {'days': days},
       );
-      return response.data is List ? response.data : [];
+      return response.data is List ? response.data : (response.data['records'] ?? []);
     } on DioException catch (e) {
-      throw _handleError(e);
+      _logger.e('getStudentAttendance error: ${e.response?.statusCode}');
+      return [];
     }
   }
 
@@ -759,9 +259,11 @@ class ApiService {
   Future<List<dynamic>> getStudentScheduleToday() async {
     try {
       final response = await _dio.get(ApiConstants.studentScheduleToday);
-      return response.data is List ? response.data : [];
+      final data = response.data;
+      return data is List ? data : (data['classes'] ?? data['items'] ?? []);
     } on DioException catch (e) {
-      throw _handleError(e);
+      _logger.e('getStudentScheduleToday error: ${e.response?.statusCode}');
+      return [];
     }
   }
 
@@ -769,9 +271,10 @@ class ApiService {
   Future<Map<String, dynamic>> getStudentScheduleWeek() async {
     try {
       final response = await _dio.get(ApiConstants.studentScheduleWeek);
-      return response.data;
+      return response.data is Map<String, dynamic> ? response.data : {};
     } on DioException catch (e) {
-      throw _handleError(e);
+      _logger.e('getStudentScheduleWeek error: ${e.response?.statusCode}');
+      return {};
     }
   }
 
@@ -783,9 +286,10 @@ class ApiService {
         queryParameters: {'page': page, 'page_size': pageSize},
       );
       final data = response.data;
-      return data is List ? data : (data['items'] ?? []);
+      return data is List ? data : (data['notifications'] ?? data['items'] ?? []);
     } on DioException catch (e) {
-      throw _handleError(e);
+      _logger.e('getStudentNotifications error: ${e.response?.statusCode}');
+      return [];
     }
   }
 
@@ -796,12 +300,12 @@ class ApiService {
         ApiConstants.studentNotificationRead.replaceAll('{id}', id.toString()),
       );
     } on DioException catch (e) {
-      throw _handleError(e);
+      _logger.e('markStudentNotificationRead error: ${e.response?.statusCode}');
     }
   }
 
   // ==========================================
-  // MOBILE LEADER ENDPOINTS
+  // LEADER MOBILE ENDPOINTS
   // ==========================================
 
   /// Get leader dashboard
@@ -810,7 +314,13 @@ class ApiService {
       final response = await _dio.get(ApiConstants.leaderDashboard);
       return response.data;
     } on DioException catch (e) {
-      throw _handleError(e);
+      _logger.e('getLeaderDashboard error: ${e.response?.statusCode}');
+      return {
+        'group': {'id': 0, 'name': 'Guruh', 'code': ''},
+        'students_count': 0,
+        'today_attendance': {'marked': 0, 'not_marked': 0, 'present': 0, 'absent': 0},
+        'today_classes': 0,
+      };
     }
   }
 
@@ -820,7 +330,8 @@ class ApiService {
       final response = await _dio.get(ApiConstants.leaderStudents);
       return response.data is List ? response.data : [];
     } on DioException catch (e) {
-      throw _handleError(e);
+      _logger.e('getLeaderStudents error: ${e.response?.statusCode}');
+      return [];
     }
   }
 
@@ -830,7 +341,8 @@ class ApiService {
       final response = await _dio.get(ApiConstants.leaderAttendanceToday);
       return response.data;
     } on DioException catch (e) {
-      throw _handleError(e);
+      _logger.e('getLeaderAttendanceToday error: ${e.response?.statusCode}');
+      return {'date': '', 'students': []};
     }
   }
 
@@ -870,9 +382,11 @@ class ApiService {
   Future<List<dynamic>> getLeaderScheduleToday() async {
     try {
       final response = await _dio.get(ApiConstants.leaderScheduleToday);
-      return response.data is List ? response.data : [];
+      final data = response.data;
+      return data is List ? data : (data['classes'] ?? data['items'] ?? []);
     } on DioException catch (e) {
-      throw _handleError(e);
+      _logger.e('getLeaderScheduleToday error: ${e.response?.statusCode}');
+      return [];
     }
   }
 
@@ -882,7 +396,8 @@ class ApiService {
       final response = await _dio.get(ApiConstants.leaderStatsWeek);
       return response.data;
     } on DioException catch (e) {
-      throw _handleError(e);
+      _logger.e('getLeaderStatsWeek error: ${e.response?.statusCode}');
+      return {};
     }
   }
 
@@ -905,6 +420,489 @@ class ApiService {
   }
 
   // ==========================================
+  // STUDENTS ENDPOINTS (GENERAL)
+  // ==========================================
+
+  /// Get students list
+  Future<List<Student>> getStudents({
+    int page = 1,
+    int pageSize = 20,
+    String? search,
+    int? groupId,
+  }) async {
+    try {
+      final response = await _dio.get(
+        ApiConstants.students,
+        queryParameters: {
+          'page': page,
+          'page_size': pageSize,
+          if (search != null && search.isNotEmpty) 'search': search,
+          if (groupId != null) 'group_id': groupId,
+        },
+      );
+
+      final data = response.data;
+      final items = data['items'] ?? data['students'] ?? data;
+
+      if (items is List) {
+        return items.map((e) => Student.fromJson(e as Map<String, dynamic>)).toList();
+      }
+      return [];
+    } on DioException catch (e) {
+      throw _handleError(e);
+    }
+  }
+
+  /// Get student by ID
+  Future<Student> getStudent(int id) async {
+    try {
+      final response = await _dio.get(
+        ApiConstants.studentById.replaceAll('{id}', id.toString()),
+      );
+      return Student.fromJson(response.data);
+    } on DioException catch (e) {
+      throw _handleError(e);
+    }
+  }
+
+  // ==========================================
+  // GROUPS ENDPOINTS
+  // ==========================================
+
+  /// Get groups list
+  Future<List<Group>> getGroups({
+    int page = 1,
+    int pageSize = 100,
+    String? search,
+    bool? activeOnly,
+  }) async {
+    try {
+      final response = await _dio.get(
+        ApiConstants.groups,
+        queryParameters: {
+          'page': page,
+          'page_size': pageSize,
+          if (search != null && search.isNotEmpty) 'search': search,
+          if (activeOnly != null) 'active_only': activeOnly,
+        },
+      );
+
+      final data = response.data;
+      final items = data['items'] ?? data['groups'] ?? data;
+
+      if (items is List) {
+        return items.map((e) => Group.fromJson(e as Map<String, dynamic>)).toList();
+      }
+      return [];
+    } on DioException catch (e) {
+      throw _handleError(e);
+    }
+  }
+
+  /// Get group by ID
+  Future<Group> getGroup(int id) async {
+    try {
+      final response = await _dio.get(
+        ApiConstants.groupById.replaceAll('{id}', id.toString()),
+      );
+      return Group.fromJson(response.data);
+    } on DioException catch (e) {
+      throw _handleError(e);
+    }
+  }
+
+  /// Get group students
+  Future<List<Student>> getGroupStudents(int groupId) async {
+    try {
+      final response = await _dio.get(
+        ApiConstants.groupStudents.replaceAll('{id}', groupId.toString()),
+      );
+
+      final data = response.data;
+      final items = data['items'] ?? data['students'] ?? data;
+
+      if (items is List) {
+        return items.map((e) => Student.fromJson(e as Map<String, dynamic>)).toList();
+      }
+      return [];
+    } on DioException catch (e) {
+      throw _handleError(e);
+    }
+  }
+
+  // ==========================================
+  // ATTENDANCE ENDPOINTS
+  // ==========================================
+
+  /// Get attendance records
+  Future<List<Attendance>> getAttendance({
+    int? groupId,
+    int? studentId,
+    String? dateFrom,
+    String? dateTo,
+    String? status,
+    int days = 30,
+    int page = 1,
+    int pageSize = 50,
+  }) async {
+    try {
+      final response = await _dio.get(
+        ApiConstants.attendance,
+        queryParameters: {
+          if (groupId != null) 'group_id': groupId,
+          if (studentId != null) 'student_id': studentId,
+          if (dateFrom != null) 'date_from': dateFrom,
+          if (dateTo != null) 'date_to': dateTo,
+          if (status != null) 'status': status,
+          'days': days,
+          'page': page,
+          'page_size': pageSize,
+        },
+      );
+
+      final data = response.data;
+      final items = data['items'] ?? data['records'] ?? data;
+
+      if (items is List) {
+        return items.map((e) => Attendance.fromJson(e as Map<String, dynamic>)).toList();
+      }
+      return [];
+    } on DioException catch (e) {
+      throw _handleError(e);
+    }
+  }
+
+  /// Mark attendance (batch)
+  Future<Map<String, dynamic>> markAttendance(List<Map<String, dynamic>> records) async {
+    try {
+      final response = await _dio.post(
+        ApiConstants.attendanceBatch,
+        data: records,
+      );
+      return response.data;
+    } on DioException catch (e) {
+      throw _handleError(e);
+    }
+  }
+
+  /// Get attendance statistics
+  Future<AttendanceStats> getAttendanceStats({
+    int? groupId,
+    int? studentId,
+    int days = 30,
+  }) async {
+    try {
+      final response = await _dio.get(
+        ApiConstants.attendanceStats,
+        queryParameters: {
+          if (groupId != null) 'group_id': groupId,
+          if (studentId != null) 'student_id': studentId,
+          'days': days,
+        },
+      );
+      return AttendanceStats.fromJson(response.data);
+    } on DioException catch (e) {
+      throw _handleError(e);
+    }
+  }
+
+  // ==========================================
+  // SCHEDULE ENDPOINTS
+  // ==========================================
+
+  /// Get schedule
+  Future<List<Schedule>> getSchedule({int? groupId, String? day}) async {
+    try {
+      final response = await _dio.get(
+        ApiConstants.schedule,
+        queryParameters: {
+          if (groupId != null) 'group_id': groupId,
+          if (day != null) 'day': day,
+        },
+      );
+
+      final data = response.data;
+      final items = data['schedule'] ?? data['items'] ?? data;
+
+      if (items is List) {
+        return items.map((e) => Schedule.fromJson(e as Map<String, dynamic>)).toList();
+      }
+      return [];
+    } on DioException catch (e) {
+      throw _handleError(e);
+    }
+  }
+
+  /// Get today's schedule
+  Future<Map<String, dynamic>> getTodaySchedule() async {
+    try {
+      final response = await _dio.get(ApiConstants.scheduleToday);
+      return response.data is Map<String, dynamic> ? response.data : {};
+    } on DioException catch (e) {
+      _logger.e('getTodaySchedule error: ${e.response?.statusCode}');
+      return {};
+    }
+  }
+
+  /// Get week schedule
+  Future<Map<String, dynamic>> getWeekSchedule({int? groupId}) async {
+    try {
+      final response = await _dio.get(
+        ApiConstants.scheduleWeek,
+        queryParameters: {
+          if (groupId != null) 'group_id': groupId,
+        },
+      );
+      return response.data is Map<String, dynamic> ? response.data : {};
+    } on DioException catch (e) {
+      _logger.e('getWeekSchedule error: ${e.response?.statusCode}');
+      return {};
+    }
+  }
+
+  // ==========================================
+  // NOTIFICATIONS ENDPOINTS
+  // ==========================================
+
+  /// Get notifications
+  Future<List<AppNotification>> getNotifications({
+    int page = 1,
+    int pageSize = 20,
+    bool? unreadOnly,
+  }) async {
+    try {
+      final response = await _dio.get(
+        ApiConstants.notifications,
+        queryParameters: {
+          'page': page,
+          'page_size': pageSize,
+          if (unreadOnly != null) 'unread_only': unreadOnly,
+        },
+      );
+
+      final data = response.data;
+      final items = data['items'] ?? data['notifications'] ?? data;
+
+      if (items is List) {
+        return items.map((e) => AppNotification.fromJson(e as Map<String, dynamic>)).toList();
+      }
+      return [];
+    } on DioException catch (e) {
+      _logger.e('getNotifications error: ${e.response?.statusCode}');
+      return [];
+    }
+  }
+
+  /// Get unread count
+  Future<int> getUnreadNotificationCount() async {
+    try {
+      final response = await _dio.get(ApiConstants.notificationUnreadCount);
+      final data = response.data;
+      return data['count'] as int? ?? data['unread_count'] as int? ?? 0;
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 404) return 0;
+      _logger.e('getUnreadNotificationCount error: ${e.response?.statusCode}');
+      return 0;
+    }
+  }
+
+  /// Mark notification as read
+  Future<void> markNotificationRead(int id) async {
+    try {
+      await _dio.put(
+        ApiConstants.notificationRead.replaceAll('{id}', id.toString()),
+      );
+    } on DioException catch (e) {
+      throw _handleError(e);
+    }
+  }
+
+  /// Mark all notifications as read
+  Future<void> markAllNotificationsRead() async {
+    try {
+      await _dio.put(ApiConstants.notificationReadAll);
+    } on DioException catch (e) {
+      throw _handleError(e);
+    }
+  }
+
+  // ==========================================
+  // REPORTS ENDPOINTS
+  // ==========================================
+
+  /// Get reports
+  Future<List<Report>> getReports({
+    int page = 1,
+    int pageSize = 20,
+    String? status,
+  }) async {
+    try {
+      final response = await _dio.get(
+        ApiConstants.reports,
+        queryParameters: {
+          'page': page,
+          'page_size': pageSize,
+          if (status != null) 'status': status,
+        },
+      );
+
+      final data = response.data;
+      final items = data['items'] ?? data['reports'] ?? data;
+
+      if (items is List) {
+        return items.map((e) => Report.fromJson(e as Map<String, dynamic>)).toList();
+      }
+      return [];
+    } on DioException catch (e) {
+      throw _handleError(e);
+    }
+  }
+
+  /// Submit report
+  Future<Report> submitReport(Map<String, dynamic> data) async {
+    try {
+      final response = await _dio.post(ApiConstants.reports, data: data);
+      return Report.fromJson(response.data);
+    } on DioException catch (e) {
+      throw _handleError(e);
+    }
+  }
+
+  /// Get report detail
+  Future<Report> getReport(int id) async {
+    try {
+      final response = await _dio.get(
+        ApiConstants.reportById.replaceAll('{id}', id.toString()),
+      );
+      return Report.fromJson(response.data);
+    } on DioException catch (e) {
+      throw _handleError(e);
+    }
+  }
+
+  // ==========================================
+  // CLUBS ENDPOINTS
+  // ==========================================
+
+  /// Get clubs
+  Future<List<Club>> getClubs({bool? activeOnly, String? search}) async {
+    try {
+      final response = await _dio.get(
+        ApiConstants.clubs,
+        queryParameters: {
+          if (activeOnly != null) 'active_only': activeOnly,
+          if (search != null && search.isNotEmpty) 'search': search,
+        },
+      );
+
+      final data = response.data;
+      final items = data['items'] ?? data['clubs'] ?? data;
+
+      if (items is List) {
+        return items.map((e) => Club.fromJson(e as Map<String, dynamic>)).toList();
+      }
+      return [];
+    } on DioException catch (e) {
+      throw _handleError(e);
+    }
+  }
+
+  /// Get club detail
+  Future<Club> getClub(int id) async {
+    try {
+      final response = await _dio.get(
+        ApiConstants.clubById.replaceAll('{id}', id.toString()),
+      );
+      return Club.fromJson(response.data);
+    } on DioException catch (e) {
+      throw _handleError(e);
+    }
+  }
+
+  /// Join club
+  Future<void> joinClub(int clubId) async {
+    try {
+      await _dio.post(
+        ApiConstants.clubJoin.replaceAll('{id}', clubId.toString()),
+      );
+    } on DioException catch (e) {
+      throw _handleError(e);
+    }
+  }
+
+  /// Leave club
+  Future<void> leaveClub(int clubId) async {
+    try {
+      await _dio.delete(
+        ApiConstants.clubLeave.replaceAll('{id}', clubId.toString()),
+      );
+    } on DioException catch (e) {
+      throw _handleError(e);
+    }
+  }
+
+  // ==========================================
+  // TOURNAMENTS ENDPOINTS
+  // ==========================================
+
+  /// Get tournaments
+  Future<List<Tournament>> getTournaments({String? status, String? search}) async {
+    try {
+      final response = await _dio.get(
+        ApiConstants.tournaments,
+        queryParameters: {
+          if (status != null) 'status': status,
+          if (search != null && search.isNotEmpty) 'search': search,
+        },
+      );
+
+      final data = response.data;
+      final items = data['items'] ?? data['tournaments'] ?? data;
+
+      if (items is List) {
+        return items.map((e) => Tournament.fromJson(e as Map<String, dynamic>)).toList();
+      }
+      return [];
+    } on DioException catch (e) {
+      throw _handleError(e);
+    }
+  }
+
+  /// Get tournament detail
+  Future<Tournament> getTournament(int id) async {
+    try {
+      final response = await _dio.get(
+        ApiConstants.tournamentById.replaceAll('{id}', id.toString()),
+      );
+      return Tournament.fromJson(response.data);
+    } on DioException catch (e) {
+      throw _handleError(e);
+    }
+  }
+
+  /// Register for tournament
+  Future<void> registerForTournament(int tournamentId) async {
+    try {
+      await _dio.post(
+        ApiConstants.tournamentRegister.replaceAll('{id}', tournamentId.toString()),
+      );
+    } on DioException catch (e) {
+      throw _handleError(e);
+    }
+  }
+
+  /// Unregister from tournament
+  Future<void> unregisterFromTournament(int tournamentId) async {
+    try {
+      await _dio.delete(
+        ApiConstants.tournamentUnregister.replaceAll('{id}', tournamentId.toString()),
+      );
+    } on DioException catch (e) {
+      throw _handleError(e);
+    }
+  }
+
+  // ==========================================
   // PUSH NOTIFICATION ENDPOINTS
   // ==========================================
 
@@ -920,6 +918,52 @@ class ApiService {
       );
     } on DioException catch (e) {
       throw _handleError(e);
+    }
+  }
+
+  // ==========================================
+  // ERROR HANDLING
+  // ==========================================
+
+  String _handleError(DioException e) {
+    if (e.response != null) {
+      final data = e.response!.data;
+      if (data is Map<String, dynamic>) {
+        final detail = data['detail'];
+        if (detail is String) return detail;
+        if (detail is Map) return detail['message']?.toString() ?? 'Xatolik yuz berdi';
+        return data['error'] as String? ??
+               data['message'] as String? ??
+               'Xatolik yuz berdi';
+      }
+    }
+
+    switch (e.type) {
+      case DioExceptionType.connectionTimeout:
+      case DioExceptionType.sendTimeout:
+      case DioExceptionType.receiveTimeout:
+        return 'Ulanish vaqti tugadi. Internetni tekshiring.';
+      case DioExceptionType.connectionError:
+        return 'Serverga ulanib bo\'lmadi.\nInternet ulanishini tekshiring.';
+      case DioExceptionType.badResponse:
+        switch (e.response?.statusCode) {
+          case 400:
+            return 'Noto\'g\'ri so\'rov';
+          case 401:
+            return 'Login yoki parol noto\'g\'ri';
+          case 403:
+            return 'Ruxsat yo\'q';
+          case 404:
+            return 'Ma\'lumot topilmadi';
+          case 422:
+            return 'Noto\'g\'ri ma\'lumot formati';
+          case 500:
+            return 'Server xatosi';
+          default:
+            return 'Xatolik: ${e.response?.statusCode}';
+        }
+      default:
+        return 'Noma\'lum xatolik yuz berdi';
     }
   }
 }

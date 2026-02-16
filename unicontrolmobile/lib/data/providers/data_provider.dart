@@ -180,9 +180,10 @@ class AttendanceNotifier extends StateNotifier<AttendanceState> {
   Future<void> fetchAttendance({
     int? groupId,
     int? studentId,
-    String? date,
-    String? startDate,
-    String? endDate,
+    String? dateFrom,
+    String? dateTo,
+    String? status,
+    int days = 30,
   }) async {
     state = state.copyWith(isLoading: true, error: null);
 
@@ -190,9 +191,10 @@ class AttendanceNotifier extends StateNotifier<AttendanceState> {
       final records = await apiService.getAttendance(
         groupId: groupId,
         studentId: studentId,
-        date: date,
-        startDate: startDate,
-        endDate: endDate,
+        dateFrom: dateFrom,
+        dateTo: dateTo,
+        status: status,
+        days: days,
       );
       state = state.copyWith(records: records, isLoading: false);
     } catch (e) {
@@ -202,8 +204,8 @@ class AttendanceNotifier extends StateNotifier<AttendanceState> {
 
   Future<bool> markAttendance(List<Map<String, dynamic>> records) async {
     try {
-      await apiService.markAttendance(records);
-      return true;
+      final result = await apiService.markAttendance(records);
+      return (result['marked'] ?? 0) > 0;
     } catch (e) {
       state = state.copyWith(error: e.toString());
       return false;
@@ -222,8 +224,7 @@ final attendanceStatsProvider = FutureProvider.family<AttendanceStats, Map<Strin
     return apiService.getAttendanceStats(
       groupId: params['group_id'] as int?,
       studentId: params['student_id'] as int?,
-      startDate: params['start_date'] as String?,
-      endDate: params['end_date'] as String?,
+      days: params['days'] as int? ?? 30,
     );
   },
 );
@@ -239,8 +240,15 @@ final scheduleProvider = FutureProvider.family<List<Schedule>, int?>(
   },
 );
 
-/// Today's schedule provider
-final todayScheduleProvider = FutureProvider<List<Schedule>>((ref) async {
+/// Week schedule provider
+final weekScheduleProvider = FutureProvider.family<Map<String, dynamic>, int?>(
+  (ref, groupId) async {
+    return apiService.getWeekSchedule(groupId: groupId);
+  },
+);
+
+/// Today's schedule provider (returns raw map with date, day, classes)
+final todayScheduleProvider = FutureProvider<Map<String, dynamic>>((ref) async {
   return apiService.getTodaySchedule();
 });
 
@@ -355,12 +363,32 @@ final unreadNotificationCountProvider = Provider<int>((ref) {
 });
 
 // ==========================================
-// DASHBOARD PROVIDERS
+// MOBILE DASHBOARD PROVIDERS
 // ==========================================
 
-/// Dashboard stats provider
+/// Student mobile dashboard provider
+final studentMobileDashboardProvider = FutureProvider<Map<String, dynamic>>((ref) async {
+  return apiService.getStudentDashboard();
+});
+
+/// Leader mobile dashboard provider
+final leaderMobileDashboardProvider = FutureProvider<Map<String, dynamic>>((ref) async {
+  return apiService.getLeaderDashboard();
+});
+
+/// Dashboard stats provider (fallback)
 final dashboardStatsProvider = FutureProvider<DashboardStats>((ref) async {
-  return apiService.getDashboardStats();
+  try {
+    return await apiService.getDashboardStats();
+  } catch (e) {
+    // Return empty stats if API fails
+    return const DashboardStats(
+      totalStudents: 0,
+      activeGroups: 0,
+      todayAttendanceRate: 0,
+      totalReports: 0,
+    );
+  }
 });
 
 // ==========================================
@@ -397,19 +425,13 @@ class ReportsNotifier extends StateNotifier<ReportsState> {
   ReportsNotifier() : super(const ReportsState());
 
   Future<void> fetchReports({
-    int? groupId,
     String? status,
-    String? startDate,
-    String? endDate,
   }) async {
     state = state.copyWith(isLoading: true, error: null);
 
     try {
       final reports = await apiService.getReports(
-        groupId: groupId,
         status: status,
-        startDate: startDate,
-        endDate: endDate,
       );
       state = state.copyWith(reports: reports, isLoading: false);
     } catch (e) {
