@@ -139,7 +139,7 @@ async def mobile_groups(db: AsyncSession = Depends(get_db), page: int = Query(1,
 async def mobile_group_students(group_id: int, db: AsyncSession = Depends(get_db)):
     res = await db.execute(select(Student).where(Student.group_id == group_id, Student.is_active == True))
     students = res.scalars().all()
-    return {"items": [{"id": s.id, "full_name": s.full_name, "hemis_id": s.hemis_id} for s in students]}
+    return {"items": [{"id": s.id, "full_name": s.full_name, "hemis_id": s.student_id} for s in students]}
 
 
 @router.get("/notifications/unread-count")

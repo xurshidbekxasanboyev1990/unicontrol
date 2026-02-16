@@ -128,14 +128,14 @@ async def get_group_students(
         select(Student).where(
             Student.group_id == group.id,
             Student.is_active == True
-        ).order_by(Student.full_name)
+        ).order_by(Student.name)
     )
     
     return [
         {
             "id": s.id,
             "full_name": s.full_name,
-            "hemis_id": s.hemis_id,
+            "hemis_id": s.student_id,
             "phone": s.phone
         }
         for s in students.scalars().all()
@@ -165,7 +165,7 @@ async def get_today_attendance(
         select(Student).where(
             Student.group_id == group.id,
             Student.is_active == True
-        ).order_by(Student.full_name)
+        ).order_by(Student.name)
     )
     
     students_list = students.scalars().all()

@@ -44,11 +44,13 @@ async def get_student_profile(
     return {
         "id": student.id,
         "full_name": student.full_name,
-        "hemis_id": student.hemis_id,
+        "hemis_id": student.student_id,
         "email": student.email,
         "phone": student.phone,
         "group_id": student.group_id,
-        "contract_number": student.contract_number,
+        "group_name": student.group_name,
+        "contract_amount": float(student.contract_amount),
+        "contract_paid": float(student.contract_paid),
         "avatar": current_user.avatar
     }
 

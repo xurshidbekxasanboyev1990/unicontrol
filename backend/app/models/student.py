@@ -243,6 +243,11 @@ class Student(Base):
         return self.name
     
     @property
+    def hemis_id(self) -> str:
+        """Alias for student_id - backward compatibility."""
+        return self.student_id
+    
+    @property
     def group_name(self) -> Optional[str]:
         """Get group name."""
         return self.group.name if self.group else None
