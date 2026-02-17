@@ -90,6 +90,8 @@ export default {
         cancelled: 'Bekor qilingan',
         sending: 'Yuborilmoqda...',
         unknown: 'Noma\'lum',
+        sent: 'Yuborildi',
+        loadError: 'Ma\'lumotlarni yuklashda xatolik',
     },
 
     // ============ ROLLAR ============
@@ -435,6 +437,9 @@ export default {
         lessonPending: 'Kutilmoqda',
         lessonFinished: 'Tugadi',
         lessonOngoing: 'Davom etmoqda',
+        congratulationError: 'Tabrik yuborishda xatolik',
+        messageError: 'Xabar yuborishda xatolik',
+        noGroupFound: 'Guruh ma\'lumotlari topilmadi',
     },
 
     // ============ DAVOMAT ============
@@ -543,6 +548,21 @@ export default {
         deleteError: 'O\'chirishda xatolik',
         exportHeaders: 'Talaba,Sana,Fan,Para,Holat,Kechikish (daq),Izoh,Sabab',
         attendanceSaved: 'Davomat saqlandi!',
+        lessonsInSchedule: 'ta dars jadvaldagilar',
+        minutes: 'daqiqa',
+        lateReasonPlaceholder: 'Masalan: Transport muammosi...',
+        changeReason: 'O\'zgartirish sababi',
+        changeReasonDesc: 'Dars tugagan, sabab kiritish talab etiladi',
+        changeReasonPlaceholder: 'Nima uchun davomat o\'zgartirilmoqda?',
+        groupNotFound: 'Guruh topilmadi',
+        reasonRequired: 'Sabab kiritilmagan',
+        requestSent: 'So\'rov yuborildi',
+        bulkChangeNotAllowed: 'Dars tugagandan keyin ommaviy o\'zgartirish mumkin emas',
+        allMarkedAs: 'Barcha talabalar "{status}" deb belgilandi',
+        allReset: 'Barcha belgilar boshlang\'ich holatga qaytarildi',
+        selectLessonFirst: 'Avval darsni tanlang',
+        attendanceSavedToast: 'davomat saqlandi',
+        saveError: 'Davomatni saqlashda xatolik yuz berdi',
     },
 
     // ============ JADVAL ============
@@ -585,6 +605,7 @@ export default {
         timeLabel: 'Vaqt',
         roomBuilding: 'Xona / Bino',
         takeAttendance: 'Davomat olish',
+        loadError: 'Jadval yuklanmadi',
     },
 
     // ============ KUTUBXONA ============
@@ -2170,6 +2191,8 @@ export default {
         lessonsCount: 'Darslar soni',
         lessons: 'dars',
         timesAbsent: 'marta kelmagan',
+        attendancePercent: 'Davomat %',
+        noData: 'Ma\'lumot yo\'q',
     },
 
     // ============ LANDING SOZLAMALARI ============

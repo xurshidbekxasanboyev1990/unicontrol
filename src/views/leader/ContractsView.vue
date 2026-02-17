@@ -5,7 +5,7 @@
       <div>
         <h1 class="text-xl sm:text-2xl font-bold text-slate-800">{{ $t('contracts.title') }}</h1>
         <p class="text-sm text-slate-500">
-          {{ groupName }} guruhi
+          {{ groupName }}
           <span v-if="totalContracts"> · {{ totalContracts }} ta talaba</span>
         </p>
       </div>
@@ -90,9 +90,9 @@
           </div>
           <span 
             class="px-2 py-0.5 rounded-lg text-xs font-medium flex-shrink-0"
-            :class="Number(c.debt_amount) < 0 ? 'bg-red-100 text-red-700' : 'bg-emerald-100 text-emerald-700'"
+            :class="Number(c.debt_amount) > 0 ? 'bg-red-100 text-red-700' : 'bg-emerald-100 text-emerald-700'"
           >
-            {{ Number(c.debt_amount) < 0 ? $t('contracts.debtors') : $t('contracts.paid') }}
+            {{ Number(c.debt_amount) > 0 ? $t('contracts.debtors') : $t('contracts.paid') }}
           </span>
         </div>
 
@@ -185,16 +185,16 @@ const loadData = async () => {
 }
 
 onMounted(async () => {
-  // Get leader's group
+  // Get leader's group from dashboard API
   try {
-    const me = await api.getMe()
-    groupId.value = me.group_id
-    groupName.value = me.group_name || 'Guruh'
-    if (groupId.value) {
+    const dashboardResp = await api.request('/dashboard/leader')
+    if (dashboardResp?.group) {
+      groupId.value = dashboardResp.group.id
+      groupName.value = dashboardResp.group.name || 'Guruh'
       await loadData()
     }
   } catch (e) {
-    console.error('Error getting user info:', e)
+    console.error('Error getting group info:', e)
   }
 })
 </script>

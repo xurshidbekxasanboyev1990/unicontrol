@@ -62,7 +62,7 @@
               <GraduationCap class="w-4 h-4" />
               {{ $t('students.faculty') }}
             </span>
-            <span class="text-slate-700">{{ student.commute || student.faculty || '-' }}</span>
+            <span class="text-slate-700">{{ student.faculty || '-' }}</span>
           </div>
           <div class="flex items-center justify-between text-sm">
             <span class="text-slate-500 flex items-center gap-2">
@@ -161,7 +161,7 @@
                 <GraduationCap class="w-5 h-5 text-slate-400" />
                 <div>
                   <p class="text-xs text-slate-500">{{ $t('students.faculty') }}</p>
-                  <p class="font-medium text-slate-800">{{ selectedStudent.commute || selectedStudent.faculty || $t('profile.notEntered') }}</p>
+                  <p class="font-medium text-slate-800">{{ selectedStudent.faculty || $t('profile.notEntered') }}</p>
                 </div>
               </div>
             </div>
@@ -231,7 +231,7 @@ const viewStudent = (student) => {
 
 const contactStudent = (student) => {
   if (student.phone) {
-    window.open(`tel:${student.phone}`)
+    window.location.href = `tel:${student.phone}`
   }
 }
 

@@ -611,45 +611,8 @@ const quickTemplates = computed(() => [
   }
 ])
 
-// Yuborilgan xabarlar tarixi (demo)
-const messageHistory = ref([
-  {
-    id: 1,
-    title: t('notifications.scheduleHistory'),
-    text: t('notifications.scheduleHistoryText'),
-    type: 'info',
-    sentAt: '26.01.2026, 14:30',
-    recipientCount: 5,
-    readCount: 4
-  },
-  {
-    id: 2,
-    title: t('notifications.attendanceHistory'),
-    text: t('notifications.attendanceHistoryText'),
-    type: 'warning',
-    sentAt: '25.01.2026, 09:15',
-    recipientCount: 1,
-    readCount: 1
-  },
-  {
-    id: 3,
-    title: t('notifications.examHistory'),
-    text: t('notifications.examHistoryText'),
-    type: 'alert',
-    sentAt: '24.01.2026, 16:00',
-    recipientCount: 5,
-    readCount: 5
-  },
-  {
-    id: 4,
-    title: t('notifications.congratsHistory'),
-    text: t('notifications.congratsHistoryText'),
-    type: 'success',
-    sentAt: '23.01.2026, 11:20',
-    recipientCount: 1,
-    readCount: 1
-  }
-])
+// Yuborilgan xabarlar tarixi
+const messageHistory = ref([])
 
 // ==================== COMPUTED ====================
 

@@ -43,7 +43,7 @@
               </div>
               <div>
                 <h2 class="font-semibold text-slate-800">{{ selectedDayName }} — {{ $t('attendance.lessons') }}</h2>
-                <p class="text-sm text-slate-500">{{ todayLessons.length }} ta dars jadvaldagilar</p>
+                <p class="text-sm text-slate-500">{{ todayLessons.length }} {{ $t('attendance.lessonsInSchedule') }}</p>
               </div>
             </div>
           </div>
@@ -373,7 +373,7 @@
                       <input
                         v-model="attendance[student.id].reason"
                         type="text"
-                        placeholder="Masalan: Kasallik, oilaviy sabab..."
+                        :placeholder="$t('attendance.reasonPlaceholder')"
                         class="w-full px-4 py-2.5 rounded-lg border border-rose-200 bg-white focus:border-rose-400 focus:ring-2 focus:ring-rose-400/20 outline-none text-sm transition-all"
                       />
                     </div>
@@ -402,7 +402,7 @@
                             type="number" min="1" max="90" placeholder="0"
                             class="w-24 px-4 py-2.5 rounded-lg border border-amber-200 bg-white focus:border-amber-400 focus:ring-2 focus:ring-amber-400/20 outline-none text-sm text-center transition-all"
                           />
-                          <span class="text-sm text-amber-600 font-medium">daqiqa</span>
+                          <span class="text-sm text-amber-600 font-medium">{{ $t('attendance.minutes') }}</span>
                         </div>
                       </div>
                       <div class="flex-1">
@@ -410,7 +410,7 @@
                         <input
                           v-model="attendance[student.id].reason"
                           type="text"
-                          placeholder="Masalan: Transport muammosi..."
+                          :placeholder="$t('attendance.lateReasonPlaceholder')"
                           class="w-full px-4 py-2.5 rounded-lg border border-amber-200 bg-white focus:border-amber-400 focus:ring-2 focus:ring-amber-400/20 outline-none text-sm transition-all"
                         />
                       </div>
@@ -438,19 +438,19 @@
           </div>
           <div class="p-6 space-y-4">
             <div class="flex items-center justify-between p-3 bg-emerald-50 rounded-xl">
-              <span class="text-emerald-700 font-medium">Kelgan</span>
+              <span class="text-emerald-700 font-medium">{{ $t('attendance.present') }}</span>
               <span class="text-2xl font-bold text-emerald-600">{{ presentCount }}</span>
             </div>
             <div class="flex items-center justify-between p-3 bg-amber-50 rounded-xl">
-              <span class="text-amber-700 font-medium">Kechikkan</span>
+              <span class="text-amber-700 font-medium">{{ $t('attendance.late') }}</span>
               <span class="text-2xl font-bold text-amber-600">{{ lateCount }}</span>
             </div>
             <div class="flex items-center justify-between p-3 bg-rose-50 rounded-xl">
-              <span class="text-rose-700 font-medium">Kelmagan</span>
+              <span class="text-rose-700 font-medium">{{ $t('attendance.absent') }}</span>
               <span class="text-2xl font-bold text-rose-600">{{ absentCount }}</span>
             </div>
             <div class="flex items-center justify-between p-3 bg-blue-50 rounded-xl">
-              <span class="text-blue-700 font-medium">Sababli</span>
+              <span class="text-blue-700 font-medium">{{ $t('attendance.excused') }}</span>
               <span class="text-2xl font-bold text-blue-600">{{ excusedCount }}</span>
             </div>
           </div>
@@ -472,8 +472,8 @@
                 <AlertCircle class="w-7 h-7" />
               </div>
               <div>
-                <h3 class="text-xl font-bold">O'zgartirish sababi</h3>
-                <p class="text-amber-100 text-sm mt-1">Dars tugagan, sabab kiritish talab etiladi</p>
+                <h3 class="text-xl font-bold">{{ $t('attendance.changeReason') }}</h3>
+                <p class="text-amber-100 text-sm mt-1">{{ $t('attendance.changeReasonDesc') }}</p>
               </div>
             </div>
           </div>
@@ -490,11 +490,11 @@
               </div>
             </div>
             <div>
-              <label class="block text-sm font-medium text-slate-700 mb-2">O'zgartirish sababi *</label>
+              <label class="block text-sm font-medium text-slate-700 mb-2">{{ $t('attendance.changeReason') }} *</label>
               <textarea
                 v-model="changeReason"
                 rows="3"
-                placeholder="Nima uchun davomat o'zgartirilmoqda?"
+                :placeholder="$t('attendance.changeReasonPlaceholder')"
                 class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-amber-400 focus:ring-2 focus:ring-amber-400/20 outline-none text-sm transition-all resize-none"
               ></textarea>
             </div>
@@ -508,7 +508,7 @@
               :disabled="!changeReason.trim()"
               class="flex-1 py-3 bg-amber-500 hover:bg-amber-600 text-white rounded-xl font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Yuborish
+              {{ $t('common.send') }}
             </button>
           </div>
         </div>
@@ -647,7 +647,7 @@ async function loadGroupData() {
     groupId.value = dashboardResp?.group?.id
 
     if (!groupId.value) {
-      toast.error('Guruh topilmadi')
+      toast.error(t('attendance.groupNotFound'))
       loading.value = false
       return
     }
@@ -677,7 +677,7 @@ async function loadGroupData() {
     await loadAttendanceForDate()
   } catch (e) {
     console.error('Load group data error:', e)
-    toast.error("Ma'lumotlar yuklanmadi")
+    toast.error(t('common.loadError'))
   } finally {
     loading.value = false
   }
@@ -700,7 +700,9 @@ async function loadAttendanceForDate() {
     records.forEach(r => {
       if (r.lesson_number) savedLessonNums.add(r.lesson_number)
     })
-    todayLessons.value.forEach(lesson => {
+    // todayLessons is a computed - use .value to access
+    const currentLessons = todayLessons.value
+    currentLessons.forEach(lesson => {
       lessonAttendanceSaved[lesson.id] = savedLessonNums.has(lesson.lesson_number)
     })
 
@@ -797,11 +799,11 @@ const setStatus = (studentId, status) => {
 
 const confirmChange = () => {
   if (!changeReason.value.trim()) {
-    toast.error('Sabab kiritilmagan')
+    toast.error(t('attendance.reasonRequired'))
     return
   }
   setStatus(pendingReasonData.value.studentId, pendingReasonData.value.newStatus)
-  toast.info("So'rov yuborildi")
+  toast.info(t('attendance.requestSent'))
   showReasonModal.value = false
   changeReason.value = ''
   pendingReasonStudent.value = null
@@ -817,16 +819,16 @@ const cancelReasonModal = () => {
 
 const markAllAs = (status) => {
   if (isLessonEnded.value) {
-    toast.warning("Dars tugagandan keyin ommaviy o'zgartirish mumkin emas")
+    toast.warning(t('attendance.bulkChangeNotAllowed'))
     return
   }
   groupStudents.value.forEach(student => setStatus(student.id, status))
-  toast.info(`Barcha talabalar "${status === 'present' ? 'Keldi' : 'Kelmadi'}" deb belgilandi`)
+  toast.info(t('attendance.allMarkedAs', { status: status === 'present' ? t('attendance.present') : t('attendance.absent') }))
 }
 
 const resetAll = () => {
   initializeAttendance()
-  toast.info("Barcha belgilar boshlang'ich holatga qaytarildi")
+  toast.info(t('attendance.allReset'))
 }
 
 // ============ HELPERS ============
@@ -839,14 +841,19 @@ const formatDate = (dateStr) => {
 }
 
 const getStatusLabel = (status) => {
-  const labels = { present: 'Keldi', absent: 'Kelmadi', late: 'Kech qoldi', excused: 'Sababli' }
+  const labels = {
+    present: t('attendance.present'),
+    absent: t('attendance.absent'),
+    late: t('attendance.late'),
+    excused: t('attendance.excused')
+  }
   return labels[status] || status
 }
 
 // ============ SAVE ============
 const saveAttendance = async () => {
   if (!selectedLesson.value) {
-    toast.warning('Avval darsni tanlang')
+    toast.warning(t('attendance.selectLessonFirst'))
     return
   }
 
@@ -886,11 +893,11 @@ const saveAttendance = async () => {
     }
 
     lessonAttendanceSaved[selectedLesson.value.id] = true
-    toast.success(`"${selectedLesson.value.subject}" — davomat saqlandi`)
+    toast.success(`"${selectedLesson.value.subject}" — ${t('attendance.attendanceSavedToast')}`)
     showSummary.value = true
   } catch (error) {
     console.error('Save attendance error:', error)
-    toast.error('Davomatni saqlashda xatolik yuz berdi')
+    toast.error(t('attendance.saveError'))
   } finally {
     saving.value = false
   }

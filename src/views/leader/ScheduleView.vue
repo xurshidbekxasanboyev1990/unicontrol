@@ -252,9 +252,11 @@ import { computed, onMounted, ref } from 'vue'
 import api from '../../services/api'
 import { useAuthStore } from '../../stores/auth'
 import { useDataStore } from '../../stores/data'
+import { useLanguageStore } from '../../stores/language'
 
 const dataStore = useDataStore()
 const authStore = useAuthStore()
+const { t: $t } = useLanguageStore()
 
 // State
 const loading = ref(true)
@@ -307,9 +309,10 @@ const subjectColorMap = computed(() => {
   }, {})
 })
 
+const dayNames = ['Yakshanba', 'Dushanba', 'Seshanba', 'Chorshanba', 'Payshanba', 'Juma', 'Shanba']
+
 const todayName = computed(() => {
-  const days = ['Yakshanba', 'Dushanba', 'Seshanba', 'Chorshanba', 'Payshanba', 'Juma', 'Shanba']
-  return days[new Date().getDay()]
+  return dayNames[new Date().getDay()]
 })
 
 const formattedDate = computed(() => {
@@ -322,7 +325,6 @@ const formattedDate = computed(() => {
 
 const todayLessons = computed(() => {
   const dayIndex = new Date().getDay()
-  const dayNames = ['', 'Dushanba', 'Seshanba', 'Chorshanba', 'Payshanba', 'Juma', 'Shanba']
   const dayName = dayNames[dayIndex]
   
   return schedule.value
@@ -346,7 +348,7 @@ async function loadSchedule() {
     groupInfo.value = dashboardResp?.group
     
     if (!groupId) {
-      error.value = 'Guruh ma\'lumotlari topilmadi'
+      error.value = $t('dashboard.noGroupFound')
       return
     }
     
@@ -400,7 +402,7 @@ async function loadSchedule() {
     }
   } catch (e) {
     console.error('Load schedule error:', e)
-    error.value = e.message || 'Jadval yuklanmadi'
+    error.value = e.message || $t('schedule.loadError')
   } finally {
     loading.value = false
   }
@@ -434,8 +436,7 @@ function normalizeScheduleItem(item) {
 }
 
 const isToday = (day) => {
-  const days = ['', 'Dushanba', 'Seshanba', 'Chorshanba', 'Payshanba', 'Juma', 'Shanba']
-  return days[new Date().getDay()] === day
+  return dayNames[new Date().getDay()] === day
 }
 
 const getLessonAt = (day, timeSlot) => {

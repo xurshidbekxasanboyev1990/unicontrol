@@ -89,6 +89,8 @@ export default {
         cancelled: 'Отменено',
         sending: 'Отправка...',
         unknown: 'Неизвестно',
+        sent: 'Отправлено',
+        loadError: 'Ошибка загрузки данных',
     },
 
     // ============ РОЛИ ============
@@ -432,6 +434,9 @@ export default {
         lessonPending: 'Ожидает',
         lessonFinished: 'Завершено',
         lessonOngoing: 'Идёт',
+        congratulationError: 'Ошибка отправки поздравления',
+        messageError: 'Ошибка отправки сообщения',
+        noGroupFound: 'Группа не найдена',
     },
     attendance: {
         title: 'Посещаемость',
@@ -538,6 +543,21 @@ export default {
         deleteError: 'Ошибка при удалении',
         exportHeaders: 'Студент,Дата,Предмет,Пара,Статус,Опоздание (мин),Примечание,Причина',
         attendanceSaved: 'Посещаемость сохранена!',
+        lessonsInSchedule: 'занятий по расписанию',
+        minutes: 'минут',
+        lateReasonPlaceholder: 'Например: Проблемы с транспортом...',
+        changeReason: 'Причина изменения',
+        changeReasonDesc: 'Занятие завершено, требуется указать причину',
+        changeReasonPlaceholder: 'Почему изменяется посещаемость?',
+        groupNotFound: 'Группа не найдена',
+        reasonRequired: 'Причина не указана',
+        requestSent: 'Запрос отправлен',
+        bulkChangeNotAllowed: 'Массовое изменение после окончания занятия невозможно',
+        allMarkedAs: 'Все студенты отмечены как "{status}"',
+        allReset: 'Все отметки сброшены',
+        selectLessonFirst: 'Сначала выберите занятие',
+        attendanceSavedToast: 'посещаемость сохранена',
+        saveError: 'Ошибка при сохранении посещаемости',
     },
 
     // ============ РАСПИСАНИЕ ============
@@ -580,6 +600,7 @@ export default {
         timeLabel: 'Время',
         roomBuilding: 'Аудитория / Корпус',
         takeAttendance: 'Отметить посещаемость',
+        loadError: 'Не удалось загрузить расписание',
     },
 
     // ============ БИБЛИОТЕКА ============
@@ -2092,6 +2113,8 @@ export default {
         lessonsCount: 'Количество занятий',
         lessons: 'занятий',
         timesAbsent: 'раз отсутствовал',
+        attendancePercent: 'Посещаемость %',
+        noData: 'Нет данных',
     },
 
     // ============ НАСТРОЙКИ ЛЕНДИНГА ============

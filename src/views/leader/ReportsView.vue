@@ -79,8 +79,7 @@
           v-model="selectedYear"
           class="rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-slate-700 focus:border-emerald-500 focus:outline-none"
         >
-          <option value="2026">2026</option>
-          <option value="2025">2025</option>
+          <option v-for="year in availableYears" :key="year" :value="String(year)">{{ year }}</option>
         </select>
       </div>
     </div>
@@ -860,7 +859,11 @@ const { t } = langStore
 // ============ STATE ============
 const activeTab = ref('my')
 const selectedMonth = ref(new Date().getMonth() + 1)
-const selectedYear = ref('2026')
+const selectedYear = ref(String(new Date().getFullYear()))
+const availableYears = computed(() => {
+  const currentYear = new Date().getFullYear()
+  return [currentYear, currentYear - 1, currentYear - 2]
+})
 const selectedOtherGroup = ref(null)
 const showCreateModal = ref(false)
 const showViewModal = ref(false)
@@ -881,7 +884,7 @@ const uploadedDocs = ref([])
 // ============ REPORT FORM ============
 const newReport = ref({
   month: new Date().getMonth() + 1,
-  year: 2026,
+  year: new Date().getFullYear(),
   activities: {
     events: '',
     achievements: '',
@@ -1051,7 +1054,9 @@ const loadGroupData = async () => {
 
       // Load real contract data from contracts API
       try {
-        const contractsResp = await api.getGroupContracts(groupInfo.value.id, { academic_year: '2025-2026', page_size: 200 })
+        const currentYear = new Date().getFullYear()
+        const academicYear = new Date().getMonth() < 8 ? `${currentYear - 1}-${currentYear}` : `${currentYear}-${currentYear + 1}`
+        const contractsResp = await api.getGroupContracts(groupInfo.value.id, { academic_year: academicYear, page_size: 200 })
         if (contractsResp) {
           contractsData.value = {
             items: contractsResp.items || [],
@@ -1298,7 +1303,7 @@ const openCreateModal = () => {
   // Reset form
   newReport.value = {
     month: new Date().getMonth() + 1,
-    year: 2026,
+    year: new Date().getFullYear(),
     activities: { events: '', achievements: '', notes: '' },
     parents: { meetings: '', conversations: '', meetingsCount: 0, attendedParents: 0 },
     problems: { main: '', needsSolution: '' },

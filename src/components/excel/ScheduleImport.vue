@@ -302,12 +302,12 @@
 <script setup>
 import api from '@/services/api'
 import {
-    AlertCircle, AlertTriangle, ArrowRight, BrainCircuit,
-    CalendarDays,
-    CheckCircle,
-    FileSpreadsheet,
-    RefreshCw, Sparkles,
-    Upload, X
+  AlertCircle, AlertTriangle, ArrowRight, BrainCircuit,
+  CalendarDays,
+  CheckCircle,
+  FileSpreadsheet,
+  RefreshCw, Sparkles,
+  Upload, X
 } from 'lucide-vue-next'
 import { ref } from 'vue'
 

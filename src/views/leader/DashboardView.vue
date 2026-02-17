@@ -44,7 +44,7 @@
                   class="flex items-center gap-1.5 rounded-lg bg-white/20 px-2.5 sm:px-3 py-1.5 text-xs font-medium backdrop-blur transition-all hover:bg-white/30 disabled:opacity-50"
                 >
                   <Gift :size="14" />
-                  <span class="hidden sm:inline">{{ congratsSent[student.id] ? '✓ Yuborildi' : $t('dashboard.congratulate') }}</span>
+                  <span class="hidden sm:inline">{{ congratsSent[student.id] ? ('✓ ' + $t('common.sent')) : $t('dashboard.congratulate') }}</span>
                   <span class="sm:hidden">{{ congratsSent[student.id] ? '✓' : '' }}<PartyPopper v-if="!congratsSent[student.id]" :size="14" /></span>
                 </button>
                 <button 
@@ -94,7 +94,7 @@
                   class="flex items-center gap-1.5 rounded-lg bg-white/20 px-3 py-1.5 text-xs font-medium backdrop-blur transition-all hover:bg-white/30 disabled:opacity-50"
                 >
                   <Gift :size="14" />
-                  {{ congratsSent[student.id] ? '✓ Yuborildi' : $t('dashboard.congratulate') }}
+                  {{ congratsSent[student.id] ? ('✓ ' + $t('common.sent')) : $t('dashboard.congratulate') }}
                 </button>
                 <button 
                   @click="openMessageModal(student)"
@@ -346,7 +346,7 @@
       </div>
       
       <p class="mt-3 text-center text-sm text-slate-500">
-        {{ Math.round((presentToday + lateToday) / (groupStudents.length || 1) * 100) }}% davomat
+        {{ Math.round((presentToday + lateToday) / (groupStudents.length || 1) * 100) }}% {{ $t('attendance.title') }}
       </p>
     </div>
   </div>
@@ -361,6 +361,7 @@ import api from '@/services/api'
 import { useAuthStore } from '@/stores/auth'
 import { useDataStore } from '@/stores/data'
 import { useLanguageStore } from '@/stores/language'
+import { useToastStore } from '@/stores/toast'
 import {
     BookOpen,
     Cake,
@@ -379,6 +380,7 @@ const router = useRouter()
 const dataStore = useDataStore()
 const authStore = useAuthStore()
 const { t } = useLanguageStore()
+const toast = useToastStore()
 
 // State
 const loading = ref(true)
@@ -574,7 +576,7 @@ async function sendCongratulation(student) {
     congratsSent.value[student.id] = true
   } catch (e) {
     console.error('Tabrik yuborishda xatolik:', e)
-    alert('Tabrik yuborishda xatolik: ' + (e.message || 'Noma\'lum xatolik'))
+    toast.error(t('dashboard.congratulationError') + ': ' + (e.message || ''))
   } finally {
     congratsSending.value[student.id] = false
   }
@@ -604,7 +606,7 @@ async function sendCustomMessage() {
     messageTarget.value = null
   } catch (e) {
     console.error('Xabar yuborishda xatolik:', e)
-    alert('Xabar yuborishda xatolik: ' + (e.message || 'Noma\'lum xatolik'))
+    toast.error(t('dashboard.messageError') + ': ' + (e.message || ''))
   } finally {
     sendingMessage.value = false
   }

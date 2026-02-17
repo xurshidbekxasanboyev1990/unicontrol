@@ -360,7 +360,7 @@ const loadAnalyticsData = async () => {
         const studentsResponse = await api.request(`/students?group_id=${groupId}&page_size=100`)
         groupStudents.value = (studentsResponse?.items || []).map(s => ({
           id: s.id,
-          name: s.name || s.full_name || 'Noma\'lum'
+          name: s.name || s.full_name || t('common.unknown')
         }))
       } catch (e) {
         console.warn('Could not load students:', e)
@@ -383,11 +383,11 @@ const loadAnalyticsData = async () => {
         console.warn('Could not load attendance stats:', e)
       }
     } else {
-      error.value = 'Guruh ma\'lumotlari topilmadi'
+      error.value = t('dashboard.noGroupFound')
     }
   } catch (e) {
     console.error('Error loading analytics data:', e)
-    error.value = 'Ma\'lumotlarni yuklashda xatolik'
+    error.value = t('common.loadError')
   } finally {
     loading.value = false
   }
@@ -411,21 +411,21 @@ const summaryCards = computed(() => [
     value: calculateOverallAttendance() + '%',
     icon: CheckCircle,
     color: 'green',
-    trend: 5
+    trend: 0
   },
   {
     title: t('analytics.absentCount'),
     value: getTotalAbsent(),
     icon: XCircle,
     color: 'red',
-    trend: -3
+    trend: 0
   },
   {
     title: t('analytics.lateCount'),
     value: getTotalLate(),
     icon: Clock,
     color: 'yellow',
-    trend: 2
+    trend: 0
   },
   {
     title: t('analytics.lessonsCount'),
@@ -439,9 +439,23 @@ const summaryCards = computed(() => [
 // Chart Data
 const attendanceTrendData = computed(() => {
   const labels = getLast7Days()
-  const presentData = [85, 90, 88, 92, 87, 91, 89]
-  const absentData = [10, 7, 8, 5, 9, 6, 8]
-  const lateData = [5, 3, 4, 3, 4, 3, 3]
+  const totalStudents = groupStudents.value.length || 1
+  const overall = calculateOverallAttendance()
+  
+  // Use real overall stats to generate proportional daily estimates
+  const totalP = Array.isArray(attendanceStats.value) ? attendanceStats.value.reduce((s, r) => s + (r.present || 0), 0) : 0
+  const totalA = Array.isArray(attendanceStats.value) ? attendanceStats.value.reduce((s, r) => s + (r.absent || 0), 0) : 0
+  const totalL = Array.isArray(attendanceStats.value) ? attendanceStats.value.reduce((s, r) => s + (r.late || 0), 0) : 0
+  const totalAll = totalP + totalA + totalL || 1
+  
+  const pRate = Math.round((totalP / totalAll) * 100)
+  const aRate = Math.round((totalA / totalAll) * 100)
+  const lRate = Math.round((totalL / totalAll) * 100)
+  
+  // Fill with the same rate for each day (no daily breakdown available)
+  const presentData = labels.map(() => pRate)
+  const absentData = labels.map(() => aRate)
+  const lateData = labels.map(() => lRate)
 
   return {
     labels,
@@ -475,10 +489,17 @@ const attendanceTrendData = computed(() => {
 })
 
 const statusDistributionData = computed(() => {
-  const present = 75
-  const absent = 10
-  const late = 8
-  const excused = 7
+  let present = 0, absent = 0, late = 0, excused = 0
+  if (Array.isArray(attendanceStats.value)) {
+    attendanceStats.value.forEach(s => {
+      present += s.present || 0
+      absent += s.absent || 0
+      late += s.late || 0
+      excused += s.excused || 0
+    })
+  }
+  // Avoid empty chart
+  if (present + absent + late + excused === 0) present = 1
 
   return {
     labels: statusLabels,
@@ -501,20 +522,25 @@ const heatmapData = computed(() => {
   
   return groupStudents.value.slice(0, 10).map(student => {
     const stat = statsMap[student.id]
-    const days = weekDays.map(() => {
-      if (stat) {
-        const rand = Math.random()
-        const presentRatio = stat.total > 0 ? (stat.present || 0) / stat.total : 0.9
-        if (rand < presentRatio) return 'present'
-        if (rand < presentRatio + 0.05) return 'late'
-        if (rand < presentRatio + 0.08) return 'excused'
-        return 'absent'
-      }
-      return 'present'
+    // Distribute days proportionally based on actual stats
+    const total = stat?.total || 0
+    const presentN = stat?.present || 0
+    const absentN = stat?.absent || 0
+    const lateN = stat?.late || 0
+    const excusedN = stat?.excused || 0
+    
+    const days = weekDays.map((_, i) => {
+      if (!stat || total === 0) return 'present'
+      // Deterministic distribution based on student index and day
+      const threshold = (i * 13 + student.id) % total
+      if (threshold < presentN) return 'present'
+      if (threshold < presentN + lateN) return 'late'
+      if (threshold < presentN + lateN + excusedN) return 'excused'
+      return 'absent'
     })
     
-    const rate = stat && stat.total > 0 
-      ? Math.round(((stat.present || 0) / stat.total) * 100) 
+    const rate = stat && total > 0 
+      ? Math.round((presentN / total) * 100) 
       : 100
     
     return {
@@ -546,7 +572,7 @@ const studentComparisonData = computed(() => {
   return {
     labels: students.map(s => s.name.split(' ')[0]),
     datasets: [{
-      label: 'Davomat %',
+      label: t('analytics.attendancePercent'),
       data: rates,
       backgroundColor: rates.map(r => 
         r >= 90 ? '#22c55e' : r >= 75 ? '#f59e0b' : '#ef4444'
@@ -557,11 +583,46 @@ const studentComparisonData = computed(() => {
 })
 
 const subjectAttendanceData = computed(() => {
+  // Try to extract per-subject data from attendance stats
+  const subjectMap = {}
+  if (Array.isArray(attendanceStats.value)) {
+    attendanceStats.value.forEach(s => {
+      if (s.subject) {
+        if (!subjectMap[s.subject]) {
+          subjectMap[s.subject] = { present: 0, total: 0 }
+        }
+        subjectMap[s.subject].present += s.present || 0
+        subjectMap[s.subject].total += s.total || 0
+      }
+    })
+  }
+  
+  const subjects = Object.keys(subjectMap)
+  if (subjects.length === 0) {
+    // No subject data available - show empty state
+    return {
+      labels: [t('analytics.noData')],
+      datasets: [{
+        label: t('analytics.attendancePercent'),
+        data: [0],
+        backgroundColor: 'rgba(59, 130, 246, 0.2)',
+        borderColor: '#3b82f6',
+        borderWidth: 2,
+        pointBackgroundColor: '#3b82f6'
+      }]
+    }
+  }
+  
+  const data = subjects.map(subj => {
+    const s = subjectMap[subj]
+    return s.total > 0 ? Math.round((s.present / s.total) * 100) : 0
+  })
+  
   return {
-    labels: ['Matematika', 'Fizika', 'Informatika', 'Ingliz tili', 'Tarix', 'Kimyo'],
+    labels: subjects,
     datasets: [{
-      label: 'Davomat %',
-      data: [92, 85, 95, 88, 78, 90],
+      label: t('analytics.attendancePercent'),
+      data,
       backgroundColor: 'rgba(59, 130, 246, 0.2)',
       borderColor: '#3b82f6',
       borderWidth: 2,
@@ -753,10 +814,10 @@ function getHeatmapCellClass(status) {
 
 function getStatusLabel(status) {
   const labels = {
-    present: 'Keldi',
-    absent: 'Kelmadi',
-    late: 'Kech qoldi',
-    excused: 'Sababli'
+    present: t('attendance.present'),
+    absent: t('attendance.absent'),
+    late: t('attendance.late'),
+    excused: t('attendance.excused')
   }
   return labels[status] || status
 }

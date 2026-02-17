@@ -317,8 +317,8 @@
 
 <script setup>
 import {
-  AlertCircle, CalendarDays, Loader2, MapPin, Pencil, Plus,
-  RefreshCw, Search, Trash2, User, X
+    AlertCircle, CalendarDays, Loader2, MapPin, Pencil, Plus,
+    RefreshCw, Search, Trash2, User, X
 } from 'lucide-vue-next'
 import { computed, onMounted, ref } from 'vue'
 import api from '../../services/api'

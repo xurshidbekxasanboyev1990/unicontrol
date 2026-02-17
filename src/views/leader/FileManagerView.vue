@@ -494,7 +494,7 @@ import {
     X,
     XCircle
 } from 'lucide-vue-next'
-import { computed, onMounted, ref, watch } from 'vue'
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 
 const toast = useToastStore()
 const langStore = useLanguageStore()
@@ -875,7 +875,12 @@ function formatDate(date) {
 }
 
 // Close context menu on click outside
-document.addEventListener('click', () => {
+const closeContextMenu = () => {
   contextMenu.value.show = false
+}
+document.addEventListener('click', closeContextMenu)
+
+onUnmounted(() => {
+  document.removeEventListener('click', closeContextMenu)
 })
 </script>

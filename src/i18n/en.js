@@ -89,6 +89,8 @@ export default {
         cancelled: 'Cancelled',
         sending: 'Sending...',
         unknown: 'Unknown',
+        sent: 'Sent',
+        loadError: 'Error loading data',
     },
 
     // ============ ROLES ============
@@ -432,6 +434,9 @@ export default {
         lessonPending: 'Pending',
         lessonFinished: 'Finished',
         lessonOngoing: 'Ongoing',
+        congratulationError: 'Error sending congratulation',
+        messageError: 'Error sending message',
+        noGroupFound: 'Group information not found',
     },
 
     // ============ ATTENDANCE ============
@@ -540,6 +545,21 @@ export default {
         deleteError: 'Error deleting',
         exportHeaders: 'Student,Date,Subject,Period,Status,Delay (min),Note,Reason',
         attendanceSaved: 'Attendance saved!',
+        lessonsInSchedule: 'lessons in schedule',
+        minutes: 'minutes',
+        lateReasonPlaceholder: 'E.g.: Transport issues...',
+        changeReason: 'Reason for change',
+        changeReasonDesc: 'Lesson has ended, reason is required',
+        changeReasonPlaceholder: 'Why is attendance being changed?',
+        groupNotFound: 'Group not found',
+        reasonRequired: 'Reason not provided',
+        requestSent: 'Request sent',
+        bulkChangeNotAllowed: 'Bulk changes not allowed after lesson ends',
+        allMarkedAs: 'All students marked as "{status}"',
+        allReset: 'All marks reset to initial state',
+        selectLessonFirst: 'Please select a lesson first',
+        attendanceSavedToast: 'attendance saved',
+        saveError: 'Error saving attendance',
     },
 
     // ============ SCHEDULE ============
@@ -582,6 +602,7 @@ export default {
         timeLabel: 'Time',
         roomBuilding: 'Room / Building',
         takeAttendance: 'Take attendance',
+        loadError: 'Failed to load schedule',
     },
 
     // ============ LIBRARY ============
@@ -2094,6 +2115,8 @@ export default {
         lessonsCount: 'Lessons count',
         lessons: 'lessons',
         timesAbsent: 'times absent',
+        attendancePercent: 'Attendance %',
+        noData: 'No data',
     },
 
     // ============ LANDING SETTINGS ============
