@@ -12,7 +12,7 @@ from pydantic import BaseModel
 
 from app.database import get_db
 from app.models.user import User
-from app.models.canteen import MenuCategory, MenuItem, CanteenOrder, OrderItem, OrderStatus
+from app.models.canteen import MenuCategory, MenuItem, Order, OrderItem, OrderStatus
 from app.core.dependencies import get_current_active_user
 
 router = APIRouter()
@@ -107,8 +107,6 @@ async def create_order(
     if not request.items:
         raise HTTPException(status_code=400, detail="Buyurtma bo'sh bo'lishi mumkin emas")
 
-    from app.config import now_tashkent
-
     total = 0
     order_items_data = []
 
@@ -131,12 +129,12 @@ async def create_order(
             "subtotal": subtotal,
         })
 
-    order = CanteenOrder(
+    order = Order(
         user_id=current_user.id,
+        order_number=f"M-{current_user.id}-{int(__import__('time').time())}",
         total_amount=total,
         status=OrderStatus.PENDING,
         notes=request.notes,
-        ordered_at=now_tashkent(),
     )
     db.add(order)
     await db.flush()
@@ -146,7 +144,9 @@ async def create_order(
             order_id=order.id,
             menu_item_id=oid["menu_item"].id,
             quantity=oid["quantity"],
-            price=oid["price"],
+            unit_price=oid["price"],
+            total_price=oid["subtotal"],
+            item_name=oid["menu_item"].name,
         )
         db.add(oi)
 
@@ -171,12 +171,12 @@ async def get_my_orders(
     current_user: User = Depends(get_current_active_user),
 ):
     """Get current user's orders."""
-    query = select(CanteenOrder).where(CanteenOrder.user_id == current_user.id)
+    query = select(Order).where(Order.user_id == current_user.id)
 
     if status:
         try:
             st = OrderStatus(status)
-            query = query.where(CanteenOrder.status == st)
+            query = query.where(Order.status == st)
         except ValueError:
             pass
 
@@ -184,7 +184,7 @@ async def get_my_orders(
     total = (await db.execute(count_q)).scalar() or 0
 
     offset = (page - 1) * page_size
-    result = await db.execute(query.order_by(desc(CanteenOrder.ordered_at)).offset(offset).limit(page_size))
+    result = await db.execute(query.order_by(desc(Order.created_at)).offset(offset).limit(page_size))
     orders = result.scalars().all()
 
     items = []
@@ -195,19 +195,20 @@ async def get_my_orders(
 
         order_items = []
         for oi in oi_list:
-            mi = (await db.execute(select(MenuItem).where(MenuItem.id == oi.menu_item_id))).scalar_one_or_none()
             order_items.append({
-                "name": mi.name if mi else "Noma'lum",
+                "name": oi.item_name or "Noma'lum",
                 "quantity": oi.quantity,
-                "price": float(oi.price) if oi.price else 0,
+                "price": float(oi.unit_price) if oi.unit_price else 0,
+                "total": float(oi.total_price) if oi.total_price else 0,
             })
 
         items.append({
             "id": o.id,
+            "order_number": o.order_number,
             "total": float(o.total_amount) if o.total_amount else 0,
             "status": o.status.value if o.status else "pending",
             "notes": o.notes,
-            "ordered_at": str(o.ordered_at) if o.ordered_at else None,
+            "created_at": str(o.created_at) if o.created_at else None,
             "items": order_items,
             "item_count": len(order_items),
         })

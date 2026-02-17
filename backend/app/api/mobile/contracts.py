@@ -98,10 +98,16 @@ async def get_group_contracts(
     current_user: User = Depends(get_current_active_user),
 ):
     """Get contracts for leader's group."""
-    # Find leader's group
-    group = (await db.execute(
-        select(Group).where(Group.leader_id == current_user.id)
+    # Find leader's student profile first, then their group
+    student = (await db.execute(
+        select(Student).where(Student.user_id == current_user.id)
     )).scalar_one_or_none()
+
+    group = None
+    if student and student.group_id:
+        group = (await db.execute(
+            select(Group).where(Group.id == student.group_id)
+        )).scalar_one_or_none()
 
     if not group:
         return {"items": [], "total": 0, "group_name": None, "summary": {}}

@@ -5,13 +5,14 @@ Mobile endpoints for library/books.
 """
 
 from typing import Optional
+from datetime import date, timedelta
 from fastapi import APIRouter, Depends, Query, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func, desc
 
 from app.database import get_db
 from app.models.user import User
-from app.models.library import Book, BookCategory, BookBorrow, BookBorrowStatus
+from app.models.library import Book, BookCategory, BookBorrow, BorrowStatus, BookStatus
 from app.core.dependencies import get_current_active_user
 
 router = APIRouter()
@@ -27,7 +28,7 @@ async def get_books(
     current_user: User = Depends(get_current_active_user),
 ):
     """Get books list with search and category filter."""
-    query = select(Book).where(Book.is_active == True)
+    query = select(Book)
 
     if search:
         query = query.where(
@@ -61,12 +62,14 @@ async def get_books(
                 "isbn": b.isbn,
                 "total_copies": b.total_copies,
                 "available_copies": b.available_copies,
-                "cover_image": b.cover_image,
+                "cover_url": b.cover_url,
                 "description": b.description,
-                "page_count": b.page_count,
-                "publish_year": b.publish_year,
-                "rating": float(b.average_rating) if b.average_rating else 0.0,
+                "pages": b.pages,
+                "year": b.year,
+                "publisher": b.publisher,
+                "rating": float(b.rating) if b.rating else 0.0,
                 "view_count": b.view_count or 0,
+                "status": b.status.value if b.status else None,
             }
             for b in books
         ],
@@ -114,7 +117,7 @@ async def get_my_borrows(
 
     if status:
         try:
-            st = BookBorrowStatus(status)
+            st = BorrowStatus(status)
             query = query.where(BookBorrow.status == st)
         except ValueError:
             pass
@@ -124,7 +127,7 @@ async def get_my_borrows(
 
     offset = (page - 1) * page_size
     result = await db.execute(
-        query.order_by(desc(BookBorrow.borrowed_at)).offset(offset).limit(page_size)
+        query.order_by(desc(BookBorrow.borrow_date)).offset(offset).limit(page_size)
     )
     borrows = result.scalars().all()
 
@@ -137,10 +140,10 @@ async def get_my_borrows(
             "book_id": br.book_id,
             "book_title": book.title if book else "Noma'lum",
             "book_author": book.author if book else "",
-            "book_cover": book.cover_image if book else None,
-            "borrowed_at": str(br.borrowed_at) if br.borrowed_at else None,
+            "book_cover": book.cover_url if book else None,
+            "borrow_date": str(br.borrow_date) if br.borrow_date else None,
             "due_date": str(br.due_date) if br.due_date else None,
-            "returned_at": str(br.returned_at) if br.returned_at else None,
+            "return_date": str(br.return_date) if br.return_date else None,
             "status": br.status.value if br.status else "active",
             "late_fee": float(br.late_fee) if br.late_fee else 0,
         })
@@ -154,8 +157,8 @@ async def get_library_stats(
     current_user: User = Depends(get_current_active_user),
 ):
     """Get library statistics for current user."""
-    total_books = (await db.execute(select(func.count(Book.id)).where(Book.is_active == True))).scalar() or 0
-    available = (await db.execute(select(func.sum(Book.available_copies)).where(Book.is_active == True))).scalar() or 0
+    total_books = (await db.execute(select(func.count(Book.id)))).scalar() or 0
+    available = (await db.execute(select(func.sum(Book.available_copies)))).scalar() or 0
 
     my_borrows = (await db.execute(
         select(func.count(BookBorrow.id)).where(
@@ -166,7 +169,7 @@ async def get_library_stats(
     active_borrows = (await db.execute(
         select(func.count(BookBorrow.id)).where(
             BookBorrow.user_id == current_user.id,
-            BookBorrow.status == BookBorrowStatus.ACTIVE,
+            BookBorrow.status == BorrowStatus.ACTIVE,
         )
     )).scalar() or 0
 
@@ -204,14 +207,15 @@ async def get_book_detail(
         "isbn": book.isbn,
         "total_copies": book.total_copies,
         "available_copies": book.available_copies,
-        "cover_image": book.cover_image,
+        "cover_url": book.cover_url,
         "description": book.description,
-        "page_count": book.page_count,
-        "publish_year": book.publish_year,
+        "pages": book.pages,
+        "year": book.year,
         "publisher": book.publisher,
-        "rating": float(book.average_rating) if book.average_rating else 0.0,
-        "review_count": book.review_count or 0,
+        "rating": float(book.rating) if book.rating else 0.0,
+        "rating_count": book.rating_count or 0,
         "view_count": book.view_count or 0,
+        "status": book.status.value if book.status else None,
     }
 
 
@@ -232,7 +236,7 @@ async def borrow_book(
     active = (await db.execute(
         select(func.count(BookBorrow.id)).where(
             BookBorrow.user_id == current_user.id,
-            BookBorrow.status == BookBorrowStatus.ACTIVE,
+            BookBorrow.status == BorrowStatus.ACTIVE,
         )
     )).scalar() or 0
 
@@ -244,22 +248,19 @@ async def borrow_book(
         select(BookBorrow).where(
             BookBorrow.user_id == current_user.id,
             BookBorrow.book_id == book_id,
-            BookBorrow.status == BookBorrowStatus.ACTIVE,
+            BookBorrow.status == BorrowStatus.ACTIVE,
         )
     )).scalar_one_or_none()
 
     if existing:
         raise HTTPException(status_code=400, detail="Bu kitob allaqachon olingan")
 
-    from datetime import datetime, timedelta
-    from app.config import now_tashkent
-
     borrow = BookBorrow(
         user_id=current_user.id,
         book_id=book_id,
-        borrowed_at=now_tashkent(),
-        due_date=now_tashkent() + timedelta(days=14),
-        status=BookBorrowStatus.ACTIVE,
+        borrow_date=date.today(),
+        due_date=date.today() + timedelta(days=14),
+        status=BorrowStatus.ACTIVE,
     )
     db.add(borrow)
     book.available_copies -= 1
