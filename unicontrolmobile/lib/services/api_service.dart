@@ -3,6 +3,7 @@
 /// Barcha endpointlar /api/mobile orqali ishlaydi
 library;
 
+import 'dart:async';
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -21,6 +22,7 @@ class ApiService {
   String? _accessToken;
   String? _refreshToken;
   bool _isRefreshing = false;
+  Completer<bool>? _refreshCompleter;
 
   ApiService._internal() {
     _dio = Dio(BaseOptions(
@@ -55,17 +57,30 @@ class ApiService {
           _logger.e('ERROR: ${error.response?.statusCode} ${error.requestOptions.path}');
         }
 
-        if (error.response?.statusCode == 401 && !_isRefreshing) {
+        if (error.response?.statusCode == 401) {
           try {
-            final refreshed = await refreshTokens();
-            if (refreshed) {
-              final opts = error.requestOptions;
-              opts.headers['Authorization'] = 'Bearer $_accessToken';
-              final response = await _dio.fetch(opts);
-              return handler.resolve(response);
+            // If already refreshing, wait for the ongoing refresh to complete
+            if (_isRefreshing) {
+              final result = await _refreshCompleter?.future ?? false;
+              if (result) {
+                // Retry request with new token
+                final opts = error.requestOptions;
+                opts.headers['Authorization'] = 'Bearer $_accessToken';
+                final response = await _dio.fetch(opts);
+                return handler.resolve(response);
+              }
+            } else {
+              // First 401 — start refresh
+              final refreshed = await refreshTokens();
+              if (refreshed) {
+                final opts = error.requestOptions;
+                opts.headers['Authorization'] = 'Bearer $_accessToken';
+                final response = await _dio.fetch(opts);
+                return handler.resolve(response);
+              }
             }
           } catch (e) {
-            _logger.e('Token refresh failed: $e');
+            _logger.e('Token refresh/retry failed: $e');
           }
         }
 
@@ -146,9 +161,14 @@ class ApiService {
 
   /// Refresh tokens
   Future<bool> refreshTokens() async {
-    if (_refreshToken == null || _isRefreshing) return false;
+    if (_refreshToken == null) return false;
+    if (_isRefreshing) {
+      // Wait for ongoing refresh
+      return _refreshCompleter?.future ?? Future.value(false);
+    }
 
     _isRefreshing = true;
+    _refreshCompleter = Completer<bool>();
     try {
       final response = await _dio.post(
         ApiConstants.refresh,
@@ -162,9 +182,11 @@ class ApiService {
       );
 
       _isRefreshing = false;
+      _refreshCompleter?.complete(true);
       return true;
     } catch (e) {
       _isRefreshing = false;
+      _refreshCompleter?.complete(false);
       await clearTokens();
       return false;
     }
