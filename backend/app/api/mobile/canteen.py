@@ -60,7 +60,7 @@ async def get_menu(
     current_user: User = Depends(get_current_active_user),
 ):
     """Get menu items."""
-    query = select(MenuItem).where(MenuItem.is_active == True)
+    query = select(MenuItem)
 
     if category_id:
         query = query.where(MenuItem.category_id == category_id)
@@ -86,7 +86,7 @@ async def get_menu(
             "name": item.name,
             "description": item.description,
             "price": float(item.price) if item.price else 0,
-            "image": item.image,
+            "image_url": item.image_url,
             "category_id": item.category_id,
             "category_name": cat,
             "is_available": item.is_available,
