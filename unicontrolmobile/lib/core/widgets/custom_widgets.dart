@@ -118,7 +118,6 @@ class GradientCard extends StatelessWidget {
 class ModernStatCard extends StatelessWidget {
   final String title;
   final String value;
-  final String? subtitle;
   final IconData icon;
   final Color color;
   final Gradient? gradient;
@@ -129,7 +128,6 @@ class ModernStatCard extends StatelessWidget {
     super.key,
     required this.title,
     required this.value,
-    this.subtitle,
     required this.icon,
     required this.color,
     this.gradient,
@@ -157,10 +155,10 @@ class ModernStatCard extends StatelessWidget {
           onTap: onTap,
           borderRadius: BorderRadius.circular(16),
           child: Padding(
-            padding: const EdgeInsets.all(14),
+            padding: const EdgeInsets.all(12),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -183,7 +181,7 @@ class ModernStatCard extends StatelessWidget {
                       ),
                   ],
                 ),
-                const SizedBox(height: 8),
+                const Spacer(),
                 Text(
                   value,
                   style: const TextStyle(
@@ -206,18 +204,6 @@ class ModernStatCard extends StatelessWidget {
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
-                if (subtitle != null) ...[
-                  const SizedBox(height: 1),
-                  Text(
-                    subtitle!,
-                    style: const TextStyle(
-                      fontSize: 10,
-                      color: AppColors.textTertiary,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ],
               ],
             ),
           ),

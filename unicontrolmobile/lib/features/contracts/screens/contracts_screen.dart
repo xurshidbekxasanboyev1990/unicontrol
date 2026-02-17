@@ -65,7 +65,7 @@ class _ContractsScreenState extends State<ContractsScreen> with SingleTickerProv
               slivers: [
                 // Header
                 SliverAppBar(
-                  expandedHeight: 260,
+                  expandedHeight: 220,
                   pinned: true,
                   backgroundColor: Colors.transparent,
                   flexibleSpace: FlexibleSpaceBar(
@@ -73,7 +73,7 @@ class _ContractsScreenState extends State<ContractsScreen> with SingleTickerProv
                       decoration: const BoxDecoration(gradient: AppColors.primaryGradient),
                       child: SafeArea(
                         child: Padding(
-                          padding: const EdgeInsets.fromLTRB(20, 60, 20, 20),
+                          padding: const EdgeInsets.fromLTRB(20, 50, 20, 16),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [

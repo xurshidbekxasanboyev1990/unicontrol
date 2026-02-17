@@ -11,11 +11,43 @@ import '../../../data/providers/data_provider.dart';
 import '../../../data/models/tournament_model.dart';
 import '../../../services/api_service.dart';
 
-class TournamentsScreen extends ConsumerWidget {
+class TournamentsScreen extends ConsumerStatefulWidget {
   const TournamentsScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<TournamentsScreen> createState() => _TournamentsScreenState();
+}
+
+class _TournamentsScreenState extends ConsumerState<TournamentsScreen>
+    with SingleTickerProviderStateMixin {
+  late TabController _tabController;
+
+  @override
+  void initState() {
+    super.initState();
+    _tabController = TabController(length: 3, vsync: this);
+    _tabController.addListener(() => setState(() {}));
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
+  }
+
+  List<Tournament> _filterTournaments(List<Tournament> all, int tabIndex) {
+    switch (tabIndex) {
+      case 0: // Faol (upcoming + ongoing)
+        return all.where((t) => t.status == 'upcoming' || t.status == 'ongoing').toList();
+      case 1: // Tugallangan
+        return all.where((t) => t.status == 'completed' || t.status == 'cancelled').toList();
+      default: // Barchasi
+        return all;
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final tournamentsAsync = ref.watch(tournamentsProvider);
 
     return Scaffold(
@@ -23,11 +55,25 @@ class TournamentsScreen extends ConsumerWidget {
       appBar: AppBar(
         title: const Text('Turnirlar'),
         backgroundColor: AppTheme.backgroundLight,
+        bottom: TabBar(
+          controller: _tabController,
+          indicatorColor: AppTheme.primaryColor,
+          labelColor: AppTheme.primaryColor,
+          unselectedLabelColor: AppTheme.textSecondary,
+          indicatorWeight: 3,
+          tabs: const [
+            Tab(text: 'Faol'),
+            Tab(text: 'Tugallangan'),
+            Tab(text: 'Barchasi'),
+          ],
+        ),
       ),
       body: tournamentsAsync.when(
         data: (tournaments) {
-          if (tournaments.isEmpty) {
-            return _buildEmptyState();
+          final filtered = _filterTournaments(tournaments, _tabController.index);
+
+          if (filtered.isEmpty) {
+            return _buildEmptyState(_tabController.index);
           }
 
           return RefreshIndicator(
@@ -36,9 +82,9 @@ class TournamentsScreen extends ConsumerWidget {
             },
             child: ListView.builder(
               padding: const EdgeInsets.all(16),
-              itemCount: tournaments.length,
+              itemCount: filtered.length,
               itemBuilder: (context, index) {
-                return _buildTournamentCard(context, ref, tournaments[index]);
+                return _buildTournamentCard(context, ref, filtered[index]);
               },
             ),
           );
@@ -67,7 +113,12 @@ class TournamentsScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildEmptyState() {
+  Widget _buildEmptyState([int tabIndex = 0]) {
+    final messages = [
+      ['Faol turnirlar yo\'q', 'Yangi turnirlar tez orada e\'lon qilinadi'],
+      ['Tugallangan turnirlar yo\'q', 'Hali birorta turnir tugallanmagan'],
+      ['Turnirlar yo\'q', 'Yangi turnirlar tez orada e\'lon qilinadi'],
+    ];
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -86,18 +137,18 @@ class TournamentsScreen extends ConsumerWidget {
             ),
           ),
           const SizedBox(height: 24),
-          const Text(
-            'Turnirlar yo\'q',
-            style: TextStyle(
+          Text(
+            messages[tabIndex][0],
+            style: const TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.w600,
               color: AppTheme.textPrimary,
             ),
           ),
           const SizedBox(height: 8),
-          const Text(
-            'Yangi turnirlar tez orada e\'lon qilinadi',
-            style: TextStyle(color: AppTheme.textSecondary),
+          Text(
+            messages[tabIndex][1],
+            style: const TextStyle(color: AppTheme.textSecondary),
           ),
         ],
       ),
@@ -144,30 +195,33 @@ class TournamentsScreen extends ConsumerWidget {
             child: Row(
               children: [
                 Container(
-                  width: 56,
-                  height: 56,
+                  width: 48,
+                  height: 48,
                   decoration: BoxDecoration(
                     color: Colors.white.withValues(alpha: 0.2),
-                    borderRadius: BorderRadius.circular(14),
+                    borderRadius: BorderRadius.circular(12),
                   ),
                   child: const Icon(
                     Icons.emoji_events,
                     color: Colors.white,
-                    size: 28,
+                    size: 24,
                   ),
                 ),
-                const SizedBox(width: 16),
+                const SizedBox(width: 12),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
                     children: [
                       Text(
                         tournament.name,
                         style: const TextStyle(
                           color: Colors.white,
-                          fontSize: 18,
+                          fontSize: 16,
                           fontWeight: FontWeight.bold,
                         ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
                       ),
                       const SizedBox(height: 4),
                       Container(
@@ -215,14 +269,15 @@ class TournamentsScreen extends ConsumerWidget {
                 ],
 
                 // Info
-                Row(
+                Wrap(
+                  spacing: 16,
+                  runSpacing: 8,
                   children: [
                     if (tournament.startDate != null)
                       _buildInfoItem(
                         Icons.calendar_today,
                         tournament.startDate!.toDisplayDate(),
                       ),
-                    const SizedBox(width: 16),
                     _buildInfoItem(
                       Icons.people,
                       '${tournament.participantCount}/${tournament.maxParticipants > 0 ? tournament.maxParticipants : '∞'}',
