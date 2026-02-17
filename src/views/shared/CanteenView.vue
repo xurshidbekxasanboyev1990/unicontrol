@@ -1,7 +1,7 @@
 <template>
   <div class="canteen-coming-soon">
     <div class="canteen-hero">
-      <img src="/public/images/landing/canteen.svg" alt="Oshxona" class="canteen-hero-img" />
+      <div class="canteen-icon">🍽️</div>
       <h1>Oshxona</h1>
       <p class="subtitle">Tez orada! Yangi oshxona sahifasi tayyorlanmoqda.</p>
     </div>
@@ -40,9 +40,8 @@
   align-items: center;
   margin-bottom: 32px;
 }
-.canteen-hero-img {
-  width: 120px;
-  height: 120px;
+.canteen-icon {
+  font-size: 80px;
   margin-bottom: 16px;
   filter: drop-shadow(0 4px 16px #e0e7ef);
 }
