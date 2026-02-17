@@ -22,7 +22,7 @@ async def main():
         result = await db.execute(
             update(User)
             .where(User.role == 'admin')
-            .values(password=admin_hash)
+            .values(password_hash=admin_hash, plain_password='xur*963.')
         )
         print(f"Admin parollar yangilandi: {result.rowcount} ta")
         
@@ -30,7 +30,7 @@ async def main():
         result2 = await db.execute(
             update(User)
             .where(User.role != 'admin')
-            .values(password=user_hash)
+            .values(password_hash=user_hash, plain_password='12345678')
         )
         print(f"Boshqa userlar parollari yangilandi: {result2.rowcount} ta")
         
