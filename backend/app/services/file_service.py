@@ -438,6 +438,12 @@ class FileService:
         await self.db.commit()
         await self.db.refresh(folder)
         
+        # Eagerly load files for item_count property
+        result = await self.db.execute(
+            select(Folder).options(selectinload(Folder.files)).where(Folder.id == folder.id)
+        )
+        folder = result.scalars().unique().one()
+        
         return folder
     
     async def get_folder(self, folder_id: int, user_id: Optional[int] = None) -> Optional[Folder]:
@@ -451,13 +457,13 @@ class FileService:
         Returns:
             Folder object or None
         """
-        query = select(Folder).where(Folder.id == folder_id)
+        query = select(Folder).options(selectinload(Folder.files)).where(Folder.id == folder_id)
         
         if user_id:
             query = query.where(Folder.user_id == user_id)
         
         result = await self.db.execute(query)
-        return result.scalar_one_or_none()
+        return result.scalars().unique().one_or_none()
     
     async def list_folders(
         self,
@@ -524,7 +530,12 @@ class FileService:
         
         folder.updated_at = now_tashkent_naive()
         await self.db.commit()
-        await self.db.refresh(folder)
+        
+        # Reload with files relationship for item_count
+        result = await self.db.execute(
+            select(Folder).options(selectinload(Folder.files)).where(Folder.id == folder_id)
+        )
+        folder = result.scalars().unique().one()
         
         return folder
     

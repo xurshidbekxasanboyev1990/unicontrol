@@ -570,19 +570,24 @@ const unreadNotifications = computed(() => dashboardData.value?.unread_notificat
 const totalBooks = ref(5000)
 
 // Methods
-function getLessonStatus(lesson) {
+function getTashkentNow() {
   const now = new Date()
+  return new Date(now.toLocaleString('en-US', { timeZone: 'Asia/Tashkent' }))
+}
+
+function getLessonStatus(lesson) {
+  const now = getTashkentNow()
   const timeStr = lesson.time || lesson.start_time || ''
   if (!timeStr.includes('-')) return t('schedule.upcoming')
   
   const [startHour, startMin] = timeStr.split('-')[0].split(':').map(Number)
   const [endHour, endMin] = timeStr.split('-')[1].split(':').map(Number)
   
-  const startTime = new Date()
-  startTime.setHours(startHour, startMin, 0)
+  const startTime = new Date(now)
+  startTime.setHours(startHour, startMin, 0, 0)
   
-  const endTime = new Date()
-  endTime.setHours(endHour, endMin, 0)
+  const endTime = new Date(now)
+  endTime.setHours(endHour, endMin, 0, 0)
   
   if (now < startTime) return t('schedule.upcoming')
   if (now > endTime) return t('schedule.finished')
@@ -590,18 +595,18 @@ function getLessonStatus(lesson) {
 }
 
 function getLessonStatusClass(lesson) {
-  const now = new Date()
+  const now = getTashkentNow()
   const timeStr = lesson.time || lesson.start_time || ''
   if (!timeStr.includes('-')) return 'bg-blue-100 text-blue-600'
   
   const [startHour, startMin] = timeStr.split('-')[0].split(':').map(Number)
   const [endHour, endMin] = timeStr.split('-')[1].split(':').map(Number)
   
-  const startTime = new Date()
-  startTime.setHours(startHour, startMin, 0)
+  const startTime = new Date(now)
+  startTime.setHours(startHour, startMin, 0, 0)
   
-  const endTime = new Date()
-  endTime.setHours(endHour, endMin, 0)
+  const endTime = new Date(now)
+  endTime.setHours(endHour, endMin, 0, 0)
   
   if (now > endTime) return 'bg-slate-100 text-slate-500'
   if (now >= startTime) return 'bg-green-100 text-green-600'
