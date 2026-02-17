@@ -62,7 +62,7 @@
       </div>
 
       <!-- Settings -->
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div>
           <label class="block text-sm font-medium text-slate-600 mb-1.5">O'quv yili</label>
           <select v-model="academicYear" class="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400">
@@ -77,12 +77,6 @@
             <option :value="1">1-semestr</option>
             <option :value="2">2-semestr</option>
           </select>
-        </div>
-        <div class="flex items-end">
-          <label class="flex items-center gap-2 cursor-pointer">
-            <input type="checkbox" v-model="clearExisting" class="w-4 h-4 rounded border-slate-300 text-blue-500 focus:ring-blue-500/20" />
-            <span class="text-sm text-slate-600">Avvalgi jadvallarni tozalash</span>
-          </label>
         </div>
         <div class="flex items-end">
           <label class="flex items-center gap-2 cursor-pointer">
@@ -136,18 +130,22 @@
       </div>
 
       <!-- Stats -->
-      <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+      <div class="grid grid-cols-2 sm:grid-cols-5 gap-4">
         <div class="text-center p-4 bg-emerald-50 rounded-xl">
           <p class="text-2xl font-bold text-emerald-600">{{ result.synced }}</p>
-          <p class="text-xs text-emerald-600">Yuklangan darslar</p>
+          <p class="text-xs text-emerald-600">Jami darslar</p>
+        </div>
+        <div class="text-center p-4 bg-cyan-50 rounded-xl">
+          <p class="text-2xl font-bold text-cyan-600">{{ result.updated || 0 }}</p>
+          <p class="text-xs text-cyan-600">Yangilangan</p>
+        </div>
+        <div class="text-center p-4 bg-indigo-50 rounded-xl">
+          <p class="text-2xl font-bold text-indigo-600">{{ result.inserted || 0 }}</p>
+          <p class="text-xs text-indigo-600">Qo'shilgan</p>
         </div>
         <div class="text-center p-4 bg-blue-50 rounded-xl">
           <p class="text-2xl font-bold text-blue-600">{{ result.matched_groups?.length || 0 }}</p>
           <p class="text-xs text-blue-600">Topilgan guruhlar</p>
-        </div>
-        <div class="text-center p-4 bg-orange-50 rounded-xl">
-          <p class="text-2xl font-bold text-orange-600">{{ result.skipped }}</p>
-          <p class="text-xs text-orange-600">O'tkazib yuborildi</p>
         </div>
         <div class="text-center p-4 bg-red-50 rounded-xl">
           <p class="text-2xl font-bold text-red-600">{{ result.unmatched_groups?.length || 0 }}</p>
@@ -321,7 +319,6 @@ const error = ref(null)
 
 const academicYear = ref('2025-2026')
 const semester = ref(2)
-const clearExisting = ref(true)
 const useAi = ref(true)
 
 function handleFileSelect(event) {
@@ -361,7 +358,6 @@ async function uploadSchedule() {
       selectedFile.value,
       academicYear.value,
       semester.value,
-      clearExisting.value,
       useAi.value
     )
     result.value = response

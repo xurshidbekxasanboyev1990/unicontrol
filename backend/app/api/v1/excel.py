@@ -231,13 +231,12 @@ async def import_schedules(
     file: UploadFile = File(...),
     semester: int = Form(2),
     academic_year: str = Form("2025-2026"),
-    clear_existing: bool = Form(True),
     use_ai: bool = Form(True),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(require_admin)
 ):
     """
-    Import schedules from Excel file with fuzzy group matching + AI enhancement.
+    Import schedules from Excel file with TRUE UPSERT + AI enhancement.
     
     Requires admin role.
     
@@ -250,8 +249,9 @@ async def import_schedules(
     - AI-powered smart group matching for unresolved names
     - AI-powered cell content parsing for messy data
     - AI quality analysis with suggestions
+    - TRUE UPSERT: updates existing, inserts new (never deletes)
+    - Match key: (group_id, day_of_week, lesson_number, semester, academic_year)
     - Auto-detects format
-    - Clears old schedules for matched groups (optional)
     """
     service = ExcelService(db)
     
@@ -264,7 +264,6 @@ async def import_schedules(
         file_data=contents,
         academic_year=academic_year,
         semester=semester,
-        clear_existing=clear_existing,
         use_ai=use_ai,
     )
     

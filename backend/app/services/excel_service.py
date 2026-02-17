@@ -31,7 +31,7 @@ from openpyxl import Workbook, load_workbook
 from openpyxl.styles import Font, Alignment, Border, Side, PatternFill
 from openpyxl.utils import get_column_letter
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, delete, func, text
+from sqlalchemy import select, func, text
 from sqlalchemy.orm import joinedload
 
 from app.config import now_tashkent
@@ -797,11 +797,11 @@ class ExcelService:
         file_data: bytes,
         academic_year: str = "2025-2026",
         semester: int = 2,
-        clear_existing: bool = True,
+        clear_existing: bool = False,
         use_ai: bool = True,
     ) -> Dict[str, Any]:
         """
-        Import schedules from Excel with UPSERT logic + AI enhancement.
+        Import schedules from Excel with true UPSERT logic + AI enhancement.
 
         Supports two Excel formats:
 
@@ -816,7 +816,8 @@ class ExcelService:
         - AI-powered group matching for unresolved groups
         - AI-powered cell parsing for messy content
         - AI quality analysis with suggestions
-        - UPSERT: clears old schedules for matched groups, inserts new
+        - TRUE UPSERT: updates existing schedules, adds new ones (never deletes)
+        - Match key: (group_id, day_of_week, lesson_number, semester, academic_year)
         - Reports unmatched groups so admin can fix
         - Auto-detects format
         """
@@ -870,20 +871,9 @@ class ExcelService:
             else:
                 unmatched_groups.add(rec["sheet_group_name"])
 
-        # Clear existing schedules for matched groups
-        if clear_existing and matched_groups:
-            group_ids = [group_name_to_id[gn] for gn in matched_groups if gn in group_name_to_id]
-            if group_ids:
-                await self.db.execute(
-                    delete(Schedule).where(
-                        Schedule.group_id.in_(group_ids),
-                        Schedule.academic_year == academic_year,
-                        Schedule.semester == semester,
-                    )
-                )
-
-        # Insert new schedules
-        synced = 0
+        # ── TRUE UPSERT: Update existing + Insert new (never delete) ──
+        updated = 0
+        inserted = 0
         skipped = 0
         errors: List[str] = []
 
@@ -903,23 +893,49 @@ class ExcelService:
                     start_time = start_time or parse_time(slot[0])
                     end_time = end_time or parse_time(slot[1])
 
-                schedule = Schedule(
-                    group_id=rec["group_id"],
-                    subject=rec["subject"],
-                    schedule_type=rec.get("schedule_type", ScheduleType.LECTURE),
-                    day_of_week=rec["day"],
-                    start_time=start_time,
-                    end_time=end_time,
-                    lesson_number=lesson_num,
-                    room=rec.get("room"),
-                    building=rec.get("building"),
-                    teacher_name=rec.get("teacher"),
-                    semester=semester,
-                    academic_year=academic_year,
-                    is_active=True,
+                # Check if schedule already exists by unique key
+                existing_result = await self.db.execute(
+                    select(Schedule).where(
+                        Schedule.group_id == rec["group_id"],
+                        Schedule.day_of_week == rec["day"],
+                        Schedule.lesson_number == lesson_num,
+                        Schedule.semester == semester,
+                        Schedule.academic_year == academic_year,
+                    )
                 )
-                self.db.add(schedule)
-                synced += 1
+                existing = existing_result.scalars().first()
+
+                if existing:
+                    # UPDATE existing schedule
+                    existing.subject = rec["subject"]
+                    existing.schedule_type = rec.get("schedule_type", ScheduleType.LECTURE)
+                    existing.start_time = start_time
+                    existing.end_time = end_time
+                    existing.room = rec.get("room")
+                    existing.building = rec.get("building")
+                    existing.teacher_name = rec.get("teacher")
+                    existing.is_active = True
+                    existing.is_cancelled = False
+                    updated += 1
+                else:
+                    # INSERT new schedule
+                    schedule = Schedule(
+                        group_id=rec["group_id"],
+                        subject=rec["subject"],
+                        schedule_type=rec.get("schedule_type", ScheduleType.LECTURE),
+                        day_of_week=rec["day"],
+                        start_time=start_time,
+                        end_time=end_time,
+                        lesson_number=lesson_num,
+                        room=rec.get("room"),
+                        building=rec.get("building"),
+                        teacher_name=rec.get("teacher"),
+                        semester=semester,
+                        academic_year=academic_year,
+                        is_active=True,
+                    )
+                    self.db.add(schedule)
+                    inserted += 1
 
             except Exception as e:
                 skipped += 1
@@ -927,18 +943,22 @@ class ExcelService:
 
         await self.db.commit()
 
+        synced = updated + inserted
+
         # Build response
         response = {
             "success": True,
             "total_records": len(all_records),
             "synced": synced,
+            "updated": updated,
+            "inserted": inserted,
             "skipped": skipped,
             "matched_groups": list(matched_groups),
             "unmatched_groups": list(unmatched_groups),
             "group_name_map": group_name_map,
             "errors": errors[:20],
             "message": (
-                f"Jadval: {synced} ta dars yuklandi, {skipped} ta o'tkazib yuborildi. "
+                f"Jadval: {updated} ta yangilandi, {inserted} ta qo'shildi, {skipped} ta o'tkazib yuborildi. "
                 f"{len(matched_groups)} ta guruh topildi, {len(unmatched_groups)} ta topilmadi."
             ),
         }
