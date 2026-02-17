@@ -48,7 +48,7 @@ class Tournament extends Equatable {
     if (!isActive || isRegistered) return false;
     if (maxParticipants > 0 && participantCount >= maxParticipants) return false;
     if (registrationDeadline != null && DateTime.now().isAfter(registrationDeadline!)) return false;
-    return status == 'upcoming';
+    return status == 'upcoming' || status == 'ongoing';
   }
 
   /// Status label

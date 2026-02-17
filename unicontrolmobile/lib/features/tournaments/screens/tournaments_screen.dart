@@ -355,7 +355,15 @@ class _TournamentsScreenState extends ConsumerState<TournamentsScreen>
                           ? 'Ro\'yxatdan o\'tgansiz ✓'
                           : tournament.canRegister
                               ? 'Ro\'yxatdan o\'tish'
-                              : 'Ro\'yxat yopilgan',
+                              : tournament.status == 'completed'
+                                  ? 'Tugallangan'
+                                  : tournament.status == 'cancelled'
+                                      ? 'Bekor qilingan'
+                                      : (tournament.maxParticipants > 0 && tournament.participantCount >= tournament.maxParticipants)
+                                          ? 'Joylar to\'lgan'
+                                          : (tournament.registrationDeadline != null && DateTime.now().isAfter(tournament.registrationDeadline!))
+                                              ? 'Muddat tugagan'
+                                              : 'Ro\'yxatdan o\'tish',
                       style: const TextStyle(
                         fontWeight: FontWeight.w600,
                       ),
