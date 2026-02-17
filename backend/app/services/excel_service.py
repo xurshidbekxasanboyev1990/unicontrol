@@ -839,8 +839,22 @@ class ExcelService:
         unmatched_groups: Set[str] = set()
         group_name_map: Dict[str, str] = {}  # sheet_name -> db_name
 
+        # Sheets to skip (not schedule data)
+        skip_sheet_keywords = ["bandligi", "bandlik", "o'qituvchi", "oqituvchi", "teacher"]
+
         for ws in wb.worksheets:
+            # Skip non-schedule sheets
+            sheet_lower = ws.title.lower().strip()
+            if any(kw in sheet_lower for kw in skip_sheet_keywords):
+                logger.info(f"Skipping non-schedule sheet: '{ws.title}'")
+                continue
+
+            logger.info(f"Parsing sheet: '{ws.title}', max_row={ws.max_row}, max_col={ws.max_column}")
             records = self._parse_schedule_sheet(ws, group_lookup, group_name_map)
+            logger.info(f"Sheet '{ws.title}': {len(records)} records parsed")
+            # Log first 3 records for debug
+            for r in records[:3]:
+                logger.info(f"  Sample: group={r.get('sheet_group_name')}, day={r.get('day')}, para={r.get('lesson_number')}, subj={r.get('subject')}, teacher={r.get('teacher')}")
             all_records.extend(records)
 
         wb.close()
@@ -1282,44 +1296,55 @@ class ExcelService:
         group_name_map: Dict[str, str],
     ) -> List[Dict[str, Any]]:
         """
-        Parse grid format with FULL merged cell support:
-        - Row 1: department/direction name (merged) — SKIPPED
-        - Row 2: group names as column headers (col D+)
-        - Column A: Day of week (often merged across 6-7 rows per day)
-        - Column B: Lesson number (sometimes merged)
-        - Column C: Time range (e.g. "08:30-09:50", sometimes merged)
-        - Column D+: Cell content = "Subject (type) Teacher Room"
+        Parse grid format with FULL merged cell support.
 
-        Also supports:
-        - Legacy format (groups in row 1)
-        - Groups in rows 2, 3, or 4
-        - Day in column A or B
-        - Merged cells for days spanning multiple para rows
+        Excel structure (per block):
+        - Row 1: department/direction name (merged) — SKIPPED
+        - Row 2: group names as column headers
+        - Column A (or block-local): Day of week (merged across lesson rows)
+        - Column B (or block-local): Lesson number
+        - Column C (or block-local): Time range
+        - Data columns: Cell content = "Subject (type) Teacher Room Building"
+
+        Supports:
+        - Multiple blocks in one sheet (2-bosqich style: each faculty has own day/lesson/time cols)
+        - Merged data cells spanning multiple group columns (same lesson for multiple groups)
+        - Groups in rows 2, 3, 4, or 1
+        - Merged cells for days spanning multiple lesson rows
         """
         records: List[Dict[str, Any]] = []
 
-        # --- Build merged cell lookup for fast access ---
-        merged_lookup = {}  # (row, col) -> value from top-left of merged range
+        # --- Build merged cell lookups ---
+        # 1) Standard merged lookup for meta cells (day, lesson, time)
+        merged_lookup = {}  # (row, col) -> value from top-left
+        # 2) Data merge ranges for distributing one cell value to multiple group columns
+        data_merge_ranges = []  # list of (min_row, max_row, min_col, max_col, value)
+
         for merged_range in ws.merged_cells.ranges:
             top_val = ws.cell(merged_range.min_row, merged_range.min_col).value
             for r in range(merged_range.min_row, merged_range.max_row + 1):
                 for c in range(merged_range.min_col, merged_range.max_col + 1):
                     merged_lookup[(r, c)] = top_val
+            # Save data merge ranges (we'll use these for data cells)
+            data_merge_ranges.append((
+                merged_range.min_row, merged_range.max_row,
+                merged_range.min_col, merged_range.max_col,
+                top_val
+            ))
 
         def get_cell(row, col):
-            """Get cell value, checking merged cells first."""
+            """Get cell value, resolving merged cells."""
             if (row, col) in merged_lookup:
                 return merged_lookup[(row, col)]
             return ws.cell(row, col).value
 
         # --- Detect group row: try rows 2, 3, 4, then row 1 ---
-        group_cols: Dict[int, tuple] = {}
+        group_cols: Dict[int, tuple] = {}  # col_idx -> (sheet_name, group_id, db_name)
         group_header_row = 2
 
-        skip_values = {"kun", "day", "para", "vaqt", "time", "hafta kuni", "dars", 
-                        "soat", "№", "lesson", "hour", ""}
+        skip_values = {"kun", "day", "para", "vaqt", "time", "hafta kuni", "dars",
+                        "soat", "№", "lesson", "hour", "", "dars vaqti"}
 
-        # Try rows 2, 3, 4 for group headers
         for try_row in [2, 3, 4]:
             found_groups = 0
             temp_cols = {}
@@ -1329,6 +1354,10 @@ class ExcelService:
                     continue
                 name = str(val).strip()
                 if name.lower() in skip_values or len(name) < 2:
+                    continue
+                # Skip if same value as row 1 merged header (faculty name, not group)
+                row1_val = get_cell(1, col_idx)
+                if row1_val and str(row1_val).strip() == name:
                     continue
                 # Check if it looks like a group name (has letters + digits)
                 if re.search(r'[A-Za-zА-Яа-яЎўҚқҒғҲҳ]', name) and re.search(r'\d', name):
@@ -1340,7 +1369,7 @@ class ExcelService:
                     else:
                         temp_cols[col_idx] = (name, None, None)
                         found_groups += 1
-            
+
             if found_groups >= 1:
                 group_cols = temp_cols
                 group_header_row = try_row
@@ -1365,103 +1394,213 @@ class ExcelService:
                         group_cols[col_idx] = (name, None, None)
 
         if not group_cols:
+            logger.warning(f"Grid parser: No groups found in sheet '{ws.title}'")
             return records
 
         data_start_row = group_header_row + 1
 
-        # --- Detect which columns hold day, lesson, time ---
-        # Usually A=day, B=lesson, C=time, but could vary
-        day_col = 1
-        lesson_col = 2
-        time_col = 3
+        logger.info(f"Grid parser '{ws.title}': group_header_row={group_header_row}, "
+                     f"groups={len(group_cols)}, merged_cells={len(ws.merged_cells.ranges)}")
 
-        # Auto-detect: check first few data rows
-        min_group_col = min(group_cols.keys())
-        meta_cols = list(range(1, min_group_col))  # columns before first group
+        # --- Detect BLOCKS: each block has its own day/lesson/time columns ---
+        # A block = (day_col, lesson_col, time_col, set_of_group_col_indices)
+        # In simple sheets: one block with cols A,B,C for all groups
+        # In multi-faculty sheets: multiple blocks separated by "Dars vaqti" meta columns
 
-        if len(meta_cols) >= 3:
-            day_col, lesson_col, time_col = meta_cols[0], meta_cols[1], meta_cols[2]
-        elif len(meta_cols) == 2:
-            day_col, lesson_col = meta_cols[0], meta_cols[1]
-            time_col = None
-        elif len(meta_cols) == 1:
-            day_col = meta_cols[0]
+        sorted_group_cols = sorted(group_cols.keys())
+
+        # Find all meta column sets: columns in data rows that have day names or lesson numbers
+        # A meta column is any column NOT in group_cols that has day/lesson/time data
+        meta_col_sets = []  # list of (day_col, lesson_col, time_col)
+
+        # Method: look for day names in data_start_row across all columns
+        day_columns = []
+        for col_idx in range(1, ws.max_column + 1):
+            if col_idx in group_cols:
+                continue
+            val = get_cell(data_start_row, col_idx)
+            if val and parse_day(val):
+                day_columns.append(col_idx)
+
+        if not day_columns:
+            # Fallback: just use col 1
+            day_columns = [1]
+
+        # For each day column, find the adjacent lesson and time columns
+        for day_col in day_columns:
             lesson_col = None
             time_col = None
+            # Check next 1-2 columns for lesson number and time
+            for offset in [1, 2]:
+                check_col = day_col + offset
+                if check_col in group_cols:
+                    break
+                val = get_cell(data_start_row, check_col)
+                if val is not None:
+                    # Is it a number (lesson)?
+                    try:
+                        ln = int(float(str(val)))
+                        if 1 <= ln <= 10:
+                            lesson_col = check_col
+                            continue
+                    except (ValueError, TypeError):
+                        pass
+                    # Is it a time string?
+                    val_str = str(val).strip()
+                    if re.match(r'\d{1,2}:\d{2}', val_str):
+                        time_col = check_col
+            meta_col_sets.append((day_col, lesson_col, time_col))
 
-        # --- Parse data rows with merged cell carry-forward ---
-        current_day = None
-        current_lesson = None
-        current_start_time = None
-        current_end_time = None
+        # Assign each group column to its nearest preceding meta block
+        # Build blocks: each block = (day_col, lesson_col, time_col, [group_cols])
+        blocks = []
+        meta_col_sets_sorted = sorted(meta_col_sets, key=lambda x: x[0])
 
-        for row_idx in range(data_start_row, ws.max_row + 1):
-            # Day of week (merged cells auto-resolved)
-            day_val = get_cell(row_idx, day_col) if day_col else None
-            if day_val:
-                d = parse_day(day_val)
-                if d:
-                    current_day = d
+        for i, (day_c, lesson_c, time_c) in enumerate(meta_col_sets_sorted):
+            # Find group columns that belong to this block:
+            # All group columns after this meta and before the next meta
+            if i + 1 < len(meta_col_sets_sorted):
+                next_meta_start = meta_col_sets_sorted[i + 1][0]
+            else:
+                next_meta_start = ws.max_column + 1
 
-            # Lesson number
-            lesson_val = get_cell(row_idx, lesson_col) if lesson_col else None
-            if lesson_val is not None:
-                try:
-                    ln = int(float(str(lesson_val)))
-                    if 1 <= ln <= 10:
-                        current_lesson = ln
-                except (ValueError, TypeError):
-                    pass
+            block_groups = {
+                col: group_cols[col]
+                for col in sorted_group_cols
+                if col > (time_c or lesson_c or day_c) and col < next_meta_start
+            }
 
-            # Time range
-            if time_col:
-                time_val = get_cell(row_idx, time_col)
-                if time_val:
-                    time_str = str(time_val).strip()
-                    parts = re.split(r'[-–—]', time_str)
-                    if len(parts) == 2:
-                        st = parse_time(parts[0].strip())
-                        et = parse_time(parts[1].strip())
-                        if st:
-                            current_start_time = st
-                        if et:
-                            current_end_time = et
+            if block_groups:
+                blocks.append((day_c, lesson_c, time_c, block_groups))
 
-            if not current_day:
+        # If no blocks were formed, create a single default block
+        if not blocks:
+            min_gc = min(sorted_group_cols)
+            meta_cols = list(range(1, min_gc))
+            day_c = meta_cols[0] if len(meta_cols) >= 1 else 1
+            lesson_c = meta_cols[1] if len(meta_cols) >= 2 else None
+            time_c = meta_cols[2] if len(meta_cols) >= 3 else None
+            blocks = [(day_c, lesson_c, time_c, group_cols)]
+
+        logger.info(f"Grid parser '{ws.title}': {len(blocks)} block(s) detected")
+        for bi, (dc, lc, tc, bg) in enumerate(blocks):
+            grp_names = [bg[c][0] for c in sorted(bg.keys())][:5]
+            logger.info(f"  Block {bi}: day_col={dc}, lesson_col={lc}, time_col={tc}, "
+                         f"groups={len(bg)} ({grp_names}{'...' if len(bg) > 5 else ''})")
+
+        # --- Build reverse lookup: for each data cell merged range, which group columns it covers ---
+        # This is needed because a merged data cell like D13:F13 means the lesson is for groups D, E, F
+        # We index by (row, min_col) -> list of group cols covered
+        merged_data_coverage = {}  # (min_row, min_col) -> set of group col indices covered
+        group_col_set = set(group_cols.keys())
+        for min_r, max_r, min_c, max_c, val in data_merge_ranges:
+            if not val:
                 continue
+            covered_groups = group_col_set & set(range(min_c, max_c + 1))
+            if covered_groups and len(covered_groups) > 1:
+                for r in range(min_r, max_r + 1):
+                    merged_data_coverage[(r, min_c)] = covered_groups
 
-            # Parse each group column
-            row_has_data = False
-            for col_idx, (sheet_name, gid, db_name) in group_cols.items():
-                cell_val = ws.cell(row_idx, col_idx).value  # Don't use merged for data cells
-                if not cell_val:
+        # --- Parse data rows per block ---
+        for day_col, lesson_col, time_col, block_groups in blocks:
+            current_day = None
+            current_lesson = None
+            current_start_time = None
+            current_end_time = None
+
+            for row_idx in range(data_start_row, ws.max_row + 1):
+                # Day of week (merged cells auto-resolved via get_cell)
+                day_val = get_cell(row_idx, day_col)
+                if day_val:
+                    d = parse_day(day_val)
+                    if d:
+                        current_day = d
+
+                # Lesson number
+                if lesson_col:
+                    lesson_val = get_cell(row_idx, lesson_col)
+                    if lesson_val is not None:
+                        try:
+                            ln = int(float(str(lesson_val)))
+                            if 1 <= ln <= 10:
+                                current_lesson = ln
+                        except (ValueError, TypeError):
+                            pass
+
+                # Time range
+                if time_col:
+                    time_val = get_cell(row_idx, time_col)
+                    if time_val:
+                        time_str = str(time_val).strip()
+                        parts = re.split(r'[-–—]', time_str)
+                        if len(parts) == 2:
+                            st = parse_time(parts[0].strip())
+                            et = parse_time(parts[1].strip())
+                            if st:
+                                current_start_time = st
+                            if et:
+                                current_end_time = et
+
+                if not current_day:
                     continue
 
-                raw_text = str(cell_val).strip()
-                if not raw_text or raw_text == "-" or raw_text == "—":
-                    continue
+                # Track which group columns already got data this row (to avoid duplicates from merges)
+                processed_cols = set()
 
-                row_has_data = True
-                subject, stype, teacher, room, building = self._parse_cell_content(raw_text)
+                for col_idx, (sheet_name, gid, db_name) in block_groups.items():
+                    if col_idx in processed_cols:
+                        continue
 
-                rec = {
-                    "sheet_group_name": sheet_name,
-                    "db_group_name": db_name,
-                    "group_id": gid,
-                    "day": current_day,
-                    "lesson_number": current_lesson or 1,
-                    "subject": subject,
-                    "teacher": teacher,
-                    "room": room,
-                    "building": building,
-                    "start_time": current_start_time,
-                    "end_time": current_end_time,
-                    "schedule_type": stype or ScheduleType.LECTURE,
-                    "_raw_cell": raw_text,  # Always save raw for AI
-                }
+                    # Use get_cell to resolve merged cells
+                    cell_val = get_cell(row_idx, col_idx)
+                    if not cell_val:
+                        continue
 
-                if subject or raw_text:
-                    records.append(rec)
+                    raw_text = str(cell_val).strip()
+                    if not raw_text or raw_text in ("-", "—", " "):
+                        continue
+
+                    # Check if this cell is from a merged range covering multiple group columns
+                    # If so, create records for ALL covered groups
+                    target_groups = [(col_idx, sheet_name, gid, db_name)]
+
+                    # Find the origin cell of this merged range
+                    origin_col = col_idx
+                    for min_r, max_r, min_c, max_c, val in data_merge_ranges:
+                        if min_r <= row_idx <= max_r and min_c <= col_idx <= max_c:
+                            origin_col = min_c
+                            break
+
+                    coverage_key = (row_idx, origin_col)
+                    if coverage_key in merged_data_coverage:
+                        covered = merged_data_coverage[coverage_key]
+                        target_groups = []
+                        for gc in sorted(covered):
+                            if gc in block_groups and gc not in processed_cols:
+                                sn, gi, dn = block_groups[gc]
+                                target_groups.append((gc, sn, gi, dn))
+
+                    subject, stype, teacher, room, building = self._parse_cell_content(raw_text)
+
+                    for tg_col, tg_sheet_name, tg_gid, tg_db_name in target_groups:
+                        processed_cols.add(tg_col)
+                        rec = {
+                            "sheet_group_name": tg_sheet_name,
+                            "db_group_name": tg_db_name,
+                            "group_id": tg_gid,
+                            "day": current_day,
+                            "lesson_number": current_lesson or 1,
+                            "subject": subject,
+                            "teacher": teacher,
+                            "room": room,
+                            "building": building,
+                            "start_time": current_start_time,
+                            "end_time": current_end_time,
+                            "schedule_type": stype or ScheduleType.LECTURE,
+                            "_raw_cell": raw_text,
+                        }
+                        if subject or raw_text:
+                            records.append(rec)
 
         return records
 
