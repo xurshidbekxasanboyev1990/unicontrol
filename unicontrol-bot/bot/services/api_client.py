@@ -18,7 +18,6 @@ class UniControlAPI:
     def __init__(self):
         # base_url should be like http://backend:8000 (no /api/v1)
         self.base_url = settings.api_base_url.rstrip("/")
-        self.api_key = settings.api_key
         self._session: Optional[aiohttp.ClientSession] = None
     
     async def _get_session(self) -> aiohttp.ClientSession:
@@ -27,7 +26,6 @@ class UniControlAPI:
             self._session = aiohttp.ClientSession(
                 headers={
                     "Content-Type": "application/json",
-                    "X-API-Key": self.api_key,
                     "X-Bot-Token": settings.bot_token
                 },
                 timeout=aiohttp.ClientTimeout(total=30)

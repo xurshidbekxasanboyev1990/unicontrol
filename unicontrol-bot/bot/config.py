@@ -26,7 +26,6 @@ class Settings(BaseSettings):
     
     # UniControl API
     api_base_url: str = Field(default="http://localhost:8000/api/v1", env="API_BASE_URL")
-    api_key: str = Field(default="", env="API_KEY")
     
     # Database
     database_url: str = Field(
