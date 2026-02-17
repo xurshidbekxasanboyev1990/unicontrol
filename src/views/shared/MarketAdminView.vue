@@ -183,8 +183,8 @@
                 <div><span class="text-slate-400">{{ $t('market.date') }}:</span> <span class="text-slate-600">{{ formatDate(op.created_at) }}</span></div>
                 <div v-if="op.payment_receipt_filename"><span class="text-slate-400">{{ $t('market.receiptFile') }}:</span> <span class="text-slate-600">{{ op.payment_receipt_filename }}</span></div>
               </div>
-              <p v-if="op.payment_reject_reason" class="mt-2 text-sm text-rose-600 bg-rose-50 rounded-lg px-3 py-2">
-                ❌ {{ op.payment_reject_reason }}
+              <p v-if="op.payment_reject_reason" class="mt-2 text-sm text-rose-600 bg-rose-50 rounded-lg px-3 py-2 flex items-center gap-1.5">
+                <XCircle class="w-4 h-4 flex-shrink-0" /> {{ op.payment_reject_reason }}
               </p>
             </div>
             <div class="flex flex-col gap-2 min-w-[140px]">
@@ -293,11 +293,11 @@
           <div v-if="payout.status !== 'completed' && payout.status !== 'rejected'" class="flex gap-2 mt-2">
             <button v-if="payout.status !== 'completed'" @click="processPayout(payout.id, 'completed')"
               class="bg-gradient-to-r from-emerald-500 to-emerald-600 text-white px-3 py-1.5 rounded-lg text-xs font-medium hover:from-emerald-600 hover:to-emerald-700 shadow-sm transition-all">
-              ✅ {{ $t('market.approvePayout') }}
+              <CheckCircle class="w-3.5 h-3.5" /> {{ $t('market.approvePayout') }}
             </button>
             <button v-if="payout.status !== 'rejected'" @click="processPayout(payout.id, 'rejected')"
               class="border border-rose-200 text-rose-600 px-3 py-1.5 rounded-lg text-xs font-medium hover:bg-rose-50 transition-colors">
-              ❌ {{ $t('market.rejectPayout') }}
+              <XCircle class="w-3.5 h-3.5" /> {{ $t('market.rejectPayout') }}
             </button>
           </div>
         </div>
@@ -387,9 +387,9 @@ const filteredOrderPayments = computed(() => {
 })
 const paymentFilters = computed(() => [
   { value: null, label: t('common.all') },
-  { value: 'pending', label: '⏳ ' + t('market.paymentPending') },
-  { value: 'verified', label: '✅ ' + t('market.paymentVerified') },
-  { value: 'rejected', label: '❌ ' + t('market.paymentRejected') },
+  { value: 'pending', label: t('market.paymentPending') },
+  { value: 'verified', label: t('market.paymentVerified') },
+  { value: 'rejected', label: t('market.paymentRejected') },
 ])
 
 // Receipt viewer
@@ -400,11 +400,11 @@ const receiptLoading = ref(false)
 const receiptPayment = ref(null)
 
 const adminTabs = computed(() => [
-  { value: 'pending', label: `📋 ${t('market.pendingApproval')}` },
-  { value: 'order-payments', label: `💰 ${t('market.orderPayments')}`, badge: pendingPaymentsCount.value || null },
-  { value: 'listings', label: `📦 ${t('market.allListings')}` },
-  { value: 'disputes', label: `⚠️ ${t('market.disputes')}` },
-  { value: 'payouts', label: `💳 ${t('market.payouts')}` },
+  { value: 'pending', label: t('market.pendingApproval') },
+  { value: 'order-payments', label: t('market.orderPayments'), badge: pendingPaymentsCount.value || null },
+  { value: 'listings', label: t('market.allListings') },
+  { value: 'disputes', label: t('market.disputes') },
+  { value: 'payouts', label: t('market.payouts') },
 ])
 
 const formatPrice = (price) => {

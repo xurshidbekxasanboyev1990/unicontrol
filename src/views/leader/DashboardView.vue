@@ -16,7 +16,7 @@
               <Cake :size="24" />
             </div>
             <div>
-              <h3 class="text-lg font-bold">🎉 {{ $t('dashboard.todayBirthday') }}</h3>
+              <h3 class="text-lg font-bold flex items-center gap-1.5"><PartyPopper :size="18" class="text-yellow-300" /> {{ $t('dashboard.todayBirthday') }}</h3>
               <p class="text-sm text-white/80">{{ todayDateFormatted }}</p>
             </div>
           </div>
@@ -29,7 +29,7 @@
             >
               <div class="relative flex h-14 w-14 items-center justify-center rounded-xl bg-white/20 text-2xl font-bold">
                 {{ student.name.charAt(0) }}
-                <span class="absolute -top-1 -right-1 text-lg">🎂</span>
+                <span class="absolute -top-1 -right-1"><Cake :size="16" class="text-pink-300" /></span>
               </div>
               <div class="flex-1 min-w-0">
                 <p class="font-semibold text-lg truncate">{{ student.name }}</p>
@@ -45,7 +45,7 @@
                 >
                   <Gift :size="14" />
                   <span class="hidden sm:inline">{{ congratsSent[student.id] ? '✓ Yuborildi' : $t('dashboard.congratulate') }}</span>
-                  <span class="sm:hidden">{{ congratsSent[student.id] ? '✓' : '🎉' }}</span>
+                  <span class="sm:hidden">{{ congratsSent[student.id] ? '✓' : '' }}<PartyPopper v-if="!congratsSent[student.id]" :size="14" /></span>
                 </button>
                 <button 
                   @click="openMessageModal(student)"
@@ -53,7 +53,7 @@
                 >
                   <Send :size="14" />
                   <span class="hidden sm:inline">{{ $t('dashboard.sendMessage') }}</span>
-                  <span class="sm:hidden">✉️</span>
+                  <span class="sm:hidden"><Send :size="14" /></span>
                 </button>
               </div>
             </div>
@@ -67,7 +67,7 @@
               <Calendar :size="24" />
             </div>
             <div>
-              <h3 class="text-lg font-bold">🎂 {{ $t('dashboard.tomorrowBirthday') }}</h3>
+              <h3 class="text-lg font-bold flex items-center gap-1.5"><Cake :size="18" class="text-pink-300" /> {{ $t('dashboard.tomorrowBirthday') }}</h3>
               <p class="text-sm text-white/80">{{ tomorrowDateFormatted }}</p>
             </div>
           </div>
@@ -366,7 +366,7 @@ import {
     Cake,
     Calendar,
     CheckCircle,
-    Gift, Send,
+    Gift, PartyPopper, Send,
     TrendingUp,
     Users,
     X,

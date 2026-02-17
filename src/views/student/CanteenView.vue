@@ -3,7 +3,7 @@
     <!-- Header -->
     <div class="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
       <div>
-        <h1 class="text-xl sm:text-2xl font-bold text-slate-800">🍽️ {{ $t('canteen.title') }}</h1>
+        <h1 class="text-xl sm:text-2xl font-bold text-slate-800 flex items-center gap-2"><UtensilsCrossed class="w-6 h-6 text-amber-500" /> {{ $t('canteen.title') }}</h1>
         <p class="text-slate-500">{{ $t('canteen.todayMenu') }}</p>
       </div>
       
@@ -88,8 +88,8 @@
           
           <!-- Badges -->
           <div class="absolute top-2 left-2 flex flex-col gap-1">
-            <span v-if="item.is_vegetarian" class="rounded-lg bg-green-500 px-2 py-1 text-xs font-medium text-white">
-              🥬 {{ $t('canteen.vegetarian') }}
+<span v-if="item.is_vegetarian" class="rounded-lg bg-green-500 px-2 py-1 text-xs font-medium text-white flex items-center gap-1">
+              <Leaf :size="12" /> {{ $t('canteen.vegetarian') }}
             </span>
             <span v-if="!item.is_available" class="rounded-lg bg-red-500 px-2 py-1 text-xs font-medium text-white">
               {{ $t('common.inactive') }}
@@ -324,6 +324,7 @@ import {
     Cookie,
     Fish,
     Flame,
+    Leaf,
     Loader2,
     Minus,
     Package,

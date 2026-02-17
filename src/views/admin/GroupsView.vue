@@ -980,7 +980,7 @@ async function assignSubscription() {
   
   try {
     const result = await api.adminAssignSubscription(subscriptionGroup.value.id, selectedPlanId.value)
-    toast.success(result.message || 'Obuna faollashtirildi ✅')
+    toast.success(result.message || 'Obuna faollashtirildi')
     showSubscriptionModal.value = false
     subscriptionGroup.value = null
     selectedPlanId.value = null

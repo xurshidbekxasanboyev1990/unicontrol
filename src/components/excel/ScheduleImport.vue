@@ -3,7 +3,7 @@
     <!-- Header -->
     <div class="flex items-center justify-between mb-6">
       <div>
-        <h2 class="text-lg font-semibold text-slate-800">📅 Dars jadvali import</h2>
+        <h2 class="text-lg font-semibold text-slate-800 flex items-center gap-2"><CalendarDays class="w-5 h-5 text-indigo-500" /> Dars jadvali import</h2>
         <p class="text-sm text-slate-500">Excel fayldan dars jadvalini yuklash</p>
       </div>
     </div>

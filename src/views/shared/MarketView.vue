@@ -59,7 +59,7 @@
       class="relative bg-gradient-to-r from-violet-600 via-purple-600 to-indigo-600 rounded-2xl p-5 text-white shadow-xl shadow-purple-500/20 overflow-hidden">
       <div class="absolute -top-6 -right-6 w-32 h-32 bg-yellow-400/20 rounded-full blur-2xl animate-pulse"></div>
       <div class="absolute -bottom-4 -left-4 w-24 h-24 bg-pink-400/20 rounded-full blur-xl"></div>
-      <div class="absolute top-2 right-4 text-4xl animate-bounce" style="animation-duration: 2s">🚀</div>
+      <div class="absolute top-2 right-4 animate-bounce" style="animation-duration: 2s"><Rocket class="w-10 h-10 text-yellow-300" /></div>
       <div class="relative flex items-center justify-between flex-wrap gap-4">
         <div class="flex items-center gap-4">
           <div class="w-14 h-14 bg-white/20 backdrop-blur rounded-2xl flex items-center justify-center flex-shrink-0">
@@ -96,7 +96,7 @@
           <div>
             <div class="flex items-center gap-2 mb-1">
               <h3 class="font-bold text-lg">{{ $t('market.groupSubscription') }}</h3>
-              <span class="bg-white/20 text-xs px-2 py-0.5 rounded-full font-semibold">✨ {{ $t('market.freeAccess') }}</span>
+              <span class="bg-white/20 text-xs px-2 py-0.5 rounded-full font-semibold flex items-center gap-1"><Sparkles class="w-3 h-3" /> {{ $t('market.freeAccess') }}</span>
             </div>
             <p class="text-sm text-white/80">{{ $t('market.groupSubDescription') }}</p>
           </div>
@@ -104,7 +104,7 @@
         <div class="bg-white/15 backdrop-blur rounded-xl px-4 py-2.5 text-center flex-shrink-0">
           <p class="text-xs text-white/60">{{ $t('market.activePlan') }}</p>
           <p class="font-bold text-lg">Student Pro</p>
-          <p class="text-xs text-white/50">{{ profile.group_plan === 'unlimited' ? '∞ Unlimited' : '⭐ Pro' }} {{ $t('market.group') }}</p>
+          <p class="text-xs text-white/50 flex items-center justify-center gap-1">{{ profile.group_plan === 'unlimited' ? '∞ Unlimited' : '' }}<Star v-if="profile.group_plan !== 'unlimited'" class="w-3 h-3 fill-current" /> {{ profile.group_plan !== 'unlimited' ? 'Pro' : '' }} {{ $t('market.group') }}</p>
         </div>
       </div>
     </div>
@@ -220,7 +220,7 @@
           </div>
           <h3 class="font-semibold text-slate-800">{{ listing.title }}</h3>
           <p class="text-sm text-slate-500">{{ formatPrice(listing.price) }} · {{ listing.orders_count }} {{ $t('market.ordersCount') }}</p>
-          <p v-if="listing.rejection_reason" class="text-xs text-rose-500 mt-1">❌ {{ listing.rejection_reason }}</p>
+          <p v-if="listing.rejection_reason" class="text-xs text-rose-500 mt-1 flex items-center gap-1"><XCircle class="w-3.5 h-3.5 flex-shrink-0" /> {{ listing.rejection_reason }}</p>
         </div>
         <div class="flex gap-2">
           <button @click="editListing(listing)" class="p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-600 hover:bg-slate-100 hover:border-slate-300 transition-colors">
@@ -588,7 +588,7 @@
           <!-- Step 1: Requirements -->
           <div v-if="orderStep === 1">
             <div class="bg-emerald-50 border border-emerald-100 rounded-xl p-4 mb-4 text-sm">
-              <p class="font-medium text-emerald-700">🛡️ {{ $t('market.garantInfo') }}</p>
+              <p class="font-medium text-emerald-700 flex items-center gap-1.5"><ShieldCheck class="w-4 h-4 flex-shrink-0" /> {{ $t('market.garantInfo') }}</p>
             </div>
             <div class="space-y-3">
               <div>
@@ -619,7 +619,7 @@
           <!-- Step 2: Payment -->
           <div v-if="orderStep === 2">
             <div class="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-4">
-              <p class="font-bold text-blue-800 text-sm mb-2">💳 {{ $t('market.paymentInfo') }}</p>
+              <p class="font-bold text-blue-800 text-sm mb-2 flex items-center gap-1.5"><CreditCard class="w-4 h-4 flex-shrink-0" /> {{ $t('market.paymentInfo') }}</p>
               <div v-if="tariffPrices" class="space-y-1">
                 <div class="flex items-center justify-between">
                   <span class="text-sm text-blue-600">{{ $t('market.cardNumber') }}:</span>
@@ -637,7 +637,7 @@
             </div>
 
             <div class="mb-4">
-              <label class="text-sm font-medium text-slate-700 mb-2 block">📎 {{ $t('market.uploadReceipt') }}</label>
+              <label class="text-sm font-medium text-slate-700 mb-2 flex items-center gap-1.5"><Paperclip class="w-4 h-4" /> {{ $t('market.uploadReceipt') }}</label>
               <div class="border-2 border-dashed rounded-xl p-4 text-center transition-colors"
                 :class="orderReceiptFile ? 'border-emerald-400 bg-emerald-50' : 'border-slate-300 hover:border-emerald-400'">
                 <input type="file" accept="image/*,.pdf" class="hidden" ref="orderReceiptInput" @change="handleOrderReceipt" />
@@ -665,7 +665,7 @@
               <button @click="submitOrder" :disabled="!orderReceiptFile || orderSubmitting"
                 class="flex-1 bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-xl py-2.5 font-semibold hover:from-emerald-600 hover:to-teal-600 shadow-lg shadow-emerald-500/25 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2">
                 <Loader2 v-if="orderSubmitting" class="w-4 h-4 animate-spin" />
-                <template v-else>💳</template>
+                <CreditCard v-else class="w-4 h-4" />
                 {{ orderSubmitting ? $t('market.sending') : $t('market.payAndOrder') }}
               </button>
             </div>
@@ -703,7 +703,7 @@
 
           <!-- Escrow Info -->
           <div v-if="selectedOrder.escrow" class="bg-emerald-50 border border-emerald-100 rounded-xl p-4 mb-4 text-sm">
-            <p class="font-medium text-emerald-700">🛡️ {{ $t('market.escrowStatus') }}: {{ selectedOrder.escrow.status }}</p>
+            <p class="font-medium text-emerald-700 flex items-center gap-1.5"><ShieldCheck class="w-4 h-4 flex-shrink-0" /> {{ $t('market.escrowStatus') }}: {{ selectedOrder.escrow.status }}</p>
             <p class="text-emerald-600">{{ $t('market.heldAmount') }}: {{ formatPrice(selectedOrder.escrow.amount) }}</p>
           </div>
 
@@ -711,23 +711,23 @@
           <div class="flex flex-wrap gap-2 mb-4">
             <button v-if="selectedOrder.status === 'pending' && selectedOrder.seller_id === authStore.user?.id"
               @click="acceptOrder(selectedOrder.id)" class="bg-gradient-to-r from-emerald-500 to-emerald-600 text-white px-4 py-2 rounded-xl text-sm font-medium hover:from-emerald-600 hover:to-emerald-700 shadow-sm transition-all">
-              ✅ {{ $t('market.acceptOrder') }}
+              <CheckCircle2 class="w-4 h-4" /> {{ $t('market.acceptOrder') }}
             </button>
             <button v-if="['in_progress', 'revision'].includes(selectedOrder.status) && selectedOrder.seller_id === authStore.user?.id"
               @click="showDeliverModal = true" class="bg-gradient-to-r from-blue-500 to-blue-600 text-white px-4 py-2 rounded-xl text-sm font-medium hover:from-blue-600 hover:to-blue-700 shadow-sm transition-all">
-              📦 {{ $t('market.deliverWork') }}
+              <Package class="w-4 h-4" /> {{ $t('market.deliverWork') }}
             </button>
             <button v-if="selectedOrder.status === 'delivered' && selectedOrder.buyer_id === authStore.user?.id"
               @click="showAcceptDeliveryModal = true" class="bg-gradient-to-r from-emerald-500 to-teal-500 text-white px-4 py-2 rounded-xl text-sm font-medium hover:from-emerald-600 hover:to-teal-600 shadow-sm transition-all">
-              ✅ {{ $t('market.acceptDelivery') }}
+              <CheckCircle2 class="w-4 h-4" /> {{ $t('market.acceptDelivery') }}
             </button>
             <button v-if="selectedOrder.status === 'delivered' && selectedOrder.buyer_id === authStore.user?.id"
               @click="showRevisionModal = true" class="bg-gradient-to-r from-amber-500 to-amber-600 text-white px-4 py-2 rounded-xl text-sm font-medium hover:from-amber-600 hover:to-amber-700 shadow-sm transition-all">
-              🔄 {{ $t('market.requestRevision') }}
+              <RefreshCcw class="w-4 h-4" /> {{ $t('market.requestRevision') }}
             </button>
             <button v-if="['in_progress', 'delivered', 'revision'].includes(selectedOrder.status)"
               @click="showDisputeModal = true" class="bg-gradient-to-r from-rose-500 to-rose-600 text-white px-4 py-2 rounded-xl text-sm font-medium hover:from-rose-600 hover:to-rose-700 shadow-sm transition-all">
-              ⚠️ {{ $t('market.openDispute') }}
+              <AlertTriangle class="w-4 h-4" /> {{ $t('market.openDispute') }}
             </button>
             <button v-if="selectedOrder.status === 'pending'"
               @click="cancelOrder(selectedOrder.id)" class="border border-rose-200 text-rose-600 px-4 py-2 rounded-xl text-sm font-medium hover:bg-rose-50 transition-colors">
@@ -742,7 +742,7 @@
           <!-- Chat Section -->
           <div v-if="showChat" class="border border-slate-200 rounded-2xl overflow-hidden">
             <div class="bg-gradient-to-r from-emerald-500 to-teal-500 px-4 py-3 flex items-center justify-between">
-              <span class="font-medium text-sm text-white">💬 {{ $t('market.chat') }}</span>
+              <span class="font-medium text-sm text-white flex items-center gap-1.5"><MessageSquare class="w-4 h-4" /> {{ $t('market.chat') }}</span>
               <button @click="closeChat" class="text-white/80 hover:text-white"><X class="w-4 h-4" /></button>
             </div>
             <div ref="chatContainer" class="h-64 overflow-y-auto p-3 space-y-2 bg-slate-50">
@@ -753,7 +753,7 @@
                   :class="msg.sender_id === authStore.user?.id ? 'bg-gradient-to-r from-emerald-500 to-teal-500 text-white' : 'bg-white border border-slate-200 text-slate-800'">
                   <p class="text-xs opacity-70 mb-0.5">{{ msg.sender_name }}</p>
                   <p>{{ msg.content }}</p>
-                  <p v-if="msg.file_url" class="text-xs underline mt-1">📎 {{ msg.file_name }}</p>
+                  <p v-if="msg.file_url" class="text-xs underline mt-1 flex items-center gap-1"><Paperclip class="w-3 h-3" /> {{ msg.file_name }}</p>
                 </div>
               </div>
             </div>
@@ -878,7 +878,7 @@
                 <button @click="selectedTariff = 'student_pro'"
                   :disabled="profile?.tariff === 'student_pro' || myTariffPayments.some(p => p.status === 'pending')"
                   class="w-full py-3 bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-xl text-sm font-bold shadow-lg shadow-emerald-500/25 transition-all disabled:opacity-50 disabled:shadow-none hover:from-emerald-600 hover:to-teal-600 hover:shadow-xl active:scale-[0.98]">
-                  {{ profile?.tariff === 'student_pro' ? '✅ ' + $t('market.currentPlan') : '⚡ ' + $t('market.getStarted') }}
+                  {{ profile?.tariff === 'student_pro' ? $t('market.currentPlan') : $t('market.getStarted') }}
                 </button>
               </div>
             </div>
@@ -910,7 +910,7 @@
                 <button @click="selectedTariff = 'premium'"
                   :disabled="profile?.tariff === 'premium' || myTariffPayments.some(p => p.status === 'pending')"
                   class="w-full py-3 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-xl text-sm font-bold shadow-lg shadow-amber-500/25 transition-all disabled:opacity-50 disabled:shadow-none hover:from-amber-600 hover:to-orange-600 hover:shadow-xl active:scale-[0.98]">
-                  {{ profile?.tariff === 'premium' ? '👑 ' + $t('market.currentPlan') : '💎 ' + $t('market.goPremium') }}
+                  {{ profile?.tariff === 'premium' ? $t('market.currentPlan') : $t('market.goPremium') }}
                 </button>
               </div>
             </div>
@@ -1020,7 +1020,7 @@
     <div v-if="showDeliverModal" class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" @click.self="showDeliverModal = false">
       <div class="relative bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl">
         <div class="flex items-center justify-between mb-4">
-          <h2 class="text-xl font-bold text-slate-800">📦 {{ $t('market.deliverWork') }}</h2>
+          <h2 class="text-xl font-bold text-slate-800 flex items-center gap-2"><Package class="w-5 h-5 text-blue-500" /> {{ $t('market.deliverWork') }}</h2>
           <button @click="showDeliverModal = false" class="p-1 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"><X class="w-5 h-5" /></button>
         </div>
         <textarea v-model="deliverForm.note" rows="3" class="w-full border border-slate-200 rounded-xl px-4 py-2.5 mb-3 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500" :placeholder="$t('market.deliveryNote')"></textarea>
@@ -1035,7 +1035,7 @@
     <div v-if="showAcceptDeliveryModal" class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" @click.self="showAcceptDeliveryModal = false">
       <div class="relative bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl">
         <div class="flex items-center justify-between mb-4">
-          <h2 class="text-xl font-bold text-slate-800">✅ {{ $t('market.acceptDelivery') }}</h2>
+          <h2 class="text-xl font-bold text-slate-800 flex items-center gap-2"><CheckCircle2 class="w-5 h-5 text-emerald-500" /> {{ $t('market.acceptDelivery') }}</h2>
           <button @click="showAcceptDeliveryModal = false" class="p-1 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"><X class="w-5 h-5" /></button>
         </div>
         <div class="mb-3">
@@ -1058,7 +1058,7 @@
     <div v-if="showRevisionModal" class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" @click.self="showRevisionModal = false">
       <div class="relative bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl">
         <div class="flex items-center justify-between mb-4">
-          <h2 class="text-xl font-bold text-slate-800">🔄 {{ $t('market.requestRevision') }}</h2>
+          <h2 class="text-xl font-bold text-slate-800 flex items-center gap-2"><RefreshCcw class="w-5 h-5 text-amber-500" /> {{ $t('market.requestRevision') }}</h2>
           <button @click="showRevisionModal = false" class="p-1 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"><X class="w-5 h-5" /></button>
         </div>
         <textarea v-model="revisionReason" rows="3" class="w-full border border-slate-200 rounded-xl px-4 py-2.5 mb-3 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500" :placeholder="$t('market.revisionReason')"></textarea>
@@ -1073,7 +1073,7 @@
     <div v-if="showDisputeModal" class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" @click.self="showDisputeModal = false">
       <div class="relative bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl">
         <div class="flex items-center justify-between mb-4">
-          <h2 class="text-xl font-bold text-slate-800">⚠️ {{ $t('market.openDispute') }}</h2>
+          <h2 class="text-xl font-bold text-slate-800 flex items-center gap-2"><AlertTriangle class="w-5 h-5 text-rose-500" /> {{ $t('market.openDispute') }}</h2>
           <button @click="showDisputeModal = false" class="p-1 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"><X class="w-5 h-5" /></button>
         </div>
         <div class="bg-rose-50 border border-rose-100 text-rose-700 text-sm p-4 rounded-xl mb-3">
@@ -1091,6 +1091,7 @@
 
 <script setup>
 import {
+    AlertTriangle,
     ArrowDownToLine,
     Banknote,
     BookOpen,
@@ -1105,6 +1106,7 @@ import {
     Lock,
     MessageSquare,
     Package,
+    Paperclip,
     Pencil,
     Percent,
     Plus,
@@ -1112,6 +1114,7 @@ import {
     Rocket,
     Search,
     Send,
+    ShieldCheck,
     ShoppingBag,
     Sparkles,
     Star,

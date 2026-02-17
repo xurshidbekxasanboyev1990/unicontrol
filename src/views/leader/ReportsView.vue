@@ -299,8 +299,8 @@
                     </span>
                   </div>
                   <div class="mt-1 flex items-center gap-3 text-xs">
-                    <span class="text-green-600">✅ {{ student.present }} {{ $t('reports.lessons') }}</span>
-                    <span class="text-red-600">❌ {{ student.absent }} {{ $t('reports.absent') }}</span>
+                    <span class="text-green-600 flex items-center gap-0.5"><CheckCircle :size="12" /> {{ student.present }} {{ $t('reports.lessons') }}</span>
+                    <span class="text-red-600 flex items-center gap-0.5"><XCircle :size="12" /> {{ student.absent }} {{ $t('reports.absent') }}</span>
                   </div>
                 </div>
               </div>
@@ -845,7 +845,8 @@ import {
     Trash2,
     Upload,
     Video,
-    X
+    X,
+    XCircle
 } from 'lucide-vue-next'
 import { computed, onMounted, ref } from 'vue'
 

@@ -15,7 +15,7 @@
         </div>
 
         <!-- Title -->
-        <h2 class="mb-2 text-2xl font-bold text-slate-800">{{ $t('quiz.lockedTitle') }} 🔒</h2>
+        <h2 class="mb-2 text-2xl font-bold text-slate-800 flex items-center justify-center gap-2">{{ $t('quiz.lockedTitle') }} <Lock :size="20" class="text-slate-400" /></h2>
         <p class="mb-6 text-sm text-slate-500 leading-relaxed">
           {{ $t('quiz.lockedDesc') }}
         </p>
@@ -50,7 +50,7 @@
 
         <!-- Features -->
         <div class="mb-8 rounded-2xl border border-slate-100 bg-slate-50 p-5 text-left">
-          <h4 class="mb-3 text-sm font-semibold text-slate-700">✨ {{ $t('quiz.featureTitle') }}:</h4>
+          <h4 class="mb-3 text-sm font-semibold text-slate-700 flex items-center gap-1.5"><Sparkles :size="16" class="text-indigo-500" /> {{ $t('quiz.featureTitle') }}:</h4>
           <ul class="space-y-2 text-sm text-slate-600">
             <li class="flex items-center gap-2">
               <div class="flex h-5 w-5 items-center justify-center rounded-full bg-indigo-100 text-xs text-indigo-600">✓</div>
@@ -87,7 +87,7 @@
     <!-- ================ HEADER ================ -->
     <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
       <div>
-        <h1 class="text-xl sm:text-2xl font-bold text-slate-800">📚 {{ $t('quiz.title') }}</h1>
+        <h1 class="text-xl sm:text-2xl font-bold text-slate-800 flex items-center gap-2"><BookOpen :size="24" class="text-indigo-500" /> {{ $t('quiz.title') }}</h1>
         <p class="text-sm text-slate-500">{{ $t('quiz.subtitle') }}</p>
       </div>
       <button
@@ -363,14 +363,14 @@
                     class="flex-1 rounded-lg border-2 py-2 text-sm font-medium transition-all"
                     :class="card.answer === 'true' ? 'border-emerald-500 bg-emerald-50 text-emerald-600' : 'border-slate-200 text-slate-500'"
                   >
-                    ✅ To'g'ri
+                    <CheckCircle :size="16" class="inline" /> To'g'ri
                   </button>
                   <button
                     @click="card.answer = 'false'; card.correct_option = 1"
                     class="flex-1 rounded-lg border-2 py-2 text-sm font-medium transition-all"
                     :class="card.answer === 'false' ? 'border-red-500 bg-red-50 text-red-600' : 'border-slate-200 text-slate-500'"
                   >
-                    ❌ Noto'g'ri
+                    <XCircle2 :size="16" class="inline" /> Noto'g'ri
                   </button>
                 </div>
 
@@ -465,11 +465,11 @@
                     {{ String.fromCharCode(65 + (card.correct_option || 0)) }}. {{ card.options[card.correct_option || 0] }}
                   </span>
                   <span v-else-if="card.answer_type === 'true_false'">
-                    {{ card.answer === 'true' ? "✅ To'g'ri" : "❌ Noto'g'ri" }}
+                    {{ card.answer === 'true' ? "To'g'ri" : "Noto'g'ri" }}
                   </span>
                   <span v-else>{{ card.answer }}</span>
                 </p>
-                <p v-if="card.hint" class="mt-1 text-xs italic text-slate-400">💡 {{ card.hint }}</p>
+                <p v-if="card.hint" class="mt-1 text-xs italic text-slate-400 flex items-center gap-1"><Lightbulb :size="12" /> {{ card.hint }}</p>
               </div>
             </div>
           </div>
@@ -532,8 +532,8 @@
               <p class="text-center text-xl font-medium sm:text-2xl">
                 {{ getFlashcardAnswer(flashcardSet.cards[flashcardIndex]) }}
               </p>
-              <p v-if="flashcardSet.cards[flashcardIndex]?.hint" class="mt-4 text-sm text-emerald-100">
-                💡 {{ flashcardSet.cards[flashcardIndex].hint }}
+              <p v-if="flashcardSet.cards[flashcardIndex]?.hint" class="mt-4 text-sm text-emerald-100 flex items-center justify-center gap-1">
+                <Lightbulb :size="14" /> {{ flashcardSet.cards[flashcardIndex].hint }}
               </p>
             </div>
           </div>
@@ -601,8 +601,8 @@
             <p class="text-center text-xl font-medium text-slate-800">
               {{ quizData.cards[quizCurrentIndex]?.question }}
             </p>
-            <p v-if="quizShowHint && quizData.cards[quizCurrentIndex]?.hint" class="mt-3 text-center text-sm italic text-amber-500">
-              💡 {{ quizData.cards[quizCurrentIndex].hint }}
+            <p v-if="quizShowHint && quizData.cards[quizCurrentIndex]?.hint" class="mt-3 text-center text-sm italic text-amber-500 flex items-center justify-center gap-1">
+              <Lightbulb :size="14" /> {{ quizData.cards[quizCurrentIndex].hint }}
             </p>
           </div>
 
@@ -634,7 +634,7 @@
                   :class="getQuizTFClass('true')"
                   :disabled="quizAnswered"
                 >
-                  ✅ To'g'ri
+                  <CheckCircle :size="16" class="inline" /> To'g'ri
                 </button>
                 <button
                   @click="selectQuizAnswer('false')"
@@ -642,7 +642,7 @@
                   :class="getQuizTFClass('false')"
                   :disabled="quizAnswered"
                 >
-                  ❌ Noto'g'ri
+                  <XCircle2 :size="16" class="inline" /> Noto'g'ri
                 </button>
               </div>
             </template>
@@ -667,7 +667,7 @@
               <div v-if="quizAnswered" class="rounded-xl p-3 text-center text-sm"
                 :class="quizAnswerCorrect ? 'bg-emerald-50 text-emerald-600' : 'bg-red-50 text-red-600'"
               >
-                {{ quizAnswerCorrect ? '✅ To\'g\'ri!' : `❌ Noto'g'ri. Javob: ${currentQuizCard?.answer}` }}
+                {{ quizAnswerCorrect ? 'To\'g\'ri!' : `Noto'g'ri. Javob: ${currentQuizCard?.answer}` }}
               </div>
             </template>
           </div>
@@ -684,8 +684,8 @@
 
           <!-- Hint button -->
           <div v-if="!quizAnswered && currentQuizCard?.hint" class="mt-4 text-center">
-            <button @click="quizShowHint = true" class="text-sm text-amber-500 hover:underline">
-              💡 Maslahat ko'rish
+            <button @click="quizShowHint = true" class="text-sm text-amber-500 hover:underline flex items-center gap-1 mx-auto">
+              <Lightbulb :size="14" /> Maslahat ko'rish
             </button>
           </div>
         </div>
@@ -696,10 +696,12 @@
         <div class="w-full max-w-md text-center">
           <div class="mb-6">
             <div
-              class="mx-auto flex h-24 w-24 items-center justify-center rounded-full text-4xl"
+              class="mx-auto flex h-24 w-24 items-center justify-center rounded-full"
               :class="quizScore >= 80 ? 'bg-emerald-100' : quizScore >= 50 ? 'bg-amber-100' : 'bg-red-100'"
             >
-              {{ quizScore >= 80 ? '🎉' : quizScore >= 50 ? '👍' : '📚' }}
+              <Trophy v-if="quizScore >= 80" :size="40" class="text-emerald-500" />
+              <ThumbsUp v-else-if="quizScore >= 50" :size="40" class="text-amber-500" />
+              <BookOpen v-else :size="40" class="text-red-500" />
             </div>
           </div>
           <h2 class="mb-2 text-3xl font-bold text-slate-800">{{ quizScore }}%</h2>
@@ -734,9 +736,11 @@
 import {
     ArrowUpCircle,
     BookOpen,
+    CheckCircle,
     ChevronLeft, ChevronRight,
     Crown,
     Layers,
+    Lightbulb,
     Loader2,
     Lock,
     Pencil,
@@ -744,8 +748,11 @@ import {
     Plus, Search,
     Shuffle,
     Sparkles,
+    ThumbsUp,
     Trash2,
+    Trophy,
     X,
+    XCircle as XCircle2,
     Zap,
 } from 'lucide-vue-next'
 import { computed, onMounted, onUnmounted, ref } from 'vue'
@@ -997,7 +1004,7 @@ const getFlashcardAnswer = (card) => {
     return `${String.fromCharCode(65 + (card.correct_option || 0))}. ${card.options[card.correct_option || 0]}`
   }
   if (card.answer_type === 'true_false') {
-    return card.answer === 'true' ? "To'g'ri ✅" : "Noto'g'ri ❌"
+    return card.answer === 'true' ? "To'g'ri" : "Noto'g'ri"
   }
   return card.answer
 }

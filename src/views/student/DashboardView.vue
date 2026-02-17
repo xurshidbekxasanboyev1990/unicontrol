@@ -99,7 +99,7 @@
             <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-white/20 backdrop-blur">
               <Cake :size="20" />
             </div>
-            <h3 class="text-base font-bold">🎉 {{ t('dashboard.todayBirthday') }}</h3>
+            <h3 class="text-base font-bold flex items-center gap-1.5"><PartyPopper :size="18" class="text-yellow-300" /> {{ t('dashboard.todayBirthday') }}</h3>
           </div>
           
           <div class="space-y-2">
@@ -110,7 +110,7 @@
             >
               <div class="relative flex h-11 w-11 items-center justify-center rounded-xl bg-white/20 text-lg font-bold">
                 {{ student.name.charAt(0) }}
-                <span class="absolute -top-1 -right-1 text-sm">🎂</span>
+                <span class="absolute -top-1 -right-1"><Cake :size="14" class="text-pink-300" /></span>
               </div>
               <div class="flex-1 min-w-0">
                 <p class="font-semibold truncate">{{ student.name }}</p>
@@ -134,7 +134,7 @@
             <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-white/20 backdrop-blur">
               <Calendar :size="20" />
             </div>
-            <h3 class="text-base font-bold">🎂 {{ t('dashboard.birthdayTomorrow') }}</h3>
+            <h3 class="text-base font-bold flex items-center gap-1.5"><Cake :size="18" class="text-pink-300" /> {{ t('dashboard.birthdayTomorrow') }}</h3>
           </div>
           
           <div class="space-y-2">
@@ -349,6 +349,7 @@ import {
   FileText,
   Gift,
   GraduationCap,
+  PartyPopper,
   TrendingUp,
   User,
   XCircle

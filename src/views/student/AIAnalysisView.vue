@@ -544,15 +544,15 @@ const weeklyData = computed(() => {
 // AI summary title (uses AI data if available, fallback to computed)
 const aiSummaryTitle = computed(() => {
   if (aiSummary.value) {
-    if (stats.value.rate >= 90) return "Ajoyib natija! 🎉"
-    if (stats.value.rate >= 75) return "Yaxshi davom etyapsiz! 👍"
-    if (stats.value.rate >= 60) return "Yaxshilash imkoniyati bor 📈"
-    return "E'tibor qarating! ⚠️"
+    if (stats.value.rate >= 90) return "Ajoyib natija!"
+    if (stats.value.rate >= 75) return "Yaxshi davom etyapsiz!"
+    if (stats.value.rate >= 60) return "Yaxshilash imkoniyati bor"
+    return "E'tibor qarating!"
   }
-  if (stats.value.rate >= 90) return "Ajoyib natija! 🎉"
-  if (stats.value.rate >= 75) return "Yaxshi davom etyapsiz! 👍"
-  if (stats.value.rate >= 60) return "Yaxshilash imkoniyati bor 📈"
-  return "E'tibor qarating! ⚠️"
+  if (stats.value.rate >= 90) return "Ajoyib natija!"
+  if (stats.value.rate >= 75) return "Yaxshi davom etyapsiz!"
+  if (stats.value.rate >= 60) return "Yaxshilash imkoniyati bor"
+  return "E'tibor qarating!"
 })
 
 // AI summary text (uses AI data if available)
@@ -564,7 +564,7 @@ const aiSummaryText = computed(() => {
 
 // Risk level helpers
 const riskLabel = computed(() => {
-  const map = { low: 'Past ✅', medium: "O'rta ⚠️", high: 'Yuqori 🔴' }
+  const map = { low: 'Past', medium: "O'rta", high: 'Yuqori' }
   return map[aiRiskLevel.value] || aiRiskLevel.value
 })
 

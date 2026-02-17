@@ -38,10 +38,10 @@
           <label class="block text-sm font-medium text-slate-600 mb-1.5">{{ $t('attendance.statusLabel') }}</label>
           <select v-model="filters.status" @change="loadAttendance" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-white focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 outline-none text-sm">
             <option :value="null">{{ $t('attendance.allStatuses') }}</option>
-            <option value="present">✅ {{ $t('attendance.statusPresent') }}</option>
-            <option value="absent">❌ {{ $t('attendance.statusAbsent') }}</option>
-            <option value="late">⚠️ {{ $t('attendance.statusLate') }}</option>
-            <option value="excused">📋 {{ $t('attendance.statusExcused') }}</option>
+            <option value="present">{{ $t('attendance.statusPresent') }}</option>
+            <option value="absent">{{ $t('attendance.statusAbsent') }}</option>
+            <option value="late">{{ $t('attendance.statusLate') }}</option>
+            <option value="excused">{{ $t('attendance.statusExcused') }}</option>
           </select>
         </div>
 
@@ -369,10 +369,10 @@ const editModal = reactive({
 })
 
 const statusOptions = [
-  { value: 'present', label: 'Keldi', emoji: '✅', activeClass: 'border-emerald-500 bg-emerald-50 text-emerald-700' },
-  { value: 'absent', label: 'Kelmadi', emoji: '❌', activeClass: 'border-rose-500 bg-rose-50 text-rose-700' },
-  { value: 'late', label: 'Kech qoldi', emoji: '⚠️', activeClass: 'border-amber-500 bg-amber-50 text-amber-700' },
-  { value: 'excused', label: 'Sababli', emoji: '📋', activeClass: 'border-blue-500 bg-blue-50 text-blue-700' }
+  { value: 'present', label: 'Keldi', emoji: '', activeClass: 'border-emerald-500 bg-emerald-50 text-emerald-700' },
+  { value: 'absent', label: 'Kelmadi', emoji: '', activeClass: 'border-rose-500 bg-rose-50 text-rose-700' },
+  { value: 'late', label: 'Kech qoldi', emoji: '', activeClass: 'border-amber-500 bg-amber-50 text-amber-700' },
+  { value: 'excused', label: 'Sababli', emoji: '', activeClass: 'border-blue-500 bg-blue-50 text-blue-700' }
 ]
 
 // Computed
@@ -467,8 +467,8 @@ function formatDate(dateStr) {
 }
 
 function getStatusEmoji(status) {
-  const map = { present: '✅', absent: '❌', late: '⚠️', excused: '📋' }
-  return map[status] || '❓'
+  const map = { present: '●', absent: '●', late: '●', excused: '●' }
+  return map[status] || '○'
 }
 
 function getStatusText(status) {
