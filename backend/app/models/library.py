@@ -166,8 +166,8 @@ class Book(Base):
     view_count = Column(Integer, default=0, comment="View count")
     
     # Timestamps
-    created_at = Column(DateTime, default=lambda: datetime.now(TASHKENT_TZ))
-    updated_at = Column(DateTime, default=lambda: datetime.now(TASHKENT_TZ), onupdate=lambda: datetime.now(TASHKENT_TZ))
+    created_at = Column(DateTime, default=lambda: datetime.now(TASHKENT_TZ).replace(tzinfo=None))
+    updated_at = Column(DateTime, default=lambda: datetime.now(TASHKENT_TZ).replace(tzinfo=None), onupdate=lambda: datetime.now(TASHKENT_TZ).replace(tzinfo=None))
     
     # Relationships
     digital_file = relationship("File", backref="book")
@@ -246,8 +246,8 @@ class BookBorrow(Base):
     late_fee = Column(Float, default=0.0, comment="Late return fee")
     
     # Timestamps
-    created_at = Column(DateTime, default=lambda: datetime.now(TASHKENT_TZ))
-    updated_at = Column(DateTime, default=lambda: datetime.now(TASHKENT_TZ), onupdate=lambda: datetime.now(TASHKENT_TZ))
+    created_at = Column(DateTime, default=lambda: datetime.now(TASHKENT_TZ).replace(tzinfo=None))
+    updated_at = Column(DateTime, default=lambda: datetime.now(TASHKENT_TZ).replace(tzinfo=None), onupdate=lambda: datetime.now(TASHKENT_TZ).replace(tzinfo=None))
     
     # Relationships
     book = relationship("Book", back_populates="borrows")
@@ -308,8 +308,8 @@ class BookReview(Base):
     review = Column(Text, nullable=True, comment="Review text")
     
     # Timestamps
-    created_at = Column(DateTime, default=lambda: datetime.now(TASHKENT_TZ))
-    updated_at = Column(DateTime, default=lambda: datetime.now(TASHKENT_TZ), onupdate=lambda: datetime.now(TASHKENT_TZ))
+    created_at = Column(DateTime, default=lambda: datetime.now(TASHKENT_TZ).replace(tzinfo=None))
+    updated_at = Column(DateTime, default=lambda: datetime.now(TASHKENT_TZ).replace(tzinfo=None), onupdate=lambda: datetime.now(TASHKENT_TZ).replace(tzinfo=None))
     
     # Relationships
     book = relationship("Book", back_populates="reviews")

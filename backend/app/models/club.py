@@ -26,8 +26,8 @@ class Club(Base):
     members_count = Column(Integer, default=0)
     is_active = Column(Boolean, default=True)
     
-    created_at = Column(DateTime, default=lambda: datetime.now(TASHKENT_TZ))
-    updated_at = Column(DateTime, default=lambda: datetime.now(TASHKENT_TZ), onupdate=lambda: datetime.now(TASHKENT_TZ))
+    created_at = Column(DateTime, default=lambda: datetime.now(TASHKENT_TZ).replace(tzinfo=None))
+    updated_at = Column(DateTime, default=lambda: datetime.now(TASHKENT_TZ).replace(tzinfo=None), onupdate=lambda: datetime.now(TASHKENT_TZ).replace(tzinfo=None))
     
     # Relationships
     members = relationship("ClubMember", back_populates="club", cascade="all, delete-orphan")
@@ -40,7 +40,7 @@ class ClubMember(Base):
     id = Column(Integer, primary_key=True, index=True)
     club_id = Column(Integer, ForeignKey("clubs.id", ondelete="CASCADE"), nullable=False, index=True)
     student_id = Column(Integer, ForeignKey("students.id", ondelete="CASCADE"), nullable=False, index=True)
-    joined_at = Column(DateTime, default=lambda: datetime.now(TASHKENT_TZ))
+    joined_at = Column(DateTime, default=lambda: datetime.now(TASHKENT_TZ).replace(tzinfo=None))
     is_active = Column(Boolean, default=True)
     
     # Relationships

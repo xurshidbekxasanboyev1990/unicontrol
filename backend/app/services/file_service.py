@@ -34,7 +34,7 @@ from app.schemas.file import (
     FolderCreate, FolderUpdate, FolderResponse,
     FileManagerResponse, StorageStats
 )
-from app.config import settings, now_tashkent
+from app.config import settings, now_tashkent, now_tashkent_naive
 
 
 # File type mappings based on extension
@@ -355,7 +355,7 @@ class FileService:
         for field, value in update_data.items():
             setattr(file, field, value)
         
-        file.updated_at = now_tashkent()
+        file.updated_at = now_tashkent_naive()
         await self.db.commit()
         await self.db.refresh(file)
         
@@ -474,7 +474,7 @@ class FileService:
         Returns:
             List of folders
         """
-        query = select(Folder).where(Folder.user_id == user_id)
+        query = select(Folder).options(selectinload(Folder.files)).where(Folder.user_id == user_id)
         
         if parent_id is not None:
             query = query.where(Folder.parent_id == parent_id)
@@ -484,7 +484,7 @@ class FileService:
         query = query.order_by(Folder.name)
         
         result = await self.db.execute(query)
-        return list(result.scalars().all())
+        return list(result.scalars().unique().all())
     
     async def update_folder(
         self,
@@ -522,7 +522,7 @@ class FileService:
             else:
                 folder.path = f"/{folder.name}"
         
-        folder.updated_at = now_tashkent()
+        folder.updated_at = now_tashkent_naive()
         await self.db.commit()
         await self.db.refresh(folder)
         
@@ -575,22 +575,23 @@ class FileService:
         files, total_files = await self.list_files(user_id, folder_id)
         
         # Build breadcrumbs
-        breadcrumbs = [{"name": "Asosiy", "path": "/", "id": None}]
+        breadcrumbs = []
+        current_path = "/"
         if folder_id:
             folder = await self.get_folder(folder_id, user_id)
             if folder:
-                # Build path from folder
-                path_parts = folder.path.strip('/').split('/')
-                current_path = ""
-                for part in path_parts:
-                    current_path += f"/{part}"
-                    breadcrumbs.append({
-                        "name": part,
-                        "path": current_path,
-                        "id": folder.id if current_path == folder.path else None
-                    })
-        
-        current_path = folder.path if folder_id and folder else "/"
+                current_path = folder.path
+                # Walk up the parent chain to build breadcrumbs
+                chain = []
+                f = folder
+                while f:
+                    chain.append({"name": f.name, "path": f.path, "id": f.id})
+                    if f.parent_id:
+                        f = await self.get_folder(f.parent_id, user_id)
+                    else:
+                        f = None
+                chain.reverse()
+                breadcrumbs = chain
         
         return FileManagerResponse(
             current_path=current_path,

@@ -91,12 +91,13 @@ import SuperSubscriptions from '../views/super/SubscriptionsView.vue'
 import SuperTelegramBot from '../views/super/TelegramBotView.vue'
 import SuperUsers from '../views/super/UsersView.vue'
 
-// Market views
+// Market & Shared views
 import AIAnalysisView from '../views/shared/AIAnalysisView.vue'
 import CreditModuleView from '../views/shared/CreditModuleView.vue'
 import MarketAdminView from '../views/shared/MarketAdminView.vue'
 import MarketView from '../views/shared/MarketView.vue'
 import QuizView from '../views/shared/QuizView.vue'
+import SharedCanteenView from '../views/shared/CanteenView.vue'
 
 const routes = [
   {
@@ -129,7 +130,7 @@ const routes = [
       { path: 'settings', name: 'student-settings', component: StudentSettings },
       { path: 'help', name: 'student-help', component: StudentHelp },
       { path: 'clubs', name: 'student-clubs', component: StudentClubs },
-      { path: 'canteen', name: 'student-canteen', component: StudentCanteen },
+      { path: 'canteen', name: 'student-canteen', component: SharedCanteenView },
       { path: 'tournaments', name: 'student-tournaments', component: StudentTournaments },
       { path: 'subscription', name: 'student-subscription', component: LeaderSubscription },
       { path: 'market', name: 'student-market', component: MarketView },
@@ -164,7 +165,7 @@ const routes = [
       { path: 'credit-module', name: 'leader-credit-module', component: CreditModuleView },
       { path: 'library', name: 'leader-library', component: StudentLibrary },
       { path: 'clubs', name: 'leader-clubs', component: StudentClubs },
-      { path: 'canteen', name: 'leader-canteen', component: StudentCanteen },
+      { path: 'canteen', name: 'leader-canteen', component: SharedCanteenView },
       { path: 'tournaments', name: 'leader-tournaments', component: StudentTournaments }
     ]
   },
@@ -185,6 +186,7 @@ const routes = [
       { path: 'reports', name: 'admin-reports', component: AdminReports },
       { path: 'notifications', name: 'admin-notifications', component: AdminNotifications },
       { path: 'clubs', name: 'admin-clubs', component: AdminClubs },
+      { path: 'canteen', name: 'admin-canteen', component: SharedCanteenView },
       { path: 'tournaments', name: 'admin-tournaments', component: AdminTournaments },
       { path: 'subjects', name: 'admin-subjects', component: AdminSubjects },
       { path: 'holidays', name: 'admin-holidays', component: AdminHolidays },
@@ -229,6 +231,7 @@ const routes = [
       { path: 'import', name: 'super-import', component: AdminImport },
       { path: 'subjects', name: 'super-subjects', component: AdminSubjects },
       { path: 'clubs', name: 'super-clubs', component: AdminClubs }
+      ,{ path: 'canteen', name: 'super-canteen', component: SharedCanteenView }
     ]
   },
 

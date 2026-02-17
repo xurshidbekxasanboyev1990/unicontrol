@@ -113,8 +113,8 @@ class File(Base):
     download_count = Column(Integer, default=0, comment="Download counter")
     
     # Timestamps
-    created_at = Column(DateTime, default=lambda: datetime.now(TASHKENT_TZ), comment="Upload timestamp")
-    updated_at = Column(DateTime, default=lambda: datetime.now(TASHKENT_TZ), onupdate=lambda: datetime.now(TASHKENT_TZ))
+    created_at = Column(DateTime, default=lambda: datetime.now(TASHKENT_TZ).replace(tzinfo=None), comment="Upload timestamp")
+    updated_at = Column(DateTime, default=lambda: datetime.now(TASHKENT_TZ).replace(tzinfo=None), onupdate=lambda: datetime.now(TASHKENT_TZ).replace(tzinfo=None))
     
     # Relationships
     folder = relationship("Folder", back_populates="files")
@@ -192,8 +192,8 @@ class Folder(Base):
     icon = Column(String(50), nullable=True, comment="Custom icon name")
     
     # Timestamps
-    created_at = Column(DateTime, default=lambda: datetime.now(TASHKENT_TZ))
-    updated_at = Column(DateTime, default=lambda: datetime.now(TASHKENT_TZ), onupdate=lambda: datetime.now(TASHKENT_TZ))
+    created_at = Column(DateTime, default=lambda: datetime.now(TASHKENT_TZ).replace(tzinfo=None))
+    updated_at = Column(DateTime, default=lambda: datetime.now(TASHKENT_TZ).replace(tzinfo=None), onupdate=lambda: datetime.now(TASHKENT_TZ).replace(tzinfo=None))
     
     # Relationships
     files = relationship("File", back_populates="folder", cascade="all, delete-orphan")

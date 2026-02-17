@@ -28,6 +28,11 @@ def now_tashkent() -> datetime:
     return datetime.now(TASHKENT_TZ)
 
 
+def now_tashkent_naive() -> datetime:
+    """Hozirgi vaqtni Asia/Tashkent da, lekin timezone-naive qaytaradi (DateTime column uchun)."""
+    return datetime.now(TASHKENT_TZ).replace(tzinfo=None)
+
+
 def today_tashkent():
     """Bugungi sanani Asia/Tashkent timezone da qaytaradi."""
     return datetime.now(TASHKENT_TZ).date()

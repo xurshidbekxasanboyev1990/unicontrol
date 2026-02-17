@@ -64,7 +64,7 @@ class MenuCategory(Base):
     color = Column(String(20), nullable=True, default="#10b981", comment="Rang kodi")
     sort_order = Column(Integer, default=0, comment="Tartib raqami")
     is_active = Column(Boolean, default=True, comment="Faollik holati")
-    created_at = Column(DateTime, default=lambda: datetime.now(TASHKENT_TZ))
+    created_at = Column(DateTime, default=lambda: datetime.now(TASHKENT_TZ).replace(tzinfo=None))
     
     # Relationships
     items = relationship("MenuItem", back_populates="category", cascade="all, delete-orphan")
@@ -122,8 +122,8 @@ class MenuItem(Base):
     preparation_time = Column(Integer, nullable=True, comment="Tayyorlanish vaqti (daqiqa)")
     
     # Timestamps
-    created_at = Column(DateTime, default=lambda: datetime.now(TASHKENT_TZ))
-    updated_at = Column(DateTime, default=lambda: datetime.now(TASHKENT_TZ), onupdate=lambda: datetime.now(TASHKENT_TZ))
+    created_at = Column(DateTime, default=lambda: datetime.now(TASHKENT_TZ).replace(tzinfo=None))
+    updated_at = Column(DateTime, default=lambda: datetime.now(TASHKENT_TZ).replace(tzinfo=None), onupdate=lambda: datetime.now(TASHKENT_TZ).replace(tzinfo=None))
     
     # Relationships
     category = relationship("MenuCategory", back_populates="items")
@@ -184,7 +184,7 @@ class Order(Base):
     notes = Column(Text, nullable=True, comment="Izohlar")
     
     # Timestamps
-    created_at = Column(DateTime, default=lambda: datetime.now(TASHKENT_TZ), comment="Yaratilgan vaqt")
+    created_at = Column(DateTime, default=lambda: datetime.now(TASHKENT_TZ).replace(tzinfo=None), comment="Yaratilgan vaqt")
     completed_at = Column(DateTime, nullable=True, comment="Bajarilgan vaqt")
     
     # Relationships

@@ -21,8 +21,8 @@ class Subject(Base):
     hours_per_week = Column(Integer, default=2)  # Haftada necha soat
     is_active = Column(Boolean, default=True)
     
-    created_at = Column(DateTime, default=lambda: datetime.now(TASHKENT_TZ))
-    updated_at = Column(DateTime, default=lambda: datetime.now(TASHKENT_TZ), onupdate=lambda: datetime.now(TASHKENT_TZ))
+    created_at = Column(DateTime, default=lambda: datetime.now(TASHKENT_TZ).replace(tzinfo=None))
+    updated_at = Column(DateTime, default=lambda: datetime.now(TASHKENT_TZ).replace(tzinfo=None), onupdate=lambda: datetime.now(TASHKENT_TZ).replace(tzinfo=None))
     
     # Relationships
     direction_subjects = relationship("DirectionSubject", back_populates="subject", cascade="all, delete-orphan")
@@ -39,8 +39,8 @@ class Direction(Base):
     duration_years = Column(Integer, default=4)  # O'qish davomiyligi (yil)
     is_active = Column(Boolean, default=True)
     
-    created_at = Column(DateTime, default=lambda: datetime.now(TASHKENT_TZ))
-    updated_at = Column(DateTime, default=lambda: datetime.now(TASHKENT_TZ), onupdate=lambda: datetime.now(TASHKENT_TZ))
+    created_at = Column(DateTime, default=lambda: datetime.now(TASHKENT_TZ).replace(tzinfo=None))
+    updated_at = Column(DateTime, default=lambda: datetime.now(TASHKENT_TZ).replace(tzinfo=None), onupdate=lambda: datetime.now(TASHKENT_TZ).replace(tzinfo=None))
     
     # Relationships
     direction_subjects = relationship("DirectionSubject", back_populates="direction", cascade="all, delete-orphan")
