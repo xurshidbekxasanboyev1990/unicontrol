@@ -71,6 +71,7 @@ import AdminHolidays from '../views/admin/HolidaysView.vue'
 import AdminImport from '../views/admin/ImportView.vue'
 import AdminNotifications from '../views/admin/NotificationsView.vue'
 import AdminReports from '../views/admin/ReportsView.vue'
+import AdminSchedule from '../views/admin/ScheduleView.vue'
 import AdminStudents from '../views/admin/StudentsView.vue'
 import AdminSubjects from '../views/admin/SubjectsView.vue'
 import AdminTournaments from '../views/admin/TournamentsView.vue'
@@ -188,6 +189,7 @@ const routes = [
       { path: 'tournaments', name: 'admin-tournaments', component: AdminTournaments },
       { path: 'subjects', name: 'admin-subjects', component: AdminSubjects },
       { path: 'holidays', name: 'admin-holidays', component: AdminHolidays },
+      { path: 'schedule', name: 'admin-schedule', component: AdminSchedule },
       { path: 'import', name: 'admin-import', component: AdminImport },
       { path: 'profile', name: 'admin-profile', component: StudentProfile },
       { path: 'settings', name: 'admin-settings', component: StudentSettings },
@@ -218,6 +220,7 @@ const routes = [
       { path: 'subscriptions', name: 'super-subscriptions', component: SuperSubscriptions },
       { path: 'telegram-bot', name: 'super-telegram-bot', component: SuperTelegramBot },
       { path: 'holidays', name: 'super-holidays', component: AdminHolidays },
+      { path: 'schedule', name: 'super-schedule', component: AdminSchedule },
       { path: 'users', name: 'super-users', component: SuperUsers },
       { path: 'contracts', name: 'super-contracts', component: SuperContracts },
       { path: 'profile', name: 'super-profile', component: StudentProfile },

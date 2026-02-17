@@ -419,6 +419,8 @@ const currentPageTitle = computed(() => {
     'super-holidays': () => t('layout.holidays'),
     'admin-import': () => t('importData.title') || 'Import',
     'super-import': () => t('importData.title') || 'Import',
+    'admin-schedule': () => t('layout.schedule'),
+    'super-schedule': () => t('layout.schedule'),
   }
   const fn = titles[route.name]
   return fn ? fn() : t('layout.controlPanel')
@@ -511,6 +513,7 @@ const menuSections = computed(() => {
         { path: '/admin/tournaments', label: t('layout.tournaments'), icon: markRaw(Trophy) },
         { path: '/admin/subjects', label: t('layout.subjects'), icon: markRaw(BookOpen) },
         { path: '/admin/holidays', label: t('layout.holidays'), icon: markRaw(CalendarOff) },
+        { path: '/admin/schedule', label: t('layout.schedule'), icon: markRaw(Calendar) },
         { path: '/admin/contracts', label: t('layout.contracts'), icon: markRaw(FileSpreadsheet) },
         { path: '/admin/import', label: t('importData.title') || 'Import', icon: markRaw(FileUp) },
         { path: '/admin/ai-analysis', label: t('layout.aiAnalysis'), icon: markRaw(Brain) },
@@ -561,6 +564,7 @@ const menuSections = computed(() => {
         { path: '/super/market', label: t('layout.market'), icon: markRaw(Store) },
         { path: '/super/telegram-bot', label: t('layout.telegramBot'), icon: markRaw(Bot) },
         { path: '/super/holidays', label: t('layout.holidays'), icon: markRaw(CalendarOff) },
+        { path: '/super/schedule', label: t('layout.schedule'), icon: markRaw(Calendar) },
         { path: '/super/ai-analysis', label: t('layout.aiAnalysis'), icon: markRaw(Brain) },
         { path: '/super/credit-module', label: t('layout.creditModule'), icon: markRaw(Calculator) }
       ]

@@ -221,12 +221,16 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
-import {
-  CalendarDays, FileSpreadsheet, Upload, X, CheckCircle,
-  AlertCircle, ArrowRight, RefreshCw
-} from 'lucide-vue-next'
 import api from '@/services/api'
+import {
+    AlertCircle, ArrowRight,
+    CalendarDays,
+    CheckCircle,
+    FileSpreadsheet,
+    RefreshCw,
+    Upload, X
+} from 'lucide-vue-next'
+import { ref } from 'vue'
 
 const isDragging = ref(false)
 const selectedFile = ref(null)

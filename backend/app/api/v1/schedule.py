@@ -34,7 +34,7 @@ router = APIRouter()
 @router.get("", response_model=ScheduleListResponse)
 async def list_schedules(
     page: int = Query(1, ge=1),
-    page_size: int = Query(50, ge=1, le=200),
+    page_size: int = Query(50, ge=1, le=500),
     group_id: Optional[int] = None,
     day_of_week: Optional[WeekDay] = None,
     is_active: Optional[bool] = True,

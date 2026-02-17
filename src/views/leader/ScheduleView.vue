@@ -265,7 +265,23 @@ const selectedLesson = ref(null)
 const groupInfo = ref(null)
 
 const weekDays = ['Dushanba', 'Seshanba', 'Chorshanba', 'Payshanba', 'Juma', 'Shanba']
-const timeSlots = ['08:30-09:50', '10:00-11:20', '12:00-13:20', '13:30-14:50', '15:00-16:20', '16:30-17:50', '18:00-19:20']
+const DEFAULT_SLOTS = ['08:30-09:50', '10:00-11:20', '12:00-13:20', '13:30-14:50', '15:00-16:20', '16:30-17:50', '18:00-19:20']
+
+// Dynamic timeSlots: build from actual schedule data
+const timeSlots = computed(() => {
+  const slotSet = new Map()
+  schedule.value.forEach(s => {
+    const t = s.time || s.startTime || ''
+    const start = t.split('-')[0]?.trim()
+    if (start && !slotSet.has(start)) {
+      slotSet.set(start, t)
+    }
+  })
+  if (slotSet.size === 0) return DEFAULT_SLOTS
+  return [...slotSet.entries()]
+    .sort((a, b) => a[0].localeCompare(b[0]))
+    .map(([, range]) => range)
+})
 
 const subjectColors = [
   'bg-gradient-to-br from-blue-500 to-blue-600',

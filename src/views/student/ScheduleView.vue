@@ -273,11 +273,30 @@ const { t } = useLanguageStore()
 
 const activeView = ref('Hafta')
 const days = ['Dushanba', 'Seshanba', 'Chorshanba', 'Payshanba', 'Juma', 'Shanba']
-const timeSlots = ['08:30-09:50', '10:00-11:20', '12:00-13:20', '13:30-14:50', '15:00-16:20', '16:30-17:50', '18:00-19:20']
+
+// Default time slots (used as fallback if no schedule data)
+const DEFAULT_SLOTS = ['08:30-09:50', '10:00-11:20', '12:00-13:20', '13:30-14:50', '15:00-16:20', '16:30-17:50', '18:00-19:20']
 
 const loading = ref(false)
 const schedule = ref([])
 const activeHolidays = ref([])
+
+// Dynamic timeSlots: build from actual schedule data
+const timeSlots = computed(() => {
+  const slotSet = new Map() // key: startTime -> full range
+  schedule.value.forEach(s => {
+    if (!s.time) return
+    const start = s.time.split('-')[0]?.trim()
+    if (start && !slotSet.has(start)) {
+      slotSet.set(start, s.time)
+    }
+  })
+  if (slotSet.size === 0) return DEFAULT_SLOTS
+  // Sort by start time
+  return [...slotSet.entries()]
+    .sort((a, b) => a[0].localeCompare(b[0]))
+    .map(([, range]) => range)
+})
 
 // ============ DYNAMIC COLOR PALETTE ============
 // 18 vivid, visually distinct colors for auto-assignment to any subject
@@ -437,8 +456,9 @@ const isToday = (day) => day === currentDayName.value
 const getLesson = (day, time) => {
   const slotStart = time.split('-')[0]?.trim()
   return schedule.value.find(s => {
+    if (s.day !== day) return false
     const lessonStart = (s.time || '').split('-')[0]?.trim()
-    return s.day === day && (s.time === time || lessonStart === slotStart)
+    return s.time === time || lessonStart === slotStart
   })
 }
 </script>

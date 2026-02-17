@@ -19,6 +19,6 @@
 </template>
 
 <script setup>
-import { BookOpen, Clock } from 'lucide-vue-next'
+import { BookOpen, Clock } from 'lucide-vue-next';
 // Tez kunda
 </script>

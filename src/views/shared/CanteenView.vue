@@ -19,6 +19,6 @@
 </template>
 
 <script setup>
-import { Clock, UtensilsCrossed } from 'lucide-vue-next'
+import { Clock, UtensilsCrossed } from 'lucide-vue-next';
 // Tez kunda
 </script>
