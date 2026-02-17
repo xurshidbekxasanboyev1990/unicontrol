@@ -146,6 +146,50 @@ async def get_current_user_profile(
     return response_data
 
 
+@router.patch("/profile")
+async def update_profile(
+    updates: dict,
+    current_user: User = Depends(get_current_active_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Update current user's profile.
+    Allowed fields: name, phone, email, avatar, address.
+    """
+    from app.models.student import Student
+    from sqlalchemy import select
+    
+    allowed_fields = {"name", "phone", "email", "avatar", "address"}
+    filtered = {k: v for k, v in updates.items() if k in allowed_fields and v is not None}
+    
+    if not filtered:
+        return {"message": "Hech narsa yangilanmadi"}
+    
+    # User ma'lumotlarini yangilash
+    for key, value in filtered.items():
+        if hasattr(current_user, key):
+            setattr(current_user, key, value)
+    
+    db.add(current_user)
+    
+    # Agar talaba bo'lsa, student jadvalini ham yangilash
+    if current_user.role in [UserRole.STUDENT, UserRole.LEADER]:
+        result = await db.execute(
+            select(Student).where(Student.user_id == current_user.id)
+        )
+        student = result.scalar_one_or_none()
+        if student:
+            student_fields = {"name", "phone", "email", "address"}
+            for key, value in filtered.items():
+                if key in student_fields and hasattr(student, key):
+                    setattr(student, key, value)
+            db.add(student)
+    
+    await db.commit()
+    
+    return {"message": "Profil yangilandi", "updated": list(filtered.keys())}
+
+
 @router.put("/me/password")
 async def change_password(
     password_data: PasswordUpdate,

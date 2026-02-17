@@ -356,11 +356,11 @@ class ApiService {
     }
 
     async getGroupStudents(groupId) {
-        return this.request(`/groups/${groupId}/students`)
+        return this.request(`/students/group/${groupId}`)
     }
 
     async getGroupStatistics(groupId) {
-        return this.request(`/groups/${groupId}/statistics`)
+        return this.request(`/groups/statistics`)
     }
 
     // ===== STUDENTS =====
@@ -405,9 +405,9 @@ class ApiService {
     }
 
     async updateStudentContract(id, paidAmount) {
-        return this.request(`/students/${id}/contract`, {
-            method: 'PATCH',
-            body: { paid_amount: paidAmount }
+        return this.request(`/students/${id}/payment`, {
+            method: 'POST',
+            body: { amount: paidAmount }
         })
     }
 
@@ -485,11 +485,11 @@ class ApiService {
     }
 
     async getAttendanceByDate(date, groupId) {
-        return this.request(`/attendance/date/${date}?group_id=${groupId}`)
+        return this.request(`/attendance?date=${date}&group_id=${groupId}`)
     }
 
     async getAttendanceStatistics(groupId, startDate, endDate) {
-        return this.request(`/attendance/statistics/${groupId}?start_date=${startDate}&end_date=${endDate}`)
+        return this.request(`/attendance/group/${groupId}/summary?date_from=${startDate}&date_to=${endDate}`)
     }
 
     async getAttendanceDailySummary(date = null, groupId = null) {
@@ -1043,29 +1043,29 @@ class ApiService {
     }
 
     async getContactInfo() {
-        return this.request('/contact-info')
+        return this.request('/faqs/contact-info')
     }
 
     async updateContactInfo(data) {
-        return this.request('/contact-info', {
+        return this.request('/faqs/contact-info', {
             method: 'PUT',
             body: data
         })
     }
 
     async getSupportMessages(params = {}) {
-        return this.request(`/support-messages${buildQuery(params)}`)
+        return this.request(`/faqs/support-messages${buildQuery(params)}`)
     }
 
     async replySupportMessage(id, reply) {
-        return this.request(`/support-messages/${id}/reply`, {
+        return this.request(`/faqs/support-messages/${id}/reply`, {
             method: 'POST',
             body: { reply }
         })
     }
 
     async updateSupportMessageStatus(id, status) {
-        return this.request(`/support-messages/${id}/status`, {
+        return this.request(`/faqs/support-messages/${id}/status`, {
             method: 'PATCH',
             body: { status }
         })

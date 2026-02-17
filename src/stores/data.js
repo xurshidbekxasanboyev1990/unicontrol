@@ -740,16 +740,26 @@ export const useDataStore = defineStore('data', () => {
 
   /**
    * Ko'p talabaga davomat qo'shish
-   * @param {Array} records - Davomat yozuvlari
+   * @param {Object|Array} data - AttendanceBatch ({date, subject, lesson_number, attendances}) yoki legacy array
    */
-  const bulkSaveAttendance = async (records) => {
+  const bulkSaveAttendance = async (data) => {
     try {
-      const response = await api.bulkCreateAttendance(records.map(r => ({
-        student_id: r.student_id || r.studentId,
-        date: r.date,
-        status: r.status,
-        reason: r.reason
-      })))
+      // Agar array kelsa, legacy formatni AttendanceBatch ga o'girish
+      let batchData = data
+      if (Array.isArray(data)) {
+        batchData = {
+          date: data[0]?.date || new Date().toISOString().split('T')[0],
+          subject: data[0]?.subject || null,
+          lesson_number: data[0]?.lesson_number || null,
+          attendances: data.map(r => ({
+            student_id: r.student_id || r.studentId,
+            status: r.status || 'absent',
+            note: r.reason || r.note || null,
+            late_minutes: r.late_minutes || 0
+          }))
+        }
+      }
+      const response = await api.bulkCreateAttendance(batchData)
       invalidateAndRefresh('attendance', 'stats')
       return response
     } catch (err) {

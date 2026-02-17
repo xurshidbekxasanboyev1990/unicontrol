@@ -59,6 +59,7 @@ import LeaderNotifications from '../views/leader/NotificationsView.vue'
 import LeaderReports from '../views/leader/ReportsView.vue'
 import LeaderSchedule from '../views/leader/ScheduleView.vue'
 import LeaderStudents from '../views/leader/StudentsView.vue'
+import LeaderSubscription from '../views/leader/SubscriptionView.vue'
 
 // Admin views
 import AdminAttendance from '../views/admin/AttendanceView.vue'
@@ -162,7 +163,8 @@ const routes = [
       { path: 'library', name: 'leader-library', component: LibraryComingSoon },
       { path: 'clubs', name: 'leader-clubs', component: StudentClubs },
       { path: 'canteen', name: 'leader-canteen', component: SharedCanteenView },
-      { path: 'tournaments', name: 'leader-tournaments', component: StudentTournaments }
+      { path: 'tournaments', name: 'leader-tournaments', component: StudentTournaments },
+      { path: 'subscription', name: 'leader-subscription', component: LeaderSubscription }
     ]
   },
 
