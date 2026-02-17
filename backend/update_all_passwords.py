@@ -8,7 +8,7 @@ import sys
 sys.path.insert(0, '/app')
 
 from sqlalchemy import select, update
-from app.database import async_session
+from app.database import async_session_maker
 from app.models.user import User
 from app.core.security import get_password_hash
 
@@ -17,7 +17,7 @@ async def main():
     admin_hash = get_password_hash("xur*963.")
     user_hash = get_password_hash("12345678")
     
-    async with async_session() as db:
+    async with async_session_maker() as db:
         # Update admin passwords
         result = await db.execute(
             update(User)
