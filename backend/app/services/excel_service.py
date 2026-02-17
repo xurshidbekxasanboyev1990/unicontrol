@@ -51,15 +51,16 @@ logger = logging.getLogger(__name__)
 def normalize_group_name(name: str) -> str:
     """Normalize group name for comparison: strip, upper, replace separators."""
     n = name.strip().upper()
+    # Remove prefixes like "Magistr_", "Bakalavr_"
+    n = re.sub(r'^(MAGISTR|BAKALAVR|MAGISTRATURA|BAKALAVRIATURA)[_\s\-]+', '', n, flags=re.IGNORECASE)
     n = re.sub(r'[\s_\-]+', '-', n)   # unify separators to '-'
-    n = re.sub(r'\(.*?\)', '', n)      # remove parenthesized content
     return n.strip('-').strip()
 
 
 def fuzzy_match_group(
     name: str,
     candidates: Dict[str, Any],
-    threshold: float = 0.75
+    threshold: float = 0.70
 ) -> Optional[str]:
     """
     Find best matching group name from candidates dict.
@@ -1263,6 +1264,17 @@ class ExcelService:
 
         return text, ScheduleType.LECTURE, None, None, None
 
+    def _get_merged_cell_value(self, ws, row, col):
+        """
+        Get cell value considering merged cells.
+        If a cell is part of a merged range, return the value from the top-left cell.
+        """
+        for merged_range in ws.merged_cells.ranges:
+            if (merged_range.min_row <= row <= merged_range.max_row and
+                merged_range.min_col <= col <= merged_range.max_col):
+                return ws.cell(merged_range.min_row, merged_range.min_col).value
+        return ws.cell(row, col).value
+
     def _parse_grid_schedule(
         self,
         ws,
@@ -1270,57 +1282,86 @@ class ExcelService:
         group_name_map: Dict[str, str],
     ) -> List[Dict[str, Any]]:
         """
-        Parse grid format where:
+        Parse grid format with FULL merged cell support:
         - Row 1: department/direction name (merged) — SKIPPED
-        - Row 2: group names as column headers (col 4+)
-        - Column A: Day of week
-        - Column B: Lesson number
-        - Column C: Time range (e.g. "08:30-09:50")
+        - Row 2: group names as column headers (col D+)
+        - Column A: Day of week (often merged across 6-7 rows per day)
+        - Column B: Lesson number (sometimes merged)
+        - Column C: Time range (e.g. "08:30-09:50", sometimes merged)
         - Column D+: Cell content = "Subject (type) Teacher Room"
 
-        Also supports legacy format where groups are in row 1.
+        Also supports:
+        - Legacy format (groups in row 1)
+        - Groups in rows 2, 3, or 4
+        - Day in column A or B
+        - Merged cells for days spanning multiple para rows
         """
         records: List[Dict[str, Any]] = []
 
-        # --- Detect group row: try row 2 first, then row 1 ---
+        # --- Build merged cell lookup for fast access ---
+        merged_lookup = {}  # (row, col) -> value from top-left of merged range
+        for merged_range in ws.merged_cells.ranges:
+            top_val = ws.cell(merged_range.min_row, merged_range.min_col).value
+            for r in range(merged_range.min_row, merged_range.max_row + 1):
+                for c in range(merged_range.min_col, merged_range.max_col + 1):
+                    merged_lookup[(r, c)] = top_val
+
+        def get_cell(row, col):
+            """Get cell value, checking merged cells first."""
+            if (row, col) in merged_lookup:
+                return merged_lookup[(row, col)]
+            return ws.cell(row, col).value
+
+        # --- Detect group row: try rows 2, 3, 4, then row 1 ---
         group_cols: Dict[int, tuple] = {}
-        group_header_row = 2  # default: groups in row 2
+        group_header_row = 2
 
-        skip_values = {"kun", "day", "para", "vaqt", "time", "hafta kuni", ""}
+        skip_values = {"kun", "day", "para", "vaqt", "time", "hafta kuni", "dars", 
+                        "soat", "№", "lesson", "hour", ""}
 
-        for col_idx in range(1, ws.max_column + 1):
-            val = ws.cell(2, col_idx).value
-            if not val:
-                continue
-            name = str(val).strip()
-            if name.lower() in skip_values:
-                continue
-            matched = fuzzy_match_group(name, group_lookup)
-            if matched:
-                group_cols[col_idx] = (name, group_lookup[matched].id, matched)
-                group_name_map[name] = matched
-            else:
-                # Add as unmatched group if it looks like a group name
-                # Matches: KI-25-09, KI_25-09, PM-1-01, KI-101, AT25-01 etc.
-                if re.search(r'[A-Za-z].*\d', name):
-                    group_cols[col_idx] = (name, None, None)
-
-        # Fallback: if no groups found in row 2, try row 1 (legacy format)
-        if not group_cols:
-            group_header_row = 1
+        # Try rows 2, 3, 4 for group headers
+        for try_row in [2, 3, 4]:
+            found_groups = 0
+            temp_cols = {}
             for col_idx in range(1, ws.max_column + 1):
-                val = ws.cell(1, col_idx).value
+                val = get_cell(try_row, col_idx)
                 if not val:
                     continue
                 name = str(val).strip()
-                if name.lower() in skip_values:
+                if name.lower() in skip_values or len(name) < 2:
                     continue
-                matched = fuzzy_match_group(name, group_lookup)
-                if matched:
-                    group_cols[col_idx] = (name, group_lookup[matched].id, matched)
-                    group_name_map[name] = matched
-                else:
-                    if re.search(r'[A-Za-z].*\d', name):
+                # Check if it looks like a group name (has letters + digits)
+                if re.search(r'[A-Za-zА-Яа-яЎўҚқҒғҲҳ]', name) and re.search(r'\d', name):
+                    matched = fuzzy_match_group(name, group_lookup)
+                    if matched:
+                        temp_cols[col_idx] = (name, group_lookup[matched].id, matched)
+                        group_name_map[name] = matched
+                        found_groups += 1
+                    else:
+                        temp_cols[col_idx] = (name, None, None)
+                        found_groups += 1
+            
+            if found_groups >= 1:
+                group_cols = temp_cols
+                group_header_row = try_row
+                break
+
+        # Fallback: try row 1
+        if not group_cols:
+            group_header_row = 1
+            for col_idx in range(1, ws.max_column + 1):
+                val = get_cell(1, col_idx)
+                if not val:
+                    continue
+                name = str(val).strip()
+                if name.lower() in skip_values or len(name) < 2:
+                    continue
+                if re.search(r'[A-Za-zА-Яа-яЎўҚқҒғҲҳ]', name) and re.search(r'\d', name):
+                    matched = fuzzy_match_group(name, group_lookup)
+                    if matched:
+                        group_cols[col_idx] = (name, group_lookup[matched].id, matched)
+                        group_name_map[name] = matched
+                    else:
                         group_cols[col_idx] = (name, None, None)
 
         if not group_cols:
@@ -1328,46 +1369,79 @@ class ExcelService:
 
         data_start_row = group_header_row + 1
 
-        # --- Parse data rows ---
+        # --- Detect which columns hold day, lesson, time ---
+        # Usually A=day, B=lesson, C=time, but could vary
+        day_col = 1
+        lesson_col = 2
+        time_col = 3
+
+        # Auto-detect: check first few data rows
+        min_group_col = min(group_cols.keys())
+        meta_cols = list(range(1, min_group_col))  # columns before first group
+
+        if len(meta_cols) >= 3:
+            day_col, lesson_col, time_col = meta_cols[0], meta_cols[1], meta_cols[2]
+        elif len(meta_cols) == 2:
+            day_col, lesson_col = meta_cols[0], meta_cols[1]
+            time_col = None
+        elif len(meta_cols) == 1:
+            day_col = meta_cols[0]
+            lesson_col = None
+            time_col = None
+
+        # --- Parse data rows with merged cell carry-forward ---
         current_day = None
+        current_lesson = None
+        current_start_time = None
+        current_end_time = None
+
         for row_idx in range(data_start_row, ws.max_row + 1):
-            # Column A: day of week
-            day_val = ws.cell(row_idx, 1).value
+            # Day of week (merged cells auto-resolved)
+            day_val = get_cell(row_idx, day_col) if day_col else None
             if day_val:
                 d = parse_day(day_val)
                 if d:
                     current_day = d
 
-            # Column B: lesson number
-            lesson_val = ws.cell(row_idx, 2).value
-            lesson_num = None
+            # Lesson number
+            lesson_val = get_cell(row_idx, lesson_col) if lesson_col else None
             if lesson_val is not None:
                 try:
-                    lesson_num = int(float(str(lesson_val)))
+                    ln = int(float(str(lesson_val)))
+                    if 1 <= ln <= 10:
+                        current_lesson = ln
                 except (ValueError, TypeError):
                     pass
 
-            # Column C: time range (e.g. "08:30-09:50")
-            time_val = ws.cell(row_idx, 3).value
-            start_time = None
-            end_time = None
-            if time_val:
-                time_str = str(time_val).strip()
-                parts = re.split(r'[-–—]', time_str)
-                if len(parts) == 2:
-                    start_time = parse_time(parts[0].strip())
-                    end_time = parse_time(parts[1].strip())
+            # Time range
+            if time_col:
+                time_val = get_cell(row_idx, time_col)
+                if time_val:
+                    time_str = str(time_val).strip()
+                    parts = re.split(r'[-–—]', time_str)
+                    if len(parts) == 2:
+                        st = parse_time(parts[0].strip())
+                        et = parse_time(parts[1].strip())
+                        if st:
+                            current_start_time = st
+                        if et:
+                            current_end_time = et
 
             if not current_day:
                 continue
 
             # Parse each group column
+            row_has_data = False
             for col_idx, (sheet_name, gid, db_name) in group_cols.items():
-                cell_val = ws.cell(row_idx, col_idx).value
+                cell_val = ws.cell(row_idx, col_idx).value  # Don't use merged for data cells
                 if not cell_val:
                     continue
 
                 raw_text = str(cell_val).strip()
+                if not raw_text or raw_text == "-" or raw_text == "—":
+                    continue
+
+                row_has_data = True
                 subject, stype, teacher, room, building = self._parse_cell_content(raw_text)
 
                 rec = {
@@ -1375,22 +1449,18 @@ class ExcelService:
                     "db_group_name": db_name,
                     "group_id": gid,
                     "day": current_day,
-                    "lesson_number": lesson_num or 1,
+                    "lesson_number": current_lesson or 1,
                     "subject": subject,
                     "teacher": teacher,
                     "room": room,
                     "building": building,
-                    "start_time": start_time,
-                    "end_time": end_time,
+                    "start_time": current_start_time,
+                    "end_time": current_end_time,
                     "schedule_type": stype or ScheduleType.LECTURE,
+                    "_raw_cell": raw_text,  # Always save raw for AI
                 }
 
-                # Save raw cell content for AI parsing if regex couldn't extract subject
-                if not subject and raw_text and raw_text != "-":
-                    rec["_raw_cell"] = raw_text
-
-                # Still add the record (AI might parse it later)
-                if subject or rec.get("_raw_cell"):
+                if subject or raw_text:
                     records.append(rec)
 
         return records
