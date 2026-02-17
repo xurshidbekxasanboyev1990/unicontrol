@@ -45,7 +45,10 @@ class AttendanceNotifier:
             except asyncio.CancelledError:
                 pass
         
-        await self.api.close()
+        try:
+            await self.api.close()
+        except Exception:
+            pass
         logger.info("Attendance notifier stopped")
     
     async def _run_loop(self):

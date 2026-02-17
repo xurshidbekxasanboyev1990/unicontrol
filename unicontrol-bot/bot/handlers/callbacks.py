@@ -27,20 +27,52 @@ async def callback_menu(callback: CallbackQuery):
         await callback.answer()
         
     elif action == "attendance":
-        from bot.handlers.attendance import cmd_attendance
-        await callback.message.delete()
+        from bot.services import UniControlAPI, AttendanceFormatter
+        from bot.keyboards import get_back_keyboard
+        from datetime import date
         
-        # Create fake message object with same chat
-        class FakeMessage:
-            def __init__(self, chat, from_user):
-                self.chat = chat
-                self.from_user = from_user
-                
-            async def answer(self, *args, **kwargs):
-                return await callback.message.answer(*args, **kwargs)
+        chat_id = callback.message.chat.id
         
-        fake_msg = FakeMessage(callback.message.chat, callback.from_user)
-        await cmd_attendance(fake_msg)
+        # Get subscription
+        async with async_session() as session:
+            result = await session.execute(
+                select(Subscription).where(
+                    Subscription.chat_id == chat_id,
+                    Subscription.is_active == True
+                )
+            )
+            sub = result.scalar_one_or_none()
+        
+        if not sub:
+            await callback.message.edit_text(
+                "❌ Bu chat hech qaysi guruhga obuna emas.\n\n"
+                "💡 <i>Obuna bo'lish uchun: /subscribe [kod]</i>",
+                parse_mode="HTML"
+            )
+            await callback.answer()
+            return
+        
+        await callback.answer("Yuklanmoqda...")
+        
+        try:
+            api = UniControlAPI()
+            attendances = await api.get_today_attendance(sub.group_id)
+            text = AttendanceFormatter.format_group_attendance(
+                attendances,
+                sub.group_code,
+                date.today().strftime("%d.%m.%Y")
+            )
+            await callback.message.edit_text(
+                text,
+                parse_mode="HTML",
+                reply_markup=get_back_keyboard()
+            )
+        except Exception as e:
+            logger.error(f"Attendance callback error: {e}")
+            await callback.message.edit_text(
+                "❌ Davomatni yuklashda xatolik yuz berdi.",
+                parse_mode="HTML"
+            )
         await callback.answer()
         
     elif action == "settings":

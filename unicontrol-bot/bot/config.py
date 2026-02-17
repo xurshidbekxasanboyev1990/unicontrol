@@ -25,7 +25,7 @@ class Settings(BaseSettings):
     bot_token: str = Field(..., env="BOT_TOKEN")
     
     # UniControl API
-    api_base_url: str = Field(default="http://localhost:8000", env="API_BASE_URL")
+    api_base_url: str = Field(default="http://localhost:8000/api/v1", env="API_BASE_URL")
     api_key: str = Field(default="", env="API_KEY")
     
     # Database

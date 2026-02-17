@@ -309,11 +309,24 @@ async def callback_resubscribe(callback: CallbackQuery):
             await session.commit()
         
         await callback.answer("Almashtirilmoqda...")
-        await callback.message.delete()
         
-        # Create new subscription
+        # Edit message instead of deleting (safe approach)
+        await callback.message.edit_text(
+            f"⏳ <b>{group_code}</b> guruhiga almashtirilmoqda...",
+            parse_mode="HTML"
+        )
+        
+        # Create new subscription — use a wrapper that sends new message
+        class _MsgProxy:
+            def __init__(self, msg):
+                self._msg = msg
+                self.chat = msg.chat
+                self.from_user = callback.from_user
+            async def answer(self, *a, **kw):
+                return await self._msg.answer(*a, **kw)
+        
         await perform_subscription(
-            callback.message,
+            _MsgProxy(callback.message),
             group_code,
             chat_id,
             chat_type,

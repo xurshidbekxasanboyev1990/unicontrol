@@ -654,7 +654,10 @@ async def process_channel_id(message: Message, state: FSMContext, bot: Bot):
         )
 
 
-@router.callback_query(F.data.startswith("admin:channel:") & ~F.data.contains("toggle") & ~F.data.contains("delete") & ~F.data.contains("add"))
+@router.callback_query(
+    F.data.startswith("admin:channel:"),
+    lambda c: not any(x in c.data for x in ["toggle", "delete", "add"])
+)
 async def callback_channel_detail(callback: CallbackQuery):
     """Show channel details"""
     if not is_admin(callback.from_user.id):
@@ -776,6 +779,7 @@ async def callback_settings_toggle(callback: CallbackQuery):
         return
     
     setting_name = callback.data.split(":")[-1]
+    current_value = False
     
     async with async_session() as session:
         result = await session.execute(select(BotSettings).where(BotSettings.id == 1))
@@ -1124,6 +1128,264 @@ async def callback_admin_close(callback: CallbackQuery):
     """Close admin panel"""
     await callback.message.delete()
     await callback.answer()
+
+
+# ==================== Missing Admin Handlers ====================
+
+@router.callback_query(F.data == "admin:broadcast:active")
+async def callback_broadcast_active(callback: CallbackQuery):
+    """Show active broadcasts"""
+    if not is_admin(callback.from_user.id):
+        await callback.answer("⛔️ Admin emas", show_alert=True)
+        return
+    
+    async with async_session() as session:
+        result = await session.execute(
+            select(Broadcast).where(Broadcast.status == "sending").order_by(Broadcast.created_at.desc())
+        )
+        broadcasts = result.scalars().all()
+    
+    if not broadcasts:
+        await callback.answer("Hozirda faol e'lon yo'q", show_alert=True)
+        return
+    
+    text = "📢 <b>Faol e'lonlar</b>\n\n"
+    for b in broadcasts:
+        text += f"🆔 #{b.id} | ✅ {b.sent_count}/{b.total_users} | ⏱ {b.started_at.strftime('%H:%M') if b.started_at else '-'}\n"
+    
+    await callback.message.edit_text(text, parse_mode="HTML", reply_markup=get_admin_broadcast_keyboard())
+    await callback.answer()
+
+
+@router.callback_query(F.data == "admin:broadcast:history")
+async def callback_broadcast_history(callback: CallbackQuery):
+    """Show broadcast history"""
+    if not is_admin(callback.from_user.id):
+        await callback.answer("⛔️ Admin emas", show_alert=True)
+        return
+    
+    async with async_session() as session:
+        result = await session.execute(
+            select(Broadcast).order_by(Broadcast.created_at.desc()).limit(10)
+        )
+        broadcasts = result.scalars().all()
+    
+    if not broadcasts:
+        await callback.answer("E'lonlar tarixi bo'sh", show_alert=True)
+        return
+    
+    text = "📜 <b>E'lonlar tarixi</b>\n\n"
+    for b in broadcasts:
+        status_icon = {"completed": "✅", "cancelled": "❌", "sending": "⏳", "pending": "📝"}.get(b.status, "❓")
+        text += (
+            f"{status_icon} #{b.id} | {b.sent_count}/{b.total_users} | "
+            f"{b.created_at.strftime('%d.%m %H:%M')}\n"
+        )
+    
+    await callback.message.edit_text(text, parse_mode="HTML", reply_markup=get_admin_broadcast_keyboard())
+    await callback.answer()
+
+
+@router.callback_query(F.data.startswith("admin:broadcast:cancel:"))
+async def callback_broadcast_cancel(callback: CallbackQuery):
+    """Cancel a pending broadcast"""
+    if not is_admin(callback.from_user.id):
+        await callback.answer("⛔️ Admin emas", show_alert=True)
+        return
+    
+    broadcast_id = int(callback.data.split(":")[-1])
+    
+    async with async_session() as session:
+        await session.execute(
+            update(Broadcast).where(Broadcast.id == broadcast_id).values(status="cancelled")
+        )
+        await session.commit()
+    
+    await callback.message.edit_text("❌ E'lon bekor qilindi.", parse_mode="HTML")
+    await callback.answer()
+
+
+@router.callback_query(F.data == "admin:users:banned")
+async def callback_users_banned(callback: CallbackQuery):
+    """Show banned users"""
+    if not is_admin(callback.from_user.id):
+        await callback.answer("⛔️ Admin emas", show_alert=True)
+        return
+    
+    async with async_session() as session:
+        result = await session.execute(
+            select(BotUser).where(BotUser.is_banned == True).order_by(BotUser.last_active.desc()).limit(20)
+        )
+        users = result.scalars().all()
+    
+    if not users:
+        await callback.answer("Bloklangan foydalanuvchilar yo'q", show_alert=True)
+        return
+    
+    text = "🚫 <b>Bloklangan foydalanuvchilar</b>\n\n"
+    for u in users:
+        name = u.first_name or ""
+        text += f"• <code>{u.telegram_id}</code> {name} @{u.username or '-'}"
+        if u.ban_reason:
+            text += f" — <i>{u.ban_reason[:30]}</i>"
+        text += "\n"
+    
+    await callback.message.edit_text(text, parse_mode="HTML", reply_markup=get_admin_users_keyboard())
+    await callback.answer()
+
+
+@router.callback_query(F.data == "admin:users:top")
+async def callback_users_top(callback: CallbackQuery):
+    """Show most active users"""
+    if not is_admin(callback.from_user.id):
+        await callback.answer("⛔️ Admin emas", show_alert=True)
+        return
+    
+    async with async_session() as session:
+        result = await session.execute(
+            select(BotUser).where(BotUser.is_blocked == False).order_by(BotUser.last_active.desc()).limit(15)
+        )
+        users = result.scalars().all()
+    
+    if not users:
+        await callback.answer("Foydalanuvchilar yo'q", show_alert=True)
+        return
+    
+    text = "📊 <b>Faol foydalanuvchilar</b>\n\n"
+    for i, u in enumerate(users, 1):
+        name = u.first_name or ""
+        last = u.last_active.strftime("%d.%m %H:%M") if u.last_active else "-"
+        text += f"{i}. {name} @{u.username or '-'} — {last}\n"
+    
+    await callback.message.edit_text(text, parse_mode="HTML", reply_markup=get_admin_users_keyboard())
+    await callback.answer()
+
+
+@router.callback_query(F.data.startswith("admin:user:message:"))
+async def callback_user_message(callback: CallbackQuery, state: FSMContext):
+    """Send message to specific user"""
+    if not is_admin(callback.from_user.id):
+        await callback.answer("⛔️ Admin emas", show_alert=True)
+        return
+    
+    user_id = int(callback.data.split(":")[-1])
+    await state.set_state(AdminStates.waiting_user_message)
+    await state.update_data(target_user_id=user_id)
+    
+    await callback.message.edit_text(
+        f"💬 <b>Xabar yuborish</b>\n\n"
+        f"🆔 Foydalanuvchi: <code>{user_id}</code>\n\n"
+        f"Xabar matnini yuboring.\n\n"
+        f"❌ Bekor qilish: /cancel",
+        parse_mode="HTML"
+    )
+    await callback.answer()
+
+
+@router.message(AdminStates.waiting_user_message)
+async def process_user_message(message: Message, state: FSMContext, bot: Bot):
+    """Send message to user"""
+    if message.text == "/cancel":
+        await state.clear()
+        await message.answer("❌ Bekor qilindi")
+        return
+    
+    data = await state.get_data()
+    user_id = data.get("target_user_id")
+    
+    try:
+        await bot.send_message(user_id, message.text)
+        await message.answer(f"✅ Xabar yuborildi! (ID: {user_id})")
+    except Exception as e:
+        await message.answer(f"❌ Xabar yuborilmadi: {str(e)}")
+    
+    await state.clear()
+
+
+@router.callback_query(F.data == "admin:logs:search")
+async def callback_logs_search(callback: CallbackQuery):
+    """Show all logs (simplified - same as recent for now)"""
+    if not is_admin(callback.from_user.id):
+        await callback.answer("⛔️ Admin emas", show_alert=True)
+        return
+    
+    await callback_logs_recent(callback)
+
+
+@router.callback_query(F.data.startswith("admin:broadcast:refresh:"))
+async def callback_broadcast_refresh(callback: CallbackQuery):
+    """Refresh broadcast progress"""
+    if not is_admin(callback.from_user.id):
+        await callback.answer("⛔️ Admin emas", show_alert=True)
+        return
+    
+    broadcast_id = int(callback.data.split(":")[-1])
+    
+    async with async_session() as session:
+        result = await session.execute(
+            select(Broadcast).where(Broadcast.id == broadcast_id)
+        )
+        broadcast = result.scalar_one_or_none()
+    
+    if not broadcast:
+        await callback.answer("E'lon topilmadi", show_alert=True)
+        return
+    
+    if broadcast.status == "completed":
+        text = (
+            f"✅ <b>E'lon yuborildi!</b>\n\n"
+            f"✅ Yuborildi: {broadcast.sent_count}\n"
+            f"❌ Xato: {broadcast.failed_count}\n"
+            f"🚫 Bloklangan: {broadcast.blocked_count}\n"
+            f"👥 Jami: {broadcast.total_users}"
+        )
+    else:
+        text = (
+            f"📢 <b>E'lon yuborilmoqda...</b>\n\n"
+            f"📊 Yuborildi: {broadcast.sent_count}/{broadcast.total_users}\n"
+            f"❌ Xato: {broadcast.failed_count}\n"
+            f"🚫 Bloklangan: {broadcast.blocked_count}"
+        )
+    
+    await callback.message.edit_text(
+        text,
+        parse_mode="HTML",
+        reply_markup=get_broadcast_progress_keyboard(broadcast_id) if broadcast.status == "sending" else None
+    )
+    await callback.answer()
+
+
+@router.callback_query(F.data.startswith("admin:broadcast:preview:"))
+async def callback_broadcast_preview(callback: CallbackQuery, bot: Bot):
+    """Preview broadcast message"""
+    if not is_admin(callback.from_user.id):
+        await callback.answer("⛔️ Admin emas", show_alert=True)
+        return
+    
+    broadcast_id = int(callback.data.split(":")[-1])
+    
+    async with async_session() as session:
+        result = await session.execute(
+            select(Broadcast).where(Broadcast.id == broadcast_id)
+        )
+        broadcast = result.scalar_one_or_none()
+    
+    if not broadcast:
+        await callback.answer("E'lon topilmadi", show_alert=True)
+        return
+    
+    try:
+        if broadcast.message_type == "text":
+            await callback.message.answer(broadcast.message_text or "(bo'sh)")
+        elif broadcast.message_type == "photo" and broadcast.media_file_id:
+            await bot.send_photo(callback.from_user.id, broadcast.media_file_id, caption=broadcast.message_text)
+        elif broadcast.message_type == "video" and broadcast.media_file_id:
+            await bot.send_video(callback.from_user.id, broadcast.media_file_id, caption=broadcast.message_text)
+        elif broadcast.message_type == "document" and broadcast.media_file_id:
+            await bot.send_document(callback.from_user.id, broadcast.media_file_id, caption=broadcast.message_text)
+        await callback.answer("👆 Ko'rib chiqing")
+    except Exception as e:
+        await callback.answer(f"Ko'rib chiqishda xato: {str(e)[:50]}", show_alert=True)
 
 
 # ==================== Birthday Test Command ====================
