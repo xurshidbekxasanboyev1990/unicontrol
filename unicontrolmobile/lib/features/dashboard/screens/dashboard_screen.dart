@@ -699,6 +699,57 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                 context.push('/settings');
               },
             ),
+            QuickActionButton(
+              icon: Icons.menu_book_rounded,
+              label: 'Kutubxona',
+              color: const Color(0xFF8E24AA),
+              compact: true,
+              onTap: () {
+                HapticFeedback.lightImpact();
+                context.push('/library');
+              },
+            ),
+            QuickActionButton(
+              icon: Icons.restaurant_rounded,
+              label: 'Oshxona',
+              color: const Color(0xFFE65100),
+              compact: true,
+              onTap: () {
+                HapticFeedback.lightImpact();
+                context.push('/canteen');
+              },
+            ),
+            QuickActionButton(
+              icon: Icons.receipt_long_rounded,
+              label: 'Kontrakt',
+              color: const Color(0xFF00897B),
+              compact: true,
+              onTap: () {
+                HapticFeedback.lightImpact();
+                context.push('/contracts');
+              },
+            ),
+            QuickActionButton(
+              icon: Icons.help_outline_rounded,
+              label: 'Yordam',
+              color: const Color(0xFF5C6BC0),
+              compact: true,
+              onTap: () {
+                HapticFeedback.lightImpact();
+                context.push('/help');
+              },
+            ),
+            if (isLeader || isAdmin)
+              QuickActionButton(
+                icon: Icons.send_rounded,
+                label: 'Xabar',
+                color: const Color(0xFF00ACC1),
+                compact: true,
+                onTap: () {
+                  HapticFeedback.lightImpact();
+                  context.push('/notifications/compose');
+                },
+              ),
           ],
         ),
       ],

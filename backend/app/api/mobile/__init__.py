@@ -19,6 +19,10 @@ from app.api.mobile import (
     clubs,
     tournaments,
     reports,
+    library,
+    canteen,
+    contracts,
+    help,
 )
 
 mobile_router = APIRouter()
@@ -77,6 +81,34 @@ mobile_router.include_router(
     push.router,
     prefix="/push",
     tags=["Push Notifications"]
+)
+
+# Library
+mobile_router.include_router(
+    library.router,
+    prefix="/library",
+    tags=["Mobile Library"]
+)
+
+# Canteen
+mobile_router.include_router(
+    canteen.router,
+    prefix="/canteen",
+    tags=["Mobile Canteen"]
+)
+
+# Contracts
+mobile_router.include_router(
+    contracts.router,
+    prefix="/contracts",
+    tags=["Mobile Contracts"]
+)
+
+# Help/FAQ
+mobile_router.include_router(
+    help.router,
+    prefix="/help",
+    tags=["Mobile Help"]
 )
 
 # General unprefixed mobile endpoints (schedule, attendance, groups, notifications/unread-count)

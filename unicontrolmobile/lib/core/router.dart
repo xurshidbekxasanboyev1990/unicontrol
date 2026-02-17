@@ -16,12 +16,18 @@ import '../features/attendance/screens/attendance_screen.dart';
 import '../features/attendance/screens/mark_attendance_screen.dart';
 import '../features/schedule/screens/schedule_screen.dart';
 import '../features/groups/screens/groups_screen.dart';
+import '../features/groups/screens/group_detail_screen.dart';
 import '../features/notifications/screens/notifications_screen.dart';
+import '../features/notifications/screens/notification_compose_screen.dart';
 import '../features/profile/screens/profile_screen.dart';
 import '../features/reports/screens/reports_screen.dart';
 import '../features/clubs/screens/clubs_screen.dart';
 import '../features/tournaments/screens/tournaments_screen.dart';
 import '../features/settings/screens/settings_screen.dart';
+import '../features/library/screens/library_screen.dart';
+import '../features/canteen/screens/canteen_screen.dart';
+import '../features/contracts/screens/contracts_screen.dart';
+import '../features/help/screens/help_screen.dart';
 import '../widgets/main_shell.dart';
 
 /// Router provider
@@ -127,12 +133,27 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/groups',
         builder: (context, state) => const GroupsScreen(),
+        routes: [
+          GoRoute(
+            path: ':id',
+            builder: (context, state) {
+              final id = int.parse(state.pathParameters['id']!);
+              return GroupDetailScreen(groupId: id);
+            },
+          ),
+        ],
       ),
 
       // Notifications
       GoRoute(
         path: '/notifications',
         builder: (context, state) => const NotificationsScreen(),
+        routes: [
+          GoRoute(
+            path: 'compose',
+            builder: (context, state) => const NotificationComposeScreen(),
+          ),
+        ],
       ),
 
       // Reports
@@ -157,6 +178,30 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/settings',
         builder: (context, state) => const SettingsScreen(),
+      ),
+
+      // Library
+      GoRoute(
+        path: '/library',
+        builder: (context, state) => const LibraryScreen(),
+      ),
+
+      // Canteen
+      GoRoute(
+        path: '/canteen',
+        builder: (context, state) => const CanteenScreen(),
+      ),
+
+      // Contracts
+      GoRoute(
+        path: '/contracts',
+        builder: (context, state) => const ContractsScreen(),
+      ),
+
+      // Help / FAQ
+      GoRoute(
+        path: '/help',
+        builder: (context, state) => const HelpScreen(),
       ),
     ],
     errorBuilder: (context, state) => Scaffold(

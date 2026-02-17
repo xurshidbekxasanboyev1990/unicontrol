@@ -922,6 +922,116 @@ class ApiService {
   }
 
   // ==========================================
+  // LIBRARY ENDPOINTS
+  // ==========================================
+
+  /// Get books list
+  Future<Map<String, dynamic>> getBooks({String? search, String? category, int page = 1}) async {
+    final params = <String, dynamic>{'page': page, 'page_size': 20};
+    if (search != null && search.isNotEmpty) params['search'] = search;
+    if (category != null) params['category'] = category;
+    final response = await _dio.get(ApiConstants.library, queryParameters: params);
+    return response.data;
+  }
+
+  /// Get book categories
+  Future<List<dynamic>> getBookCategories() async {
+    final response = await _dio.get(ApiConstants.libraryCategories);
+    return response.data;
+  }
+
+  /// Get book detail
+  Future<Map<String, dynamic>> getBookDetail(int id) async {
+    final response = await _dio.get(ApiConstants.libraryDetail(id));
+    return response.data;
+  }
+
+  /// Get my borrows
+  Future<Map<String, dynamic>> getMyBorrows({String? status, int page = 1}) async {
+    final params = <String, dynamic>{'page': page};
+    if (status != null) params['status'] = status;
+    final response = await _dio.get(ApiConstants.libraryMyBorrows, queryParameters: params);
+    return response.data;
+  }
+
+  /// Get library stats
+  Future<Map<String, dynamic>> getLibraryStats() async {
+    final response = await _dio.get(ApiConstants.libraryStats);
+    return response.data;
+  }
+
+  /// Borrow a book
+  Future<Map<String, dynamic>> borrowBook(int bookId) async {
+    final response = await _dio.post(ApiConstants.libraryBorrow(bookId));
+    return response.data;
+  }
+
+  // ==========================================
+  // CANTEEN ENDPOINTS
+  // ==========================================
+
+  /// Get canteen categories
+  Future<List<dynamic>> getCanteenCategories() async {
+    final response = await _dio.get(ApiConstants.canteenCategories);
+    return response.data;
+  }
+
+  /// Get canteen menu
+  Future<Map<String, dynamic>> getCanteenMenu({int? categoryId, String? search}) async {
+    final params = <String, dynamic>{};
+    if (categoryId != null) params['category_id'] = categoryId;
+    if (search != null && search.isNotEmpty) params['search'] = search;
+    final response = await _dio.get(ApiConstants.canteenMenu, queryParameters: params);
+    return response.data;
+  }
+
+  /// Create canteen order
+  Future<Map<String, dynamic>> createOrder(List<Map<String, dynamic>> items, {String? notes}) async {
+    final response = await _dio.post(ApiConstants.canteenOrders, data: {
+      'items': items,
+      if (notes != null) 'notes': notes,
+    });
+    return response.data;
+  }
+
+  /// Get my orders
+  Future<Map<String, dynamic>> getMyOrders({String? status, int page = 1}) async {
+    final params = <String, dynamic>{'page': page};
+    if (status != null) params['status'] = status;
+    final response = await _dio.get(ApiConstants.canteenOrders, queryParameters: params);
+    return response.data;
+  }
+
+  // ==========================================
+  // CONTRACTS ENDPOINTS
+  // ==========================================
+
+  /// Get my contract
+  Future<Map<String, dynamic>> getMyContract() async {
+    final response = await _dio.get(ApiConstants.contractsMy);
+    return response.data;
+  }
+
+  /// Get group contracts
+  Future<Map<String, dynamic>> getGroupContracts({int page = 1}) async {
+    final response = await _dio.get(ApiConstants.contractsGroup, queryParameters: {'page': page});
+    return response.data;
+  }
+
+  // ==========================================
+  // HELP ENDPOINTS
+  // ==========================================
+
+  /// Get FAQ
+  Future<Map<String, dynamic>> getFAQ({String? category, String? search}) async {
+    final params = <String, dynamic>{};
+    if (category != null) params['category'] = category;
+    if (search != null && search.isNotEmpty) params['search'] = search;
+    final response = await _dio.get(ApiConstants.help, queryParameters: params);
+    return response.data;
+  }
+
+  // ==========================================
   // ERROR HANDLING
   // ==========================================
 

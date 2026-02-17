@@ -4,6 +4,7 @@ library;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../core/theme/app_theme.dart';
 import '../../../data/providers/data_provider.dart';
@@ -100,7 +101,9 @@ class _GroupsScreenState extends ConsumerState<GroupsScreen> {
   }
 
   Widget _buildGroupCard(Group group) {
-    return Container(
+    return GestureDetector(
+      onTap: () => context.push('/groups/${group.id}'),
+      child: Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
         color: Colors.white,
@@ -234,7 +237,7 @@ class _GroupsScreenState extends ConsumerState<GroupsScreen> {
             ),
         ],
       ),
+    ),
     );
   }
 }
-

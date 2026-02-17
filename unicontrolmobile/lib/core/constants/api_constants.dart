@@ -110,6 +110,35 @@ class ApiConstants {
 
   // System
   static const String health = '/health';
+
+  // ==========================================
+  // LIBRARY ENDPOINTS (/api/mobile/library)
+  // ==========================================
+  static const String library = '/library';
+  static const String libraryCategories = '/library/categories';
+  static const String libraryMyBorrows = '/library/my-borrows';
+  static const String libraryStats = '/library/stats';
+  static String libraryDetail(int id) => '/library/$id';
+  static String libraryBorrow(int id) => '/library/$id/borrow';
+
+  // ==========================================
+  // CANTEEN ENDPOINTS (/api/mobile/canteen)
+  // ==========================================
+  static const String canteenCategories = '/canteen/categories';
+  static const String canteenMenu = '/canteen/menu';
+  static const String canteenOrders = '/canteen/orders';
+
+  // ==========================================
+  // CONTRACTS ENDPOINTS (/api/mobile/contracts)
+  // ==========================================
+  static const String contractsMy = '/contracts/my';
+  static const String contractsGroup = '/contracts/group';
+
+  // ==========================================
+  // HELP ENDPOINTS (/api/mobile/help)
+  // ==========================================
+  static const String help = '/help';
+  static String helpDetail(int id) => '/help/$id';
 }
 
 /// Storage keys for local storage
