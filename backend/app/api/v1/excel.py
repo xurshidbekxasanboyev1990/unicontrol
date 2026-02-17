@@ -232,11 +232,12 @@ async def import_schedules(
     semester: int = Form(2),
     academic_year: str = Form("2025-2026"),
     clear_existing: bool = Form(True),
+    use_ai: bool = Form(True),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(require_admin)
 ):
     """
-    Import schedules from Excel file with fuzzy group matching.
+    Import schedules from Excel file with fuzzy group matching + AI enhancement.
     
     Requires admin role.
     
@@ -246,6 +247,9 @@ async def import_schedules(
     
     Features:
     - Fuzzy group name matching (KI-25-09 <-> KI_25-09)
+    - AI-powered smart group matching for unresolved names
+    - AI-powered cell content parsing for messy data
+    - AI quality analysis with suggestions
     - Auto-detects format
     - Clears old schedules for matched groups (optional)
     """
@@ -261,6 +265,7 @@ async def import_schedules(
         academic_year=academic_year,
         semester=semester,
         clear_existing=clear_existing,
+        use_ai=use_ai,
     )
     
     return result

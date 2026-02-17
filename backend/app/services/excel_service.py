@@ -798,9 +798,10 @@ class ExcelService:
         academic_year: str = "2025-2026",
         semester: int = 2,
         clear_existing: bool = True,
+        use_ai: bool = True,
     ) -> Dict[str, Any]:
         """
-        Import schedules from Excel with UPSERT logic.
+        Import schedules from Excel with UPSERT logic + AI enhancement.
 
         Supports two Excel formats:
 
@@ -812,6 +813,9 @@ class ExcelService:
 
         Features:
         - Fuzzy group name matching (KI-25-09 <-> KI_25-09)
+        - AI-powered group matching for unresolved groups
+        - AI-powered cell parsing for messy content
+        - AI quality analysis with suggestions
         - UPSERT: clears old schedules for matched groups, inserts new
         - Reports unmatched groups so admin can fix
         - Auto-detects format
@@ -826,6 +830,7 @@ class ExcelService:
         db_groups = groups_result.scalars().all()
         group_name_to_id = {g.name: g.id for g in db_groups}
         group_lookup = {g.name: g for g in db_groups}
+        db_group_names = [g.name for g in db_groups]
 
         all_records: List[Dict[str, Any]] = []
         matched_groups: Set[str] = set()
@@ -837,6 +842,26 @@ class ExcelService:
             all_records.extend(records)
 
         wb.close()
+
+        # ── AI ENHANCEMENT ──
+        ai_result = None
+        if use_ai:
+            try:
+                from app.services.ai_schedule_agent import AIScheduleAgent
+                agent = AIScheduleAgent()
+                if agent.is_available():
+                    logger.info("AI Schedule Agent activated for import enhancement")
+                    ai_result = await agent.enhance_import(
+                        records=all_records,
+                        db_group_names=db_group_names,
+                        group_lookup=group_lookup,
+                        group_name_map=group_name_map,
+                    )
+                    all_records = ai_result["records"]
+                else:
+                    logger.info("AI not available (no API key), using regex-only mode")
+            except Exception as e:
+                logger.warning(f"AI enhancement failed, continuing without AI: {e}")
 
         # Separate matched vs unmatched
         for rec in all_records:
@@ -887,6 +912,7 @@ class ExcelService:
                     end_time=end_time,
                     lesson_number=lesson_num,
                     room=rec.get("room"),
+                    building=rec.get("building"),
                     teacher_name=rec.get("teacher"),
                     semester=semester,
                     academic_year=academic_year,
@@ -901,7 +927,8 @@ class ExcelService:
 
         await self.db.commit()
 
-        return {
+        # Build response
+        response = {
             "success": True,
             "total_records": len(all_records),
             "synced": synced,
@@ -916,6 +943,35 @@ class ExcelService:
             ),
         }
 
+        # Add AI results to response
+        if ai_result:
+            ai_matched = ai_result.get("ai_matched_groups", {})
+            ai_parsed = ai_result.get("ai_parsed_cells", 0)
+            analysis = ai_result.get("analysis")
+            tokens = ai_result.get("tokens_used", 0)
+
+            response["ai"] = {
+                "enabled": True,
+                "matched_groups": ai_matched,
+                "matched_groups_count": len(ai_matched),
+                "parsed_cells_count": ai_parsed,
+                "tokens_used": tokens,
+                "analysis": analysis,
+            }
+
+            # Update message with AI info
+            if ai_matched or ai_parsed:
+                ai_msg_parts = []
+                if ai_matched:
+                    ai_msg_parts.append(f"AI {len(ai_matched)} ta guruhni moslashtirdi")
+                if ai_parsed:
+                    ai_msg_parts.append(f"{ai_parsed} ta katakchani tahlil qildi")
+                response["message"] += " | AI: " + ", ".join(ai_msg_parts) + "."
+        else:
+            response["ai"] = {"enabled": False}
+
+        return response
+
     def _parse_schedule_sheet(
         self,
         ws,
@@ -925,21 +981,25 @@ class ExcelService:
         """
         Parse a single worksheet for schedule data.
         Auto-detects format:
-        - If first row has 'Guruh' -> flat table format
+        - If row 1 or row 2 has flat table headers ('Guruh', 'Fan', 'Kun') -> flat table
         - Otherwise -> Google Sheets grid format (groups as columns)
         """
         records: List[Dict[str, Any]] = []
 
-        # Read first row to detect format
-        header_row = []
-        for cell in ws[1]:
-            header_row.append(str(cell.value or "").strip().lower())
+        # Read first 2 rows to detect format
+        flat_keywords = ["guruh", "group", "fan", "subject", "kun", "day"]
+        
+        for check_row in [1, 2]:
+            header_vals = []
+            for cell in ws[check_row]:
+                header_vals.append(str(cell.value or "").strip().lower())
+            joined = " ".join(header_vals)
+            if any(kw in joined for kw in flat_keywords):
+                records = self._parse_flat_schedule(ws, group_lookup, group_name_map, header_row=check_row)
+                return records
 
-        if any(kw in " ".join(header_row) for kw in ["guruh", "group", "fan", "subject", "kun", "day"]):
-            records = self._parse_flat_schedule(ws, group_lookup, group_name_map)
-        else:
-            records = self._parse_grid_schedule(ws, group_lookup, group_name_map)
-
+        # Grid format
+        records = self._parse_grid_schedule(ws, group_lookup, group_name_map)
         return records
 
     def _parse_flat_schedule(
@@ -947,16 +1007,17 @@ class ExcelService:
         ws,
         group_lookup: Dict[str, Any],
         group_name_map: Dict[str, str],
+        header_row: int = 1,
     ) -> List[Dict[str, Any]]:
         """
         Parse flat table format:
-        | Guruh | Kun | Para | Fan | O'qituvchi | Xona | Boshlanish | Tugash |
+        | Guruh | Kun | Para | Fan | O'qituvchi | Xona | Bino | Boshlanish | Tugash |
         """
         records: List[Dict[str, Any]] = []
 
         # Map header columns
         headers: Dict[str, int] = {}
-        for col_idx, cell in enumerate(ws[1], 1):
+        for col_idx, cell in enumerate(ws[header_row], 1):
             val = str(cell.value or "").strip().lower()
             if val in ("guruh", "group", "guruh nomi"):
                 headers["group"] = col_idx
@@ -970,6 +1031,8 @@ class ExcelService:
                 headers["teacher"] = col_idx
             elif val in ("xona", "room", "auditoriya"):
                 headers["room"] = col_idx
+            elif val in ("bino", "building"):
+                headers["building"] = col_idx
             elif val in ("boshlanish", "start", "boshi"):
                 headers["start"] = col_idx
             elif val in ("tugash", "end", "oxiri"):
@@ -981,13 +1044,16 @@ class ExcelService:
             return records
 
         type_map = {
-            "ma'ruza": ScheduleType.LECTURE, "lecture": ScheduleType.LECTURE,
+            "ma'ruza": ScheduleType.LECTURE, "lecture": ScheduleType.LECTURE, "maruza": ScheduleType.LECTURE,
             "amaliy": ScheduleType.PRACTICE, "practice": ScheduleType.PRACTICE,
             "laboratoriya": ScheduleType.LAB, "lab": ScheduleType.LAB,
             "seminar": ScheduleType.SEMINAR,
+            "imtihon": ScheduleType.EXAM, "exam": ScheduleType.EXAM,
+            "konsultatsiya": ScheduleType.CONSULTATION, "consultation": ScheduleType.CONSULTATION,
         }
 
-        for row_idx in range(2, ws.max_row + 1):
+        data_start = header_row + 1
+        for row_idx in range(data_start, ws.max_row + 1):
             group_val = ws.cell(row_idx, headers["group"]).value
             if not group_val:
                 continue
@@ -1022,6 +1088,7 @@ class ExcelService:
 
             teacher = str(ws.cell(row_idx, headers["teacher"]).value or "").strip() if "teacher" in headers else None
             room = str(ws.cell(row_idx, headers["room"]).value or "").strip() if "room" in headers else None
+            building = str(ws.cell(row_idx, headers["building"]).value or "").strip() if "building" in headers else None
 
             stype = ScheduleType.LECTURE
             if "type" in headers:
@@ -1037,6 +1104,7 @@ class ExcelService:
                 "subject": subject,
                 "teacher": teacher,
                 "room": room,
+                "building": building,
                 "start_time": start_time,
                 "end_time": end_time,
                 "schedule_type": stype,
@@ -1046,13 +1114,24 @@ class ExcelService:
 
     # Regex to parse cell content: "Subject (type) Teacher Room"
     _CELL_TYPE_RE = re.compile(
-        r"^(.+?)\s*\((ma.ruza|amaliy|laboratoriya|seminar)\)\s*(.*)",
+        r"^(.+?)\s*\((ma.ruza|amaliy|laboratoriya|seminar|imtihon|konsultatsiya|exam|lab)\)\s*(.*)",
         re.IGNORECASE,
     )
-    # Regex to extract room from the rest after teacher name
+    # Regex to extract room+building from the rest after teacher name
+    # Matches: "307-xona A bino", "L-2 B bino", "Sport zal A bino", "Faollar zali A bino"
+    # Also matches: "101-xona", "Aud. 305", "xona 101", "507A", standalone room numbers
     _CELL_ROOM_RE = re.compile(
-        r"^(.+?)\s+(\d{2,4}-xona\s+[A-Z]\s+bino|Sport\s+zal\s+[A-Z]\s+bino|"
-        r"L-\d+\s+[A-Z]\s+bino|Faollar\s+zali\s+[A-Z]\s+bino)$",
+        r"^(.+?)\s+(\d{2,4}[A-Za-z]?(?:-xona)?(?:\s+[A-Z]\s+bino)?|"
+        r"Sport\s+zal(?:\s+[A-Z]\s+bino)?|"
+        r"L-\d+(?:\s+[A-Z]\s+bino)?|"
+        r"Faollar\s+zali(?:\s+[A-Z]\s+bino)?|"
+        r"Aud\.?\s*\d+|"
+        r"xona[\s-]?\d+)$",
+        re.IGNORECASE,
+    )
+    # Helper to split room and building from combined string
+    _ROOM_BUILDING_RE = re.compile(
+        r"^(.+?)\s+([A-Z])\s+bino$",
         re.IGNORECASE,
     )
     # Map type keywords to ScheduleType
@@ -1062,8 +1141,21 @@ class ExcelService:
         "maruza": ScheduleType.LECTURE,
         "amaliy": ScheduleType.PRACTICE,
         "laboratoriya": ScheduleType.LAB,
+        "lab": ScheduleType.LAB,
         "seminar": ScheduleType.SEMINAR,
+        "imtihon": ScheduleType.EXAM,
+        "exam": ScheduleType.EXAM,
+        "konsultatsiya": ScheduleType.CONSULTATION,
     }
+
+    def _split_room_building(self, raw_room: str):
+        """Split '307-xona A bino' into room='307-xona' and building='A bino'."""
+        if not raw_room:
+            return raw_room, None
+        m = self._ROOM_BUILDING_RE.match(raw_room.strip())
+        if m:
+            return m.group(1).strip(), f"{m.group(2)} bino"
+        return raw_room.strip(), None
 
     def _parse_cell_content(self, raw: str):
         """
@@ -1072,21 +1164,37 @@ class ExcelService:
         Formats supported:
         1. "Subject (type) Teacher Room"  — e.g.  Falsafa (ma'ruza) Ustoz 307-xona A bino
         2. "Subject\\nTeacher\\nRoom"       — newline-separated
-        3. "Subject"                        — subject only (e.g. Kelajak soati Faollar zali A bino)
+        3. "Subject Teacher Room"           — plain with room at end
+        4. "Subject"                        — subject only
 
-        Returns (subject, schedule_type, teacher, room)
+        Returns (subject, schedule_type, teacher, room, building)
         """
         text = raw.strip()
         if not text or text == "-":
-            return None, None, None, None
+            return None, None, None, None, None
 
         # --- Format 2: newline-separated ---
         if "\n" in text:
-            lines = text.split("\n")
-            subject = lines[0].strip()
-            teacher = lines[1].strip() if len(lines) > 1 else None
-            room = lines[2].strip() if len(lines) > 2 else None
-            return subject, ScheduleType.LECTURE, teacher, room
+            lines = [l.strip() for l in text.split("\n") if l.strip()]
+            subject = lines[0] if len(lines) > 0 else None
+            teacher = lines[1] if len(lines) > 1 else None
+            raw_room = lines[2] if len(lines) > 2 else None
+            room, building = self._split_room_building(raw_room) if raw_room else (None, None)
+            
+            # Check if subject line itself contains type in parentheses
+            stype = ScheduleType.LECTURE
+            if subject:
+                m = self._CELL_TYPE_RE.match(subject)
+                if m:
+                    subject = m.group(1).strip()
+                    stype_raw = m.group(2).strip().lower().replace("\u2018", "'").replace("\u2019", "'")
+                    stype = self._CELL_TYPE_MAP.get(stype_raw, ScheduleType.LECTURE)
+                    # If there's text after type, it might be teacher
+                    extra = m.group(3).strip()
+                    if extra and not teacher:
+                        teacher = extra
+            
+            return subject, stype, teacher, room, building
 
         # --- Format 1: "Subject (type) Teacher Room" ---
         m = self._CELL_TYPE_RE.match(text)
@@ -1098,17 +1206,42 @@ class ExcelService:
 
             teacher = None
             room = None
+            building = None
             if rest:
                 rm = self._CELL_ROOM_RE.match(rest)
                 if rm:
                     teacher = rm.group(1).strip()
-                    room = rm.group(2).strip()
+                    room, building = self._split_room_building(rm.group(2).strip())
                 else:
-                    teacher = rest
-            return subject, stype, teacher, room
+                    # Try to find room pattern at the end of rest
+                    room_at_end = re.search(
+                        r'\s+(\d{2,4}[A-Za-z]?-xona(?:\s+[A-Z]\s+bino)?|'
+                        r'Sport\s+zal(?:\s+[A-Z]\s+bino)?|'
+                        r'L-\d+(?:\s+[A-Z]\s+bino)?|'
+                        r'Faollar\s+zali(?:\s+[A-Z]\s+bino)?)$',
+                        rest, re.IGNORECASE
+                    )
+                    if room_at_end:
+                        teacher = rest[:room_at_end.start()].strip() or None
+                        room, building = self._split_room_building(room_at_end.group(1).strip())
+                    else:
+                        teacher = rest
+            return subject, stype, teacher, room, building
 
-        # --- Format 3: plain string, no type ---
-        return text, ScheduleType.LECTURE, None, None
+        # --- Format 3: plain string, try to extract room at end ---
+        room_at_end = re.search(
+            r'\s+(\d{2,4}[A-Za-z]?-xona(?:\s+[A-Z]\s+bino)?|'
+            r'Sport\s+zal(?:\s+[A-Z]\s+bino)?|'
+            r'L-\d+(?:\s+[A-Z]\s+bino)?|'
+            r'Faollar\s+zali(?:\s+[A-Z]\s+bino)?)$',
+            text, re.IGNORECASE
+        )
+        if room_at_end:
+            subject = text[:room_at_end.start()].strip()
+            room, building = self._split_room_building(room_at_end.group(1).strip())
+            return subject, ScheduleType.LECTURE, None, room, building
+
+        return text, ScheduleType.LECTURE, None, None, None
 
     def _parse_grid_schedule(
         self,
@@ -1147,9 +1280,9 @@ class ExcelService:
                 group_cols[col_idx] = (name, group_lookup[matched].id, matched)
                 group_name_map[name] = matched
             else:
-                # Only add as unmatched group if it looks like a group name
-                # (contains digits + dash pattern typical for groups)
-                if re.search(r'\d{2}[-_]\d{2}', name):
+                # Add as unmatched group if it looks like a group name
+                # Matches: KI-25-09, KI_25-09, PM-1-01, KI-101, AT25-01 etc.
+                if re.search(r'[A-Za-z].*\d', name):
                     group_cols[col_idx] = (name, None, None)
 
         # Fallback: if no groups found in row 2, try row 1 (legacy format)
@@ -1167,7 +1300,7 @@ class ExcelService:
                     group_cols[col_idx] = (name, group_lookup[matched].id, matched)
                     group_name_map[name] = matched
                 else:
-                    if re.search(r'\d{2}[-_]\d{2}', name):
+                    if re.search(r'[A-Za-z].*\d', name):
                         group_cols[col_idx] = (name, None, None)
 
         if not group_cols:
@@ -1214,12 +1347,10 @@ class ExcelService:
                 if not cell_val:
                     continue
 
-                subject, stype, teacher, room = self._parse_cell_content(str(cell_val))
+                raw_text = str(cell_val).strip()
+                subject, stype, teacher, room, building = self._parse_cell_content(raw_text)
 
-                if not subject:
-                    continue
-
-                records.append({
+                rec = {
                     "sheet_group_name": sheet_name,
                     "db_group_name": db_name,
                     "group_id": gid,
@@ -1228,10 +1359,19 @@ class ExcelService:
                     "subject": subject,
                     "teacher": teacher,
                     "room": room,
+                    "building": building,
                     "start_time": start_time,
                     "end_time": end_time,
                     "schedule_type": stype or ScheduleType.LECTURE,
-                })
+                }
+
+                # Save raw cell content for AI parsing if regex couldn't extract subject
+                if not subject and raw_text and raw_text != "-":
+                    rec["_raw_cell"] = raw_text
+
+                # Still add the record (AI might parse it later)
+                if subject or rec.get("_raw_cell"):
+                    records.append(rec)
 
         return records
 

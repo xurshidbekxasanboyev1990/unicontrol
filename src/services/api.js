@@ -613,12 +613,13 @@ class ApiService {
         return response.blob()
     }
 
-    async importSchedulesFromExcel(file, academicYear = '2025-2026', semester = 2, clearExisting = true) {
+    async importSchedulesFromExcel(file, academicYear = '2025-2026', semester = 2, clearExisting = true, useAi = true) {
         const formData = new FormData()
         formData.append('file', file)
         formData.append('academic_year', academicYear)
         formData.append('semester', semester.toString())
         formData.append('clear_existing', clearExisting.toString())
+        formData.append('use_ai', useAi.toString())
 
         const token = this.getToken()
         const response = await fetch(`${this.baseUrl}/excel/import/schedules`, {

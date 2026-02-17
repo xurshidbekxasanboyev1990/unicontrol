@@ -4,7 +4,7 @@
     <div class="flex items-center justify-between mb-6">
       <div>
         <h2 class="text-lg font-semibold text-slate-800 flex items-center gap-2"><CalendarDays class="w-5 h-5 text-indigo-500" /> Dars jadvali import</h2>
-        <p class="text-sm text-slate-500">Excel fayldan dars jadvalini yuklash</p>
+        <p class="text-sm text-slate-500">Excel fayldan dars jadvalini yuklash (AI yordamida)</p>
       </div>
     </div>
 
@@ -62,7 +62,7 @@
       </div>
 
       <!-- Settings -->
-      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <div>
           <label class="block text-sm font-medium text-slate-600 mb-1.5">O'quv yili</label>
           <select v-model="academicYear" class="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400">
@@ -82,6 +82,15 @@
           <label class="flex items-center gap-2 cursor-pointer">
             <input type="checkbox" v-model="clearExisting" class="w-4 h-4 rounded border-slate-300 text-blue-500 focus:ring-blue-500/20" />
             <span class="text-sm text-slate-600">Avvalgi jadvallarni tozalash</span>
+          </label>
+        </div>
+        <div class="flex items-end">
+          <label class="flex items-center gap-2 cursor-pointer">
+            <input type="checkbox" v-model="useAi" class="w-4 h-4 rounded border-slate-300 text-violet-500 focus:ring-violet-500/20" />
+            <span class="text-sm text-slate-600 flex items-center gap-1">
+              <BrainCircuit class="w-4 h-4 text-violet-500" />
+              AI yordamida moslashtirish
+            </span>
           </label>
         </div>
       </div>
@@ -108,9 +117,12 @@
     <div v-if="isUploading" class="text-center py-10">
       <div class="w-16 h-16 mx-auto mb-4 relative">
         <div class="w-full h-full rounded-full border-4 border-slate-200 border-t-blue-500 animate-spin"></div>
+        <BrainCircuit v-if="useAi" class="w-6 h-6 text-violet-500 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 animate-pulse" />
       </div>
       <p class="text-lg font-medium text-slate-700">Jadval yuklanmoqda...</p>
-      <p class="text-sm text-slate-400 mt-1">Excel faylni tahlil qilish va guruhlarni moslashtirish</p>
+      <p class="text-sm text-slate-400 mt-1">
+        {{ useAi ? 'AI tahlil qilmoqda: guruhlarni moslashtirish va ma\'lumotlarni tekshirish' : 'Excel faylni tahlil qilish va guruhlarni moslashtirish' }}
+      </p>
     </div>
 
     <!-- Result -->
@@ -140,6 +152,75 @@
         <div class="text-center p-4 bg-red-50 rounded-xl">
           <p class="text-2xl font-bold text-red-600">{{ result.unmatched_groups?.length || 0 }}</p>
           <p class="text-xs text-red-600">Topilmagan guruhlar</p>
+        </div>
+      </div>
+
+      <!-- AI Results Section -->
+      <div v-if="result.ai?.enabled" class="bg-gradient-to-r from-violet-50 to-indigo-50 rounded-xl p-5 border border-violet-200/50">
+        <h4 class="text-sm font-semibold text-violet-800 mb-3 flex items-center gap-2">
+          <BrainCircuit class="w-4 h-4" /> AI Agent natijalari
+        </h4>
+        <div class="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-4">
+          <div class="bg-white/60 rounded-lg p-3 text-center">
+            <p class="text-lg font-bold text-violet-600">{{ result.ai.matched_groups_count || 0 }}</p>
+            <p class="text-xs text-violet-500">AI moslashgan guruhlar</p>
+          </div>
+          <div class="bg-white/60 rounded-lg p-3 text-center">
+            <p class="text-lg font-bold text-violet-600">{{ result.ai.parsed_cells_count || 0 }}</p>
+            <p class="text-xs text-violet-500">AI tahlil qilgan kataklar</p>
+          </div>
+          <div class="bg-white/60 rounded-lg p-3 text-center">
+            <p class="text-lg font-bold text-violet-600">{{ result.ai.tokens_used || 0 }}</p>
+            <p class="text-xs text-violet-500">AI tokenlar sarflandi</p>
+          </div>
+        </div>
+
+        <!-- AI Matched Groups -->
+        <div v-if="result.ai.matched_groups && Object.keys(result.ai.matched_groups).length" class="mb-3">
+          <p class="text-xs font-medium text-violet-700 mb-2">AI moslashtirilgan guruhlar:</p>
+          <div class="space-y-1">
+            <div v-for="(dbName, excelName) in result.ai.matched_groups" :key="excelName"
+              class="flex items-center gap-2 text-xs text-violet-700">
+              <span class="px-2 py-0.5 bg-white rounded">{{ excelName }}</span>
+              <Sparkles class="w-3 h-3 text-violet-400" />
+              <ArrowRight class="w-3 h-3" />
+              <span class="px-2 py-0.5 bg-white rounded font-medium">{{ dbName }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- AI Quality Analysis -->
+        <div v-if="result.ai.analysis" class="mt-3">
+          <div v-if="result.ai.analysis.quality_score" class="flex items-center gap-2 mb-2">
+            <span class="text-xs font-medium text-violet-700">Sifat bahosi:</span>
+            <div class="flex items-center gap-1">
+              <div class="w-24 h-2 bg-violet-200 rounded-full overflow-hidden">
+                <div class="h-full rounded-full transition-all"
+                  :class="result.ai.analysis.quality_score >= 7 ? 'bg-emerald-500' : result.ai.analysis.quality_score >= 4 ? 'bg-amber-500' : 'bg-red-500'"
+                  :style="{ width: (result.ai.analysis.quality_score * 10) + '%' }">
+                </div>
+              </div>
+              <span class="text-xs font-bold text-violet-600">{{ result.ai.analysis.quality_score }}/10</span>
+            </div>
+          </div>
+
+          <p v-if="result.ai.analysis.summary" class="text-xs text-violet-600 mb-2">
+            {{ result.ai.analysis.summary }}
+          </p>
+
+          <div v-if="result.ai.analysis.suggestions?.length" class="space-y-1">
+            <p class="text-xs font-medium text-violet-700">Takliflar:</p>
+            <p v-for="(s, i) in result.ai.analysis.suggestions" :key="i" class="text-xs text-violet-600 flex items-start gap-1">
+              <Sparkles class="w-3 h-3 mt-0.5 flex-shrink-0" /> {{ s }}
+            </p>
+          </div>
+
+          <div v-if="result.ai.analysis.anomalies?.length" class="mt-2 space-y-1">
+            <p class="text-xs font-medium text-amber-700">Ogohlantirishlar:</p>
+            <p v-for="(a, i) in result.ai.analysis.anomalies" :key="i" class="text-xs text-amber-600 flex items-start gap-1">
+              <AlertTriangle class="w-3 h-3 mt-0.5 flex-shrink-0" /> {{ a }}
+            </p>
+          </div>
         </div>
       </div>
 
@@ -223,11 +304,11 @@
 <script setup>
 import api from '@/services/api'
 import {
-    AlertCircle, ArrowRight,
+    AlertCircle, AlertTriangle, ArrowRight, BrainCircuit,
     CalendarDays,
     CheckCircle,
     FileSpreadsheet,
-    RefreshCw,
+    RefreshCw, Sparkles,
     Upload, X
 } from 'lucide-vue-next'
 import { ref } from 'vue'
@@ -241,6 +322,7 @@ const error = ref(null)
 const academicYear = ref('2025-2026')
 const semester = ref(2)
 const clearExisting = ref(true)
+const useAi = ref(true)
 
 function handleFileSelect(event) {
   const file = event.target.files[0]
@@ -279,7 +361,8 @@ async function uploadSchedule() {
       selectedFile.value,
       academicYear.value,
       semester.value,
-      clearExisting.value
+      clearExisting.value,
+      useAi.value
     )
     result.value = response
   } catch (err) {
