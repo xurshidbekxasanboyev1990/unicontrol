@@ -40,12 +40,25 @@ class _GroupDetailScreenState extends State<GroupDetailScreen> {
   Future<void> _loadGroupData() async {
     setState(() => _isLoading = true);
     try {
-      final groupData = await _apiService.getGroupDetail(widget.groupId);
-      final studentsData = await _apiService.getGroupStudents(widget.groupId);
+      final group = await _apiService.getGroup(widget.groupId);
+      final students = await _apiService.getGroupStudents(widget.groupId);
 
       setState(() {
-        _group = groupData;
-        _students = (studentsData['items'] as List?) ?? studentsData is List ? studentsData as List : [];
+        _group = {
+          'id': group.id,
+          'name': group.name,
+          'course': group.course,
+          'leader_name': group.leaderName,
+        };
+        _students = students.map((s) {
+          return {
+            'id': s.id,
+            'first_name': s.name,
+            'last_name': '',
+            'hemis_id': s.hemisId ?? '',
+            'phone': s.phone ?? '',
+          };
+        }).toList();
         _filteredStudents = _students;
         _isLoading = false;
       });
