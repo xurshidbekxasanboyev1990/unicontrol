@@ -129,7 +129,7 @@
 
             <!-- Title -->
             <div class="space-y-4 animate-fade-in animation-delay-200">
-              <h1 class="text-4xl sm:text-5xl lg:text-6xl font-bold text-white leading-[1.1] tracking-tight">
+              <h1 class="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-white leading-[1.1] tracking-tight">
                 {{ $t('landing.heroTitle1') }}
                 <br />
                 <span class="relative inline-block">
@@ -144,12 +144,12 @@
             </div>
 
             <!-- CTA -->
-            <div class="flex flex-wrap items-center gap-4 animate-fade-in animation-delay-400">
-              <router-link to="/login" class="group relative overflow-hidden">
+            <div class="flex flex-col sm:flex-row flex-wrap items-center gap-3 sm:gap-4 animate-fade-in animation-delay-400">
+              <router-link to="/login" class="group relative overflow-hidden w-full sm:w-auto">
                 <div class="absolute inset-0 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-2xl"></div>
                 <div class="absolute inset-0 bg-gradient-to-r from-emerald-400 to-teal-400 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                 <div class="absolute inset-0 translate-y-full group-hover:translate-y-0 bg-white/10 transition-transform duration-300"></div>
-                <div class="relative flex items-center gap-3 px-8 py-4 font-semibold text-white">
+                <div class="relative flex items-center justify-center gap-3 px-6 sm:px-8 py-3.5 sm:py-4 font-semibold text-white">
                   <Rocket class="w-5 h-5" />
                   <span>{{ $t('landing.getStarted') }}</span>
                   <ArrowRight class="w-5 h-5 group-hover:translate-x-1 transition-transform" />
@@ -289,16 +289,16 @@
     </section>
 
     <!-- ========== TRUSTED BY ========== -->
-    <section class="relative z-10 px-6 lg:px-20 py-16 border-t border-white/5">
+    <section class="relative z-10 px-4 sm:px-6 lg:px-20 py-10 sm:py-16 border-t border-white/5">
       <div class="max-w-7xl mx-auto reveal-on-scroll">
-        <p class="text-center text-slate-500 text-sm font-medium mb-10">{{ $t('landing.trustedBy') }}</p>
-        <div class="flex flex-wrap items-center justify-center gap-12">
-          <div class="flex items-center gap-4 bg-white/5 border border-white/10 rounded-2xl px-8 py-5 hover-lift reveal-scale">
-            <div class="w-14 h-14 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center">
-              <GraduationCap class="w-7 h-7 text-white" />
+        <p class="text-center text-slate-500 text-sm font-medium mb-6 sm:mb-10">{{ $t('landing.trustedBy') }}</p>
+        <div class="flex flex-wrap items-center justify-center gap-4 sm:gap-8 lg:gap-12">
+          <div class="flex items-center gap-3 sm:gap-4 bg-white/5 border border-white/10 rounded-2xl px-5 sm:px-8 py-4 sm:py-5 hover-lift reveal-scale w-full sm:w-auto">
+            <div class="w-12 h-12 sm:w-14 sm:h-14 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center flex-shrink-0">
+              <GraduationCap class="w-6 h-6 sm:w-7 sm:h-7 text-white" />
             </div>
             <div>
-              <span class="text-xl font-bold text-white">KUAF</span>
+              <span class="text-lg sm:text-xl font-bold text-white">KUAF</span>
               <p class="text-sm text-slate-400">{{ $t('landing.kuafFull') }}</p>
             </div>
           </div>
@@ -323,8 +323,8 @@
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8 perspective-container">
           <!-- Step 1 -->
           <div class="relative group card-stack stagger-child" style="--index: 0">
-            <div class="absolute -inset-1 bg-gradient-to-r from-emerald-500/20 to-teal-500/20 rounded-3xl blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-            <div class="relative bg-slate-800/50 backdrop-blur border border-white/5 rounded-3xl p-8 h-full hover-lift">
+            <div class="absolute -inset-1 bg-gradient-to-r from-emerald-500/20 to-teal-500/20 rounded-2xl sm:rounded-3xl blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+            <div class="relative bg-slate-800/50 backdrop-blur border border-white/5 rounded-2xl sm:rounded-3xl p-5 sm:p-8 h-full hover-lift">
               <div class="flex items-center gap-4 mb-6">
                 <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center text-2xl font-bold text-white shadow-lg shadow-emerald-500/30">1</div>
                 <div class="h-1 flex-1 bg-gradient-to-r from-emerald-500/50 to-transparent rounded-full"></div>
@@ -339,8 +339,8 @@
 
           <!-- Step 2 -->
           <div class="relative group card-stack stagger-child" style="--index: 1">
-            <div class="absolute -inset-1 bg-gradient-to-r from-teal-500/20 to-cyan-500/20 rounded-3xl blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-            <div class="relative bg-slate-800/50 backdrop-blur border border-white/5 rounded-3xl p-8 h-full hover-lift">
+            <div class="absolute -inset-1 bg-gradient-to-r from-teal-500/20 to-cyan-500/20 rounded-2xl sm:rounded-3xl blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+            <div class="relative bg-slate-800/50 backdrop-blur border border-white/5 rounded-2xl sm:rounded-3xl p-5 sm:p-8 h-full hover-lift">
               <div class="flex items-center gap-4 mb-6">
                 <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-teal-500 to-cyan-600 flex items-center justify-center text-2xl font-bold text-white shadow-lg shadow-teal-500/30">2</div>
                 <div class="h-1 flex-1 bg-gradient-to-r from-teal-500/50 to-transparent rounded-full"></div>
@@ -355,8 +355,8 @@
 
           <!-- Step 3 -->
           <div class="relative group card-stack stagger-child" style="--index: 2">
-            <div class="absolute -inset-1 bg-gradient-to-r from-cyan-500/20 to-violet-500/20 rounded-3xl blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-            <div class="relative bg-slate-800/50 backdrop-blur border border-white/5 rounded-3xl p-8 h-full hover-lift">
+            <div class="absolute -inset-1 bg-gradient-to-r from-cyan-500/20 to-violet-500/20 rounded-2xl sm:rounded-3xl blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+            <div class="relative bg-slate-800/50 backdrop-blur border border-white/5 rounded-2xl sm:rounded-3xl p-5 sm:p-8 h-full hover-lift">
               <div class="flex items-center gap-4 mb-6">
                 <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-cyan-500 to-violet-600 flex items-center justify-center text-2xl font-bold text-white shadow-lg shadow-cyan-500/30">3</div>
                 <div class="h-1 flex-1 bg-gradient-to-r from-cyan-500/50 to-transparent rounded-full"></div>
@@ -387,68 +387,68 @@
 
         <!-- Features Grid - 3D Stacked Cards -->
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 perspective-container">
-          <div class="group relative bg-slate-800/30 backdrop-blur border border-white/5 rounded-3xl p-8 hover:border-emerald-500/30 transition-all duration-500 card-stack stagger-child hover-lift" style="--index: 0">
-            <div class="absolute inset-0 bg-gradient-to-br from-emerald-500/5 to-transparent rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity"></div>
+          <div class="group relative bg-slate-800/30 backdrop-blur border border-white/5 rounded-2xl sm:rounded-3xl p-5 sm:p-8 hover:border-emerald-500/30 transition-all duration-500 card-stack stagger-child hover-lift" style="--index: 0">
+            <div class="absolute inset-0 bg-gradient-to-br from-emerald-500/5 to-transparent rounded-2xl sm:rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity"></div>
             <div class="relative">
-              <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-emerald-500/20 to-emerald-500/5 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-500">
-                <Calendar class="w-8 h-8 text-emerald-400" />
+              <div class="w-12 h-12 sm:w-16 sm:h-16 rounded-xl sm:rounded-2xl bg-gradient-to-br from-emerald-500/20 to-emerald-500/5 flex items-center justify-center mb-4 sm:mb-6 group-hover:scale-110 transition-transform duration-500">
+                <Calendar class="w-6 h-6 sm:w-8 sm:h-8 text-emerald-400" />
               </div>
-              <h3 class="text-xl font-bold text-white mb-3">{{ $t('landing.featureSchedule') }}</h3>
+              <h3 class="text-lg sm:text-xl font-bold text-white mb-2 sm:mb-3">{{ $t('landing.featureSchedule') }}</h3>
               <p class="text-slate-400 leading-relaxed">{{ $t('landing.featureScheduleDesc') }}</p>
             </div>
           </div>
 
-          <div class="group relative bg-slate-800/30 backdrop-blur border border-white/5 rounded-3xl p-8 hover:border-teal-500/30 transition-all duration-500 card-stack stagger-child hover-lift" style="--index: 1">
-            <div class="absolute inset-0 bg-gradient-to-br from-teal-500/5 to-transparent rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity"></div>
+          <div class="group relative bg-slate-800/30 backdrop-blur border border-white/5 rounded-2xl sm:rounded-3xl p-5 sm:p-8 hover:border-teal-500/30 transition-all duration-500 card-stack stagger-child hover-lift" style="--index: 1">
+            <div class="absolute inset-0 bg-gradient-to-br from-teal-500/5 to-transparent rounded-2xl sm:rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity"></div>
             <div class="relative">
-              <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-teal-500/20 to-teal-500/5 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-500">
-                <BarChart3 class="w-8 h-8 text-teal-400" />
+              <div class="w-12 h-12 sm:w-16 sm:h-16 rounded-xl sm:rounded-2xl bg-gradient-to-br from-teal-500/20 to-teal-500/5 flex items-center justify-center mb-4 sm:mb-6 group-hover:scale-110 transition-transform duration-500">
+                <BarChart3 class="w-6 h-6 sm:w-8 sm:h-8 text-teal-400" />
               </div>
-              <h3 class="text-xl font-bold text-white mb-3">{{ $t('landing.featureAttendance') }}</h3>
+              <h3 class="text-lg sm:text-xl font-bold text-white mb-2 sm:mb-3">{{ $t('landing.featureAttendance') }}</h3>
               <p class="text-slate-400 leading-relaxed">{{ $t('landing.featureAttendanceDesc') }}</p>
             </div>
           </div>
 
-          <div class="group relative bg-slate-800/30 backdrop-blur border border-white/5 rounded-3xl p-8 hover:border-cyan-500/30 transition-all duration-500 card-stack stagger-child hover-lift" style="--index: 2">
-            <div class="absolute inset-0 bg-gradient-to-br from-cyan-500/5 to-transparent rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity"></div>
+          <div class="group relative bg-slate-800/30 backdrop-blur border border-white/5 rounded-2xl sm:rounded-3xl p-5 sm:p-8 hover:border-cyan-500/30 transition-all duration-500 card-stack stagger-child hover-lift" style="--index: 2">
+            <div class="absolute inset-0 bg-gradient-to-br from-cyan-500/5 to-transparent rounded-2xl sm:rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity"></div>
             <div class="relative">
-              <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-cyan-500/20 to-cyan-500/5 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-500">
-                <Brain class="w-8 h-8 text-cyan-400" />
+              <div class="w-12 h-12 sm:w-16 sm:h-16 rounded-xl sm:rounded-2xl bg-gradient-to-br from-cyan-500/20 to-cyan-500/5 flex items-center justify-center mb-4 sm:mb-6 group-hover:scale-110 transition-transform duration-500">
+                <Brain class="w-6 h-6 sm:w-8 sm:h-8 text-cyan-400" />
               </div>
-              <h3 class="text-xl font-bold text-white mb-3">{{ $t('landing.featureAI') }}</h3>
+              <h3 class="text-lg sm:text-xl font-bold text-white mb-2 sm:mb-3">{{ $t('landing.featureAI') }}</h3>
               <p class="text-slate-400 leading-relaxed">{{ $t('landing.featureAIDesc') }}</p>
             </div>
           </div>
 
-          <div class="group relative bg-slate-800/30 backdrop-blur border border-white/5 rounded-3xl p-8 hover:border-violet-500/30 transition-all duration-500 card-stack stagger-child hover-lift" style="--index: 3">
-            <div class="absolute inset-0 bg-gradient-to-br from-violet-500/5 to-transparent rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity"></div>
+          <div class="group relative bg-slate-800/30 backdrop-blur border border-white/5 rounded-2xl sm:rounded-3xl p-5 sm:p-8 hover:border-violet-500/30 transition-all duration-500 card-stack stagger-child hover-lift" style="--index: 3">
+            <div class="absolute inset-0 bg-gradient-to-br from-violet-500/5 to-transparent rounded-2xl sm:rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity"></div>
             <div class="relative">
-              <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-violet-500/20 to-violet-500/5 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-500">
-                <Bell class="w-8 h-8 text-violet-400" />
+              <div class="w-12 h-12 sm:w-16 sm:h-16 rounded-xl sm:rounded-2xl bg-gradient-to-br from-violet-500/20 to-violet-500/5 flex items-center justify-center mb-4 sm:mb-6 group-hover:scale-110 transition-transform duration-500">
+                <Bell class="w-6 h-6 sm:w-8 sm:h-8 text-violet-400" />
               </div>
-              <h3 class="text-xl font-bold text-white mb-3">{{ $t('landing.featureNotifications') }}</h3>
+              <h3 class="text-lg sm:text-xl font-bold text-white mb-2 sm:mb-3">{{ $t('landing.featureNotifications') }}</h3>
               <p class="text-slate-400 leading-relaxed">{{ $t('landing.featureNotificationsDesc') }}</p>
             </div>
           </div>
 
-          <div class="group relative bg-slate-800/30 backdrop-blur border border-white/5 rounded-3xl p-8 hover:border-amber-500/30 transition-all duration-500 card-stack stagger-child hover-lift" style="--index: 4">
-            <div class="absolute inset-0 bg-gradient-to-br from-amber-500/5 to-transparent rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity"></div>
+          <div class="group relative bg-slate-800/30 backdrop-blur border border-white/5 rounded-2xl sm:rounded-3xl p-5 sm:p-8 hover:border-amber-500/30 transition-all duration-500 card-stack stagger-child hover-lift" style="--index: 4">
+            <div class="absolute inset-0 bg-gradient-to-br from-amber-500/5 to-transparent rounded-2xl sm:rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity"></div>
             <div class="relative">
-              <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-amber-500/20 to-amber-500/5 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-500">
-                <Trophy class="w-8 h-8 text-amber-400" />
+              <div class="w-12 h-12 sm:w-16 sm:h-16 rounded-xl sm:rounded-2xl bg-gradient-to-br from-amber-500/20 to-amber-500/5 flex items-center justify-center mb-4 sm:mb-6 group-hover:scale-110 transition-transform duration-500">
+                <Trophy class="w-6 h-6 sm:w-8 sm:h-8 text-amber-400" />
               </div>
-              <h3 class="text-xl font-bold text-white mb-3">{{ $t('landing.featureTournaments') }}</h3>
+              <h3 class="text-lg sm:text-xl font-bold text-white mb-2 sm:mb-3">{{ $t('landing.featureTournaments') }}</h3>
               <p class="text-slate-400 leading-relaxed">{{ $t('landing.featureTournamentsDesc') }}</p>
             </div>
           </div>
 
-          <div class="group relative bg-slate-800/30 backdrop-blur border border-white/5 rounded-3xl p-8 hover:border-rose-500/30 transition-all duration-500 card-stack stagger-child hover-lift" style="--index: 5">
-            <div class="absolute inset-0 bg-gradient-to-br from-rose-500/5 to-transparent rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity"></div>
+          <div class="group relative bg-slate-800/30 backdrop-blur border border-white/5 rounded-2xl sm:rounded-3xl p-5 sm:p-8 hover:border-rose-500/30 transition-all duration-500 card-stack stagger-child hover-lift" style="--index: 5">
+            <div class="absolute inset-0 bg-gradient-to-br from-rose-500/5 to-transparent rounded-2xl sm:rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity"></div>
             <div class="relative">
-              <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-rose-500/20 to-rose-500/5 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-500">
-                <Shield class="w-8 h-8 text-rose-400" />
+              <div class="w-12 h-12 sm:w-16 sm:h-16 rounded-xl sm:rounded-2xl bg-gradient-to-br from-rose-500/20 to-rose-500/5 flex items-center justify-center mb-4 sm:mb-6 group-hover:scale-110 transition-transform duration-500">
+                <Shield class="w-6 h-6 sm:w-8 sm:h-8 text-rose-400" />
               </div>
-              <h3 class="text-xl font-bold text-white mb-3">{{ $t('landing.featureSecurity') }}</h3>
+              <h3 class="text-lg sm:text-xl font-bold text-white mb-2 sm:mb-3">{{ $t('landing.featureSecurity') }}</h3>
               <p class="text-slate-400 leading-relaxed">{{ $t('landing.featureSecurityDesc') }}</p>
             </div>
           </div>
@@ -463,38 +463,38 @@
           <!-- Left - Image/Visual -->
           <div class="relative reveal-left reveal-on-scroll">
             <div class="absolute -inset-4 bg-gradient-to-r from-emerald-500/20 to-teal-500/20 rounded-[40px] blur-3xl opacity-50"></div>
-            <div class="relative bg-slate-800/50 backdrop-blur-xl border border-white/10 rounded-3xl p-8 hover-scale">
+            <div class="relative bg-slate-800/50 backdrop-blur-xl border border-white/10 rounded-2xl sm:rounded-3xl p-5 sm:p-8 hover-scale">
               <!-- Mission Card -->
-              <div class="mb-6">
-                <div class="flex items-center gap-4 mb-4">
-                  <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center">
-                    <Target class="w-7 h-7 text-white" />
+              <div class="mb-4 sm:mb-6">
+                <div class="flex items-center gap-3 sm:gap-4 mb-3 sm:mb-4">
+                  <div class="w-11 h-11 sm:w-14 sm:h-14 rounded-xl sm:rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center flex-shrink-0">
+                    <Target class="w-5 h-5 sm:w-7 sm:h-7 text-white" />
                   </div>
                   <div>
-                    <h4 class="text-lg font-bold text-white">{{ $t('landing.ourMission') }}</h4>
-                    <p class="text-sm text-slate-500">{{ $t('landing.modernizeEducation') }}</p>
+                    <h4 class="text-base sm:text-lg font-bold text-white">{{ $t('landing.ourMission') }}</h4>
+                    <p class="text-xs sm:text-sm text-slate-500">{{ $t('landing.modernizeEducation') }}</p>
                   </div>
                 </div>
-                <p class="text-slate-400 leading-relaxed">{{ $t('landing.missionDesc') }}</p>
+                <p class="text-sm sm:text-base text-slate-400 leading-relaxed">{{ $t('landing.missionDesc') }}</p>
               </div>
 
               <!-- Stats Grid -->
-              <div class="grid grid-cols-2 gap-4">
-                <div class="bg-white/5 rounded-2xl p-5 text-center stagger-child">
-                  <div class="text-2xl font-bold text-emerald-400 mb-1">{{ landing.about_stats.founded }}</div>
-                  <div class="text-sm text-slate-500">{{ $t('landing.founded') }}</div>
+              <div class="grid grid-cols-2 gap-2.5 sm:gap-4">
+                <div class="bg-white/5 rounded-xl sm:rounded-2xl p-3 sm:p-5 text-center stagger-child">
+                  <div class="text-lg sm:text-2xl font-bold text-emerald-400 mb-0.5 sm:mb-1">{{ landing.about_stats.founded }}</div>
+                  <div class="text-xs sm:text-sm text-slate-500">{{ $t('landing.founded') }}</div>
                 </div>
-                <div class="bg-white/5 rounded-2xl p-5 text-center stagger-child">
-                  <div class="text-3xl font-bold text-teal-400 mb-1">{{ landing.about_stats.universities }}</div>
-                  <div class="text-sm text-slate-500">{{ $t('landing.universities') }}</div>
+                <div class="bg-white/5 rounded-xl sm:rounded-2xl p-3 sm:p-5 text-center stagger-child">
+                  <div class="text-2xl sm:text-3xl font-bold text-teal-400 mb-0.5 sm:mb-1">{{ landing.about_stats.universities }}</div>
+                  <div class="text-xs sm:text-sm text-slate-500">{{ $t('landing.universities') }}</div>
                 </div>
-                <div class="bg-white/5 rounded-2xl p-5 text-center stagger-child">
-                  <div class="text-3xl font-bold text-cyan-400 mb-1">{{ landing.about_stats.users }}</div>
-                  <div class="text-sm text-slate-500">{{ $t('landing.users') }}</div>
+                <div class="bg-white/5 rounded-xl sm:rounded-2xl p-3 sm:p-5 text-center stagger-child">
+                  <div class="text-2xl sm:text-3xl font-bold text-cyan-400 mb-0.5 sm:mb-1">{{ landing.about_stats.users }}</div>
+                  <div class="text-xs sm:text-sm text-slate-500">{{ $t('landing.users') }}</div>
                 </div>
-                <div class="bg-white/5 rounded-2xl p-5 text-center stagger-child">
-                  <div class="text-3xl font-bold text-violet-400 mb-1">{{ landing.about_stats.support }}</div>
-                  <div class="text-sm text-slate-500">{{ $t('landing.support247') }}</div>
+                <div class="bg-white/5 rounded-xl sm:rounded-2xl p-3 sm:p-5 text-center stagger-child">
+                  <div class="text-2xl sm:text-3xl font-bold text-violet-400 mb-0.5 sm:mb-1">{{ landing.about_stats.support }}</div>
+                  <div class="text-xs sm:text-sm text-slate-500">{{ $t('landing.support247') }}</div>
                 </div>
               </div>
             </div>
@@ -507,13 +507,11 @@
               <span class="text-sm text-emerald-400">{{ $t('landing.aboutBadge') }}</span>
             </div>
 
-            <h2 class="text-3xl lg:text-5xl font-bold text-white leading-tight">
-              {{ $t('landing.newApproach') }} 
+            <h2 class="text-2xl sm:text-3xl lg:text-5xl font-bold text-white leading-tight"> 
               <span class="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-teal-400">{{ $t('landing.approach') }}</span>
             </h2>
 
-            <p class="text-lg text-slate-400 leading-relaxed">
-              {{ $t('landing.aboutDesc') }}
+            <p class="text-base sm:text-lg text-slate-400 leading-relaxed">
             </p>
 
             <div class="space-y-4">
@@ -568,7 +566,7 @@
         <!-- Testimonials Grid - 3D Cards -->
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 perspective-container">
           <!-- Testimonial 1 -->
-          <div class="bg-slate-800/30 backdrop-blur border border-white/5 rounded-3xl p-8 card-stack stagger-child hover-lift" style="--index: 0">
+          <div class="bg-slate-800/30 backdrop-blur border border-white/5 rounded-2xl sm:rounded-3xl p-5 sm:p-8 card-stack stagger-child hover-lift" style="--index: 0">
             <div class="flex items-center gap-1 mb-4">
               <Star v-for="i in 5" :key="i" class="w-5 h-5 text-amber-400 fill-amber-400" />
             </div>
@@ -585,7 +583,7 @@
           </div>
 
           <!-- Testimonial 2 -->
-          <div class="bg-slate-800/30 backdrop-blur border border-white/5 rounded-3xl p-8 card-stack stagger-child hover-lift" style="--index: 1">
+          <div class="bg-slate-800/30 backdrop-blur border border-white/5 rounded-2xl sm:rounded-3xl p-5 sm:p-8 card-stack stagger-child hover-lift" style="--index: 1">
             <div class="flex items-center gap-1 mb-4">
               <Star v-for="i in 5" :key="i" class="w-5 h-5 text-amber-400 fill-amber-400" />
             </div>
@@ -602,7 +600,7 @@
           </div>
 
           <!-- Testimonial 3 -->
-          <div class="bg-slate-800/30 backdrop-blur border border-white/5 rounded-3xl p-8 card-stack stagger-child hover-lift" style="--index: 2">
+          <div class="bg-slate-800/30 backdrop-blur border border-white/5 rounded-2xl sm:rounded-3xl p-5 sm:p-8 card-stack stagger-child hover-lift" style="--index: 2">
             <div class="flex items-center gap-1 mb-4">
               <Star v-for="i in 5" :key="i" class="w-5 h-5 text-amber-400 fill-amber-400" />
             </div>
@@ -682,14 +680,14 @@
     <!-- ========== CTA SECTION ========== -->
     <section class="relative z-10 px-4 sm:px-6 lg:px-20 py-16 sm:py-24 border-t border-white/5">
       <div class="max-w-5xl mx-auto reveal-scale">
-        <div class="relative overflow-hidden rounded-[40px] hover-scale">
+        <div class="relative overflow-hidden rounded-2xl sm:rounded-[40px] hover-scale">
           <!-- Background -->
           <div class="absolute inset-0 bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600"></div>
           <div class="absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg width=\'60\' height=\'60\' viewBox=\'0 0 60 60\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cg fill=\'none\' fill-rule=\'evenodd\'%3E%3Cg fill=\'%23ffffff\' fill-opacity=\'0.05\'%3E%3Cpath d=\'M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z\'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')]"></div>
           
           <!-- Content -->
-          <div class="relative px-6 py-12 sm:px-8 sm:py-16 lg:px-16 lg:py-20 text-center">
-            <h2 class="text-2xl sm:text-3xl lg:text-5xl font-bold text-white mb-4 sm:mb-6">
+          <div class="relative px-5 py-10 sm:px-8 sm:py-16 lg:px-16 lg:py-20 text-center">
+            <h2 class="text-xl sm:text-3xl lg:text-5xl font-bold text-white mb-3 sm:mb-6">
               {{ $t('landing.startNow') }}
             </h2>
             <p class="text-xl text-white/80 mb-10 max-w-2xl mx-auto">
@@ -733,43 +731,43 @@
 
             <!-- Contact Info -->
             <div class="space-y-6">
-              <div class="flex items-center gap-4 stagger-child hover-lift p-2 -m-2 rounded-2xl transition-all">
-                <div class="w-14 h-14 rounded-2xl bg-emerald-500/10 flex items-center justify-center">
-                  <Mail class="w-6 h-6 text-emerald-400" />
+              <div class="flex items-center gap-3 sm:gap-4 stagger-child hover-lift p-2 -m-2 rounded-2xl transition-all">
+                <div class="w-11 h-11 sm:w-14 sm:h-14 rounded-xl sm:rounded-2xl bg-emerald-500/10 flex items-center justify-center flex-shrink-0">
+                  <Mail class="w-5 h-5 sm:w-6 sm:h-6 text-emerald-400" />
                 </div>
                 <div>
                   <div class="text-sm text-slate-500 mb-1">{{ $t('common.email') }}</div>
-                  <a :href="'mailto:' + landing.contact_info.email" class="text-lg font-semibold text-white hover:text-emerald-400 transition-colors">{{ landing.contact_info.email }}</a>
+                  <a :href="'mailto:' + landing.contact_info.email" class="text-sm sm:text-lg font-semibold text-white hover:text-emerald-400 transition-colors break-all">{{ landing.contact_info.email }}</a>
                 </div>
               </div>
 
-              <div class="flex items-center gap-4 stagger-child hover-lift p-2 -m-2 rounded-2xl transition-all">
-                <div class="w-14 h-14 rounded-2xl bg-teal-500/10 flex items-center justify-center">
-                  <Phone class="w-6 h-6 text-teal-400" />
+              <div class="flex items-center gap-3 sm:gap-4 stagger-child hover-lift p-2 -m-2 rounded-2xl transition-all">
+                <div class="w-11 h-11 sm:w-14 sm:h-14 rounded-xl sm:rounded-2xl bg-teal-500/10 flex items-center justify-center flex-shrink-0">
+                  <Phone class="w-5 h-5 sm:w-6 sm:h-6 text-teal-400" />
                 </div>
                 <div>
                   <div class="text-sm text-slate-500 mb-1">{{ $t('common.phone') }}</div>
-                  <a :href="'tel:' + landing.contact_info.phone.replace(/\\s/g, '')" class="text-lg font-semibold text-white hover:text-teal-400 transition-colors">{{ landing.contact_info.phone }}</a>
+                  <a :href="'tel:' + landing.contact_info.phone.replace(/\\s/g, '')" class="text-sm sm:text-lg font-semibold text-white hover:text-teal-400 transition-colors">{{ landing.contact_info.phone }}</a>
                 </div>
               </div>
 
-              <div class="flex items-center gap-4 stagger-child hover-lift p-2 -m-2 rounded-2xl transition-all">
-                <div class="w-14 h-14 rounded-2xl bg-cyan-500/10 flex items-center justify-center">
-                  <MessageCircle class="w-6 h-6 text-cyan-400" />
+              <div class="flex items-center gap-3 sm:gap-4 stagger-child hover-lift p-2 -m-2 rounded-2xl transition-all">
+                <div class="w-11 h-11 sm:w-14 sm:h-14 rounded-xl sm:rounded-2xl bg-cyan-500/10 flex items-center justify-center flex-shrink-0">
+                  <MessageCircle class="w-5 h-5 sm:w-6 sm:h-6 text-cyan-400" />
                 </div>
                 <div>
                   <div class="text-sm text-slate-500 mb-1">{{ $t('landing.telegram') }}</div>
-                  <a :href="'https://t.me/' + landing.contact_info.telegram.replace('@', '')" target="_blank" class="text-lg font-semibold text-white hover:text-cyan-400 transition-colors">{{ landing.contact_info.telegram }}</a>
+                  <a :href="'https://t.me/' + landing.contact_info.telegram.replace('@', '')" target="_blank" class="text-sm sm:text-lg font-semibold text-white hover:text-cyan-400 transition-colors">{{ landing.contact_info.telegram }}</a>
                 </div>
               </div>
 
-              <div class="flex items-center gap-4 stagger-child hover-lift p-2 -m-2 rounded-2xl transition-all">
-                <div class="w-14 h-14 rounded-2xl bg-violet-500/10 flex items-center justify-center">
-                  <MapPin class="w-6 h-6 text-violet-400" />
+              <div class="flex items-center gap-3 sm:gap-4 stagger-child hover-lift p-2 -m-2 rounded-2xl transition-all">
+                <div class="w-11 h-11 sm:w-14 sm:h-14 rounded-xl sm:rounded-2xl bg-violet-500/10 flex items-center justify-center flex-shrink-0">
+                  <MapPin class="w-5 h-5 sm:w-6 sm:h-6 text-violet-400" />
                 </div>
                 <div>
                   <div class="text-sm text-slate-500 mb-1">{{ $t('common.address') }}</div>
-                  <p class="text-lg font-semibold text-white">{{ landing.contact_info.address }}</p>
+                  <p class="text-sm sm:text-lg font-semibold text-white">{{ landing.contact_info.address }}</p>
                 </div>
               </div>
             </div>
@@ -778,8 +776,8 @@
           <!-- Right - Contact Form -->
           <div class="relative reveal-right reveal-on-scroll">
             <div class="absolute -inset-4 bg-gradient-to-r from-emerald-500/10 to-teal-500/10 rounded-[40px] blur-3xl"></div>
-            <div class="relative bg-slate-800/50 backdrop-blur-xl border border-white/10 rounded-3xl p-8 hover-scale">
-              <h3 class="text-2xl font-bold text-white mb-6">{{ $t('landing.sendMessage') }}</h3>
+            <div class="relative bg-slate-800/50 backdrop-blur-xl border border-white/10 rounded-2xl sm:rounded-3xl p-5 sm:p-8 hover-scale">
+              <h3 class="text-xl sm:text-2xl font-bold text-white mb-4 sm:mb-6">{{ $t('landing.sendMessage') }}</h3>
               <form class="space-y-5">
                 <div class="stagger-child">
                   <label class="block text-sm font-medium text-slate-400 mb-2">{{ $t('landing.yourName') }}</label>
@@ -808,9 +806,9 @@
     <footer class="relative z-10 px-4 sm:px-6 lg:px-20 py-8 sm:py-12 border-t border-white/5">
       <div class="max-w-7xl mx-auto reveal-on-scroll">
         <!-- Top -->
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-6 sm:gap-10 mb-8 sm:mb-12">
+        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 sm:gap-10 mb-8 sm:mb-12">
           <!-- Brand -->
-          <div class="col-span-2 space-y-4 stagger-child">
+          <div class="col-span-1 sm:col-span-2 space-y-4 stagger-child">
             <div class="flex items-center gap-3">
               <div class="w-12 h-12 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-2xl flex items-center justify-center">
                 <GraduationCap class="w-6 h-6 text-white" />
@@ -853,7 +851,7 @@
         <!-- Team Section -->
         <div class="pt-8 border-t border-white/5 mb-8">
           <h4 class="font-semibold text-white mb-6 text-center">{{ $t('landing.projectTeam') }}</h4>
-          <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
+          <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2.5 sm:gap-4">
             <div v-for="member in landing.team_members" :key="member.id" class="bg-white/5 rounded-2xl p-4 text-center stagger-child hover-lift">
               <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center mx-auto mb-3">
                 <span class="text-lg font-bold text-white">{{ member.name?.charAt(0) || '?' }}</span>
