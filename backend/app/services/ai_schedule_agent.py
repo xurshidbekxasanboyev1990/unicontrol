@@ -410,15 +410,17 @@ Tahlil qil va aniq takliflar ber."""
                         rec["db_group_name"] = db_name
                         group_name_map[excel_name] = db_name
 
-        # ── Step 2: Parse ALL cells with raw content through AI ──
+        # ── Step 2: Parse ONLY cells where regex couldn't extract subject ──
         cells_to_parse = []
         for i, rec in enumerate(records):
-            raw = rec.get("_raw_cell", "")
-            if raw and raw.strip() and raw.strip() != "-":
-                cells_to_parse.append({
-                    "id": str(i),
-                    "content": raw,
-                })
+            # Only send to AI if regex failed to extract subject
+            if not rec.get("subject") and rec.get("_raw_cell"):
+                raw = rec["_raw_cell"].strip()
+                if raw and raw != "-" and raw != "—":
+                    cells_to_parse.append({
+                        "id": str(i),
+                        "content": raw,
+                    })
 
         ai_parsed_count = 0
         if cells_to_parse:
