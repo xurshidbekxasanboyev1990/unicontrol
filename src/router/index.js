@@ -98,6 +98,7 @@ import MarketAdminView from '../views/shared/MarketAdminView.vue'
 import MarketView from '../views/shared/MarketView.vue'
 import QuizView from '../views/shared/QuizView.vue'
 import SharedCanteenView from '../views/shared/CanteenView.vue'
+import LibraryComingSoon from '../views/shared/LibraryComingSoon.vue'
 
 const routes = [
   {
@@ -123,7 +124,7 @@ const routes = [
       { path: 'dashboard', name: 'student-dashboard', component: StudentDashboard },
       { path: 'schedule', name: 'student-schedule', component: StudentSchedule },
       { path: 'attendance', name: 'student-attendance', component: StudentAttendance },
-      { path: 'library', name: 'student-library', component: StudentLibrary },
+      { path: 'library', name: 'student-library', component: LibraryComingSoon },
       { path: 'ai-analysis', name: 'student-ai-analysis', component: AIAnalysisView },
       { path: 'notifications', name: 'student-notifications', component: StudentNotifications },
       { path: 'profile', name: 'student-profile', component: StudentProfile },
@@ -163,7 +164,7 @@ const routes = [
       { path: 'quizzes', name: 'leader-quizzes', component: QuizView },
       { path: 'ai-analysis', name: 'leader-ai-analysis', component: AIAnalysisView },
       { path: 'credit-module', name: 'leader-credit-module', component: CreditModuleView },
-      { path: 'library', name: 'leader-library', component: StudentLibrary },
+      { path: 'library', name: 'leader-library', component: LibraryComingSoon },
       { path: 'clubs', name: 'leader-clubs', component: StudentClubs },
       { path: 'canteen', name: 'leader-canteen', component: SharedCanteenView },
       { path: 'tournaments', name: 'leader-tournaments', component: StudentTournaments }
