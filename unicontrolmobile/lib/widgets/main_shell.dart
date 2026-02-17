@@ -202,7 +202,7 @@ class _MainShellState extends ConsumerState<MainShell> {
   }
 
   Widget _buildDrawer(dynamic user, bool isLeader, bool isAdmin, int unreadCount) {
-    final userName = user != null ? '${user.firstName ?? ''} ${user.lastName ?? ''}'.trim() : 'Foydalanuvchi';
+    final userName = user != null ? (user.displayName ?? 'Foydalanuvchi') : 'Foydalanuvchi';
     final userRole = user?.role?.value ?? 'student';
 
     return Drawer(
@@ -486,7 +486,7 @@ class _NavBarItem extends StatelessWidget {
                         fontWeight: FontWeight.w600,
                       ),
                       maxLines: 1,
-                      overflow: TextOverflow.clip,
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ),
                 ),

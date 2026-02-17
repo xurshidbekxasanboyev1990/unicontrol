@@ -13,11 +13,15 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from pydantic import BaseModel
 from typing import Optional
 
+from sqlalchemy import select
+
 from app.database import get_db
 from app.services.auth_service import AuthService
 from app.core.dependencies import get_current_active_user
 from app.core.security import create_access_token, create_refresh_token
 from app.models.user import User
+from app.models.student import Student
+from app.models.group import Group
 
 router = APIRouter()
 
@@ -76,6 +80,25 @@ async def mobile_login(
     db.add(user)
     await db.commit()
     
+    # Find group_id
+    group_id = None
+    group_name = None
+    student_res = await db.execute(select(Student).where(Student.user_id == user.id))
+    student = student_res.scalar_one_or_none()
+    if student:
+        group_id = student.group_id
+        if student.group_id:
+            grp = await db.execute(select(Group).where(Group.id == student.group_id))
+            g = grp.scalar_one_or_none()
+            if g:
+                group_name = g.name
+    else:
+        grp = await db.execute(select(Group).where(Group.leader_id == user.id))
+        g = grp.scalar_one_or_none()
+        if g:
+            group_id = g.id
+            group_name = g.name
+    
     return {
         "access_token": access_token,
         "refresh_token": refresh_token,
@@ -87,7 +110,9 @@ async def mobile_login(
             "name": user.name,
             "role": user.role.value,
             "avatar": user.avatar,
-            "phone": user.phone
+            "phone": user.phone,
+            "group_id": group_id,
+            "group_name": group_name,
         }
     }
 
@@ -148,11 +173,31 @@ async def register_device(
 
 @router.get("/me")
 async def get_current_user_mobile(
+    db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_active_user)
 ):
     """
     Get current user info for mobile.
     """
+    # Find group_id
+    group_id = None
+    group_name = None
+    student_res = await db.execute(select(Student).where(Student.user_id == current_user.id))
+    student = student_res.scalar_one_or_none()
+    if student:
+        group_id = student.group_id
+        if student.group_id:
+            grp = await db.execute(select(Group).where(Group.id == student.group_id))
+            g = grp.scalar_one_or_none()
+            if g:
+                group_name = g.name
+    else:
+        grp = await db.execute(select(Group).where(Group.leader_id == current_user.id))
+        g = grp.scalar_one_or_none()
+        if g:
+            group_id = g.id
+            group_name = g.name
+    
     return {
         "id": current_user.id,
         "login": current_user.login,
@@ -161,7 +206,9 @@ async def get_current_user_mobile(
         "role": current_user.role.value,
         "avatar": current_user.avatar,
         "phone": current_user.phone,
-        "is_active": current_user.is_active
+        "is_active": current_user.is_active,
+        "group_id": group_id,
+        "group_name": group_name,
     }
 
 

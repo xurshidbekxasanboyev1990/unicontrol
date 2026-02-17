@@ -181,20 +181,28 @@ class _AttendanceScreenState extends ConsumerState<AttendanceScreen> {
           const SizedBox(height: 12),
           Row(
             children: [
-              Text(
-                '${stats.attendanceRate.toStringAsFixed(1)}%',
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 36,
-                  fontWeight: FontWeight.bold,
+              Expanded(
+                flex: 2,
+                child: Text(
+                  '${stats.attendanceRate.toStringAsFixed(1)}%',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 32,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ),
-              const Spacer(),
-              _buildMiniStat('✅', stats.presentDays, 'Keldi'),
-              const SizedBox(width: 16),
-              _buildMiniStat('❌', stats.absentDays, 'Kelmadi'),
-              const SizedBox(width: 16),
-              _buildMiniStat('⏰', stats.lateDays, 'Kechikdi'),
+              Expanded(
+                flex: 3,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    _buildMiniStat(Icons.check_circle, stats.presentDays, 'Keldi'),
+                    _buildMiniStat(Icons.cancel, stats.absentDays, 'Kelmadi'),
+                    _buildMiniStat(Icons.access_time, stats.lateDays, 'Kechikdi'),
+                  ],
+                ),
+              ),
             ],
           ),
         ],
@@ -202,10 +210,10 @@ class _AttendanceScreenState extends ConsumerState<AttendanceScreen> {
     );
   }
 
-  Widget _buildMiniStat(String emoji, int count, String label) {
+  Widget _buildMiniStat(IconData icon, int count, String label) {
     return Column(
       children: [
-        Text(emoji, style: const TextStyle(fontSize: 20)),
+        Icon(icon, color: Colors.white, size: 20),
         const SizedBox(height: 4),
         Text(
           '$count',
@@ -229,10 +237,10 @@ class _AttendanceScreenState extends ConsumerState<AttendanceScreen> {
   Widget _buildFilterChips() {
     final filters = [
       {'value': 'all', 'label': 'Barchasi'},
-      {'value': 'present', 'label': '✅ Keldi'},
-      {'value': 'absent', 'label': '❌ Kelmadi'},
-      {'value': 'late', 'label': '⏰ Kechikdi'},
-      {'value': 'excused', 'label': '📋 Sababli'},
+      {'value': 'present', 'label': 'Keldi'},
+      {'value': 'absent', 'label': 'Kelmadi'},
+      {'value': 'late', 'label': 'Kechikdi'},
+      {'value': 'excused', 'label': 'Sababli'},
     ];
 
     return Container(
@@ -302,9 +310,10 @@ class _AttendanceScreenState extends ConsumerState<AttendanceScreen> {
               borderRadius: BorderRadius.circular(12),
             ),
             child: Center(
-              child: Text(
-                record.statusEmoji,
-                style: const TextStyle(fontSize: 22),
+              child: Icon(
+                _getStatusIcon(record.status),
+                color: statusColor,
+                size: 22,
               ),
             ),
           ),
@@ -374,6 +383,19 @@ class _AttendanceScreenState extends ConsumerState<AttendanceScreen> {
         return AppColors.warning;
       case AttendanceStatus.excused:
         return AppColors.info;
+    }
+  }
+
+  IconData _getStatusIcon(AttendanceStatus status) {
+    switch (status) {
+      case AttendanceStatus.present:
+        return Icons.check_circle_rounded;
+      case AttendanceStatus.absent:
+        return Icons.cancel_rounded;
+      case AttendanceStatus.late:
+        return Icons.access_time_rounded;
+      case AttendanceStatus.excused:
+        return Icons.info_rounded;
     }
   }
 }

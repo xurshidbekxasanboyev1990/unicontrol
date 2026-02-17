@@ -188,22 +188,22 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen>
             child: Row(
               children: [
                 _buildReportStat(
-                  '✅',
+                  Icons.check_circle_rounded,
                   '${report.presentCount}',
                   'Keldi',
                 ),
                 _buildReportStat(
-                  '❌',
+                  Icons.cancel_rounded,
                   '${report.absentCount}',
                   'Kelmadi',
                 ),
                 _buildReportStat(
-                  '⏰',
+                  Icons.access_time_rounded,
                   '${report.lateCount}',
                   'Kechikdi',
                 ),
                 _buildReportStat(
-                  '📋',
+                  Icons.description_rounded,
                   '${report.excusedCount}',
                   'Sababli',
                 ),
@@ -215,14 +215,14 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen>
     );
   }
 
-  Widget _buildReportStat(String emoji, String value, String label) {
+  Widget _buildReportStat(IconData icon, String value, String label) {
     return Expanded(
       child: Column(
         children: [
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Text(emoji, style: const TextStyle(fontSize: 16)),
+              Icon(icon, size: 16, color: AppTheme.textSecondary),
               const SizedBox(width: 4),
               Text(
                 value,

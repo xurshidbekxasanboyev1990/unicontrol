@@ -271,11 +271,11 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
   String _getGreeting() {
     final hour = DateTime.now().hour;
     if (hour < 12) {
-      return 'Xayrli tong! 🌅';
+      return 'Xayrli tong!';
     } else if (hour < 17) {
-      return 'Xayrli kun! ☀️';
+      return 'Xayrli kun!';
     } else {
-      return 'Xayrli kech! 🌙';
+      return 'Xayrli kech!';
     }
   }
 
@@ -383,12 +383,11 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
           physics: const NeverScrollableScrollPhysics(),
           mainAxisSpacing: 14,
           crossAxisSpacing: 14,
-          childAspectRatio: 1.1,
+          childAspectRatio: 1.0,
           children: [
             ModernStatCard(
               title: 'Talabalar',
               value: '${data['students_count'] ?? 0}',
-              subtitle: 'Jami ro\'yxatda',
               icon: Icons.people_rounded,
               color: AppColors.indigo,
               onTap: () => context.push('/students'),
@@ -397,7 +396,6 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
             ModernStatCard(
               title: 'Bugungi darslar',
               value: '${data['today_classes'] ?? 0}',
-              subtitle: 'Dars rejalashtirilgan',
               icon: Icons.menu_book_rounded,
               color: AppColors.teal,
               onTap: () => context.go('/schedule'),
@@ -406,14 +404,12 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
             ModernStatCard(
               title: 'Keldi',
               value: '${todayAttendance['present'] ?? 0}',
-              subtitle: 'Bugun',
               icon: Icons.check_circle_rounded,
               color: AppColors.success,
             ),
             ModernStatCard(
               title: 'Kelmadi',
               value: '${todayAttendance['absent'] ?? 0}',
-              subtitle: 'Bugun',
               icon: Icons.cancel_rounded,
               color: AppColors.error,
             ),
@@ -449,19 +445,17 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
           physics: const NeverScrollableScrollPhysics(),
           mainAxisSpacing: 14,
           crossAxisSpacing: 14,
-          childAspectRatio: 1.1,
+          childAspectRatio: 1.0,
           children: [
             ModernStatCard(
               title: 'Holat',
               value: _getStatusLabel(data['today_status']),
-              subtitle: 'Bugungi davomat',
               icon: _getStatusIcon(data['today_status']),
               color: _getStatusColor(data['today_status']),
             ),
             ModernStatCard(
               title: 'Darslar',
               value: '${data['today_classes'] ?? 0}',
-              subtitle: 'Bugun rejalashtirilgan',
               icon: Icons.menu_book_rounded,
               color: AppColors.indigo,
               onTap: () => context.go('/schedule'),
@@ -470,7 +464,6 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
             ModernStatCard(
               title: 'Davomat',
               value: '${attendanceRate.toStringAsFixed(0)}%',
-              subtitle: 'Oy davomida',
               icon: Icons.insert_chart_rounded,
               color: AppColors.teal,
               onTap: () => context.go('/attendance'),
@@ -479,7 +472,6 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
             ModernStatCard(
               title: 'Bildirishnomalar',
               value: '${data['unread_notifications'] ?? 0}',
-              subtitle: 'O\'qilmagan',
               icon: Icons.notifications_rounded,
               color: AppColors.warning,
               onTap: () => context.push('/notifications'),
@@ -499,7 +491,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
 
   String _getStatusLabel(String? status) {
     switch (status) {
-      case 'present': return 'Keldi ✓';
+      case 'present': return 'Keldi';
       case 'absent': return 'Kelmadi';
       case 'late': return 'Kechikdi';
       case 'excused': return 'Sababli';
@@ -538,9 +530,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
           physics: const NeverScrollableScrollPhysics(),
           mainAxisSpacing: 14,
           crossAxisSpacing: 14,
-          childAspectRatio: 1.1,
+          childAspectRatio: 1.0,
           children: List.generate(4, (_) =>
-            ShimmerBox(width: double.infinity, height: 120, borderRadius: 20),
+            ShimmerBox(width: double.infinity, height: 100, borderRadius: 20),
           ),
         ),
       ],
@@ -620,12 +612,12 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
         const SectionHeader(title: 'Tezkor amallar'),
         const SizedBox(height: 14),
         GridView.count(
-          crossAxisCount: 4,
+          crossAxisCount: 3,
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
-          mainAxisSpacing: 12,
-          crossAxisSpacing: 12,
-          childAspectRatio: 0.85,
+          mainAxisSpacing: 10,
+          crossAxisSpacing: 10,
+          childAspectRatio: 1.0,
           children: [
             if (isLeader || isAdmin)
               QuickActionButton(
@@ -813,7 +805,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      'Dam oling! 🎉',
+                      'Dam oling!',
                       style: TextStyle(
                         fontSize: 14,
                         color: AppColors.textSecondary,

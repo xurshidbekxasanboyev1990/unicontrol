@@ -316,7 +316,7 @@ class _ScheduleScreenState extends ConsumerState<ScheduleScreen>
           ),
           const SizedBox(height: 8),
           Text(
-            'Bu kun uchun darslar yo\'q 🎉',
+            'Bu kun uchun darslar yo\'q',
             style: TextStyle(
               color: AppColors.textSecondary,
               fontSize: 15,

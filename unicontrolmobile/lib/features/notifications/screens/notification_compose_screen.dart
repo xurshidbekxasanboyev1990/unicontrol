@@ -51,7 +51,7 @@ class _NotificationComposeScreenState extends State<NotificationComposeScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('✅ Bildirishnoma yuborildi!'),
+            content: Text('Bildirishnoma yuborildi!'),
             backgroundColor: AppColors.success,
           ),
         );
@@ -61,7 +61,7 @@ class _NotificationComposeScreenState extends State<NotificationComposeScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('❌ Xatolik: $e'),
+            content: Text('Xatolik: $e'),
             backgroundColor: AppColors.error,
           ),
         );

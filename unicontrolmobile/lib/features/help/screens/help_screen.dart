@@ -25,16 +25,16 @@ class _HelpScreenState extends State<HelpScreen> {
   final Set<int> _expandedItems = {};
 
   final List<Map<String, dynamic>> _categories = [
-    {'id': 'all', 'name': 'Barchasi', 'icon': '📋'},
-    {'id': 'general', 'name': 'Umumiy', 'icon': '📌'},
-    {'id': 'attendance', 'name': 'Davomat', 'icon': '✅'},
-    {'id': 'schedule', 'name': 'Jadval', 'icon': '📅'},
-    {'id': 'library', 'name': 'Kutubxona', 'icon': '📚'},
-    {'id': 'canteen', 'name': 'Oshxona', 'icon': '🍽️'},
-    {'id': 'contract', 'name': 'Kontrakt', 'icon': '💰'},
-    {'id': 'clubs', 'name': 'Klublar', 'icon': '🏅'},
-    {'id': 'notifications', 'name': 'Bildirishnomalar', 'icon': '🔔'},
-    {'id': 'technical', 'name': 'Texnik', 'icon': '⚙️'},
+    {'id': 'all', 'name': 'Barchasi', 'icon': Icons.list_rounded},
+    {'id': 'general', 'name': 'Umumiy', 'icon': Icons.info_rounded},
+    {'id': 'attendance', 'name': 'Davomat', 'icon': Icons.fact_check_rounded},
+    {'id': 'schedule', 'name': 'Jadval', 'icon': Icons.calendar_today_rounded},
+    {'id': 'library', 'name': 'Kutubxona', 'icon': Icons.menu_book_rounded},
+    {'id': 'canteen', 'name': 'Oshxona', 'icon': Icons.restaurant_rounded},
+    {'id': 'contract', 'name': 'Kontrakt', 'icon': Icons.receipt_long_rounded},
+    {'id': 'clubs', 'name': 'Klublar', 'icon': Icons.emoji_events_rounded},
+    {'id': 'notifications', 'name': 'Bildirishnomalar', 'icon': Icons.notifications_rounded},
+    {'id': 'technical', 'name': 'Texnik', 'icon': Icons.settings_rounded},
   ];
 
   @override
@@ -102,9 +102,15 @@ class _HelpScreenState extends State<HelpScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text(
-                          '❓ Yordam markazi',
-                          style: TextStyle(color: Colors.white, fontSize: 28, fontWeight: FontWeight.bold),
+                        Row(
+                          children: [
+                            const Icon(Icons.help_outline_rounded, color: Colors.white, size: 28),
+                            const SizedBox(width: 10),
+                            const Text(
+                              'Yordam markazi',
+                              style: TextStyle(color: Colors.white, fontSize: 28, fontWeight: FontWeight.bold),
+                            ),
+                          ],
                         ),
                         const SizedBox(height: 6),
                         Text(
@@ -187,7 +193,7 @@ class _HelpScreenState extends State<HelpScreen> {
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Text(cat['icon'], style: const TextStyle(fontSize: 14)),
+                          Icon(cat['icon'] as IconData, size: 16, color: isSelected ? Colors.white : AppColors.textSecondary),
                           const SizedBox(width: 6),
                           Text(
                             cat['name'],

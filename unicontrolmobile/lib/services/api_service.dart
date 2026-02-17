@@ -622,11 +622,38 @@ class ApiService {
       );
 
       final data = response.data;
-      final items = data['schedule'] ?? data['items'] ?? data;
-
+      
+      // Format 1: {"schedule": [...]} (when group_id provided)
+      final items = data['schedule'] ?? data['items'];
       if (items is List) {
         return items.map((e) => Schedule.fromJson(e as Map<String, dynamic>)).toList();
       }
+      
+      // Format 2: {"MONDAY": [...], "TUESDAY": [...], ...} (week dict without group_id)
+      if (data is Map<String, dynamic>) {
+        final allSchedules = <Schedule>[];
+        final dayNames = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+        for (final entry in data.entries) {
+          if (entry.value is List && dayNames.contains(entry.key.toLowerCase())) {
+            for (final item in entry.value) {
+              if (item is Map<String, dynamic>) {
+                // Inject day_of_week if not present
+                final enriched = Map<String, dynamic>.from(item);
+                enriched['day_of_week'] ??= entry.key;
+                enriched['day'] ??= entry.key;
+                allSchedules.add(Schedule.fromJson(enriched));
+              }
+            }
+          }
+        }
+        if (allSchedules.isNotEmpty) return allSchedules;
+      }
+      
+      // Format 3: raw list
+      if (data is List) {
+        return data.map((e) => Schedule.fromJson(e as Map<String, dynamic>)).toList();
+      }
+      
       return [];
     } on DioException catch (e) {
       throw _handleError(e);

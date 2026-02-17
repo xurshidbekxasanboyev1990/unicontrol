@@ -148,28 +148,34 @@ class _CanteenScreenState extends State<CanteenScreen> {
         slivers: [
           // App Bar
           SliverAppBar(
-            expandedHeight: 160,
+            expandedHeight: 180,
             pinned: true,
             backgroundColor: Colors.transparent,
             flexibleSpace: FlexibleSpaceBar(
               background: Container(
                 decoration: const BoxDecoration(gradient: AppColors.warmGradient),
-                child: const SafeArea(
+                child: SafeArea(
                   child: Padding(
-                    padding: EdgeInsets.fromLTRB(20, 60, 20, 20),
+                    padding: const EdgeInsets.fromLTRB(20, 60, 20, 20),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          '🍽️ Oshxona',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 28,
-                            fontWeight: FontWeight.bold,
-                          ),
+                        Row(
+                          children: [
+                            const Icon(Icons.restaurant_rounded, color: Colors.white, size: 28),
+                            const SizedBox(width: 10),
+                            const Text(
+                              'Oshxona',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 28,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
                         ),
-                        SizedBox(height: 8),
-                        Text(
+                        const SizedBox(height: 8),
+                        const Text(
                           'Mazali taomlar buyurtma qiling',
                           style: TextStyle(color: Colors.white70, fontSize: 14),
                         ),
@@ -221,7 +227,7 @@ class _CanteenScreenState extends State<CanteenScreen> {
                 children: [
                   _CategoryChip(
                     label: 'Hammasi',
-                    icon: '🍴',
+                    icon: Icons.restaurant_menu_rounded,
                     isSelected: _selectedCategoryId == null,
                     onTap: () {
                       setState(() => _selectedCategoryId = null);
@@ -230,7 +236,7 @@ class _CanteenScreenState extends State<CanteenScreen> {
                   ),
                   ..._categories.map((c) => _CategoryChip(
                     label: c['name'] ?? '',
-                    icon: c['icon'] ?? '🍽️',
+                    icon: Icons.fastfood_rounded,
                     isSelected: _selectedCategoryId == c['id'],
                     onTap: () {
                       setState(() => _selectedCategoryId = c['id']);
@@ -361,7 +367,7 @@ class _CanteenScreenState extends State<CanteenScreen> {
 
 class _CategoryChip extends StatelessWidget {
   final String label;
-  final String icon;
+  final IconData icon;
   final bool isSelected;
   final VoidCallback onTap;
 
@@ -390,7 +396,7 @@ class _CategoryChip extends StatelessWidget {
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text(icon, style: const TextStyle(fontSize: 14)),
+              Icon(icon, size: 16, color: isSelected ? Colors.white : AppColors.textSecondary),
               const SizedBox(width: 6),
               Text(
                 label,
@@ -473,7 +479,7 @@ class _MenuItemCard extends StatelessWidget {
                           color: AppColors.successLight,
                           borderRadius: BorderRadius.circular(6),
                         ),
-                        child: const Text('🌿', style: TextStyle(fontSize: 10)),
+                        child: const Icon(Icons.eco_rounded, color: AppColors.success, size: 12),
                       ),
                   ],
                 ),

@@ -3,6 +3,7 @@
 library;
 
 import 'package:equatable/equatable.dart';
+import 'package:flutter/material.dart';
 import '../../core/constants/app_constants.dart';
 
 class AppNotification extends Equatable {
@@ -35,24 +36,24 @@ class AppNotification extends Equatable {
   });
 
   /// Type icon
-  String get typeIcon {
+  IconData get typeIconData {
     switch (type) {
       case NotificationType.info:
-        return 'ℹ️';
+        return Icons.info_rounded;
       case NotificationType.warning:
-        return '⚠️';
+        return Icons.warning_rounded;
       case NotificationType.success:
-        return '✅';
+        return Icons.check_circle_rounded;
       case NotificationType.error:
-        return '❌';
+        return Icons.error_rounded;
       case NotificationType.attendance:
-        return '📋';
+        return Icons.fact_check_rounded;
       case NotificationType.schedule:
-        return '📅';
+        return Icons.calendar_today_rounded;
       case NotificationType.report:
-        return '📊';
+        return Icons.bar_chart_rounded;
       case NotificationType.system:
-        return '🔧';
+        return Icons.settings_rounded;
     }
   }
 

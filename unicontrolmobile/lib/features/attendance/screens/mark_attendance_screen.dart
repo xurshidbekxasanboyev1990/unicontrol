@@ -363,10 +363,10 @@ class _MarkAttendanceScreenState extends ConsumerState<MarkAttendanceScreen> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
-          _buildMiniStat('✅ $present', AppTheme.presentColor),
-          _buildMiniStat('❌ $absent', AppTheme.absentColor),
-          _buildMiniStat('⏰ $late', AppTheme.lateColor),
-          _buildMiniStat('📋 $excused', AppTheme.excusedColor),
+          _buildMiniStat('K: $present', AppTheme.presentColor),
+          _buildMiniStat('Y: $absent', AppTheme.absentColor),
+          _buildMiniStat('K: $late', AppTheme.lateColor),
+          _buildMiniStat('S: $excused', AppTheme.excusedColor),
         ],
       ),
     );
@@ -452,25 +452,25 @@ class _MarkAttendanceScreenState extends ConsumerState<MarkAttendanceScreen> {
                 student.id,
                 AttendanceStatus.present,
                 status,
-                '✅',
+                Icons.check_circle_rounded,
               ),
               _buildStatusButton(
                 student.id,
                 AttendanceStatus.absent,
                 status,
-                '❌',
+                Icons.cancel_rounded,
               ),
               _buildStatusButton(
                 student.id,
                 AttendanceStatus.late,
                 status,
-                '⏰',
+                Icons.access_time_rounded,
               ),
               _buildStatusButton(
                 student.id,
                 AttendanceStatus.excused,
                 status,
-                '📋',
+                Icons.info_rounded,
               ),
             ],
           ),
@@ -483,7 +483,7 @@ class _MarkAttendanceScreenState extends ConsumerState<MarkAttendanceScreen> {
     int studentId,
     AttendanceStatus buttonStatus,
     AttendanceStatus currentStatus,
-    String emoji,
+    IconData icon,
   ) {
     final isSelected = buttonStatus == currentStatus;
 
@@ -504,11 +504,10 @@ class _MarkAttendanceScreenState extends ConsumerState<MarkAttendanceScreen> {
               : null,
         ),
         child: Center(
-          child: Text(
-            emoji,
-            style: TextStyle(
-              fontSize: isSelected ? 18 : 14,
-            ),
+          child: Icon(
+            icon,
+            color: _getStatusColor(buttonStatus),
+            size: isSelected ? 20 : 16,
           ),
         ),
       ),

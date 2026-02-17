@@ -140,9 +140,10 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Center(
-                child: Text(
-                  notification.typeIcon,
-                  style: const TextStyle(fontSize: 20),
+                child: Icon(
+                  notification.typeIconData,
+                  color: _getTypeColor(notification.type),
+                  size: 22,
                 ),
               ),
             ),

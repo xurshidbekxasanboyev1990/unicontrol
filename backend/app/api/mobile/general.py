@@ -36,55 +36,55 @@ async def mobile_schedule(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_active_user),
 ):
-    """Return schedule for current user (student) or for group if provided."""
-    if group_id:
-        schedules = await db.execute(
-            select(Schedule).where(Schedule.group_id == group_id, Schedule.is_active == True).order_by(Schedule.day_of_week, Schedule.start_time)
-        )
-        items = []
-        for s in schedules.scalars().all():
-            items.append({
-                "id": s.id,
-                "subject": s.subject,
-                "start_time": s.start_time.strftime("%H:%M"),
-                "end_time": s.end_time.strftime("%H:%M"),
-                "room": s.room,
-                "teacher": s.teacher_name,
-                "day": s.day_of_week.name,
-                "is_cancelled": s.is_cancelled,
-            })
-        return {"schedule": items}
+    """Return schedule for current user (student/leader) or for group if provided."""
+    # Resolve group_id if not provided
+    if not group_id:
+        student_res = await db.execute(select(Student).where(Student.user_id == current_user.id))
+        student = student_res.scalar_one_or_none()
+        if student:
+            group_id = student.group_id
+        else:
+            group_res = await db.execute(select(Group).where(Group.leader_id == current_user.id))
+            group = group_res.scalar_one_or_none()
+            if group:
+                group_id = group.id
 
-    student_res = await db.execute(select(Student).where(Student.user_id == current_user.id))
-    student = student_res.scalar_one_or_none()
-    if not student:
-        raise HTTPException(status_code=404, detail="Student profile not found")
+    if not group_id:
+        return {"schedule": []}
 
-    schedules = await db.execute(
-        select(Schedule).where(Schedule.group_id == student.group_id, Schedule.is_active == True).order_by(Schedule.day_of_week, Schedule.start_time)
-    )
+    query = select(Schedule).where(
+        Schedule.group_id == group_id,
+        Schedule.is_active == True
+    ).order_by(Schedule.day_of_week, Schedule.start_time)
 
-    week_schedule = {d.name: [] for d in WeekDay}
+    # Filter by day if specified
+    if day:
+        dn = day.strip().lower()
+        try:
+            wd = WeekDay(dn)
+            query = select(Schedule).where(
+                Schedule.group_id == group_id,
+                Schedule.is_active == True,
+                Schedule.day_of_week == wd,
+            ).order_by(Schedule.start_time)
+        except Exception:
+            return {"schedule": [], "error": "Invalid day"}
+
+    schedules = await db.execute(query)
+    items = []
     for s in schedules.scalars().all():
-        week_schedule[s.day_of_week.name].append({
+        items.append({
             "id": s.id,
             "subject": s.subject,
             "start_time": s.start_time.strftime("%H:%M"),
             "end_time": s.end_time.strftime("%H:%M"),
             "room": s.room,
             "teacher": s.teacher_name,
+            "day_of_week": s.day_of_week.name,
+            "day": s.day_of_week.name,
             "is_cancelled": s.is_cancelled,
         })
-
-    if day:
-        dn = day.strip().lower()
-        try:
-            wd = WeekDay(dn)
-            return {wd.name: week_schedule.get(wd.name, [])}
-        except Exception:
-            return {"error": "Invalid day"}
-
-    return week_schedule
+    return {"schedule": items}
 
 
 @router.get("/schedule/today")

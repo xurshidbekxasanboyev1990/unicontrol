@@ -65,7 +65,7 @@ class _ContractsScreenState extends State<ContractsScreen> with SingleTickerProv
               slivers: [
                 // Header
                 SliverAppBar(
-                  expandedHeight: 200,
+                  expandedHeight: 260,
                   pinned: true,
                   backgroundColor: Colors.transparent,
                   flexibleSpace: FlexibleSpaceBar(
@@ -77,9 +77,15 @@ class _ContractsScreenState extends State<ContractsScreen> with SingleTickerProv
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              const Text(
-                                '💰 Kontrakt',
-                                style: TextStyle(color: Colors.white, fontSize: 28, fontWeight: FontWeight.bold),
+                              Row(
+                                children: [
+                                  const Icon(Icons.receipt_long_rounded, color: Colors.white, size: 28),
+                                  const SizedBox(width: 10),
+                                  const Text(
+                                    'Kontrakt',
+                                    style: TextStyle(color: Colors.white, fontSize: 28, fontWeight: FontWeight.bold),
+                                  ),
+                                ],
                               ),
                               const SizedBox(height: 16),
                               if (_myContract?['has_contract'] == true) ...[
