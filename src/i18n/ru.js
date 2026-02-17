@@ -1151,6 +1151,14 @@ export default {
         passwordChanged: 'Пароль успешно изменён',
         passwordChangeError: 'Ошибка при изменении пароля',
         notEntered: 'Не указано',
+        sectionContract: 'Информация о контракте',
+        remainingAmount: 'Остаток',
+        educationForm: 'Форма обучения',
+        direction: 'Направление',
+        status: 'Статус',
+        change: 'Изменить',
+        fullName: 'ФИО',
+        save: 'Сохранить',
     },
 
     // ============ НАСТРОЙКИ ============
@@ -2209,6 +2217,26 @@ export default {
         selectCategory: 'Выберите категорию',
         sendReply: 'Отправить ответ',
         messages: 'Обращения',
+        yes: 'Да',
+        no: 'Нет',
+        supportContact: 'Обращение в поддержку',
+        videoTutorials: 'Видеоинструкции',
+        selectPlaceholder: 'Выберите...',
+        other: 'Другое',
+        message: 'Сообщение',
+        describeProblem: 'Опишите вашу проблему подробно...',
+        categories: {
+            all: 'Все',
+            attendance: 'Посещаемость',
+            library: 'Библиотека',
+            settings: 'Настройки',
+            profile: 'Профиль',
+        },
+        videoTitles: {
+            loginProfile: 'Вход в систему и профиль',
+            viewAttendance: 'Просмотр посещаемости',
+            useLibrary: 'Использование библиотеки',
+        },
     },
 
     // ============ СУПЕРПАНЕЛЬ ============

@@ -1153,6 +1153,14 @@ export default {
         passwordChanged: 'Password successfully changed',
         passwordChangeError: 'Error changing password',
         notEntered: 'Not specified',
+        sectionContract: 'Contract Information',
+        remainingAmount: 'Remaining Amount',
+        educationForm: 'Education Form',
+        direction: 'Direction',
+        status: 'Status',
+        change: 'Change',
+        fullName: 'Full Name',
+        save: 'Save',
     },
 
     // ============ SETTINGS ============
@@ -2211,6 +2219,26 @@ export default {
         selectCategory: 'Select category',
         sendReply: 'Send reply',
         messages: 'Messages',
+        yes: 'Yes',
+        no: 'No',
+        supportContact: 'Contact support',
+        videoTutorials: 'Video Tutorials',
+        selectPlaceholder: 'Select...',
+        other: 'Other',
+        message: 'Message',
+        describeProblem: 'Describe your problem in detail...',
+        categories: {
+            all: 'All',
+            attendance: 'Attendance',
+            library: 'Library',
+            settings: 'Settings',
+            profile: 'Profile',
+        },
+        videoTitles: {
+            loginProfile: 'Login and Profile',
+            viewAttendance: 'Viewing Attendance',
+            useLibrary: 'Using the Library',
+        },
     },
 
     // ============ SUPER DASHBOARD ============

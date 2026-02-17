@@ -1158,6 +1158,14 @@ export default {
         passwordChanged: 'Parol muvaffaqiyatli o\'zgartirildi',
         passwordChangeError: 'Parolni o\'zgartirishda xatolik',
         notEntered: 'Kiritilmagan',
+        sectionContract: 'Kontrakt ma\'lumotlari',
+        remainingAmount: 'Qoldiq summa',
+        educationForm: 'Ta\'lim shakli',
+        direction: 'Yo\'nalish',
+        status: 'Holat',
+        change: 'O\'zgartirish',
+        fullName: 'F.I.Sh.',
+        save: 'Saqlash',
     },
 
     // ============ SOZLAMALAR ============
@@ -2289,6 +2297,26 @@ export default {
         selectCategory: 'Kategoriya tanlang',
         sendReply: 'Javob yuborish',
         messages: 'Murojaatlar',
+        yes: 'Ha',
+        no: 'Yo\'q',
+        supportContact: 'Qo\'llab-quvvatlashga murojaat',
+        videoTutorials: 'Video qo\'llanmalar',
+        selectPlaceholder: 'Tanlang...',
+        other: 'Boshqa',
+        message: 'Xabar',
+        describeProblem: 'Muammoingizni batafsil yozing...',
+        categories: {
+            all: 'Barchasi',
+            attendance: 'Davomat',
+            library: 'Kutubxona',
+            settings: 'Sozlamalar',
+            profile: 'Profil',
+        },
+        videoTitles: {
+            loginProfile: 'Tizimga kirish va profil',
+            viewAttendance: 'Davomat ko\'rish',
+            useLibrary: 'Kutubxonadan foydalanish',
+        },
     },
 
     // ============ SUPER DASHBOARD ============
