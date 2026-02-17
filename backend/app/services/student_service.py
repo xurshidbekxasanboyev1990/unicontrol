@@ -170,12 +170,13 @@ class StudentService:
         
         # Create linked user account if requested
         if student_data.create_user_account and student_data.email:
+            plain_pwd = student_data.password or student_data.jshshir or "12345678"
             user = User(
+                login=student_id,  # Use student_id as login
                 email=student_data.email,
                 name=student_data.name,
-                password_hash=get_password_hash(
-                    student_data.password or student_data.jshshir or "12345678"
-                ),
+                password_hash=get_password_hash(plain_pwd),
+                plain_password=plain_pwd,
                 role=UserRole.STUDENT,
                 phone=student_data.phone,
             )

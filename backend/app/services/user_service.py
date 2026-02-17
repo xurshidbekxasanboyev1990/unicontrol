@@ -97,6 +97,14 @@ class UserService:
         if existing:
             raise ConflictException("Email already registered")
         
+        # Check login uniqueness
+        login_value = user_data.login or user_data.email
+        existing_login = await self.db.execute(
+            select(User).where(User.login == login_value)
+        )
+        if existing_login.scalar_one_or_none():
+            raise ConflictException("Login already registered")
+        
         user = User(
             login=user_data.login or user_data.email,
             email=user_data.email,

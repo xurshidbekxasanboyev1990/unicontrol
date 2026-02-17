@@ -280,6 +280,7 @@ class AuthService:
         
         # Create superadmin
         admin = User(
+            login=email,
             email=email,
             name=name,
             password_hash=get_password_hash(password),

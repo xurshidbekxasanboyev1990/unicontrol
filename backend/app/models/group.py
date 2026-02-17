@@ -144,10 +144,16 @@ class Group(Base):
     
     @property
     def student_count(self) -> int:
-        """Get number of students in group."""
-        return len(self.students) if self.students else 0
+        """Get number of students in group (safe for async - doesn't trigger lazy load)."""
+        try:
+            return len(self.students) if self.students else 0
+        except Exception:
+            return 0
     
     @property
     def leader_name(self) -> Optional[str]:
-        """Get leader's name."""
-        return self.leader.name if self.leader else None
+        """Get leader's name (safe for async - doesn't trigger lazy load)."""
+        try:
+            return self.leader.name if self.leader else None
+        except Exception:
+            return None

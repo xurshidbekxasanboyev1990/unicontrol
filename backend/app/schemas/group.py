@@ -19,7 +19,7 @@ class GroupBase(BaseModel):
     description: Optional[str] = None
     course_year: int = Field(default=1, ge=1, le=6)
     department: Optional[str] = Field(None, max_length=200)
-    faculty: Optional[str] = Field(None, max_length=200)
+    faculty: str = Field(..., min_length=1, max_length=200)
     contract_amount: Decimal = Field(default=0, ge=0)
 
 

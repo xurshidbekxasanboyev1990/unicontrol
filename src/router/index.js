@@ -90,12 +90,12 @@ import SuperUsers from '../views/super/UsersView.vue'
 
 // Market & Shared views
 import AIAnalysisView from '../views/shared/AIAnalysisView.vue'
+import SharedCanteenView from '../views/shared/CanteenView.vue'
 import CreditModuleView from '../views/shared/CreditModuleView.vue'
+import LibraryComingSoon from '../views/shared/LibraryComingSoon.vue'
 import MarketAdminView from '../views/shared/MarketAdminView.vue'
 import MarketView from '../views/shared/MarketView.vue'
 import QuizView from '../views/shared/QuizView.vue'
-import SharedCanteenView from '../views/shared/CanteenView.vue'
-import LibraryComingSoon from '../views/shared/LibraryComingSoon.vue'
 
 const routes = [
   {
@@ -227,7 +227,7 @@ const routes = [
       { path: 'import', name: 'super-import', component: AdminImport },
       { path: 'subjects', name: 'super-subjects', component: AdminSubjects },
       { path: 'clubs', name: 'super-clubs', component: AdminClubs }
-      ,{ path: 'canteen', name: 'super-canteen', component: SharedCanteenView }
+      , { path: 'canteen', name: 'super-canteen', component: SharedCanteenView }
     ]
   },
 

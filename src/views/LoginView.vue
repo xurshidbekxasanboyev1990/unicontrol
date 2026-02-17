@@ -213,18 +213,18 @@
 
 <script setup>
 import {
-  AlertCircle,
-  ArrowLeft,
-  ArrowRight,
-  Check,
-  Eye,
-  EyeOff,
-  GraduationCap,
-  Loader2,
-  Lock,
-  LogIn,
-  ShieldAlert,
-  User
+    AlertCircle,
+    ArrowLeft,
+    ArrowRight,
+    Check,
+    Eye,
+    EyeOff,
+    GraduationCap,
+    Loader2,
+    Lock,
+    LogIn,
+    ShieldAlert,
+    User
 } from 'lucide-vue-next'
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'

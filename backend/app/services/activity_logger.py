@@ -59,14 +59,12 @@ async def log_activity(
             context=json.dumps(context, default=str, ensure_ascii=False) if context else None,
         )
         db.add(log_entry)
-        await db.commit()
+        # flush instead of commit to avoid breaking ongoing transactions
+        # the session's get_db dependency will commit at the end
+        await db.flush()
     except Exception as e:
         logger.error(f"Failed to log activity: {e}")
         # Don't let logging failures break the main flow
-        try:
-            await db.rollback()
-        except:
-            pass
 
 
 def get_client_ip(request) -> str:

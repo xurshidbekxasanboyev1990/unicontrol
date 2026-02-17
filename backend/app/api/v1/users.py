@@ -130,6 +130,10 @@ async def update_user(
     Users can update their own profile.
     Admins can update any user.
     """
+    # Permission check: only self or admin/superadmin
+    if current_user.id != user_id and current_user.role not in [UserRole.ADMIN, UserRole.SUPERADMIN]:
+        from app.core.exceptions import ForbiddenException
+        raise ForbiddenException("You can only update your own profile")
     service = UserService(db)
     user = await service.update(user_id, user_data, current_user)
     await log_activity(

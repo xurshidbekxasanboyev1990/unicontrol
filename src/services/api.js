@@ -137,7 +137,7 @@ class ApiService {
         if (!timestamp) return true
 
         const tokenAge = Date.now() - parseInt(timestamp)
-        const tokenLifetime = 480 * 60 * 1000 // 480 daqiqa = 8 soat (backend ACCESS_TOKEN_EXPIRE_MINUTES bilan mos)
+        const tokenLifetime = 30 * 60 * 1000 // 30 daqiqa (backend ACCESS_TOKEN_EXPIRE_MINUTES default bilan mos)
 
         return tokenAge > (tokenLifetime - this.tokenRefreshThreshold)
     }
