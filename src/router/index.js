@@ -40,11 +40,9 @@ import LoginView from '../views/LoginView.vue'
 
 // Student views
 import StudentAttendance from '../views/student/AttendanceView.vue'
-import StudentCanteen from '../views/student/CanteenView.vue'
 import StudentClubs from '../views/student/ClubsView.vue'
 import StudentDashboard from '../views/student/DashboardView.vue'
 import StudentHelp from '../views/student/HelpView.vue'
-import StudentLibrary from '../views/student/LibraryView.vue'
 import StudentNotifications from '../views/student/NotificationsView.vue'
 import StudentProfile from '../views/student/ProfileView.vue'
 import StudentSchedule from '../views/student/ScheduleView.vue'
@@ -61,7 +59,6 @@ import LeaderNotifications from '../views/leader/NotificationsView.vue'
 import LeaderReports from '../views/leader/ReportsView.vue'
 import LeaderSchedule from '../views/leader/ScheduleView.vue'
 import LeaderStudents from '../views/leader/StudentsView.vue'
-import LeaderSubscription from '../views/leader/SubscriptionView.vue'
 
 // Admin views
 import AdminAttendance from '../views/admin/AttendanceView.vue'
@@ -133,7 +130,6 @@ const routes = [
       { path: 'clubs', name: 'student-clubs', component: StudentClubs },
       { path: 'canteen', name: 'student-canteen', component: SharedCanteenView },
       { path: 'tournaments', name: 'student-tournaments', component: StudentTournaments },
-      { path: 'subscription', name: 'student-subscription', component: LeaderSubscription },
       { path: 'market', name: 'student-market', component: MarketView },
       { path: 'quizzes', name: 'student-quizzes', component: QuizView },
       { path: 'credit-module', name: 'student-credit-module', component: CreditModuleView }
@@ -156,7 +152,6 @@ const routes = [
       { path: 'notifications', name: 'leader-notifications', component: LeaderNotifications },
       { path: 'analytics', name: 'leader-analytics', component: LeaderAnalytics },
       { path: 'files', name: 'leader-files', component: LeaderFileManager },
-      { path: 'subscription', name: 'leader-subscription', component: LeaderSubscription },
       { path: 'profile', name: 'leader-profile', component: StudentProfile },
       { path: 'settings', name: 'leader-settings', component: StudentSettings },
       { path: 'help', name: 'leader-help', component: StudentHelp },

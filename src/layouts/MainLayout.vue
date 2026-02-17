@@ -447,7 +447,6 @@ const menuSections = computed(() => {
         { path: '/student/market', label: t('layout.market'), icon: markRaw(Store) },
         { path: '/student/quizzes', label: t('layout.quizzes'), icon: markRaw(ClipboardList) },
         { path: '/student/credit-module', label: t('layout.creditModule'), icon: markRaw(Calculator) },
-        { path: '/student/subscription', label: t('layout.subscription'), icon: markRaw(CreditCard) },
         { path: '/student/notifications', label: t('layout.notifications'), icon: markRaw(Bell), badge: dataStore.unreadCount > 0 ? String(dataStore.unreadCount) : null }
       ]
     })
@@ -486,7 +485,6 @@ const menuSections = computed(() => {
         { path: '/leader/market', label: t('layout.market'), icon: markRaw(Store) },
         { path: '/leader/quizzes', label: t('layout.quizzes'), icon: markRaw(ClipboardList) },
         { path: '/leader/credit-module', label: t('layout.creditModule'), icon: markRaw(Calculator) },
-        { path: '/leader/subscription', label: t('layout.subscription'), icon: markRaw(CreditCard) },
         { path: '/leader/notifications', label: t('layout.notifications'), icon: markRaw(Send), badge: dataStore.unreadCount > 0 ? String(dataStore.unreadCount) : null }
       ]
     })

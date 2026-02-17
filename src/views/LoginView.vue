@@ -190,37 +190,7 @@
             </button>
           </form>
 
-          <!-- Divider -->
-          <div class="relative my-8">
-            <div class="absolute inset-0 flex items-center">
-              <div class="w-full border-t border-white/10"></div>
-            </div>
-            <div class="relative flex justify-center">
-              <span class="px-4 bg-transparent text-slate-500 text-sm font-medium">{{ t('login.demoAccounts') }}</span>
-            </div>
-          </div>
 
-          <!-- Demo Accounts -->
-          <div class="grid grid-cols-2 gap-3">
-            <button
-              v-for="demo in demoAccounts"
-              :key="demo.username"
-              @click="fillDemo(demo)"
-              class="group relative overflow-hidden rounded-2xl transition-all duration-300 hover:scale-[1.02] hover:-translate-y-1"
-            >
-              <div class="absolute inset-0 bg-white/5 group-hover:bg-white/15 transition-all duration-300"></div>
-              <div :class="['absolute inset-0 opacity-0 group-hover:opacity-100 transition-all duration-300 blur-xl', demo.glowClass]"></div>
-              <div class="relative flex items-center gap-3 p-4 border border-white/10 group-hover:border-white/30 rounded-2xl transition-all duration-300">
-                <div :class="['w-11 h-11 rounded-xl flex items-center justify-center shadow-lg transition-all duration-300 group-hover:scale-110 group-hover:shadow-xl', demo.bgClass]">
-                  <component :is="demo.icon" class="w-5 h-5 text-white transition-transform duration-300 group-hover:scale-110" />
-                </div>
-                <div class="text-left">
-                  <p class="text-sm font-semibold text-white group-hover:text-emerald-300 transition-colors duration-300">{{ t(demo.labelKey) }}</p>
-                  <p class="text-xs text-slate-500 group-hover:text-slate-300 transition-colors duration-300">{{ demo.username }}</p>
-                </div>
-              </div>
-            </button>
-          </div>
         </div>
       </div>
 
@@ -247,20 +217,16 @@ import {
   ArrowLeft,
   ArrowRight,
   Check,
-  Crown,
   Eye,
   EyeOff,
   GraduationCap,
   Loader2,
   Lock,
   LogIn,
-  Shield,
   ShieldAlert,
-  User,
-  UserCircle,
-  Users
+  User
 } from 'lucide-vue-next'
-import { markRaw, ref } from 'vue'
+import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
 import { useLanguageStore } from '../stores/language'
@@ -289,45 +255,7 @@ const goToHome = () => {
   router.push('/')
 }
 
-const demoAccounts = [
-  { 
-    username: '519231100736', 
-    password: '12345678', 
-    labelKey: 'roles.student', 
-    icon: markRaw(UserCircle), 
-    bgClass: 'bg-gradient-to-br from-blue-500 to-blue-600',
-    glowClass: 'bg-blue-500/10'
-  },
-  { 
-    username: '519251107043', 
-    password: '12345678', 
-    labelKey: 'roles.leader', 
-    icon: markRaw(Users), 
-    bgClass: 'bg-gradient-to-br from-amber-500 to-orange-600',
-    glowClass: 'bg-amber-500/10'
-  },
-  { 
-    username: 'admin', 
-    password: 'admin123', 
-    labelKey: 'roles.admin', 
-    icon: markRaw(Shield), 
-    bgClass: 'bg-gradient-to-br from-violet-500 to-purple-600',
-    glowClass: 'bg-violet-500/10'
-  },
-  { 
-    username: 'superadmin', 
-    password: 'superadmin123', 
-    labelKey: 'roles.superadmin', 
-    icon: markRaw(Crown), 
-    bgClass: 'bg-gradient-to-br from-rose-500 to-pink-600',
-    glowClass: 'bg-rose-500/10'
-  }
-]
 
-const fillDemo = (demo) => {
-  username.value = demo.username
-  password.value = demo.password
-}
 
 const handleLogin = async () => {
   error.value = ''
