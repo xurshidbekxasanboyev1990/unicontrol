@@ -79,6 +79,7 @@ from app.models.subscription import (
 from app.models.landing import LandingSettings
 from app.models.ai_usage import AIUsage
 from app.models.holiday import Holiday, HolidayType
+from app.models.system_settings import SystemSettings
 
 __all__ = [
     # User
@@ -179,4 +180,6 @@ __all__ = [
     # Holiday
     "Holiday",
     "HolidayType",
+    # System Settings
+    "SystemSettings",
 ]

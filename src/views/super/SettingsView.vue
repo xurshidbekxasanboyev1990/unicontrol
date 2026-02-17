@@ -1,21 +1,40 @@
 <template>
   <div class="space-y-6">
     <!-- Header -->
-    <div>
-      <h1 class="text-xl sm:text-2xl font-bold text-slate-800">{{ $t('settings.title') }}</h1>
-      <p class="text-sm text-slate-500">{{ $t('settings.appSettings') }}</p>
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+      <div>
+        <h1 class="text-xl sm:text-2xl font-bold text-slate-800">{{ $t('settings.title') }}</h1>
+        <p class="text-sm text-slate-500">{{ $t('settings.appSettings') }}</p>
+      </div>
+      <button 
+        @click="loadSettings"
+        :disabled="isRefreshing"
+        class="flex items-center gap-2 px-4 py-2 text-slate-600 hover:bg-slate-100 rounded-xl transition-colors disabled:opacity-50"
+      >
+        <RefreshCw :size="18" :class="{ 'animate-spin': isRefreshing }" />
+        {{ $t('common.refresh') }}
+      </button>
     </div>
 
     <!-- Loading State -->
-    <div v-if="loading" class="flex items-center justify-center py-20">
-      <Loader2 class="w-8 h-8 text-amber-500 animate-spin" />
-      <span class="ml-3 text-slate-600">{{ $t('common.loading') }}</span>
+    <div v-if="isLoading" class="space-y-6">
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div v-for="i in 6" :key="i" class="bg-white rounded-2xl border border-slate-200 p-6">
+          <div class="h-6 w-40 bg-slate-200 rounded mb-4 animate-pulse"></div>
+          <div class="space-y-4">
+            <div v-for="j in 3" :key="j">
+              <div class="h-4 w-24 bg-slate-100 rounded mb-2 animate-pulse"></div>
+              <div class="h-12 bg-slate-100 rounded-xl animate-pulse"></div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
 
     <!-- Error State -->
-    <div v-else-if="error" class="bg-red-50 border border-red-200 rounded-2xl p-6 text-center">
+    <div v-else-if="loadError" class="bg-red-50 border border-red-200 rounded-2xl p-6 text-center">
       <AlertCircle class="w-12 h-12 text-red-400 mx-auto mb-3" />
-      <p class="text-red-600 mb-4">{{ error }}</p>
+      <p class="text-red-600 mb-4">{{ loadError }}</p>
       <button @click="loadSettings" class="px-4 py-2 bg-red-500 text-white rounded-xl hover:bg-red-600 transition-colors flex items-center gap-2 mx-auto">
         <RefreshCw class="w-4 h-4" />
         {{ $t('common.retry') }}
@@ -26,33 +45,66 @@
 
     <!-- Settings Sections -->
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-      <!-- General Settings -->
+
+      <!-- 1. Muassasa ma'lumotlari -->
       <div class="bg-white rounded-2xl border border-slate-200 p-6">
         <h2 class="text-lg font-semibold text-slate-800 mb-4 flex items-center gap-2">
-          <Settings class="w-5 h-5 text-slate-400" />
-          {{ $t('settings.generalSettings') }}
+          <Building2 class="w-5 h-5 text-amber-500" />
+          {{ $t('settings.institutionInfo') }}
         </h2>
         <div class="space-y-4">
           <div>
-            <label class="block text-sm font-medium text-slate-700 mb-2">{{ $t('settings.systemName') }}</label>
+            <label class="block text-sm font-medium text-slate-700 mb-2">{{ $t('settings.institutionName') }}</label>
             <input 
-              v-model="settings.systemName"
+              v-model="settings.institution_name"
               type="text"
               class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 outline-none"
+              placeholder="UniControl"
             />
           </div>
           <div>
-            <label class="block text-sm font-medium text-slate-700 mb-2">{{ $t('settings.universityName') }}</label>
+            <label class="block text-sm font-medium text-slate-700 mb-2">{{ $t('settings.institutionAddress') }}</label>
             <input 
-              v-model="settings.universityName"
+              v-model="settings.institution_address"
               type="text"
               class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 outline-none"
+              placeholder="Toshkent sh., ..."
             />
           </div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-sm font-medium text-slate-700 mb-2">{{ $t('settings.institutionPhone') }}</label>
+              <input 
+                v-model="settings.institution_phone"
+                type="text"
+                class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 outline-none"
+                placeholder="+998 ..."
+              />
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-slate-700 mb-2">{{ $t('settings.institutionEmail') }}</label>
+              <input 
+                v-model="settings.institution_email"
+                type="email"
+                class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 outline-none"
+                placeholder="info@university.uz"
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 2. O'quv yili va semestr -->
+      <div class="bg-white rounded-2xl border border-slate-200 p-6">
+        <h2 class="text-lg font-semibold text-slate-800 mb-4 flex items-center gap-2">
+          <GraduationCap class="w-5 h-5 text-amber-500" />
+          {{ $t('settings.academicInfo') }}
+        </h2>
+        <div class="space-y-4">
           <div>
             <label class="block text-sm font-medium text-slate-700 mb-2">{{ $t('settings.academicYear') }}</label>
             <select 
-              v-model="settings.academicYear"
+              v-model="settings.academic_year"
               class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 outline-none"
             >
               <option>2024-2025</option>
@@ -70,289 +122,430 @@
               <option value="2">{{ $t('settings.semester2') }}</option>
             </select>
           </div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-sm font-medium text-slate-700 mb-2">{{ $t('settings.workStart') }}</label>
+              <input 
+                v-model="settings.working_hours_start"
+                type="time"
+                class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 outline-none"
+              />
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-slate-700 mb-2">{{ $t('settings.workEnd') }}</label>
+              <input 
+                v-model="settings.working_hours_end"
+                type="time"
+                class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 outline-none"
+              />
+            </div>
+          </div>
         </div>
       </div>
 
-      <!-- Attendance Settings -->
+      <!-- 3. Davomat sozlamalari -->
       <div class="bg-white rounded-2xl border border-slate-200 p-6">
         <h2 class="text-lg font-semibold text-slate-800 mb-4 flex items-center gap-2">
-          <ClipboardCheck class="w-5 h-5 text-slate-400" />
+          <ClipboardCheck class="w-5 h-5 text-amber-500" />
           {{ $t('settings.attendanceSettings') }}
         </h2>
         <div class="space-y-4">
           <div>
-            <label class="block text-sm font-medium text-slate-700 mb-2">{{ $t('settings.minAttendancePercent') }}</label>
-            <input 
-              v-model="settings.minAttendance"
-              type="number"
-              min="0"
-              max="100"
-              class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 outline-none"
-            />
+            <label class="block text-sm font-medium text-slate-700 mb-2">{{ $t('settings.attendanceThreshold') }}</label>
+            <div class="flex items-center gap-3">
+              <input 
+                v-model.number="settings.attendance_threshold"
+                type="range"
+                min="50"
+                max="100"
+                step="5"
+                class="flex-1 accent-amber-500"
+              />
+              <span class="text-lg font-bold text-amber-600 w-14 text-center">{{ settings.attendance_threshold }}%</span>
+            </div>
+            <p class="text-xs text-slate-500 mt-1">{{ $t('settings.attendanceThresholdDesc') }}</p>
           </div>
           <div>
             <label class="block text-sm font-medium text-slate-700 mb-2">{{ $t('settings.lateThreshold') }}</label>
-            <input 
-              v-model="settings.lateThreshold"
-              type="number"
-              min="0"
-              class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 outline-none"
-            />
-          </div>
-          <div class="flex items-center justify-between p-3 bg-slate-50 rounded-xl">
-            <div>
-              <p class="font-medium text-slate-700">{{ $t('settings.autoWarning') }}</p>
-              <p class="text-sm text-slate-500">{{ $t('settings.autoWarningDesc') }}</p>
+            <div class="flex items-center gap-3">
+              <input 
+                v-model.number="settings.late_minutes_threshold"
+                type="number"
+                min="0"
+                max="60"
+                class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 outline-none"
+              />
+              <span class="text-sm text-slate-500 whitespace-nowrap">{{ $t('settings.minutes') }}</span>
             </div>
-            <button 
-              @click="settings.autoWarning = !settings.autoWarning"
-              class="w-12 h-6 rounded-full transition-colors"
-              :class="settings.autoWarning ? 'bg-amber-500' : 'bg-slate-300'"
-            >
-              <div 
-                class="w-5 h-5 bg-white rounded-full shadow transition-transform"
-                :class="settings.autoWarning ? 'translate-x-6' : 'translate-x-0.5'"
-              ></div>
-            </button>
-          </div>
-          <div class="flex items-center justify-between p-3 bg-slate-50 rounded-xl">
-            <div>
-              <p class="font-medium text-slate-700">{{ $t('settings.weekendAttendance') }}</p>
-              <p class="text-sm text-slate-500">{{ $t('settings.weekendAttendanceDesc') }}</p>
-            </div>
-            <button 
-              @click="settings.weekendAttendance = !settings.weekendAttendance"
-              class="w-12 h-6 rounded-full transition-colors"
-              :class="settings.weekendAttendance ? 'bg-amber-500' : 'bg-slate-300'"
-            >
-              <div 
-                class="w-5 h-5 bg-white rounded-full shadow transition-transform"
-                :class="settings.weekendAttendance ? 'translate-x-6' : 'translate-x-0.5'"
-              ></div>
-            </button>
           </div>
         </div>
       </div>
 
-      <!-- Notification Settings -->
+      <!-- 4. Integratsiyalar -->
       <div class="bg-white rounded-2xl border border-slate-200 p-6">
         <h2 class="text-lg font-semibold text-slate-800 mb-4 flex items-center gap-2">
-          <Bell class="w-5 h-5 text-slate-400" />
-          {{ $t('settings.notificationSettings') }}
+          <Plug class="w-5 h-5 text-amber-500" />
+          {{ $t('settings.integrations') }}
         </h2>
-        <div class="space-y-4">
+        <div class="space-y-3">
+          <!-- Telegram Bot -->
           <div class="flex items-center justify-between p-3 bg-slate-50 rounded-xl">
-            <div>
-              <p class="font-medium text-slate-700">{{ $t('settings.emailNotifications') }}</p>
-              <p class="text-sm text-slate-500">{{ $t('settings.emailNotificationsDesc') }}</p>
+            <div class="flex items-center gap-3">
+              <div class="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+                <MessageCircle class="w-4 h-4 text-blue-600" />
+              </div>
+              <div>
+                <p class="font-medium text-slate-700">Telegram Bot</p>
+                <p class="text-xs text-slate-500">{{ $t('settings.telegramBotDesc') }}</p>
+              </div>
             </div>
             <button 
-              @click="settings.emailNotifications = !settings.emailNotifications"
-              class="w-12 h-6 rounded-full transition-colors"
-              :class="settings.emailNotifications ? 'bg-amber-500' : 'bg-slate-300'"
+              @click="settings.telegram_bot_enabled = !settings.telegram_bot_enabled"
+              class="w-12 h-6 rounded-full transition-colors flex-shrink-0"
+              :class="settings.telegram_bot_enabled ? 'bg-amber-500' : 'bg-slate-300'"
             >
               <div 
                 class="w-5 h-5 bg-white rounded-full shadow transition-transform"
-                :class="settings.emailNotifications ? 'translate-x-6' : 'translate-x-0.5'"
+                :class="settings.telegram_bot_enabled ? 'translate-x-6' : 'translate-x-0.5'"
               ></div>
             </button>
           </div>
+
+          <!-- Email -->
           <div class="flex items-center justify-between p-3 bg-slate-50 rounded-xl">
-            <div>
-              <p class="font-medium text-slate-700">{{ $t('settings.smsNotifications') }}</p>
-              <p class="text-sm text-slate-500">{{ $t('settings.smsNotificationsDesc') }}</p>
+            <div class="flex items-center gap-3">
+              <div class="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
+                <Mail class="w-4 h-4 text-green-600" />
+              </div>
+              <div>
+                <p class="font-medium text-slate-700">Email</p>
+                <p class="text-xs text-slate-500">{{ $t('settings.emailNotifsDesc') }}</p>
+              </div>
             </div>
             <button 
-              @click="settings.smsNotifications = !settings.smsNotifications"
-              class="w-12 h-6 rounded-full transition-colors"
-              :class="settings.smsNotifications ? 'bg-amber-500' : 'bg-slate-300'"
+              @click="settings.email_notifications_enabled = !settings.email_notifications_enabled"
+              class="w-12 h-6 rounded-full transition-colors flex-shrink-0"
+              :class="settings.email_notifications_enabled ? 'bg-amber-500' : 'bg-slate-300'"
             >
               <div 
                 class="w-5 h-5 bg-white rounded-full shadow transition-transform"
-                :class="settings.smsNotifications ? 'translate-x-6' : 'translate-x-0.5'"
+                :class="settings.email_notifications_enabled ? 'translate-x-6' : 'translate-x-0.5'"
               ></div>
             </button>
           </div>
+
+          <!-- SMS -->
           <div class="flex items-center justify-between p-3 bg-slate-50 rounded-xl">
-            <div>
-              <p class="font-medium text-slate-700">{{ $t('settings.pushNotifications') }}</p>
-              <p class="text-sm text-slate-500">{{ $t('settings.pushNotificationsDesc') }}</p>
+            <div class="flex items-center gap-3">
+              <div class="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center">
+                <Smartphone class="w-4 h-4 text-purple-600" />
+              </div>
+              <div>
+                <p class="font-medium text-slate-700">SMS</p>
+                <p class="text-xs text-slate-500">{{ $t('settings.smsNotifsDesc') }}</p>
+              </div>
             </div>
             <button 
-              @click="settings.pushNotifications = !settings.pushNotifications"
-              class="w-12 h-6 rounded-full transition-colors"
-              :class="settings.pushNotifications ? 'bg-amber-500' : 'bg-slate-300'"
+              @click="settings.sms_notifications_enabled = !settings.sms_notifications_enabled"
+              class="w-12 h-6 rounded-full transition-colors flex-shrink-0"
+              :class="settings.sms_notifications_enabled ? 'bg-amber-500' : 'bg-slate-300'"
             >
               <div 
                 class="w-5 h-5 bg-white rounded-full shadow transition-transform"
-                :class="settings.pushNotifications ? 'translate-x-6' : 'translate-x-0.5'"
+                :class="settings.sms_notifications_enabled ? 'translate-x-6' : 'translate-x-0.5'"
+              ></div>
+            </button>
+          </div>
+
+          <!-- AI Analysis -->
+          <div class="flex items-center justify-between p-3 bg-slate-50 rounded-xl">
+            <div class="flex items-center gap-3">
+              <div class="w-8 h-8 bg-orange-100 rounded-lg flex items-center justify-center">
+                <Brain class="w-4 h-4 text-orange-600" />
+              </div>
+              <div>
+                <p class="font-medium text-slate-700">AI {{ $t('settings.analysis') }}</p>
+                <p class="text-xs text-slate-500">{{ $t('settings.aiAnalysisDesc') }}</p>
+              </div>
+            </div>
+            <button 
+              @click="settings.ai_analysis_enabled = !settings.ai_analysis_enabled"
+              class="w-12 h-6 rounded-full transition-colors flex-shrink-0"
+              :class="settings.ai_analysis_enabled ? 'bg-amber-500' : 'bg-slate-300'"
+            >
+              <div 
+                class="w-5 h-5 bg-white rounded-full shadow transition-transform"
+                :class="settings.ai_analysis_enabled ? 'translate-x-6' : 'translate-x-0.5'"
               ></div>
             </button>
           </div>
         </div>
       </div>
 
-      <!-- Security Settings -->
+      <!-- 5. Interfeys sozlamalari -->
       <div class="bg-white rounded-2xl border border-slate-200 p-6">
         <h2 class="text-lg font-semibold text-slate-800 mb-4 flex items-center gap-2">
-          <Shield class="w-5 h-5 text-slate-400" />
-          {{ $t('settings.securitySettings') }}
+          <Monitor class="w-5 h-5 text-amber-500" />
+          {{ $t('settings.displaySettings') }}
         </h2>
         <div class="space-y-4">
           <div>
-            <label class="block text-sm font-medium text-slate-700 mb-2">{{ $t('settings.sessionTimeout') }}</label>
-            <input 
-              v-model="settings.sessionTimeout"
-              type="number"
-              min="5"
+            <label class="block text-sm font-medium text-slate-700 mb-2">{{ $t('settings.defaultLanguage') }}</label>
+            <select 
+              v-model="settings.language"
               class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 outline-none"
-            />
-          </div>
-          <div class="flex items-center justify-between p-3 bg-slate-50 rounded-xl">
-            <div>
-              <p class="font-medium text-slate-700">{{ $t('settings.twoFactorAuth') }}</p>
-              <p class="text-sm text-slate-500">{{ $t('settings.twoFactorAuthDesc') }}</p>
-            </div>
-            <button 
-              @click="settings.twoFactorAuth = !settings.twoFactorAuth"
-              class="w-12 h-6 rounded-full transition-colors"
-              :class="settings.twoFactorAuth ? 'bg-amber-500' : 'bg-slate-300'"
             >
-              <div 
-                class="w-5 h-5 bg-white rounded-full shadow transition-transform"
-                :class="settings.twoFactorAuth ? 'translate-x-6' : 'translate-x-0.5'"
-              ></div>
-            </button>
+              <option value="uz">O'zbekcha</option>
+              <option value="ru">Русский</option>
+              <option value="en">English</option>
+            </select>
           </div>
-          <div class="flex items-center justify-between p-3 bg-slate-50 rounded-xl">
-            <div>
-              <p class="font-medium text-slate-700">{{ $t('settings.ipRestriction') }}</p>
-              <p class="text-sm text-slate-500">{{ $t('settings.ipRestrictionDesc') }}</p>
-            </div>
-            <button 
-              @click="settings.ipRestriction = !settings.ipRestriction"
-              class="w-12 h-6 rounded-full transition-colors"
-              :class="settings.ipRestriction ? 'bg-amber-500' : 'bg-slate-300'"
+          <div>
+            <label class="block text-sm font-medium text-slate-700 mb-2">{{ $t('settings.timezone') }}</label>
+            <select 
+              v-model="settings.timezone"
+              class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 outline-none"
             >
-              <div 
-                class="w-5 h-5 bg-white rounded-full shadow transition-transform"
-                :class="settings.ipRestriction ? 'translate-x-6' : 'translate-x-0.5'"
-              ></div>
-            </button>
+              <option value="Asia/Tashkent">Asia/Tashkent (UTC+5)</option>
+              <option value="Asia/Samarkand">Asia/Samarkand (UTC+5)</option>
+              <option value="Europe/Moscow">Europe/Moscow (UTC+3)</option>
+              <option value="UTC">UTC</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-slate-700 mb-2">{{ $t('settings.theme') }}</label>
+            <div class="grid grid-cols-2 gap-3">
+              <button 
+                @click="settings.theme = 'light'"
+                class="p-3 rounded-xl border-2 transition-colors flex items-center gap-2"
+                :class="settings.theme === 'light' ? 'border-amber-500 bg-amber-50' : 'border-slate-200 hover:border-slate-300'"
+              >
+                <Sun class="w-5 h-5 text-amber-500" />
+                <span class="text-sm font-medium">{{ $t('settings.lightTheme') }}</span>
+              </button>
+              <button 
+                @click="settings.theme = 'dark'"
+                class="p-3 rounded-xl border-2 transition-colors flex items-center gap-2"
+                :class="settings.theme === 'dark' ? 'border-amber-500 bg-amber-50' : 'border-slate-200 hover:border-slate-300'"
+              >
+                <Moon class="w-5 h-5 text-slate-600" />
+                <span class="text-sm font-medium">{{ $t('settings.darkTheme') }}</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 6. Tizim ma'lumotlari (faqat ko'rish) -->
+      <div class="bg-white rounded-2xl border border-slate-200 p-6">
+        <h2 class="text-lg font-semibold text-slate-800 mb-4 flex items-center gap-2">
+          <Info class="w-5 h-5 text-amber-500" />
+          {{ $t('settings.systemInfo') }}
+        </h2>
+        <div class="space-y-3">
+          <div class="flex items-center justify-between py-2 border-b border-slate-100">
+            <span class="text-sm text-slate-500">{{ $t('settings.version') }}</span>
+            <span class="text-sm font-medium text-slate-700">2.0.0</span>
+          </div>
+          <div class="flex items-center justify-between py-2 border-b border-slate-100">
+            <span class="text-sm text-slate-500">{{ $t('settings.environment') }}</span>
+            <span class="text-sm font-medium text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded">Production</span>
+          </div>
+          <div class="flex items-center justify-between py-2 border-b border-slate-100">
+            <span class="text-sm text-slate-500">Backend</span>
+            <span class="text-sm font-medium text-slate-700">FastAPI + PostgreSQL</span>
+          </div>
+          <div class="flex items-center justify-between py-2 border-b border-slate-100">
+            <span class="text-sm text-slate-500">Frontend</span>
+            <span class="text-sm font-medium text-slate-700">Vue 3 + Vite</span>
+          </div>
+          <div class="flex items-center justify-between py-2">
+            <span class="text-sm text-slate-500">{{ $t('settings.lastUpdate') }}</span>
+            <span class="text-sm font-medium text-slate-700">{{ new Date().toLocaleDateString('uz-UZ') }}</span>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- Save Button -->
-    <div class="flex justify-end">
-      <button 
-        @click="saveSettings"
-        :disabled="saving"
-        class="px-6 py-3 bg-amber-500 text-white rounded-xl font-medium hover:bg-amber-600 transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-      >
-        <Loader2 v-if="saving" class="w-5 h-5 animate-spin" />
-        <Save v-else class="w-5 h-5" />
-        {{ saving ? $t('settings.saving') : $t('common.save') }}
-      </button>
+    <!-- Save Bar -->
+    <div class="flex items-center justify-between bg-white rounded-2xl border border-slate-200 p-4 sticky bottom-4">
+      <div class="text-sm">
+        <span v-if="hasChanges" class="text-amber-600 flex items-center gap-1">
+          <AlertCircle class="w-4 h-4" />
+          {{ $t('settings.unsavedChanges') }}
+        </span>
+        <span v-else class="text-emerald-600 flex items-center gap-1">
+          <CheckCircle2 class="w-4 h-4" />
+          {{ $t('settings.allSaved') }}
+        </span>
+      </div>
+      <div class="flex gap-3">
+        <button 
+          @click="resetSettings"
+          :disabled="!hasChanges || isSaving"
+          class="px-5 py-2.5 border border-slate-200 text-slate-600 rounded-xl font-medium hover:bg-slate-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          {{ $t('common.cancel') }}
+        </button>
+        <button 
+          @click="saveSettings"
+          :disabled="!hasChanges || isSaving"
+          class="px-6 py-2.5 bg-amber-500 text-white rounded-xl font-medium hover:bg-amber-600 transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          <Loader2 v-if="isSaving" class="w-5 h-5 animate-spin" />
+          <Save v-else class="w-5 h-5" />
+          {{ isSaving ? $t('settings.saving') : $t('common.save') }}
+        </button>
+      </div>
     </div>
     </template>
-
-    <!-- Success Toast -->
-    <Transition
-      enter-active-class="transition-all duration-300"
-      enter-from-class="opacity-0 translate-y-4"
-      enter-to-class="opacity-100 translate-y-0"
-      leave-active-class="transition-all duration-300"
-      leave-from-class="opacity-100 translate-y-0"
-      leave-to-class="opacity-0 translate-y-4"
-    >
-      <div 
-        v-if="showSuccess"
-        class="fixed bottom-6 right-6 bg-emerald-500 text-white px-6 py-4 rounded-2xl shadow-lg flex items-center gap-3"
-      >
-        <CheckCircle class="w-5 h-5" />
-        <span class="font-medium">{{ $t('common.success') }}</span>
-      </div>
-    </Transition>
   </div>
 </template>
 
 <script setup>
+/**
+ * Super Admin SettingsView.vue
+ * ============================
+ * Backend API: GET /settings, PUT /settings
+ * Barcha maydonlar real backend system_settings.py ga mos
+ */
+
 import api from '@/services/api'
-import { useLanguageStore } from '@/stores/language'
 import { useToastStore } from '@/stores/toast'
 import {
-    AlertCircle,
-    Bell,
-    CheckCircle,
-    ClipboardCheck,
-    Loader2,
-    RefreshCw,
-    Save,
-    Settings,
-    Shield
+  AlertCircle,
+  Brain,
+  Building2,
+  CheckCircle2,
+  ClipboardCheck,
+  GraduationCap,
+  Info,
+  Loader2,
+  Mail,
+  MessageCircle,
+  Monitor,
+  Moon,
+  Plug,
+  RefreshCw,
+  Save,
+  Smartphone,
+  Sun,
 } from 'lucide-vue-next'
-import { onMounted, reactive, ref } from 'vue'
+import { computed, onMounted, reactive, ref } from 'vue'
 
 const toast = useToastStore()
-const langStore = useLanguageStore()
-const { t } = langStore
-const loading = ref(true)
-const saving = ref(false)
-const error = ref(null)
-const showSuccess = ref(false)
 
-const settings = reactive({
-  systemName: 'Uni Control',
-  universityName: '',
-  academicYear: '2024-2025',
-  semester: '1',
-  minAttendance: 70,
-  lateThreshold: 15,
-  autoWarning: true,
-  weekendAttendance: false,
-  emailNotifications: true,
-  smsNotifications: false,
-  pushNotifications: true,
-  sessionTimeout: 30,
-  twoFactorAuth: false,
-  ipRestriction: false
+// State
+const isLoading = ref(true)
+const isRefreshing = ref(false)
+const isSaving = ref(false)
+const loadError = ref(null)
+
+// Default settings matching backend SettingsResponse exactly
+const defaultSettings = {
+  institution_name: 'UniControl',
+  institution_logo: null,
+  institution_address: null,
+  institution_phone: null,
+  institution_email: null,
+  academic_year: '2025-2026',
+  semester: '2',
+  attendance_threshold: 80,
+  late_minutes_threshold: 15,
+  working_hours_start: '08:00',
+  working_hours_end: '18:00',
+  telegram_bot_enabled: true,
+  email_notifications_enabled: true,
+  sms_notifications_enabled: false,
+  ai_analysis_enabled: true,
+  language: 'uz',
+  timezone: 'Asia/Tashkent',
+  theme: 'light',
+}
+
+const settings = reactive({ ...defaultSettings })
+const originalSettings = ref({ ...defaultSettings })
+
+// O'zgarishlar borligini tekshirish
+const hasChanges = computed(() => {
+  return JSON.stringify(settings) !== JSON.stringify(originalSettings.value)
 })
 
+// Sozlamalarni yuklash
 const loadSettings = async () => {
-  loading.value = true
-  error.value = null
   try {
+    loadError.value = null
+    isRefreshing.value = true
+    
     const response = await api.getSettings()
+    
     if (response) {
-      // response.data emas, to'g'ridan-to'g'ri response
-      Object.assign(settings, response)
+      Object.keys(defaultSettings).forEach(key => {
+        if (response[key] !== undefined && response[key] !== null) {
+          settings[key] = response[key]
+        }
+      })
     }
+    
+    originalSettings.value = { ...settings }
+    
   } catch (err) {
     console.error('Error loading settings:', err)
-    error.value = t('common.error')
-    // Keep defaults if API fails
+    loadError.value = 'Sozlamalarni yuklashda xatolik'
+    toast.warning('Standart qiymatlar ishlatilmoqda')
   } finally {
-    loading.value = false
+    isLoading.value = false
+    isRefreshing.value = false
   }
 }
 
+// Sozlamalarni saqlash
 const saveSettings = async () => {
-  saving.value = true
   try {
-    await api.updateSettings({ ...settings })
-    showSuccess.value = true
-    toast.success(t('common.success'))
-    setTimeout(() => {
-      showSuccess.value = false
-    }, 3000)
+    isSaving.value = true
+    
+    // Faqat o'zgargan maydonlarni yuborish
+    const changedData = {}
+    Object.keys(defaultSettings).forEach(key => {
+      if (JSON.stringify(settings[key]) !== JSON.stringify(originalSettings.value[key])) {
+        changedData[key] = settings[key]
+      }
+    })
+    
+    if (Object.keys(changedData).length === 0) {
+      toast.info('O\'zgarishlar yo\'q')
+      return
+    }
+    
+    const response = await api.updateSettings(changedData)
+    
+    if (response) {
+      Object.keys(defaultSettings).forEach(key => {
+        if (response[key] !== undefined) {
+          settings[key] = response[key]
+        }
+      })
+    }
+    
+    originalSettings.value = { ...settings }
+    toast.success('Sozlamalar saqlandi')
+    
   } catch (err) {
     console.error('Error saving settings:', err)
-    toast.error(t('common.error'))
+    if (err.message?.includes('403')) {
+      toast.error('Ruxsat yo\'q — faqat Super Admin sozlamalarni o\'zgartira oladi')
+    } else {
+      toast.error('Sozlamalarni saqlashda xatolik')
+    }
   } finally {
-    saving.value = false
+    isSaving.value = false
   }
+}
+
+// O'zgarishlarni bekor qilish
+const resetSettings = () => {
+  Object.assign(settings, originalSettings.value)
+  toast.info('O\'zgarishlar bekor qilindi')
 }
 
 onMounted(loadSettings)

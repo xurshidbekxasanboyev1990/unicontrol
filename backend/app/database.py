@@ -111,7 +111,8 @@ async def init_db() -> None:
             user, student, group, attendance, 
             schedule, notification, report,
             mutoola, activity_log, file,
-            library, canteen, club, subject, tournament
+            library, canteen, club, subject, tournament,
+            system_settings
         )
         await conn.run_sync(Base.metadata.create_all)
     
