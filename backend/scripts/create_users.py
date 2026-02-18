@@ -71,12 +71,9 @@ async def create_users():
         ).decode('utf-8')
         
         if existing:
-            # User exists, update password hash
-            await conn.execute(
-                "UPDATE users SET password_hash = $1 WHERE login = $2",
-                password_hash, user_data['login']
-            )
-            print(f"  ✓ Updated {user_data['login']} password")
+            # User already exists — DO NOT overwrite password!
+            # Parolni faqat admin panel orqali o'zgartirish kerak
+            print(f"  ✓ {user_data['login']} already exists (password NOT changed)")
         else:
             # Create new user
             await conn.execute("""
