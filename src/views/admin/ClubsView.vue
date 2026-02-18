@@ -495,10 +495,10 @@ const deleteClub = async () => {
 const toggleStatus = async (club) => {
   try {
     await dataStore.toggleClubStatus(club.id)
-    toast.info(club.isActive ? 'To\'garak o\'chirildi' : 'To\'garak yoqildi')
+    toast.info(club.isActive ? t('clubs.clubDeactivated') : t('clubs.clubActivated'))
   } catch (err) {
     console.error('Error toggling club status:', err)
-    toast.error('Statusni o\'zgartirishda xatolik')
+    toast.error(t('subjects.statusChangeError'))
   }
 }
 </script>

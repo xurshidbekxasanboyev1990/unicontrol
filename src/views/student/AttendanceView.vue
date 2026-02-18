@@ -167,10 +167,12 @@ import {
 import { computed, markRaw, onMounted, ref } from 'vue'
 import api from '../../services/api'
 import { useAuthStore } from '../../stores/auth'
+import { useLanguageStore } from '../../stores/language'
 import { useToastStore } from '../../stores/toast'
 
 const authStore = useAuthStore()
 const toast = useToastStore()
+const { t } = useLanguageStore()
 
 const loading = ref(false)
 const error = ref(null)
@@ -193,7 +195,7 @@ async function loadAttendance() {
         id: r.id,
         studentId: r.student_id,
         date: r.date,
-        subject: r.subject || 'Fan',
+        subject: r.subject || t('schedule.subject'),
         status: r.status || 'present'
       }))
     } else if (response?.data) {
@@ -201,14 +203,14 @@ async function loadAttendance() {
         id: r.id,
         studentId: r.student_id,
         date: r.date,
-        subject: r.subject || 'Fan',
+        subject: r.subject || t('schedule.subject'),
         status: r.status || 'present'
       }))
     }
   } catch (err) {
     console.error('Load attendance error:', err)
-    error.value = err.message || 'Davomat yuklanmadi'
-    toast.error('Davomat yuklanmadi')
+    error.value = err.message || t('attendance.loadError')
+    toast.error(t('attendance.loadError'))
   } finally {
     loading.value = false
   }
@@ -293,10 +295,10 @@ const getStatusBadgeClass = (status) => {
 
 const getStatusText = (status) => {
   const texts = {
-    present: 'Kelgan',
-    late: 'Kechikkan',
-    absent: 'Kelmagan',
-    excused: 'Sababli'
+    present: t('attendance.present'),
+    late: t('attendance.late'),
+    absent: t('attendance.absent'),
+    excused: t('attendance.excused')
   }
   return texts[status] || status
 }

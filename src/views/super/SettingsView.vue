@@ -411,6 +411,7 @@
  */
 
 import api from '@/services/api'
+import { useLanguageStore } from '@/stores/language'
 import { useToastStore } from '@/stores/toast'
 import {
   AlertCircle,
@@ -434,6 +435,7 @@ import {
 import { computed, onMounted, reactive, ref } from 'vue'
 
 const toast = useToastStore()
+const { t } = useLanguageStore()
 
 // State
 const isLoading = ref(true)
@@ -491,8 +493,8 @@ const loadSettings = async () => {
     
   } catch (err) {
     console.error('Error loading settings:', err)
-    loadError.value = 'Sozlamalarni yuklashda xatolik'
-    toast.warning('Standart qiymatlar ishlatilmoqda')
+    loadError.value = t('settings.loadError')
+    toast.warning(t('settings.usingDefaults'))
   } finally {
     isLoading.value = false
     isRefreshing.value = false
@@ -513,7 +515,7 @@ const saveSettings = async () => {
     })
     
     if (Object.keys(changedData).length === 0) {
-      toast.info('O\'zgarishlar yo\'q')
+      toast.info(t('settings.noChanges'))
       return
     }
     
@@ -528,14 +530,14 @@ const saveSettings = async () => {
     }
     
     originalSettings.value = { ...settings }
-    toast.success('Sozlamalar saqlandi')
+    toast.success(t('settings.saved'))
     
   } catch (err) {
     console.error('Error saving settings:', err)
     if (err.message?.includes('403')) {
-      toast.error('Ruxsat yo\'q — faqat Super Admin sozlamalarni o\'zgartira oladi')
+      toast.error(t('settings.noPermission'))
     } else {
-      toast.error('Sozlamalarni saqlashda xatolik')
+      toast.error(t('settings.saveError'))
     }
   } finally {
     isSaving.value = false
@@ -545,7 +547,7 @@ const saveSettings = async () => {
 // O'zgarishlarni bekor qilish
 const resetSettings = () => {
   Object.assign(settings, originalSettings.value)
-  toast.info('O\'zgarishlar bekor qilindi')
+  toast.info(t('settings.changesCancelled'))
 }
 
 onMounted(loadSettings)

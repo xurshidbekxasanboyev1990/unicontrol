@@ -293,17 +293,17 @@
                 <div 
                   class="h-full bg-emerald-500 transition-all duration-500" 
                   :style="{ width: (day.total > 0 ? (day.present / day.total * 100) : 0) + '%' }"
-                  :title="'Keldi: ' + day.present"
+                  :title="$t('dashboard.legendPresent') + ': ' + day.present"
                 ></div>
                 <div 
                   class="h-full bg-amber-500 transition-all duration-500" 
                   :style="{ width: (day.total > 0 ? (day.late / day.total * 100) : 0) + '%' }"
-                  :title="'Kechikdi: ' + day.late"
+                  :title="$t('dashboard.legendLate') + ': ' + day.late"
                 ></div>
                 <div 
                   class="h-full bg-rose-500 transition-all duration-500" 
                   :style="{ width: (day.total > 0 ? (day.absent / day.total * 100) : 0) + '%' }"
-                  :title="'Kelmadi: ' + day.absent"
+                  :title="$t('dashboard.legendAbsent') + ': ' + day.absent"
                 ></div>
               </div>
               <span class="text-xs font-bold w-12 text-right" :class="day.rate >= 80 ? 'text-emerald-600' : day.rate >= 60 ? 'text-amber-600' : 'text-rose-600'">{{ day.rate }}%</span>
@@ -485,7 +485,7 @@
               </div>
               <div class="flex-1 min-w-0">
                 <p class="font-medium text-slate-800 truncate">{{ group.name }}</p>
-                <p class="text-xs text-slate-500">{{ group.faculty }} • {{ group.course_year }}-kurs</p>
+                <p class="text-xs text-slate-500">{{ group.faculty }} • {{ group.course_year }}-{{ $t('dashboard.courseLabel') }}</p>
               </div>
               <div class="flex items-center gap-1 bg-blue-50 px-2.5 py-1 rounded-lg">
                 <Users class="w-3.5 h-3.5 text-blue-600" />
@@ -540,7 +540,7 @@
             {{ $t('dashboard.recentActivity') }}
           </h2>
           <router-link to="/super/logs" class="text-xs text-amber-600 hover:text-amber-700 font-medium">
-            Barchasini ko'rish →
+            {{ $t('dashboard.viewAllLink') }} →
           </router-link>
         </div>
         <div v-if="recentLogs.length === 0" class="p-8 text-center text-slate-400">
@@ -608,6 +608,9 @@ import {
 } from 'lucide-vue-next'
 import { computed, markRaw, onMounted, reactive, ref } from 'vue'
 import api from '../../services/api'
+import { useLanguageStore } from '../../stores/language'
+
+const { t } = useLanguageStore()
 
 // === STATE ===
 const loading = ref(true)
@@ -681,10 +684,10 @@ const roleDistribution = computed(() => {
   const total = Object.values(raw).reduce((s, v) => s + v, 0) || 1
   
   const roles = [
-    { key: 'student', label: 'Talabalar', dotClass: 'bg-blue-500', barClass: 'bg-blue-500' },
-    { key: 'leader', label: 'Liderlar', dotClass: 'bg-violet-500', barClass: 'bg-violet-500' },
-    { key: 'admin', label: 'Adminlar', dotClass: 'bg-amber-500', barClass: 'bg-amber-500' },
-    { key: 'superadmin', label: 'Super Adminlar', dotClass: 'bg-rose-500', barClass: 'bg-rose-500' }
+    { key: 'student', label: t('common.students'), dotClass: 'bg-blue-500', barClass: 'bg-blue-500' },
+    { key: 'leader', label: t('dashboard.leaders'), dotClass: 'bg-violet-500', barClass: 'bg-violet-500' },
+    { key: 'admin', label: t('dashboard.adminsLabel'), dotClass: 'bg-amber-500', barClass: 'bg-amber-500' },
+    { key: 'superadmin', label: t('dashboard.superAdminsLabel'), dotClass: 'bg-rose-500', barClass: 'bg-rose-500' }
   ]
 
   return roles.map(r => ({
@@ -813,7 +816,7 @@ const loadDashboard = async () => {
 
   } catch (err) {
     console.error('Dashboard load error:', err)
-    error.value = err.message || 'Ma\'lumotlarni yuklashda xatolik yuz berdi'
+    error.value = err.message || t('dashboard.loadError')
   } finally {
     loading.value = false
     refreshing.value = false
@@ -831,7 +834,7 @@ const formatNumber = (num) => {
 const formatTrendDate = (dateStr) => {
   if (!dateStr) return ''
   const d = new Date(dateStr)
-  const months = ['yan', 'fev', 'mar', 'apr', 'may', 'iyun', 'iyul', 'avg', 'sen', 'okt', 'noy', 'dek']
+  const months = [t('months.jan'), t('months.feb'), t('months.mar'), t('months.apr'), t('months.may'), t('months.jun'), t('months.jul'), t('months.aug'), t('months.sep'), t('months.oct'), t('months.nov'), t('months.dec')]
   return `${d.getDate()}-${months[d.getMonth()]}`
 }
 
@@ -853,8 +856,8 @@ const formatLog = (log) => {
     icon: markRaw(iconData.icon),
     bgClass: iconData.bg,
     iconClass: iconData.text,
-    action: log.details || log.action || 'Noma\'lum amal',
-    user: log.user_name || 'Tizim',
+    action: log.details || log.action || t('dashboard.unknownAction'),
+    user: log.user_name || t('dashboard.system'),
     module: log.module || '',
     time: formatTime(log.timestamp || log.created_at)
   }
@@ -862,14 +865,14 @@ const formatLog = (log) => {
 
 // Format timestamp to relative time
 const formatTime = (timestamp) => {
-  if (!timestamp) return 'Hozir'
+  if (!timestamp) return t('dashboard.justNow')
   const date = new Date(timestamp)
   const now = new Date()
   const diff = Math.floor((now - date) / 1000)
-  if (diff < 60) return 'Hozir'
-  if (diff < 3600) return `${Math.floor(diff / 60)} daq oldin`
-  if (diff < 86400) return `${Math.floor(diff / 3600)} soat oldin`
-  if (diff < 604800) return `${Math.floor(diff / 86400)} kun oldin`
+  if (diff < 60) return t('dashboard.justNow')
+  if (diff < 3600) return `${Math.floor(diff / 60)} ${t('dashboard.minutesAgo')}`
+  if (diff < 86400) return `${Math.floor(diff / 3600)} ${t('dashboard.hoursAgo')}`
+  if (diff < 604800) return `${Math.floor(diff / 86400)} ${t('dashboard.daysAgo')}`
   return date.toLocaleDateString('uz-UZ')
 }
 
@@ -904,8 +907,8 @@ const getRoleLabel = (role) => {
   const map = {
     superadmin: 'Super Admin',
     admin: 'Admin',
-    leader: 'Lider',
-    student: 'Talaba'
+    leader: t('dashboard.leaders'),
+    student: t('common.students')
   }
   return map[role] || role
 }

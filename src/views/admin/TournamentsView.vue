@@ -669,7 +669,7 @@
             <div class="p-6 overflow-y-auto max-h-[calc(90vh-140px)]">
               <div v-if="participantsLoading" class="text-center py-12">
                 <div class="w-10 h-10 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-                <p class="text-slate-500">Yuklanmoqda...</p>
+                <p class="text-slate-500">{{ $t('common.loading') }}</p>
               </div>
 
               <div v-else-if="participants.length === 0" class="text-center py-12">
@@ -866,7 +866,7 @@ onMounted(async () => {
       dataStore.fetchSubjects()
     ])
   } catch (err) {
-    toast.error('Ma\'lumotlarni yuklashda xatolik')
+    toast.error(t('common.loadError'))
     console.error(err)
   } finally {
     loading.value = false
@@ -885,36 +885,36 @@ const activeSubjectDropdown = ref(null) // Fan dropdown uchun
 const participants = ref([])
 const participantsLoading = ref(false)
 
-const categories = [
-  { value: 'all', label: 'Barchasi', icon: Trophy },
-  { value: 'intellektual', label: 'Intellektual', icon: Brain },
-  { value: 'sport', label: 'Sport', icon: Dumbbell },
-  { value: 'ijodiy', label: 'Ijodiy', icon: Palette },
-  { value: 'ilmiy', label: 'Ilmiy', icon: FlaskConical }
-]
+const categories = computed(() => [
+  { value: 'all', label: t('common.all'), icon: Trophy },
+  { value: 'intellektual', label: t('tournaments.intellectual'), icon: Brain },
+  { value: 'sport', label: t('tournaments.sport'), icon: Dumbbell },
+  { value: 'ijodiy', label: t('tournaments.creative'), icon: Palette },
+  { value: 'ilmiy', label: t('tournaments.scientific'), icon: FlaskConical }
+])
 
 // CustomSelect uchun options (Lucide icons)
-const categoryOptions = [
-  { value: 'intellektual', label: 'Intellektual', icon: Brain },
-  { value: 'sport', label: 'Sport', icon: Dumbbell },
-  { value: 'ijodiy', label: 'Ijodiy', icon: Palette },
-  { value: 'ilmiy', label: 'Ilmiy', icon: FlaskConical }
-]
+const categoryOptions = computed(() => [
+  { value: 'intellektual', label: t('tournaments.intellectual'), icon: Brain },
+  { value: 'sport', label: t('tournaments.sport'), icon: Dumbbell },
+  { value: 'ijodiy', label: t('tournaments.creative'), icon: Palette },
+  { value: 'ilmiy', label: t('tournaments.scientific'), icon: FlaskConical }
+])
 
-const typeOptions = [
-  { value: 'olimpiada', label: 'Olimpiada', icon: Trophy },
-  { value: 'chempionat', label: 'Chempionat', icon: Award },
-  { value: 'tanlov', label: 'Tanlov', icon: Star },
-  { value: 'festival', label: 'Festival', icon: PartyPopper },
-  { value: 'boshqa', label: 'Boshqa', icon: FileQuestion }
-]
+const typeOptions = computed(() => [
+  { value: 'olimpiada', label: t('tournaments.olympiad'), icon: Trophy },
+  { value: 'chempionat', label: t('tournaments.championship'), icon: Award },
+  { value: 'tanlov', label: t('tournaments.contest'), icon: Star },
+  { value: 'festival', label: t('tournaments.festival'), icon: PartyPopper },
+  { value: 'boshqa', label: t('tournaments.other'), icon: FileQuestion }
+])
 
-const fieldTypeOptions = [
-  { value: 'text', label: 'Matn', icon: Type },
-  { value: 'number', label: 'Raqam', icon: Hash },
-  { value: 'select', label: 'Tanlash', icon: List },
-  { value: 'textarea', label: 'Katta matn', icon: AlignLeft }
-]
+const fieldTypeOptions = computed(() => [
+  { value: 'text', label: t('tournaments.fieldText'), icon: Type },
+  { value: 'number', label: t('tournaments.fieldNumber'), icon: Hash },
+  { value: 'select', label: t('tournaments.fieldSelect'), icon: List },
+  { value: 'textarea', label: t('tournaments.fieldTextarea'), icon: AlignLeft }
+])
 
 const defaultForm = {
   title: '',
@@ -984,16 +984,16 @@ const getDirectionOptions = (currentDirectionId) => {
 
 // Yo'nalish nomini olish
 const getDirectionName = (directionId) => {
-  if (!directionId) return 'Tanlanmagan'
+  if (!directionId) return t('tournaments.notSelected')
   const direction = dataStore.getDirectionById(directionId)
-  return direction ? `${direction.code} - ${direction.name}` : 'Noma\'lum'
+  return direction ? `${direction.code} - ${direction.name}` : t('common.unknown')
 }
 
 // Birinchi fan nomini olish (fixed rejim uchun)
 const getFirstSubjectName = (subjectIds) => {
-  if (!subjectIds || subjectIds.length === 0) return 'Tanlanmagan'
+  if (!subjectIds || subjectIds.length === 0) return t('tournaments.notSelected')
   const subject = dataStore.getSubjectById(subjectIds[0])
-  return subject?.name || 'Noma\'lum'
+  return subject?.name || t('common.unknown')
 }
 
 // Fan nomini olish
@@ -1052,10 +1052,10 @@ const getCategoryIcon = (category) => {
 
 const getCategoryLabel = (category) => {
   const labels = {
-    intellektual: 'Intellektual',
-    sport: 'Sport',
-    ijodiy: 'Ijodiy',
-    ilmiy: 'Ilmiy'
+    intellektual: t('tournaments.intellectual'),
+    sport: t('tournaments.sport'),
+    ijodiy: t('tournaments.creative'),
+    ilmiy: t('tournaments.scientific')
   }
   return labels[category] || category
 }
@@ -1136,31 +1136,31 @@ const updateFieldOptions = (field) => {
 
 const saveTournament = async () => {
   if (!form.value.title || !form.value.description || !form.value.startDate || !form.value.registrationDeadline) {
-    toast.error('Majburiy maydonlarni to\'ldiring')
+    toast.error(t('tournaments.fillRequired'))
     return
   }
 
   // YANGI MODEL: Qatnashish qoidalarini validatsiya qilish
   for (const rule of form.value.participationRules) {
     if (!rule.directionId) {
-      toast.error('Barcha qoidalar uchun yo\'nalish tanlang')
+      toast.error(t('tournaments.selectDirectionForRules'))
       return
     }
     if (!rule.allowedSubjectIds || rule.allowedSubjectIds.length === 0) {
-      toast.error('Barcha qoidalar uchun kamida bitta fan tanlang')
+      toast.error(t('tournaments.selectSubjectForRules'))
       return
     }
     if (rule.selectionMode === 'fixed' && rule.allowedSubjectIds.length > 1) {
-      toast.error('Fixed rejimda faqat bitta fan tanlanishi kerak')
+      toast.error(t('tournaments.fixedOnlyOneSubject'))
       return
     }
     if (rule.selectionMode === 'multiple') {
       if (rule.minSelect < 1) {
-        toast.error('Minimum tanlash 1 dan kam bo\'lishi mumkin emas')
+        toast.error(t('tournaments.minSelectError'))
         return
       }
       if (rule.maxSelect < rule.minSelect) {
-        toast.error('Maximum tanlash minimum dan kam bo\'lishi mumkin emas')
+        toast.error(t('tournaments.maxSelectError'))
         return
       }
     }
@@ -1183,14 +1183,14 @@ const saveTournament = async () => {
   try {
     if (isEditing.value) {
       await dataStore.updateTournament(form.value.id, data)
-      toast.success('Turnir yangilandi')
+      toast.success(t('tournaments.tournamentUpdated'))
     } else {
       await dataStore.addTournament(data)
-      toast.success('Turnir yaratildi')
+      toast.success(t('tournaments.tournamentCreated'))
     }
     closeModal()
   } catch (err) {
-    toast.error(err.message || 'Xatolik yuz berdi')
+    toast.error(err.message || t('common.error'))
   } finally {
     saving.value = false
   }
@@ -1205,11 +1205,11 @@ const deleteTournament = async () => {
   saving.value = true
   try {
     await dataStore.deleteTournament(tournamentToDelete.value.id)
-    toast.success('Turnir o\'chirildi')
+    toast.success(t('tournaments.tournamentDeleted'))
     showDeleteModal.value = false
     tournamentToDelete.value = null
   } catch (err) {
-    toast.error(err.message || 'O\'chirishda xatolik')
+    toast.error(err.message || t('tournaments.deleteError'))
   } finally {
     saving.value = false
   }
@@ -1218,9 +1218,9 @@ const deleteTournament = async () => {
 const toggleStatus = async (id) => {
   try {
     await dataStore.toggleTournamentStatus(id)
-    toast.success('Status yangilandi')
+    toast.success(t('tournaments.statusUpdated'))
   } catch (err) {
-    toast.error(err.message || 'Status yangilashda xatolik')
+    toast.error(err.message || t('tournaments.statusUpdateError'))
   }
 }
 
@@ -1234,7 +1234,7 @@ const viewRegistrations = async (tournament) => {
   try {
     participants.value = await dataStore.fetchTournamentParticipants(tournament.id)
   } catch (err) {
-    toast.error('Ishtirokchilarni yuklashda xatolik')
+    toast.error(t('tournaments.participantsLoadError'))
     console.error(err)
   } finally {
     participantsLoading.value = false
@@ -1284,7 +1284,7 @@ const downloadExcel = () => {
   link.click()
   URL.revokeObjectURL(url)
   
-  toast.success('Ro\'yxat yuklab olindi')
+  toast.success(t('tournaments.listDownloaded'))
 }
 
 const toggleRegDetails = (regId) => {
@@ -1299,10 +1299,10 @@ const updateStatus = async (tournamentId, regId, status) => {
     if (reg) {
       reg.status = status
     }
-    toast.success(status === 'confirmed' || status === 'approved' ? 'Tasdiqlandi' : 'Rad etildi')
+    toast.success(status === 'confirmed' || status === 'approved' ? t('common.approved') : t('common.rejected'))
   } catch (e) {
     console.error('Status update error:', e)
-    toast.error('Statusni yangilashda xatolik')
+    toast.error(t('tournaments.statusUpdateError'))
   }
 }
 </script>

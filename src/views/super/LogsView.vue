@@ -465,12 +465,12 @@ const exportLogs = async () => {
   try {
     toast.info(t('common.loading'))
     // Export as CSV from current logs
-    const headers = ['Vaqt', 'Harakat', 'Tavsif', 'Foydalanuvchi', 'IP', 'Ob\'ekt']
+    const headers = [t('logs.csvTime'), t('logs.csvAction'), t('logs.csvDescription'), t('logs.csvUser'), 'IP', t('logs.csvEntity')]
     const rows = logs.value.map(l => [
       formatDate(l.created_at),
       l.action,
       l.description,
-      l.user_name || 'Tizim',
+      l.user_name || t('logs.system'),
       l.ip_address || '',
       l.entity_type ? `${l.entity_type}#${l.entity_id || ''}` : ''
     ])

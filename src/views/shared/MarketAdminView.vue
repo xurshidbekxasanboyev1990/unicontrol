@@ -565,7 +565,7 @@ const verifyOrderPayment = async (payment) => {
     payment.payment_status = 'verified'
     payment.payment_verified = true
     payment.payment_rejected = false
-    toast.success(`${payment.buyer_name} — ${payment.title} to'lovi tasdiqlandi!`)
+    toast.success(t('market.paymentVerifiedSuccess'))
     loadStats()
   } catch (e) {
     toast.error(e.message || t('common.error'))

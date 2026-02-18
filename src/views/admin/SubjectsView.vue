@@ -469,10 +469,12 @@ import {
 } from 'lucide-vue-next'
 import { computed, onMounted, ref } from 'vue'
 import { useDataStore } from '../../stores/data'
+import { useLanguageStore } from '../../stores/language'
 import { useToastStore } from '../../stores/toast'
 
 const dataStore = useDataStore()
 const toast = useToastStore()
+const { t } = useLanguageStore()
 
 // Loading
 const loading = ref(true)
@@ -511,7 +513,7 @@ onMounted(async () => {
     ])
   } catch (err) {
     console.error('Error loading data:', err)
-    toast.error('Ma\'lumotlarni yuklashda xatolik')
+    toast.error(t('common.loadError'))
   } finally {
     loading.value = false
   }
@@ -581,7 +583,7 @@ const editDirection = (direction) => {
 
 const saveDirection = async () => {
   if (!directionForm.value.name.trim() || !directionForm.value.code.trim()) {
-    toast.error('Nom va kodni kiriting')
+    toast.error(t('subjects.enterNameCode'))
     return
   }
 
@@ -589,15 +591,15 @@ const saveDirection = async () => {
   try {
     if (isEditingDirection.value) {
       await dataStore.updateDirection(directionForm.value.id, directionForm.value)
-      toast.success('Yo\'nalish yangilandi')
+      toast.success(t('subjects.directionUpdated'))
     } else {
       await dataStore.addDirection(directionForm.value)
-      toast.success('Yangi yo\'nalish qo\'shildi')
+      toast.success(t('subjects.directionAdded'))
     }
     showDirectionModal.value = false
   } catch (err) {
     console.error('Error saving direction:', err)
-    toast.error('Yo\'nalishni saqlashda xatolik')
+    toast.error(t('subjects.directionSaveError'))
   } finally {
     saving.value = false
   }
@@ -606,10 +608,10 @@ const saveDirection = async () => {
 const toggleDirectionStatus = async (direction) => {
   try {
     await dataStore.toggleDirectionStatus(direction.id)
-    toast.success(direction.isActive ? 'Yo\'nalish o\'chirildi' : 'Yo\'nalish yoqildi')
+    toast.success(direction.isActive ? t('subjects.directionDeactivated') : t('subjects.directionActivated'))
   } catch (err) {
     console.error('Error toggling direction status:', err)
-    toast.error('Statusni o\'zgartirishda xatolik')
+    toast.error(t('subjects.statusChangeError'))
   }
 }
 
@@ -621,10 +623,10 @@ const confirmDeleteDirection = (direction) => {
 const deleteDirection = async () => {
   try {
     await dataStore.deleteDirection(directionToDelete.value.id)
-    toast.success('Yo\'nalish o\'chirildi')
+    toast.success(t('subjects.directionDeleted'))
   } catch (err) {
     console.error('Error deleting direction:', err)
-    toast.error('Yo\'nalishni o\'chirishda xatolik')
+    toast.error(t('subjects.directionDeleteError'))
   } finally {
     showDeleteDirectionModal.value = false
     directionToDelete.value = null
@@ -643,14 +645,14 @@ const openDirectionSubjectsModal = (direction) => {
 
 const addNewSubject = async () => {
   if (!newSubjectName.value.trim()) {
-    toast.error('Fan nomini kiriting')
+    toast.error(t('subjects.enterSubjectName'))
     return
   }
 
   // Check if subject already exists
   const existing = dataStore.subjects.find(s => s.name.toLowerCase() === newSubjectName.value.trim().toLowerCase())
   if (existing) {
-    toast.error('Bu fan allaqachon mavjud')
+    toast.error(t('subjects.subjectExists'))
     return
   }
 
@@ -688,7 +690,7 @@ const addNewSubject = async () => {
       selectedSubjectIds.value.push(newSubject.id)
     }
     
-    toast.success('Yangi fan qo\'shildi')
+    toast.success(t('subjects.subjectAdded'))
     newSubjectName.value = ''
     newSubjectIcon.value = 'BookOpen'
   } catch (err) {
@@ -724,7 +726,7 @@ const deleteSubject = async () => {
     
     // Delete subject
     await dataStore.deleteSubject(subjectToDelete.value.id)
-    toast.success('Fan o\'chirildi')
+    toast.success(t('subjects.subjectDeleted'))
     showDeleteSubjectModal.value = false
     subjectToDelete.value = null
   } catch (err) {

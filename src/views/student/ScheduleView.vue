@@ -8,7 +8,7 @@
       </div>
       <div class="flex items-center gap-2 bg-white rounded-xl p-1 border border-slate-200 shadow-sm">
         <button
-          v-for="view in ['Hafta', 'Bugun']"
+          v-for="view in ['weekly', 'today']"
           :key="view"
           @click="activeView = view"
           :class="[
@@ -18,7 +18,7 @@
               : 'text-slate-500 hover:text-slate-800 hover:bg-slate-50'
           ]"
         >
-          {{ view }}
+          {{ view === 'weekly' ? $t('schedule.weekly') : $t('schedule.today') }}
         </button>
       </div>
     </div>
@@ -45,13 +45,13 @@
 
       <div class="text-center">
         <div class="w-12 h-12 border-4 border-emerald-200 border-t-emerald-500 rounded-full animate-spin mx-auto mb-4"></div>
-        <p class="text-slate-500 font-medium">Jadval yuklanmoqda...</p>
+        <p class="text-slate-500 font-medium">{{ $t('common.loading') }}</p>
       </div>
     </div>
 
     <template v-else>
       <!-- Today's Schedule (when Bugun selected) -->
-      <div v-if="activeView === 'Bugun'" class="space-y-4">
+      <div v-if="activeView === 'today'" class="space-y-4">
         <div class="bg-gradient-to-br from-emerald-500 via-teal-500 to-cyan-600 rounded-2xl p-6 text-white relative overflow-hidden">
           <div class="absolute top-0 right-0 w-40 h-40 bg-white/5 rounded-full -translate-y-10 translate-x-10"></div>
           <div class="absolute bottom-0 left-0 w-32 h-32 bg-white/5 rounded-full translate-y-10 -translate-x-10"></div>
@@ -61,7 +61,7 @@
               <span class="text-sm opacity-80">{{ todayFormatted }}</span>
             </div>
             <h2 class="text-2xl font-bold">{{ currentDayName }}</h2>
-            <p class="text-emerald-100 mt-1">{{ todaySchedule.length }} ta dars</p>
+            <p class="text-emerald-100 mt-1">{{ todaySchedule.length }} {{ $t('schedule.lessonsCount') }}</p>
           </div>
         </div>
 
@@ -158,7 +158,7 @@
                     <div class="flex flex-col items-center gap-1">
                       <span>{{ day }}</span>
                       <span v-if="isToday(day)" class="inline-flex items-center px-2 py-0.5 bg-emerald-500 text-white text-[10px] font-bold rounded-full">
-                        Bugun
+                        {{ $t('common.today') }}
                       </span>
                     </div>
                   </th>
@@ -177,7 +177,7 @@
                       <span class="text-[11px] text-slate-400">{{ time.split('-')[1] }}</span>
                     </div>
                     <div class="mt-1 inline-flex items-center gap-1 px-2 py-0.5 bg-slate-100 text-slate-500 rounded text-[10px] font-bold">
-                      {{ tIdx + 1 }}-para
+                      {{ tIdx + 1 }}-{{ $t('schedule.lessonPeriod') }}
                     </div>
                   </td>
 
@@ -234,7 +234,7 @@
           <div class="flex items-center gap-2 mb-4">
             <Palette class="w-4 h-4 text-slate-400" />
             <h3 class="text-sm font-bold text-slate-700">{{ $t('schedule.subject') }}</h3>
-            <span class="text-xs text-slate-400 ml-1">({{ uniqueSubjects.length }} ta fan)</span>
+            <span class="text-xs text-slate-400 ml-1">({{ uniqueSubjects.length }} {{ $t('schedule.subjectsCount') }})</span>
           </div>
           <div class="flex flex-wrap gap-2.5">
             <div
@@ -271,7 +271,7 @@ const authStore = useAuthStore()
 const toast = useToastStore()
 const { t } = useLanguageStore()
 
-const activeView = ref('Hafta')
+const activeView = ref('weekly')
 const days = ['Dushanba', 'Seshanba', 'Chorshanba', 'Payshanba', 'Juma', 'Shanba']
 
 // Default time slots (used as fallback if no schedule data)
@@ -418,7 +418,7 @@ async function loadSchedule() {
     }
   } catch (err) {
     console.error('Load schedule error:', err)
-    toast.error('Jadval yuklanmadi')
+    toast.error(t('schedule.loadError'))
   } finally {
     loading.value = false
   }

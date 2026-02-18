@@ -339,20 +339,20 @@ import { useAuthStore } from '@/stores/auth'
 import { useDataStore } from '@/stores/data'
 import { useLanguageStore } from '@/stores/language'
 import {
-    Bell,
-    Book,
-    BookOpen,
-    Cake,
-    Calendar,
-    CheckCircle,
-    Clock,
-    FileText,
-    Gift,
-    GraduationCap,
-    PartyPopper,
-    TrendingUp,
-    User,
-    XCircle
+  Bell,
+  Book,
+  BookOpen,
+  Cake,
+  Calendar,
+  CheckCircle,
+  Clock,
+  FileText,
+  Gift,
+  GraduationCap,
+  PartyPopper,
+  TrendingUp,
+  User,
+  XCircle
 } from 'lucide-vue-next'
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 
@@ -442,7 +442,7 @@ async function loadDashboard() {
             id: a.id,
             date: a.date,
             status: a.status,
-            subject: a.subject || a.lesson_name || 'Umumiy',
+            subject: a.subject || a.lesson_name || t('common.total'),
             student_id: a.student_id
           }))
         } else if (attResp?.data) {
@@ -496,7 +496,7 @@ const user = computed(() => authStore.user)
 
 const currentGroup = computed(() => {
   return {
-    name: authStore.user?.group || authStore.user?.group_name || 'Noma\'lum guruh'
+    name: authStore.user?.group || authStore.user?.group_name || t('common.unknown')
   }
 })
 
@@ -523,7 +523,7 @@ const tomorrowBirthdays = computed(() => birthdayData.value.tomorrow || [])
 async function sendBirthdayCongrats(student) {
   congratsSending.value[student.id] = true
   try {
-    const senderName = authStore.user?.name || 'Guruh a\'zosi'
+    const senderName = authStore.user?.name || t('dashboard.groupMember')
     await api.createNotification({
       user_id: student.user_id,
       title: "🎂 Tug'ilgan kun tabrigi!",

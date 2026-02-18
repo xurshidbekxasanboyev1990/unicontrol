@@ -990,7 +990,7 @@ const viewReceipt = async (payment) => {
     receiptUrl.value = URL.createObjectURL(blob)
   } catch (e) {
     console.error(e)
-    toast.error('Chekni yuklashda xatolik')
+    toast.error(t('subscription.receiptLoadError'))
     showReceiptModal.value = false
   } finally {
     receiptLoading.value = false
@@ -1002,10 +1002,10 @@ const approvePayment = async (payment) => {
   try {
     await api.actionPayment(payment.id, { status: 'approved' })
     payment.status = 'approved'
-    toast.success(`"${payment.group_name}" guruhi obunasi tasdiqlandi!`)
+    toast.success(t('subscription.paymentApproved'))
     await loadSubscriptions()
   } catch (e) {
-    toast.error(e.message || 'Xatolik')
+    toast.error(e.message || t('common.error'))
   }
 }
 
@@ -1022,9 +1022,9 @@ const rejectPayment = async () => {
     rejectingPayment.value.status = 'rejected'
     rejectingPayment.value.admin_note = rejectNote.value
     showRejectModal.value = false
-    toast.success('To\'lov rad etildi')
+    toast.success(t('subscription.paymentRejected'))
   } catch (e) {
-    toast.error(e.message || 'Xatolik')
+    toast.error(e.message || t('common.error'))
   }
 }
 
@@ -1032,9 +1032,9 @@ const saveSettings = async () => {
   settingsSaving.value = true
   try {
     await api.updateSubscriptionSettings(settingsForm.value)
-    toast.success('Sozlamalar saqlandi')
+    toast.success(t('subscription.settingsSaved'))
   } catch (e) {
-    toast.error(e.message || 'Xatolik')
+    toast.error(e.message || t('common.error'))
   } finally {
     settingsSaving.value = false
   }
@@ -1044,12 +1044,12 @@ const activateTrial = async () => {
   trialLoading.value = true
   try {
     const result = await api.activateTrial()
-    toast.success(result.message || 'Sinov muddati faollashtirildi!')
+    toast.success(result.message || t('subscription.trialActivated'))
     trialActivated.value = true
     trialEndDate.value = result.trial_end_date
     settingsForm.value.trial_end_date = result.trial_end_date
   } catch (e) {
-    toast.error(e.message || 'Xatolik')
+    toast.error(e.message || t('common.error'))
   } finally {
     trialLoading.value = false
   }
@@ -1247,7 +1247,7 @@ const viewMarketReceipt = async (payment) => {
     marketReceiptUrl.value = URL.createObjectURL(blob)
   } catch (e) {
     console.error(e)
-    toast.error('Chekni yuklashda xatolik')
+    toast.error(t('subscription.receiptLoadError'))
     showMarketReceiptModal.value = false
   } finally {
     marketReceiptLoading.value = false
@@ -1258,22 +1258,22 @@ const approveMarketPayment = async (payment) => {
   try {
     await api.request(`/market/tariff-payments/${payment.id}?action=approved`, { method: 'PATCH' })
     payment.status = 'approved'
-    toast.success(`${payment.user_name} — ${payment.tariff === 'student_pro' ? 'Student Pro' : 'Premium'} tarifi tasdiqlandi!`)
+    toast.success(t('subscription.marketPaymentApproved'))
   } catch (e) {
-    toast.error(e.message || 'Xatolik')
+    toast.error(e.message || t('common.error'))
   }
 }
 
 const rejectMarketPayment = async (payment) => {
-  const note = prompt('Rad etish sababini yozing:')
+  const note = prompt(t('subscription.rejectReason'))
   if (note === null) return
   try {
     await api.request(`/market/tariff-payments/${payment.id}?action=rejected&admin_note=${encodeURIComponent(note || '')}`, { method: 'PATCH' })
     payment.status = 'rejected'
     payment.admin_note = note
-    toast.success('Market to\'lov rad etildi')
+    toast.success(t('subscription.marketPaymentRejected'))
   } catch (e) {
-    toast.error(e.message || 'Xatolik')
+    toast.error(e.message || t('common.error'))
   }
 }
 

@@ -425,7 +425,7 @@ async function searchStudents(query) {
 function normalizeStudent(data) {
   return {
     id: data.id,
-    name: data.full_name || data.name || 'Ism kiritilmagan',
+    name: data.full_name || data.name || t('common.unknown'),
     studentId: data.hemis_id || data.student_id || '',
     group: data.group_name || data.group || '',
     groupId: data.group_id,

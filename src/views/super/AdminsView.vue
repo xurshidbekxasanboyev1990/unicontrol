@@ -48,13 +48,13 @@
           <div class="flex items-center justify-between text-sm">
             <span class="text-slate-500 flex items-center gap-2">
               <Shield class="w-4 h-4" />
-              Rol
+              {{ $t('admins.role') }}
             </span>
             <span 
               class="px-2 py-0.5 rounded-lg text-xs font-medium"
               :class="admin.role === 'super' ? 'bg-amber-100 text-amber-700' : 'bg-violet-100 text-violet-700'"
             >
-              {{ admin.role === 'super' ? 'Super Admin' : 'Admin' }}
+              {{ admin.role === 'super' ? 'Super Admin' : $t('admins.adminRole') }}
             </span>
           </div>
           <div class="flex items-center justify-between text-sm">
@@ -139,7 +139,7 @@
                     type="text"
                     required
                     class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 outline-none"
-                    placeholder="Ism familiya"
+                    :placeholder="$t('admins.namePlaceholder')"
                   />
                 </div>
                 <div>
@@ -190,7 +190,7 @@
                     id="isSuperAdmin"
                     class="w-5 h-5 rounded border-slate-300 text-amber-500 focus:ring-amber-500"
                   />
-                  <label for="isSuperAdmin" class="text-sm text-slate-700">Super Admin</label>
+                  <label for="isSuperAdmin" class="text-sm text-slate-700">{{ $t('admins.superAdminLabel') }}</label>
                 </div>
               </div>
             </div>
@@ -376,9 +376,11 @@ import {
 } from 'lucide-vue-next'
 import { computed, markRaw, onMounted, reactive, ref } from 'vue'
 import api from '../../services/api'
+import { useLanguageStore } from '../../stores/language'
 import { useToastStore } from '../../stores/toast'
 
 const toast = useToastStore()
+const { t } = useLanguageStore()
 const showModal = ref(false)
 const showDeleteConfirm = ref(false)
 const editingAdmin = ref(null)
@@ -688,7 +690,7 @@ const saveAdmin = async () => {
       if (index !== -1) {
         admins.value[index] = mapAdminFromApi(updated)
       }
-      toast.success('Admin yangilandi')
+      toast.success(t('admins.adminUpdated'))
     } else {
       // Create new admin via API  
       const created = await api.createAdmin({
@@ -696,12 +698,12 @@ const saveAdmin = async () => {
         password: form.password
       })
       admins.value.push(mapAdminFromApi(created))
-      toast.success('Yangi admin qo\'shildi')
+      toast.success(t('admins.adminAdded'))
     }
     showModal.value = false
   } catch (err) {
     console.error('Error saving admin:', err)
-    toast.error(err.message || 'Admin saqlashda xatolik')
+    toast.error(err.message || t('admins.saveError'))
   } finally {
     saving.value = false
   }
@@ -717,10 +719,10 @@ const deleteAdmin = async () => {
     try {
       await api.deleteAdmin(deletingAdmin.value.id)
       admins.value = admins.value.filter(a => a.id !== deletingAdmin.value.id)
-      toast.success('Admin o\'chirildi')
+      toast.success(t('admins.adminDeleted'))
     } catch (err) {
       console.error('Error deleting admin:', err)
-      toast.error(err.message || 'Admin o\'chirishda xatolik')
+      toast.error(err.message || t('admins.deleteError'))
     }
   }
   showDeleteConfirm.value = false
@@ -748,7 +750,7 @@ const loadAdmins = async () => {
     admins.value = adminsList.map(mapAdminFromApi)
   } catch (err) {
     console.error('Error loading admins:', err)
-    toast.error('Adminlarni yuklashda xatolik')
+    toast.error(t('admins.loadError'))
     
     // Fallback: try getting users with admin role
     try {

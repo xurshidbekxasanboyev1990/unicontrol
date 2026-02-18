@@ -846,7 +846,7 @@ function openModal(group = null) {
 // Save group
 async function saveGroup() {
   if (!form.name) {
-    toast.error('Guruh nomini kiriting')
+    toast.error(t('groups.enterGroupName'))
     return
   }
   
@@ -964,7 +964,7 @@ async function openSubscriptionModal(group) {
   } catch (e) {
     console.error('Load plans error:', e)
     subscriptionPlans.value = []
-    toast.error('Rejalarni yuklashda xatolik')
+    toast.error(t('common.loadError'))
   } finally {
     loadingPlans.value = false
   }

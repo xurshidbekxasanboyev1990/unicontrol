@@ -180,18 +180,18 @@
             </svg>
             <div class="absolute inset-0 flex flex-col items-center justify-center">
               <span class="text-3xl font-bold text-slate-800">{{ paidPercentage }}%</span>
-              <span class="text-sm text-slate-500">To'langan</span>
+              <span class="text-sm text-slate-500">{{ $t('contracts.paid') }}</span>
             </div>
           </div>
         </div>
         <div class="flex items-center justify-center gap-6 mt-4">
           <div class="flex items-center gap-2">
             <span class="w-3 h-3 rounded-full bg-emerald-500"></span>
-            <span class="text-sm text-slate-600">To'langan ({{ paidCount }})</span>
+            <span class="text-sm text-slate-600">{{ $t('contracts.paid') }} ({{ paidCount }})</span>
           </div>
           <div class="flex items-center gap-2">
             <span class="w-3 h-3 rounded-full bg-slate-200"></span>
-            <span class="text-sm text-slate-600">To'lanmagan ({{ unpaidCount }})</span>
+            <span class="text-sm text-slate-600">{{ $t('contracts.unpaid') }} ({{ unpaidCount }})</span>
           </div>
         </div>
       </div>
@@ -200,7 +200,7 @@
     <!-- Recent Activities -->
     <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden">
       <div class="p-6 border-b border-slate-100">
-        <h2 class="text-lg font-semibold text-slate-800">So'nggi faoliyatlar</h2>
+        <h2 class="text-lg font-semibold text-slate-800">{{ $t('dashboard.recentActivities') }}</h2>
       </div>
 
       <div class="divide-y divide-slate-100">
@@ -257,9 +257,11 @@ import { computed, markRaw, onMounted, ref } from 'vue'
 import api from '../../services/api'
 import { useAuthStore } from '../../stores/auth'
 import { useDataStore } from '../../stores/data'
+import { useLanguageStore } from '../../stores/language'
 
 const dataStore = useDataStore()
 const authStore = useAuthStore()
+const { t } = useLanguageStore()
 
 // State
 const loading = ref(true)
@@ -355,7 +357,7 @@ async function loadDashboard() {
     await loadRecentActivities()
   } catch (e) {
     console.error('Dashboard load error:', e)
-    error.value = e.message || 'Dashboard yuklanmadi'
+    error.value = e.message || t('dashboard.loadError')
   } finally {
     loading.value = false
   }
@@ -410,7 +412,7 @@ function formatActivity(log) {
     icon: markRaw(icon),
     bgClass,
     iconClass,
-    title: log.action || 'Faoliyat',
+    title: log.action || t('dashboard.activity'),
     description: log.details || log.user || '',
     time: formatTime(log.created_at || log.timestamp)
   }
@@ -423,10 +425,10 @@ function formatTime(timestamp) {
   const now = new Date()
   const diff = Math.floor((now - date) / 1000)
   
-  if (diff < 60) return 'Hozirgina'
-  if (diff < 3600) return `${Math.floor(diff / 60)} daqiqa oldin`
-  if (diff < 86400) return `${Math.floor(diff / 3600)} soat oldin`
-  if (diff < 604800) return `${Math.floor(diff / 86400)} kun oldin`
+  if (diff < 60) return t('dashboard.justNow')
+  if (diff < 3600) return `${Math.floor(diff / 60)} ${t('dashboard.minutesAgo')}`
+  if (diff < 86400) return `${Math.floor(diff / 3600)} ${t('dashboard.hoursAgo')}`
+  if (diff < 604800) return `${Math.floor(diff / 86400)} ${t('dashboard.daysAgo')}`
   
   return date.toLocaleDateString('uz-UZ')
 }
@@ -439,27 +441,27 @@ function getDefaultActivities() {
       icon: markRaw(UserCheck),
       bgClass: 'bg-emerald-100',
       iconClass: 'text-emerald-600',
-      title: 'Tizimga xush kelibsiz',
+      title: t('dashboard.welcome'),
       description: `Admin: ${authStore.user?.fullName || 'Admin'}`,
-      time: 'Hozirgina'
+      time: t('dashboard.justNow')
     },
     {
       id: 2,
       icon: markRaw(Layers),
       bgClass: 'bg-violet-100',
       iconClass: 'text-violet-600',
-      title: 'Guruhlar yuklandi',
-      description: `${totalGroups.value} ta guruh mavjud`,
-      time: 'Hozirgina'
+      title: t('dashboard.groupsLoaded'),
+      description: `${totalGroups.value} ${t('dashboard.groupsAvailable')}`,
+      time: t('dashboard.justNow')
     },
     {
       id: 3,
       icon: markRaw(Users),
       bgClass: 'bg-blue-100',
       iconClass: 'text-blue-600',
-      title: 'Talabalar yuklandi',
-      description: `${totalStudents.value} ta talaba mavjud`,
-      time: 'Hozirgina'
+      title: t('dashboard.studentsLoaded'),
+      description: `${totalStudents.value} ${t('dashboard.studentsAvailable')}`,
+      time: t('dashboard.justNow')
     }
   ]
 }

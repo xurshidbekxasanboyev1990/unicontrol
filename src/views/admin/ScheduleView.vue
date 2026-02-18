@@ -4,12 +4,12 @@
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
       <div>
         <h1 class="text-xl sm:text-2xl font-bold text-slate-800">{{ $t('schedule.title') }}</h1>
-        <p class="text-sm text-slate-500">{{ totalSchedules }} ta dars jadvali</p>
+        <p class="text-sm text-slate-500">{{ totalSchedules }} {{ $t('schedule.lessonsCount') }}</p>
       </div>
       <div class="flex flex-wrap items-center gap-2">
         <button @click="openCreateModal" class="px-4 py-2.5 bg-emerald-500 text-white rounded-xl font-medium hover:bg-emerald-600 transition-colors flex items-center gap-2">
           <Plus class="w-5 h-5" />
-          <span class="hidden sm:inline">Yangi dars</span>
+          <span class="hidden sm:inline">{{ $t('schedule.addLesson') }}</span>
         </button>
         <button @click="loadSchedules" class="p-2.5 border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors">
           <RefreshCw class="w-5 h-5 text-slate-500" :class="loading && 'animate-spin'" />
@@ -22,43 +22,43 @@
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
         <!-- Group filter -->
         <div>
-          <label class="block text-xs font-medium text-slate-500 mb-1">Guruh</label>
+          <label class="block text-xs font-medium text-slate-500 mb-1">{{ $t('attendance.group') }}</label>
           <select v-model="filterGroupId" @change="loadSchedules" class="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-emerald-500">
-            <option :value="null">Barcha guruhlar</option>
+            <option :value="null">{{ $t('attendance.allGroups') }}</option>
             <option v-for="g in groups" :key="g.id" :value="g.id">{{ g.name }}</option>
           </select>
         </div>
         <!-- Day filter -->
         <div>
-          <label class="block text-xs font-medium text-slate-500 mb-1">Kun</label>
+          <label class="block text-xs font-medium text-slate-500 mb-1">{{ $t('schedule.day') }}</label>
           <select v-model="filterDay" @change="loadSchedules" class="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-emerald-500">
-            <option :value="null">Barcha kunlar</option>
-            <option value="monday">Dushanba</option>
-            <option value="tuesday">Seshanba</option>
-            <option value="wednesday">Chorshanba</option>
-            <option value="thursday">Payshanba</option>
-            <option value="friday">Juma</option>
-            <option value="saturday">Shanba</option>
+            <option :value="null">{{ $t('schedule.allDays') }}</option>
+            <option value="monday">{{ $t('schedule.monday') }}</option>
+            <option value="tuesday">{{ $t('schedule.tuesday') }}</option>
+            <option value="wednesday">{{ $t('schedule.wednesday') }}</option>
+            <option value="thursday">{{ $t('schedule.thursday') }}</option>
+            <option value="friday">{{ $t('schedule.friday') }}</option>
+            <option value="saturday">{{ $t('schedule.saturday') }}</option>
           </select>
         </div>
         <!-- View mode -->
         <div>
-          <label class="block text-xs font-medium text-slate-500 mb-1">Ko'rinish</label>
+          <label class="block text-xs font-medium text-slate-500 mb-1">{{ $t('common.view') }}</label>
           <div class="flex gap-1 bg-slate-100 rounded-xl p-1">
             <button @click="viewMode = 'table'" :class="['flex-1 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors', viewMode === 'table' ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-500']">
-              Jadval
+              {{ $t('schedule.tableView') }}
             </button>
             <button @click="viewMode = 'week'" :class="['flex-1 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors', viewMode === 'week' ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-500']">
-              Hafta
+              {{ $t('schedule.weekly') }}
             </button>
           </div>
         </div>
         <!-- Search -->
         <div>
-          <label class="block text-xs font-medium text-slate-500 mb-1">Qidirish</label>
+          <label class="block text-xs font-medium text-slate-500 mb-1">{{ $t('common.search') }}</label>
           <div class="relative">
             <Search class="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
-            <input v-model="searchQuery" placeholder="Fan nomi, o'qituvchi..." class="w-full pl-9 pr-3 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-emerald-500" />
+            <input v-model="searchQuery" :placeholder="$t('common.search')" class="w-full pl-9 pr-3 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-emerald-500" />
           </div>
         </div>
       </div>
@@ -68,7 +68,7 @@
     <div v-if="loading" class="flex items-center justify-center py-20">
       <div class="text-center">
         <Loader2 class="w-10 h-10 text-emerald-500 animate-spin mx-auto mb-4" />
-        <p class="text-slate-500">Yuklanmoqda...</p>
+        <p class="text-slate-500">{{ $t('common.loading') }}</p>
       </div>
     </div>
 
@@ -76,8 +76,8 @@
     <template v-else-if="viewMode === 'table'">
       <div v-if="filteredSchedules.length === 0" class="bg-white rounded-2xl border border-slate-200 p-12 text-center">
         <CalendarDays class="w-16 h-16 text-slate-300 mx-auto mb-4" />
-        <h3 class="text-lg font-semibold text-slate-600">Jadval topilmadi</h3>
-        <p class="text-sm text-slate-400 mt-1">Filterni o'zgartiring yoki yangi dars qo'shing</p>
+        <h3 class="text-lg font-semibold text-slate-600">{{ $t('common.noData') }}</h3>
+        <p class="text-sm text-slate-400 mt-1">{{ $t('schedule.noLessonsDesc') }}</p>
       </div>
 
       <div v-else class="bg-white rounded-2xl border border-slate-200 overflow-hidden">
@@ -85,15 +85,15 @@
           <table class="w-full">
             <thead>
               <tr class="bg-slate-50 border-b border-slate-200">
-                <th class="text-left px-4 py-3 text-xs font-bold text-slate-500 uppercase">Guruh</th>
-                <th class="text-left px-4 py-3 text-xs font-bold text-slate-500 uppercase">Kun</th>
-                <th class="text-left px-4 py-3 text-xs font-bold text-slate-500 uppercase">Para</th>
-                <th class="text-left px-4 py-3 text-xs font-bold text-slate-500 uppercase">Vaqt</th>
-                <th class="text-left px-4 py-3 text-xs font-bold text-slate-500 uppercase">Fan</th>
-                <th class="text-left px-4 py-3 text-xs font-bold text-slate-500 uppercase">O'qituvchi</th>
-                <th class="text-left px-4 py-3 text-xs font-bold text-slate-500 uppercase">Xona</th>
-                <th class="text-left px-4 py-3 text-xs font-bold text-slate-500 uppercase">Turi</th>
-                <th class="text-center px-4 py-3 text-xs font-bold text-slate-500 uppercase">Amallar</th>
+                <th class="text-left px-4 py-3 text-xs font-bold text-slate-500 uppercase">{{ $t('attendance.group') }}</th>
+                <th class="text-left px-4 py-3 text-xs font-bold text-slate-500 uppercase">{{ $t('schedule.day') }}</th>
+                <th class="text-left px-4 py-3 text-xs font-bold text-slate-500 uppercase">{{ $t('schedule.lessonPeriod') }}</th>
+                <th class="text-left px-4 py-3 text-xs font-bold text-slate-500 uppercase">{{ $t('common.time') }}</th>
+                <th class="text-left px-4 py-3 text-xs font-bold text-slate-500 uppercase">{{ $t('schedule.subject') }}</th>
+                <th class="text-left px-4 py-3 text-xs font-bold text-slate-500 uppercase">{{ $t('schedule.teacher') }}</th>
+                <th class="text-left px-4 py-3 text-xs font-bold text-slate-500 uppercase">{{ $t('schedule.room') }}</th>
+                <th class="text-left px-4 py-3 text-xs font-bold text-slate-500 uppercase">{{ $t('common.type') }}</th>
+                <th class="text-center px-4 py-3 text-xs font-bold text-slate-500 uppercase">{{ $t('common.actions') }}</th>
               </tr>
             </thead>
             <tbody class="divide-y divide-slate-100">
@@ -138,7 +138,7 @@
               Oldingi
             </button>
             <button @click="currentPage++" :disabled="currentPage >= totalPages" class="px-3 py-1.5 border border-slate-200 rounded-lg text-sm disabled:opacity-40">
-              Keyingi
+              {{ $t('common.next') }}
             </button>
           </div>
         </div>
@@ -149,7 +149,7 @@
     <template v-else-if="viewMode === 'week'">
       <div v-if="!filterGroupId" class="bg-amber-50 border border-amber-200 rounded-2xl p-6 text-center">
         <AlertCircle class="w-8 h-8 text-amber-500 mx-auto mb-2" />
-        <p class="font-medium text-amber-800">Haftalik ko'rinish uchun guruh tanlang</p>
+        <p class="font-medium text-amber-800">{{ $t('schedule.selectGroupForWeek') }}</p>
       </div>
 
       <div v-else class="bg-white rounded-2xl border border-slate-200 overflow-hidden">
@@ -158,7 +158,7 @@
             <thead>
               <tr>
                 <th class="sticky left-0 z-10 bg-slate-50 px-4 py-4 text-left text-xs font-bold text-slate-500 uppercase w-[100px] border-b border-slate-200">
-                  Vaqt
+                  {{ $t('common.time') }}
                 </th>
                 <th v-for="day in weekDayKeys" :key="day" class="px-3 py-4 text-center text-xs font-bold uppercase border-b border-l border-slate-200 bg-slate-50 text-slate-500" :class="isTodayDay(day) && 'bg-emerald-50 text-emerald-700'" style="min-width: 140px;">
                   {{ dayLabel(day) }}
@@ -170,7 +170,7 @@
                 <td class="sticky left-0 z-10 px-4 py-3 border-b border-slate-100 font-semibold" :class="idx % 2 === 0 ? 'bg-white' : 'bg-slate-50'">
                   <div class="text-sm font-bold text-slate-700">{{ slot.split('-')[0] }}</div>
                   <div class="text-[11px] text-slate-400">{{ slot.split('-')[1] }}</div>
-                  <div class="mt-1 text-[10px] text-slate-400 font-bold">{{ idx + 1 }}-para</div>
+                  <div class="mt-1 text-[10px] text-slate-400 font-bold">{{ idx + 1 }}-{{ $t('schedule.lessonPeriod') }}</div>
                 </td>
                 <td v-for="day in weekDayKeys" :key="day + slot" class="px-2 py-2 border-b border-l border-slate-100 align-top" :class="isTodayDay(day) && 'bg-emerald-50/30'">
                   <div v-if="getWeekLesson(day, slot)" class="rounded-xl p-2.5 text-sm cursor-pointer hover:shadow-md transition-all" :class="getSubjectBg(getWeekLesson(day, slot).subject)" @click="editSchedule(getWeekLesson(day, slot))">
@@ -200,92 +200,92 @@
       <div v-if="showModal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" @click.self="showModal = false">
         <div class="bg-white rounded-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto shadow-2xl">
           <div class="p-6 border-b border-slate-100 flex items-center justify-between">
-            <h3 class="text-lg font-bold text-slate-800">{{ editingId ? 'Darsni tahrirlash' : 'Yangi dars qo\'shish' }}</h3>
+            <h3 class="text-lg font-bold text-slate-800">{{ editingId ? $t('schedule.editLesson') : $t('schedule.addLesson') }}</h3>
             <button @click="showModal = false" class="p-2 hover:bg-slate-100 rounded-lg"><X class="w-5 h-5 text-slate-500" /></button>
           </div>
           <div class="p-6 space-y-4">
             <!-- Group -->
             <div>
-              <label class="block text-sm font-medium text-slate-700 mb-1">Guruh *</label>
+              <label class="block text-sm font-medium text-slate-700 mb-1">{{ $t('attendance.group') }} *</label>
               <select v-model="form.group_id" class="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-emerald-500" required>
-                <option :value="null" disabled>Tanlang</option>
+                <option :value="null" disabled>{{ $t('common.select') }}</option>
                 <option v-for="g in groups" :key="g.id" :value="g.id">{{ g.name }}</option>
               </select>
             </div>
             <!-- Subject -->
             <div>
-              <label class="block text-sm font-medium text-slate-700 mb-1">Fan nomi *</label>
-              <input v-model="form.subject" class="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-emerald-500" placeholder="Masalan: Matematika" required />
+              <label class="block text-sm font-medium text-slate-700 mb-1">{{ $t('schedule.subject') }} *</label>
+              <input v-model="form.subject" class="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-emerald-500" :placeholder="$t('schedule.subject')" required />
             </div>
             <!-- Day + Lesson number -->
             <div class="grid grid-cols-2 gap-3">
               <div>
-                <label class="block text-sm font-medium text-slate-700 mb-1">Kun *</label>
+                <label class="block text-sm font-medium text-slate-700 mb-1">{{ $t('schedule.day') }} *</label>
                 <select v-model="form.day_of_week" class="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-emerald-500" required>
-                  <option :value="null" disabled>Tanlang</option>
-                  <option value="monday">Dushanba</option>
-                  <option value="tuesday">Seshanba</option>
-                  <option value="wednesday">Chorshanba</option>
-                  <option value="thursday">Payshanba</option>
-                  <option value="friday">Juma</option>
-                  <option value="saturday">Shanba</option>
+                  <option :value="null" disabled>{{ $t('common.select') }}</option>
+                  <option value="monday">{{ $t('schedule.monday') }}</option>
+                  <option value="tuesday">{{ $t('schedule.tuesday') }}</option>
+                  <option value="wednesday">{{ $t('schedule.wednesday') }}</option>
+                  <option value="thursday">{{ $t('schedule.thursday') }}</option>
+                  <option value="friday">{{ $t('schedule.friday') }}</option>
+                  <option value="saturday">{{ $t('schedule.saturday') }}</option>
                 </select>
               </div>
               <div>
-                <label class="block text-sm font-medium text-slate-700 mb-1">Para №</label>
+                <label class="block text-sm font-medium text-slate-700 mb-1">{{ $t('schedule.lessonPeriod') }} №</label>
                 <select v-model.number="form.lesson_number" class="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-emerald-500">
                   <option :value="null">-</option>
-                  <option v-for="n in 7" :key="n" :value="n">{{ n }}-para</option>
+                  <option v-for="n in 7" :key="n" :value="n">{{ n }}-{{ $t('schedule.lessonPeriod') }}</option>
                 </select>
               </div>
             </div>
             <!-- Time -->
             <div class="grid grid-cols-2 gap-3">
               <div>
-                <label class="block text-sm font-medium text-slate-700 mb-1">Boshlanish *</label>
+                <label class="block text-sm font-medium text-slate-700 mb-1">{{ $t('schedule.startTime') }} *</label>
                 <input v-model="form.start_time" type="time" class="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-emerald-500" required />
               </div>
               <div>
-                <label class="block text-sm font-medium text-slate-700 mb-1">Tugash *</label>
+                <label class="block text-sm font-medium text-slate-700 mb-1">{{ $t('schedule.endTime') }} *</label>
                 <input v-model="form.end_time" type="time" class="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-emerald-500" required />
               </div>
             </div>
             <!-- Auto-fill from lesson number -->
             <div v-if="form.lesson_number && !editingId" class="flex items-center gap-2">
-              <button @click="autoFillTime" class="text-xs text-emerald-600 hover:text-emerald-700 underline">Para vaqtini avtomatik to'ldirish</button>
+              <button @click="autoFillTime" class="text-xs text-emerald-600 hover:text-emerald-700 underline">{{ $t('schedule.autoFillTime') }}</button>
             </div>
             <!-- Teacher -->
             <div>
-              <label class="block text-sm font-medium text-slate-700 mb-1">O'qituvchi</label>
-              <input v-model="form.teacher_name" class="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-emerald-500" placeholder="O'qituvchi FIO" />
+              <label class="block text-sm font-medium text-slate-700 mb-1">{{ $t('schedule.teacher') }}</label>
+              <input v-model="form.teacher_name" class="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-emerald-500" :placeholder="$t('schedule.teacher')" />
             </div>
             <!-- Room + Building -->
             <div class="grid grid-cols-2 gap-3">
               <div>
-                <label class="block text-sm font-medium text-slate-700 mb-1">Xona</label>
-                <input v-model="form.room" class="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-emerald-500" placeholder="307-xona" />
+                <label class="block text-sm font-medium text-slate-700 mb-1">{{ $t('schedule.room') }}</label>
+                <input v-model="form.room" class="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-emerald-500" :placeholder="$t('schedule.room')" />
               </div>
               <div>
-                <label class="block text-sm font-medium text-slate-700 mb-1">Bino</label>
-                <input v-model="form.building" class="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-emerald-500" placeholder="A bino" />
+                <label class="block text-sm font-medium text-slate-700 mb-1">{{ $t('schedule.building') }}</label>
+                <input v-model="form.building" class="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-emerald-500" :placeholder="$t('schedule.building')" />
               </div>
             </div>
             <!-- Type -->
             <div>
-              <label class="block text-sm font-medium text-slate-700 mb-1">Dars turi</label>
+              <label class="block text-sm font-medium text-slate-700 mb-1">{{ $t('schedule.lessonType') }}</label>
               <select v-model="form.schedule_type" class="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-emerald-500">
-                <option value="lecture">Ma'ruza</option>
-                <option value="practice">Amaliy</option>
-                <option value="lab">Laboratoriya</option>
-                <option value="seminar">Seminar</option>
+                <option value="lecture">{{ $t('schedule.lecture') }}</option>
+                <option value="practice">{{ $t('schedule.practice') }}</option>
+                <option value="lab">{{ $t('schedule.lab') }}</option>
+                <option value="seminar">{{ $t('schedule.seminar') }}</option>
               </select>
             </div>
           </div>
           <div class="p-6 border-t border-slate-100 flex gap-3">
-            <button @click="showModal = false" class="flex-1 py-2.5 bg-slate-100 text-slate-700 rounded-xl font-medium hover:bg-slate-200 transition-colors">Bekor qilish</button>
+            <button @click="showModal = false" class="flex-1 py-2.5 bg-slate-100 text-slate-700 rounded-xl font-medium hover:bg-slate-200 transition-colors">{{ $t('common.cancel') }}</button>
             <button @click="saveSchedule" :disabled="saving" class="flex-1 py-2.5 bg-emerald-500 text-white rounded-xl font-medium hover:bg-emerald-600 transition-colors disabled:opacity-50 flex items-center justify-center gap-2">
               <Loader2 v-if="saving" class="w-4 h-4 animate-spin" />
-              {{ editingId ? 'Saqlash' : 'Qo\'shish' }}
+              {{ editingId ? $t('common.save') : $t('common.add') }}
             </button>
           </div>
         </div>
@@ -300,14 +300,14 @@
             <div class="w-14 h-14 bg-red-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
               <Trash2 class="w-7 h-7 text-red-500" />
             </div>
-            <h3 class="text-lg font-bold text-slate-800 mb-2">Darsni o'chirish</h3>
+            <h3 class="text-lg font-bold text-slate-800 mb-2">{{ $t('schedule.deleteLesson') }}</h3>
             <p class="text-sm text-slate-500">
-              <strong>{{ deletingSchedule?.subject }}</strong> darsini o'chirishni tasdiqlaysizmi?
+              <strong>{{ deletingSchedule?.subject }}</strong> — {{ $t('common.confirm') }}?
             </p>
           </div>
           <div class="flex gap-3 mt-6">
-            <button @click="showDeleteModal = false" class="flex-1 py-2.5 bg-slate-100 text-slate-700 rounded-xl font-medium hover:bg-slate-200">Bekor</button>
-            <button @click="deleteSchedule" :disabled="saving" class="flex-1 py-2.5 bg-red-500 text-white rounded-xl font-medium hover:bg-red-600 disabled:opacity-50">O'chirish</button>
+            <button @click="showDeleteModal = false" class="flex-1 py-2.5 bg-slate-100 text-slate-700 rounded-xl font-medium hover:bg-slate-200">{{ $t('common.cancel') }}</button>
+            <button @click="deleteSchedule" :disabled="saving" class="flex-1 py-2.5 bg-red-500 text-white rounded-xl font-medium hover:bg-red-600 disabled:opacity-50">{{ $t('common.delete') }}</button>
           </div>
         </div>
       </div>
@@ -322,9 +322,11 @@ import {
 } from 'lucide-vue-next'
 import { computed, onMounted, ref } from 'vue'
 import api from '../../services/api'
+import { useLanguageStore } from '../../stores/language'
 import { useToastStore } from '../../stores/toast'
 
 const toast = useToastStore()
+const { t } = useLanguageStore()
 
 // State
 const loading = ref(false)
@@ -494,7 +496,7 @@ async function loadSchedules() {
     subjects.forEach(s => getSubjectBg(s))
   } catch (e) {
     console.error('Load schedules error:', e)
-    toast.error('Jadval yuklanmadi')
+    toast.error(t('schedule.loadError'))
   } finally {
     loading.value = false
   }
@@ -549,7 +551,7 @@ function autoFillTime() {
 
 async function saveSchedule() {
   if (!form.value.group_id || !form.value.subject || !form.value.day_of_week || !form.value.start_time || !form.value.end_time) {
-    toast.error('Barcha majburiy maydonlarni to\'ldiring')
+    toast.error(t('schedule.fillRequired'))
     return
   }
   saving.value = true
@@ -557,10 +559,10 @@ async function saveSchedule() {
     const data = { ...form.value }
     if (editingId.value) {
       await api.updateSchedule(editingId.value, data)
-      toast.success('Dars yangilandi')
+      toast.success(t('schedule.lessonUpdated'))
     } else {
       await api.createSchedule(data)
-      toast.success('Yangi dars qo\'shildi')
+      toast.success(t('schedule.lessonAdded'))
     }
     showModal.value = false
     await loadSchedules()
@@ -581,7 +583,7 @@ async function deleteSchedule() {
   saving.value = true
   try {
     await api.deleteSchedule(deletingSchedule.value.id)
-    toast.success('Dars o\'chirildi')
+    toast.success(t('schedule.lessonDeleted'))
     showDeleteModal.value = false
     deletingSchedule.value = null
     await loadSchedules()

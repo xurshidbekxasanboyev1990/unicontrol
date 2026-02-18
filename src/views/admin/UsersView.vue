@@ -424,6 +424,7 @@
  */
 
 import api from '@/services/api'
+import { useLanguageStore } from '@/stores/language'
 import { useToastStore } from '@/stores/toast'
 import {
     ChevronLeft,
@@ -443,6 +444,7 @@ import {
 import { computed, onMounted, ref } from 'vue'
 
 const toast = useToastStore()
+const { t } = useLanguageStore()
 
 // Pagination state
 const currentPage = ref(1)
@@ -513,7 +515,7 @@ async function loadUsers() {
     
     users.value = items.map(u => ({
       id: u.id,
-      name: u.full_name || u.name || 'Noma\'lum',
+      name: u.full_name || u.name || t('common.unknown'),
       studentId: u.student_id || '',
       phone: u.phone || '',
       group: u.group_name || '',
@@ -529,7 +531,7 @@ async function loadUsers() {
     totalPages.value = response?.total_pages || 1
   } catch (err) {
     console.error('Error loading users:', err)
-    toast.error('Foydalanuvchilarni yuklashda xatolik')
+    toast.error(t('common.loadError'))
   } finally {
     loading.value = false
   }
@@ -625,11 +627,11 @@ async function confirmReset() {
       user.plainPassword = newPassword.value
     }
     
-    toast.success('Parol yangilandi', `${selectedUser.value.name} uchun yangi parol o'rnatildi`)
+    toast.success(t('settings.passwordChanged'))
     showResetModal.value = false
   } catch (err) {
     console.error('Error resetting password:', err)
-    toast.error('Parolni tiklashda xatolik')
+    toast.error(t('settings.passwordError'))
   } finally {
     resetting.value = false
   }
@@ -638,7 +640,7 @@ async function confirmReset() {
 // Copy to clipboard
 function copyToClipboard(text) {
   navigator.clipboard.writeText(text)
-  toast.info('Nusxalandi', 'Ma\'lumot clipboard\'ga nusxalandi')
+  toast.info(t('common.copied'))
 }
 
 // Load on mount

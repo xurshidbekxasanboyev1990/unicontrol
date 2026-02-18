@@ -335,10 +335,12 @@ import {
 import { computed, onMounted, reactive, ref } from 'vue'
 import api from '../../services/api'
 import { useAuthStore } from '../../stores/auth'
+import { useLanguageStore } from '../../stores/language'
 import { useToastStore } from '../../stores/toast'
 
 const authStore = useAuthStore()
 const toast = useToastStore()
+const { t } = useLanguageStore()
 
 // State
 const loading = ref(true)
@@ -368,12 +370,12 @@ const editModal = reactive({
   }
 })
 
-const statusOptions = [
-  { value: 'present', label: 'Keldi', emoji: '', activeClass: 'border-emerald-500 bg-emerald-50 text-emerald-700' },
-  { value: 'absent', label: 'Kelmadi', emoji: '', activeClass: 'border-rose-500 bg-rose-50 text-rose-700' },
-  { value: 'late', label: 'Kech qoldi', emoji: '', activeClass: 'border-amber-500 bg-amber-50 text-amber-700' },
-  { value: 'excused', label: 'Sababli', emoji: '', activeClass: 'border-blue-500 bg-blue-50 text-blue-700' }
-]
+const statusOptions = computed(() => [
+  { value: 'present', label: t('attendance.statusPresent'), emoji: '', activeClass: 'border-emerald-500 bg-emerald-50 text-emerald-700' },
+  { value: 'absent', label: t('attendance.statusAbsent'), emoji: '', activeClass: 'border-rose-500 bg-rose-50 text-rose-700' },
+  { value: 'late', label: t('attendance.statusLate'), emoji: '', activeClass: 'border-amber-500 bg-amber-50 text-amber-700' },
+  { value: 'excused', label: t('attendance.statusExcused'), emoji: '', activeClass: 'border-blue-500 bg-blue-50 text-blue-700' }
+])
 
 // Computed
 const isSuperAdmin = computed(() => authStore.isSuperAdmin)
@@ -436,7 +438,7 @@ async function loadAttendance() {
     totalRecords.value = resp.total || attendanceRecords.value.length
   } catch (e) {
     console.error('Load attendance error:', e)
-    toast.error('Davomatni yuklashda xatolik')
+    toast.error(t('attendance.loadError'))
   } finally {
     loading.value = false
   }
@@ -472,7 +474,7 @@ function getStatusEmoji(status) {
 }
 
 function getStatusText(status) {
-  const map = { present: 'Keldi', absent: 'Kelmadi', late: 'Kech qoldi', excused: 'Sababli' }
+  const map = { present: t('attendance.statusPresent'), absent: t('attendance.statusAbsent'), late: t('attendance.statusLate'), excused: t('attendance.statusExcused') }
   return map[status] || status
 }
 
@@ -488,7 +490,7 @@ function getStatusClasses(status) {
 
 function openEditModal(record) {
   if (!record.is_editable && !isSuperAdmin.value) {
-    toast.warning('Bu davomatni tahrirlash vaqti tugagan (24 soatdan oshgan)')
+    toast.warning(t('attendance.editTimeExpired'))
     return
   }
   editModal.record = record
@@ -516,14 +518,14 @@ async function saveEdit() {
       body: data
     })
 
-    toast.success('Davomat yangilandi')
+    toast.success(t('attendance.updated'))
     editModal.show = false
     await loadAttendance()
   } catch (e) {
     console.error('Save edit error:', e)
     const msg = e?.response?.data?.detail || e?.message || 'Xatolik yuz berdi'
     if (msg.includes('24 soat')) {
-      toast.error('24 soatdan oshgan — tahrirlash bloklangan')
+            toast.error(t('attendance.editBlocked'))
     } else {
       toast.error(msg)
     }
@@ -533,21 +535,21 @@ async function saveEdit() {
 }
 
 async function deleteRecord(record) {
-  if (!confirm(`${record.student_name} - ${record.date} davomatini o'chirmoqchimisiz?`)) return
+  if (!confirm(`${record.student_name} - ${record.date} ${t('attendance.deleteConfirm')}`)) return
 
   try {
     await api.request(`/attendance/${record.id}`, { method: 'DELETE' })
-    toast.success('Davomat o\'chirildi')
+    toast.success(t('attendance.deleted'))
     await loadAttendance()
   } catch (e) {
     console.error('Delete error:', e)
-    toast.error('O\'chirishda xatolik')
+    toast.error(t('attendance.deleteError'))
   }
 }
 
 function exportToExcel() {
   // Simple CSV export
-  const headers = ['Talaba', 'Sana', 'Fan', 'Para', 'Holat', 'Kechikish (daq)', 'Izoh', 'Sabab']
+  const headers = t('attendance.exportHeaders').split(',')
   const rows = filteredRecords.value.map(r => [
     r.student_name || '',
     r.date || '',

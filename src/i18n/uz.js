@@ -92,6 +92,23 @@ export default {
         unknown: 'Noma\'lum',
         sent: 'Yuborildi',
         loadError: 'Ma\'lumotlarni yuklashda xatolik',
+        copied: 'Nusxalandi',
+    },
+
+    // ============ OYLAR ============
+    months: {
+        jan: 'yan',
+        feb: 'fev',
+        mar: 'mar',
+        apr: 'apr',
+        may: 'may',
+        jun: 'iyun',
+        jul: 'iyul',
+        aug: 'avg',
+        sep: 'sen',
+        oct: 'okt',
+        nov: 'noy',
+        dec: 'dek',
     },
 
     // ============ ROLLAR ============
@@ -357,6 +374,7 @@ export default {
         birthdayToday: 'Bugun tug\'ilgan kun!',
         birthdayTomorrow: 'Ertaga tug\'ilgan kun!',
         sendCongrats: 'Tabriklamoqchiman',
+        groupMember: 'Guruh a\'zosi',
         noBirthdays: 'Yaqin kunlarda tug\'ilgan kunlar yo\'q',
         // Super admin dashboard
         retryBtn: 'Qayta urinish',
@@ -440,6 +458,20 @@ export default {
         congratulationError: 'Tabrik yuborishda xatolik',
         messageError: 'Xabar yuborishda xatolik',
         noGroupFound: 'Guruh ma\'lumotlari topilmadi',
+        recentActivities: 'So\'nggi faoliyatlar',
+        loadError: 'Dashboard yuklanmadi',
+        groupsLoaded: 'Guruhlar yuklandi',
+        studentsLoaded: 'Talabalar yuklandi',
+        groupsAvailable: 'ta guruh mavjud',
+        studentsAvailable: 'ta talaba mavjud',
+        activity: 'Faoliyat',
+        // Super dashboard extra
+        unknownAction: 'Noma\'lum amal',
+        system: 'Tizim',
+        leaders: 'Liderlar',
+        adminsLabel: 'Adminlar',
+        superAdminsLabel: 'Super Adminlar',
+        courseLabel: 'kurs',
     },
 
     // ============ DAVOMAT ============
@@ -606,6 +638,28 @@ export default {
         roomBuilding: 'Xona / Bino',
         takeAttendance: 'Davomat olish',
         loadError: 'Jadval yuklanmadi',
+        lessonsCount: 'ta dars',
+        lessonPeriod: 'para',
+        subjectsCount: 'ta fan',
+        addLesson: 'Yangi dars',
+        editLesson: 'Darsni tahrirlash',
+        deleteLesson: 'Darsni o\'chirish',
+        lessonUpdated: 'Dars yangilandi',
+        lessonAdded: 'Yangi dars qo\'shildi',
+        lessonDeleted: 'Dars o\'chirildi',
+        fillRequired: 'Barcha majburiy maydonlarni to\'ldiring',
+        selectGroupForWeek: 'Haftalik ko\'rinish uchun guruh tanlang',
+        allDays: 'Barcha kunlar',
+        tableView: 'Jadval',
+        startTime: 'Boshlanish',
+        endTime: 'Tugash',
+        autoFillTime: 'Para vaqtini avtomatik to\'ldirish',
+        building: 'Bino',
+        lessonType: 'Dars turi',
+        lecture: 'Ma\'ruza',
+        practice: 'Amaliy',
+        lab: 'Laboratoriya',
+        seminar: 'Seminar',
     },
 
     // ============ KUTUBXONA ============
@@ -704,6 +758,8 @@ export default {
         teacher: 'O\'qituvchi',
         price: 'Narxi (oylik)',
         confirmDeleteMsg: 'to\'garagini o\'chirmoqchimisiz?',
+        clubDeactivated: 'To\'garak nofaol qilindi',
+        clubActivated: 'To\'garak faollashtirildi',
     },
 
     // ============ TURNIRLAR ============
@@ -833,6 +889,28 @@ export default {
         howToSelect: 'Talaba qanday tanlaydi?',
         whichSubjects: 'Qaysi fanlardan?',
         directionNotSelected: 'Yo\'nalish tanlanmagan',
+        notSelected: 'Tanlanmagan',
+        fillRequired: 'Majburiy maydonlarni to\'ldiring',
+        selectDirectionForRules: 'Barcha qoidalar uchun yo\'nalish tanlang',
+        selectSubjectForRules: 'Barcha qoidalar uchun kamida bitta fan tanlang',
+        fixedOnlyOneSubject: 'Avtomatik rejimda faqat bitta fan tanlanishi kerak',
+        tournamentUpdated: 'Turnir yangilandi',
+        tournamentCreated: 'Turnir yaratildi',
+        tournamentDeleted: 'Turnir o\'chirildi',
+        deleteError: 'O\'chirishda xatolik',
+        statusUpdated: 'Status yangilandi',
+        statusUpdateError: 'Status yangilashda xatolik',
+        participantsLoadError: 'Ishtirokchilarni yuklashda xatolik',
+        listDownloaded: 'Ro\'yxat yuklab olindi',
+        olympiad: 'Olimpiada',
+        championship: 'Chempionat',
+        contest: 'Tanlov',
+        festival: 'Festival',
+        other: 'Boshqa',
+        fieldText: 'Matn',
+        fieldNumber: 'Raqam',
+        fieldSelect: 'Tanlash',
+        fieldTextarea: 'Katta matn',
     },
 
     // ============ TOPSHIRIQLAR/QUIZ ============
@@ -982,8 +1060,17 @@ export default {
         cancelSubscription: 'Obunani bekor qilish',
         blockSubscription: 'Obunani bloklash',
         changeStatus: 'Holatni o\'zgartirish',
-        statusChangeConfirm: '"{group}" guruhining obunasini {status} holatiga o\'zgartirmoqchimisiz?',
+        statusChangeConfirm: '\"{group}\" guruhining obunasini {status} holatiga o\'zgartirmoqchimisiz?',
         days: 'kun',
+        // Subscription toast messages
+        receiptLoadError: 'Chekni yuklashda xatolik',
+        paymentApproved: 'To\'lov tasdiqlandi',
+        paymentRejected: 'To\'lov rad etildi',
+        settingsSaved: 'Sozlamalar saqlandi',
+        trialActivated: 'Sinov muddati faollashtirildi!',
+        marketPaymentApproved: 'Market to\'lovi tasdiqlandi',
+        marketPaymentRejected: 'Market to\'lov rad etildi',
+        rejectReason: 'Rad etish sababini yozing:',
     },
 
     // ============ BAYRAMLAR / DAM OLISH ============
@@ -1187,6 +1274,8 @@ export default {
         change: 'O\'zgartirish',
         fullName: 'F.I.Sh.',
         save: 'Saqlash',
+        grantLabel: 'Grant',
+        contractNotLoaded: 'Kontrakt ma\'lumotlari hali yuklanmagan',
     },
 
     // ============ SOZLAMALAR ============
@@ -1335,6 +1424,16 @@ export default {
         version: 'Versiya',
         environment: 'Muhit',
         lastUpdate: 'Oxirgi yangilash',
+        loadWarning: 'Sozlamalar yuklanmadi, standart qiymatlar ishlatilmoqda',
+        saved: 'Sozlamalar saqlandi',
+        saveError: 'Sozlamalarni saqlashda xatolik',
+        changesReverted: 'O\'zgarishlar bekor qilindi',
+        // Extra settings keys
+        loadError: 'Sozlamalarni yuklashda xatolik',
+        usingDefaults: 'Standart qiymatlar ishlatilmoqda',
+        noChanges: 'O\'zgarishlar yo\'q',
+        noPermission: 'Ruxsat yo\'q — faqat Super Admin sozlamalarni o\'zgartira oladi',
+        changesCancelled: 'O\'zgarishlar bekor qilindi',
     },
 
     // ============ TALABALAR (Admin/Leader) ============
@@ -1421,6 +1520,7 @@ export default {
         andMore: 'va yana {count} ta...',
         selectPlanDesc: 'Rejani tanlang va guruhga 1 oylik obuna faollashtiring:',
         selectPlan: 'Rejani tanlang',
+        enterGroupName: 'Guruh nomini kiriting',
     },
 
     // ============ HISOBOTLAR ============
@@ -1780,6 +1880,28 @@ export default {
         resetError: 'Parolni tiklashda xatolik',
         deleteError: 'O\'chirishda xatolik',
         searchOther: 'Boshqa qidiruv so\'zini sinab ko\'ring',
+        // Extra users keys
+        password: 'Parol',
+        hiddenForSecurity: 'Xavfsizlik sababli yashirin',
+        notSet: 'O\'rnatilmagan',
+        studentId: 'Talaba ID',
+        group: 'Guruh',
+        phone: 'Telefon',
+        roleLabel: 'Rol',
+        user: 'Foydalanuvchi',
+        setNewPasswordDesc: 'uchun yangi parol o\'rnating',
+        deleteConfirmText: 'foydalanuvchisini o\'chirmoqchimisiz? Bu amalni qaytarib bo\'lmaydi.',
+        updated: 'Yangilandi',
+        dataUpdated: 'ma\'lumotlari yangilandi',
+        added: 'Qo\'shildi',
+        successAdded: 'muvaffaqiyatli qo\'shildi',
+        passwordResetError: 'Parolni tiklashda xatolik',
+        newPasswordSet: 'uchun yangi parol o\'rnatildi',
+        wasActivated: 'faollashtirildi',
+        wasDeactivated: 'nofaol qilindi',
+        wasDeleted: 'o\'chirildi',
+        inactive: 'Nofaol',
+        activeStatus: 'Faol holat',
     },
 
     // ============ ADMINLAR ============
@@ -1806,6 +1928,16 @@ export default {
         superAdminAllPermissions: 'Super Admin barcha ruxsatlarga ega bo\'ladi',
         confirmDelete: 'O\'chirishni tasdiqlang',
         deleteConfirmMsg: 'adminini o\'chirmoqchimisiz?',
+        // Admin toast messages
+        adminRole: 'Admin',
+        namePlaceholder: 'Ism familiya',
+        superAdminLabel: 'Super Admin',
+        adminUpdated: 'Admin yangilandi',
+        adminAdded: 'Admin qo\'shildi',
+        saveError: 'Saqlashda xatolik',
+        adminDeleted: 'Admin o\'chirildi',
+        deleteError: 'O\'chirishda xatolik',
+        loadError: 'Adminlarni yuklashda xatolik',
     },
 
     // ============ LOGLAR ============
@@ -1867,6 +1999,12 @@ export default {
         actionDeactivate: 'O\'chirish',
         actionRoleChange: 'Rol o\'zgartirish',
         actionError: 'Xato',
+        // CSV export headers
+        csvTime: 'Vaqt',
+        csvAction: 'Harakat',
+        csvDescription: 'Tavsif',
+        csvUser: 'Foydalanuvchi',
+        csvEntity: 'Ob\'yekt',
     },
 
     // ============ FANLAR ============
@@ -1907,6 +2045,18 @@ export default {
         deleteDirection: 'Yo\'nalishni o\'chirish',
         deleteDirectionConfirm: 'yo\'nalishini o\'chirishni xohlaysizmi?',
         deleteSubjectConfirm: 'fanini o\'chirishni xohlaysizmi?',
+        enterNameCode: 'Nom va kodni kiriting',
+        directionUpdated: 'Yo\'nalish yangilandi',
+        directionAdded: 'Yo\'nalish qo\'shildi',
+        directionSaveError: 'Yo\'nalishni saqlashda xatolik',
+        directionDeactivated: 'Yo\'nalish nofaol qilindi',
+        directionActivated: 'Yo\'nalish faollashtirildi',
+        statusChangeError: 'Statusni o\'zgartirishda xatolik',
+        directionDeleted: 'Yo\'nalish o\'chirildi',
+        directionDeleteError: 'Yo\'nalishni o\'chirishda xatolik',
+        subjectExists: 'Bu fan allaqachon mavjud',
+        subjectAdded: 'Fan qo\'shildi',
+        subjectDeleted: 'Fan o\'chirildi',
     },
 
     // ============ AI TAHLIL ============
@@ -2268,6 +2418,7 @@ export default {
     // ============ IMPORT ============
     importData: {
         title: 'Ma\'lumotlarni import qilish',
+        subtitle: 'Excel fayllardan ma\'lumotlarni yuklash',
         selectFile: 'Faylni tanlang',
         dragDrop: 'Faylni bu yerga tashlang',
         supportedFormats: 'Qo\'llab-quvvatlanadigan formatlar',
@@ -2275,6 +2426,19 @@ export default {
         success: 'Muvaffaqiyatli import qilindi',
         error: 'Import xatosi',
         preview: 'Oldindan ko\'rish',
+        contingent: 'Kontingent',
+        scheduleImport: 'Dars jadvali',
+        importSuccess: 'Import muvaffaqiyatli: {groups} guruh, {students} talaba qo\'shildi',
+        importRules: 'Import qoidalari',
+        requiredColumns: 'Majburiy ustunlar',
+        fullName: 'F.I.O (To\'liq ism)',
+        groupName: 'Guruh nomi',
+        sampleFile: 'Namuna fayl',
+        sampleFileDesc: 'Import uchun namuna faylni yuklab olishingiz mumkin.',
+        downloadSample: 'Namuna faylni yuklash',
+        scheduleRules: 'Jadval import qoidalari',
+        excelFormat: 'Excel format',
+        cellFormat: 'Cell formati',
     },
 
     // ============ YORDAM ============
@@ -2365,6 +2529,19 @@ export default {
             viewAttendance: 'Davomat ko\'rish',
             useLibrary: 'Kutubxonadan foydalanish',
         },
+        // HelpManage extra keys
+        faqUpdated: 'Savol yangilandi',
+        categoryHasFaqs: 'Bu kategoriyada savollar bor. Avval savollarni o\'chiring.',
+        statusUpdated: 'Status yangilandi',
+        replySent: 'Javob yuborildi',
+        sendError: 'Yuborishda xatolik',
+        catGeneral: 'Umumiy',
+        catPayment: 'To\'lov',
+        catSchedule: 'Dars jadvali',
+        catTechSupport: 'Texnik yordam',
+        dataLoadError: 'Ma\'lumotlar yuklanmadi',
+        questionPlaceholder: 'Savol matnini kiriting',
+        answerPlaceholder: 'Javob matnini kiriting',
     },
 
     // ============ SUPER DASHBOARD ============
@@ -2730,6 +2907,7 @@ export default {
         noReceipt: 'Chek topilmadi',
         receiptFile: 'Chek fayli',
         date: 'Sana',
+        paymentVerifiedSuccess: 'To\'lov tasdiqlandi',
     },
 
     // ============ KONTRAKTLAR ============
@@ -2738,6 +2916,7 @@ export default {
         totalContracts: 'Jami kontraktlar',
         contractAmount: 'Kontrakt summasi',
         paid: 'To\'langan',
+        unpaid: 'To\'lanmagan',
         totalPaid: 'To\'langan summa',
         debt: 'Qarzdorlik',
         grantAmount: 'Grant summasi',
@@ -2815,6 +2994,10 @@ export default {
         exportSuccess: 'Excel fayl yuklab olindi',
         exportError: 'Eksportda xatolik',
         paymentStatus: 'To\'lov holati',
+        // Money format
+        billion: 'mlrd',
+        million: 'mln',
+        thousand: 'ming',
     },
 
     // ============ KREDIT MODUL ============

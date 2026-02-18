@@ -16,7 +16,7 @@
           <p class="text-emerald-100 mt-1">{{ student?.student_id || student?.login || '' }}</p>
           <div class="flex items-center justify-center sm:justify-start gap-2 mt-3">
             <span class="px-3 py-1 bg-white/20 backdrop-blur rounded-lg text-sm">
-              {{ student?.group_name || group?.name || 'Guruh' }}
+              {{ student?.group_name || group?.name || $t('profile.group') }}
             </span>
             <span class="px-3 py-1 bg-white/20 backdrop-blur rounded-lg text-sm">
               {{ $t('roles.student') }}
@@ -54,7 +54,7 @@
         </div>
         <div class="text-center p-4 bg-purple-50 rounded-xl">
           <p class="text-xl font-bold text-purple-600">{{ contractData?.grant_amount > 0 ? formatContract(contractData.grant_amount) : '—' }}</p>
-          <p class="text-xs text-slate-500 mt-1">Grant</p>
+          <p class="text-xs text-slate-500 mt-1">{{ $t('profile.grantLabel') }}</p>
         </div>
       </div>
 
@@ -97,7 +97,7 @@
       </div>
       
       <div v-if="!contractData && !loading" class="text-center py-4 text-slate-400 text-sm">
-        Kontrakt ma'lumotlari hali yuklanmagan
+        {{ $t('profile.contractNotLoaded') }}
       </div>
     </div>
 
@@ -326,7 +326,9 @@ const loadProfile = async () => {
     
     // Load contract data from contracts table
     try {
-      const contractResp = await api.getMyContract('2025-2026')
+      const currentYear = new Date().getFullYear()
+      const academicYear = new Date().getMonth() >= 8 ? `${currentYear}-${currentYear + 1}` : `${currentYear - 1}-${currentYear}`
+      const contractResp = await api.getMyContract(academicYear)
       if (contractResp?.contract) {
         contractData.value = contractResp.contract
       }
@@ -482,7 +484,7 @@ const changePassword = async () => {
     passwordForm.new = ''
     
     toast.success(t('profile.passwordChanged'))
-    showToastMessage(t('profile.passwordChangeShort'))
+    showToastMessage(t('profile.passwordChanged'))
   } catch (e) {
     console.error('Error changing password:', e)
     const errorMsg = e.response?.data?.detail || t('profile.passwordChangeError')

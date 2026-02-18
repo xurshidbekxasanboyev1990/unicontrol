@@ -4,7 +4,7 @@
     <div class="flex items-center justify-between">
       <div>
         <h1 class="text-xl sm:text-2xl font-bold text-slate-800">{{ $t('importData.title') }}</h1>
-        <p class="text-sm text-slate-500 mt-1">Excel fayllardan ma'lumotlarni yuklash</p>
+        <p class="text-sm text-slate-500 mt-1">{{ $t('importData.subtitle') }}</p>
       </div>
     </div>
 
@@ -32,11 +32,11 @@
 
       <!-- Instructions -->
       <div class="mt-6 bg-white/70 backdrop-blur-sm rounded-3xl border border-slate-200/60 p-6">
-        <h2 class="text-lg font-semibold text-slate-800 mb-4">Import qoidalari</h2>
+        <h2 class="text-lg font-semibold text-slate-800 mb-4">{{ $t('importData.importRules') }}</h2>
         
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div class="space-y-4">
-            <h3 class="text-sm font-medium text-slate-700">Qo'llab-quvvatlanadigan formatlar:</h3>
+            <h3 class="text-sm font-medium text-slate-700">{{ $t('importData.supportedFormats') }}</h3>
             <ul class="space-y-2 text-sm text-slate-600">
               <li class="flex items-center gap-2">
                 <CheckCircle class="w-4 h-4 text-emerald-500" />
@@ -50,15 +50,15 @@
           </div>
 
           <div class="space-y-4">
-            <h3 class="text-sm font-medium text-slate-700">Majburiy ustunlar:</h3>
+            <h3 class="text-sm font-medium text-slate-700">{{ $t('importData.requiredColumns') }}</h3>
             <ul class="space-y-2 text-sm text-slate-600">
               <li class="flex items-center gap-2">
                 <AlertCircle class="w-4 h-4 text-orange-500" />
-                F.I.O (To'liq ism)
+                {{ $t('importData.fullName') }}
               </li>
               <li class="flex items-center gap-2">
                 <AlertCircle class="w-4 h-4 text-orange-500" />
-                Guruh nomi
+                {{ $t('importData.groupName') }}
               </li>
             </ul>
           </div>
@@ -68,14 +68,13 @@
           <div class="flex items-start gap-3">
             <Info class="w-5 h-5 text-blue-600 mt-0.5" />
             <div>
-              <p class="text-sm font-medium text-blue-800">Namuna fayl</p>
+              <p class="text-sm font-medium text-blue-800">{{ $t('importData.sampleFile') }}</p>
               <p class="text-xs text-blue-600 mt-1">
-                Import uchun namuna faylni yuklab olishingiz mumkin. 
-                Bu sizga to'g'ri formatda ma'lumot tayyorlashda yordam beradi.
+                {{ $t('importData.sampleFileDesc') }}
               </p>
               <button class="mt-3 flex items-center gap-2 px-4 py-2 bg-blue-100 text-blue-700 rounded-lg text-sm font-medium hover:bg-blue-200 transition-colors">
                 <Download class="w-4 h-4" />
-                Namuna faylni yuklash
+                {{ $t('importData.downloadSample') }}
               </button>
             </div>
           </div>
@@ -89,11 +88,11 @@
 
       <!-- Instructions for schedule -->
       <div class="mt-6 bg-white/70 backdrop-blur-sm rounded-3xl border border-slate-200/60 p-6">
-        <h2 class="text-lg font-semibold text-slate-800 mb-4">Jadval import qoidalari</h2>
+        <h2 class="text-lg font-semibold text-slate-800 mb-4">{{ $t('importData.scheduleRules') }}</h2>
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div class="space-y-4">
-            <h3 class="text-sm font-medium text-slate-700">Excel format:</h3>
+            <h3 class="text-sm font-medium text-slate-700">{{ $t('importData.excelFormat') }}</h3>
             <ul class="space-y-2 text-sm text-slate-600">
               <li class="flex items-start gap-2">
                 <CheckCircle class="w-4 h-4 text-emerald-500 mt-0.5" />
@@ -111,7 +110,7 @@
           </div>
 
           <div class="space-y-4">
-            <h3 class="text-sm font-medium text-slate-700">Cell formati:</h3>
+            <h3 class="text-sm font-medium text-slate-700">{{ $t('importData.cellFormat') }}</h3>
             <ul class="space-y-2 text-sm text-slate-600">
               <li class="flex items-start gap-2">
                 <Info class="w-4 h-4 text-blue-500 mt-0.5" />
@@ -141,18 +140,20 @@
 import ExcelImport from '@/components/excel/ExcelImport.vue'
 import ScheduleImport from '@/components/excel/ScheduleImport.vue'
 import { useToastStore } from '@/stores/toast'
+import { useLanguageStore } from '@/stores/language'
 import { AlertCircle, CalendarDays, CheckCircle, Download, Info, Users } from 'lucide-vue-next'
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 
 const toast = useToastStore()
+const { t } = useLanguageStore()
 const activeTab = ref('kontingent')
 
-const tabs = [
-  { key: 'kontingent', label: 'Kontingent', icon: Users },
-  { key: 'schedule', label: 'Dars jadvali', icon: CalendarDays },
-]
+const tabs = computed(() => [
+  { key: 'kontingent', label: t('importData.contingent'), icon: Users },
+  { key: 'schedule', label: t('importData.scheduleImport'), icon: CalendarDays },
+])
 
 function handleImportComplete(result) {
-  toast.success(`Import muvaffaqiyatli: ${result.groups} guruh, ${result.students} talaba qo'shildi`)
+  toast.success(t('importData.importSuccess', { groups: result.groups, students: result.students }))
 }
 </script>

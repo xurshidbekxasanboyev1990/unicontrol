@@ -450,10 +450,12 @@ import {
 import { computed, onMounted, ref } from 'vue'
 import api from '../../services/api'
 import { useDataStore } from '../../stores/data'
+import { useLanguageStore } from '../../stores/language'
 import { useToastStore } from '../../stores/toast'
 
 const dataStore = useDataStore()
 const toast = useToastStore()
+const { t } = useLanguageStore()
 
 // State
 const loading = ref(true)
@@ -500,7 +502,7 @@ async function loadReportData() {
     }
   } catch (err) {
     console.error('Load report data error:', err)
-    toast.error('Ma\'lumotlar yuklanmadi')
+    toast.error(t('common.loadError'))
   } finally {
     loading.value = false
   }
@@ -539,11 +541,11 @@ async function loadAllReports() {
 async function approveReport(report) {
   try {
     await api.request(`/reports/${report.id}/approve`, { method: 'POST' })
-    toast.success('Hisobot tasdiqlandi')
+    toast.success(t('reports.approved'))
     await Promise.all([loadPendingReports(), loadAllReports()])
   } catch (err) {
     console.error('Approve error:', err)
-    toast.error('Tasdiqlashda xatolik')
+    toast.error(t('reports.approveError'))
   }
 }
 
@@ -558,12 +560,12 @@ async function confirmReject() {
   if (rejectReason.value.length < 5) return
   try {
     await api.request(`/reports/${rejectingReport.value.id}/reject?reason=${encodeURIComponent(rejectReason.value)}`, { method: 'POST' })
-    toast.success('Hisobot rad etildi')
+    toast.success(t('reports.rejected'))
     showRejectModal.value = false
     await Promise.all([loadPendingReports(), loadAllReports()])
   } catch (err) {
     console.error('Reject error:', err)
-    toast.error('Rad etishda xatolik')
+    toast.error(t('reports.rejectError'))
   }
 }
 
@@ -581,23 +583,23 @@ async function downloadSingleReport(report, format = 'pdf') {
     link.click()
     link.remove()
     window.URL.revokeObjectURL(url)
-    toast.success('Yuklab olindi')
+    toast.success(t('reports.downloaded'))
   } catch (err) {
     console.error('Download error:', err)
-    toast.error('Yuklab olishda xatolik')
+    toast.error(t('reports.downloadError'))
   }
 }
 
 // Helpers
 function formatReportType(type) {
   const labels = {
-    attendance: 'Davomat',
-    payment: 'To\'lov',
-    students: 'Talabalar',
-    groups: 'Guruhlar',
-    analytics: 'Analitika',
-    ai_analysis: 'AI Tahlil',
-    custom: 'Boshqa',
+    attendance: t('attendance.title'),
+    payment: t('reports.payment'),
+    students: t('reports.studentsReport'),
+    groups: t('reports.groupsReport'),
+    analytics: t('reports.analytics'),
+    ai_analysis: t('reports.aiAnalysis'),
+    custom: t('reports.custom'),
   }
   return labels[type] || type
 }
@@ -772,10 +774,10 @@ const exportReport = async () => {
     }
     
     doc.save(`fakultet_hisobot_${new Date().toISOString().split('T')[0]}.pdf`)
-    toast.success('Hisobot yuklab olindi!')
+    toast.success(t('reports.downloaded'))
   } catch (err) {
     console.error('Export error:', err)
-    toast.error('Eksport xatosi')
+    toast.error(t('reports.exportError'))
   }
 }
 

@@ -6,7 +6,7 @@
         <h1 class="text-xl sm:text-2xl font-bold text-slate-800">{{ $t('contracts.title') }}</h1>
         <p class="text-sm text-slate-500">
           {{ $t('contracts.totalContracts') }}: {{ totalContracts }}
-          <span v-if="selectedYear"> · {{ selectedYear }} o'quv yili</span>
+          <span v-if="selectedYear"> · {{ selectedYear }} {{ $t('contracts.academicYear') }}</span>
         </p>
       </div>
       <div class="flex flex-wrap gap-2">
@@ -647,6 +647,9 @@ import {
 } from 'lucide-vue-next'
 import { computed, onMounted, ref } from 'vue'
 import api from '../../services/api'
+import { useLanguageStore } from '../../stores/language'
+
+const { t } = useLanguageStore()
 
 // State
 const contracts = ref([])
@@ -744,13 +747,13 @@ const formatMoney = (amount) => {
   const absNum = Math.abs(num)
   const sign = num < 0 ? '-' : ''
   if (absNum >= 1_000_000_000) {
-    return sign + (absNum / 1_000_000_000).toFixed(1) + ' mlrd'
+    return sign + (absNum / 1_000_000_000).toFixed(1) + ' ' + t('contracts.billion')
   }
   if (absNum >= 1_000_000) {
-    return sign + (absNum / 1_000_000).toFixed(1) + ' mln'
+    return sign + (absNum / 1_000_000).toFixed(1) + ' ' + t('contracts.million')
   }
   if (absNum >= 1_000) {
-    return sign + (absNum / 1_000).toFixed(0) + ' ming'
+    return sign + (absNum / 1_000).toFixed(0) + ' ' + t('contracts.thousand')
   }
   return num.toLocaleString('uz-UZ')
 }

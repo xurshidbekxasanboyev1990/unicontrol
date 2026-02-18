@@ -363,15 +363,15 @@ import { useDataStore } from '@/stores/data'
 import { useLanguageStore } from '@/stores/language'
 import { useToastStore } from '@/stores/toast'
 import {
-    BookOpen,
-    Cake,
-    Calendar,
-    CheckCircle,
-    Gift, PartyPopper, Send,
-    TrendingUp,
-    Users,
-    X,
-    XCircle, Zap
+  BookOpen,
+  Cake,
+  Calendar,
+  CheckCircle,
+  Gift, PartyPopper, Send,
+  TrendingUp,
+  Users,
+  X,
+  XCircle, Zap
 } from 'lucide-vue-next'
 import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'

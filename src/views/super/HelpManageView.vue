@@ -427,7 +427,7 @@
               <input 
                 v-model="faqForm.question"
                 type="text"
-                placeholder="Savol matnini kiriting"
+                :placeholder="$t('help.questionPlaceholder')"
                 class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 outline-none"
               />
             </div>
@@ -437,7 +437,7 @@
               <textarea 
                 v-model="faqForm.answer"
                 rows="5"
-                placeholder="Javob matnini kiriting"
+                :placeholder="$t('help.answerPlaceholder')"
                 class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 outline-none resize-none"
               ></textarea>
             </div>
@@ -763,7 +763,7 @@ const getCategoryIcon = (iconName) => {
 
 const getCategoryName = (categoryId) => {
   const cat = categories.value.find(c => c.id === categoryId)
-  return cat ? cat.name : 'Noma\'lum'
+  return cat ? cat.name : t('common.unknown')
 }
 
 const getCategoryFaqCount = (categoryId) => {
@@ -844,7 +844,7 @@ const saveFaq = async () => {
       if (index !== -1) {
         faqs.value[index] = { ...faqs.value[index], ...faqForm }
       }
-      toast.success('Muvaffaqiyat', 'Savol yangilandi')
+      toast.success(t('common.success'), t('help.faqUpdated'))
     } else {
       // Create via API
       const response = await api.createFaq({
@@ -930,7 +930,7 @@ const saveCategory = () => {
 const deleteCategory = (category) => {
   const faqCount = getCategoryFaqCount(category.id)
   if (faqCount > 0) {
-    toast.warning('Diqqat', `Bu kategoriyada ${faqCount} ta savol bor. Avval savollarni o'chiring.`)
+    toast.warning(t('common.warning'), t('help.categoryHasFaqs', { count: faqCount }))
     return
   }
   if (confirm(t('common.confirm') + '?')) {
@@ -977,7 +977,7 @@ const openMessageModal = (msg) => {
 }
 
 const updateMessageStatus = () => {
-  toast.info('Yangilandi', 'Status yangilandi')
+  toast.info(t('common.updated'), t('help.statusUpdated'))
 }
 
 const sendReply = async () => {
@@ -988,10 +988,10 @@ const sendReply = async () => {
     // API call to send reply
     await api.replySupportMessage(selectedMessage.value.id, replyMessage.value)
     selectedMessage.value.status = 'resolved'
-    toast.success('Yuborildi', 'Javob yuborildi')
+    toast.success(t('common.sent'), t('help.replySent'))
     showMessageModal.value = false
   } catch (error) {
-    toast.error('Xatolik', error.message || 'Yuborishda xatolik')
+    toast.error(t('common.error'), error.message || t('help.sendError'))
   } finally {
     isSaving.value = false
   }
@@ -1054,16 +1054,16 @@ const loadData = async () => {
     // Set default categories if none exist
     if (categories.value.length === 0) {
       categories.value = [
-        { id: 1, name: 'Umumiy', icon: 'HelpCircle' },
-        { id: 2, name: 'Davomat', icon: 'ClipboardCheck' },
-        { id: 3, name: 'To\'lov', icon: 'CreditCard' },
-        { id: 4, name: 'Dars jadvali', icon: 'Calendar' },
-        { id: 5, name: 'Texnik yordam', icon: 'Settings' }
+        { id: 1, name: t('help.catGeneral'), icon: 'HelpCircle' },
+        { id: 2, name: t('help.catAttendance'), icon: 'ClipboardCheck' },
+        { id: 3, name: t('help.catPayment'), icon: 'CreditCard' },
+        { id: 4, name: t('help.catSchedule'), icon: 'Calendar' },
+        { id: 5, name: t('help.catTechSupport'), icon: 'Settings' }
       ]
     }
   } catch (error) {
     console.error('Error loading data:', error)
-    toast.error('Xatolik', 'Ma\'lumotlar yuklanmadi')
+    toast.error(t('common.error'), t('help.dataLoadError'))
   } finally {
     isLoading.value = false
   }

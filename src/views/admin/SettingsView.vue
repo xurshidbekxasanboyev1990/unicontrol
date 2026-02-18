@@ -438,22 +438,24 @@
  */
 
 import api from '@/services/api'
+import { useLanguageStore } from '@/stores/language'
 import { useToastStore } from '@/stores/toast'
 import {
-    AlertCircle,
-    Bell,
-    Building,
-    ClipboardCheck,
-    CreditCard,
-    FileText,
-    Loader2,
-    Monitor,
-    RefreshCw,
-    Save
+  AlertCircle,
+  Bell,
+  Building,
+  ClipboardCheck,
+  CreditCard,
+  FileText,
+  Loader2,
+  Monitor,
+  RefreshCw,
+  Save
 } from 'lucide-vue-next'
 import { computed, onMounted, reactive, ref } from 'vue'
 
 const toast = useToastStore()
+const { t } = useLanguageStore()
 
 // State
 const isLoading = ref(true)
@@ -531,7 +533,7 @@ const loadSettings = async () => {
     
   } catch (error) {
     console.error('Error loading settings:', error)
-    toast.warning('Ogohlantirish', 'Sozlamalar yuklanmadi, standart qiymatlar ishlatilmoqda')
+    toast.warning(t('common.warning'), t('settings.loadWarning'))
   } finally {
     isLoading.value = false
     isRefreshing.value = false
@@ -548,10 +550,10 @@ const saveSettings = async () => {
     // Original qiymatlarni yangilash
     originalSettings.value = { ...settings }
     
-    toast.success('Muvaffaqiyat', 'Sozlamalar saqlandi')
+    toast.success(t('common.success'), t('settings.saved'))
   } catch (error) {
     console.error('Error saving settings:', error)
-    toast.error('Xatolik', 'Sozlamalarni saqlashda xatolik yuz berdi')
+    toast.error(t('common.error'), t('settings.saveError'))
   } finally {
     isSaving.value = false
   }
@@ -560,7 +562,7 @@ const saveSettings = async () => {
 // O'zgarishlarni bekor qilish
 const resetSettings = () => {
   Object.assign(settings, originalSettings.value)
-  toast.info('Bekor qilindi', 'O\'zgarishlar bekor qilindi')
+  toast.info(t('settings.changesReverted'))
 }
 
 onMounted(() => {

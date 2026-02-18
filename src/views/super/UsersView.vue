@@ -339,7 +339,7 @@
               </div>
               
               <div v-if="selectedUser.role !== 'superadmin' && selectedUser.plainPassword" class="rounded-xl border border-amber-200 bg-amber-50 p-4">
-                <label class="mb-1 block text-xs font-medium text-amber-600">Parol</label>
+                <label class="mb-1 block text-xs font-medium text-amber-600">{{ $t('users.password') }}</label>
                 <div class="flex items-center justify-between">
                   <span class="font-mono text-lg font-bold text-amber-700">{{ selectedUser.plainPassword }}</span>
                   <button 
@@ -351,9 +351,9 @@
                 </div>
               </div>
               <div v-else class="rounded-xl border border-slate-200 bg-slate-50 p-4">
-                <label class="mb-1 block text-xs font-medium text-slate-500">Parol</label>
+                <label class="mb-1 block text-xs font-medium text-slate-500">{{ $t('users.password') }}</label>
                 <span class="text-sm text-slate-500">
-                  {{ selectedUser.role === 'superadmin' ? 'Xavfsizlik sababli yashirin' : 'O\'rnatilmagan' }}
+                  {{ selectedUser.role === 'superadmin' ? $t('users.hiddenForSecurity') : $t('users.notSet') }}
                 </span>
               </div>
               
@@ -363,24 +363,24 @@
               </div>
               
               <div v-if="selectedUser.studentId" class="rounded-xl border border-slate-200 p-4">
-                <label class="mb-1 block text-xs font-medium text-slate-500">Talaba ID</label>
+                <label class="mb-1 block text-xs font-medium text-slate-500">{{ $t('users.studentId') }}</label>
                 <span class="text-slate-800">{{ selectedUser.studentId }}</span>
               </div>
               
               <div v-if="selectedUser.group" class="rounded-xl border border-slate-200 p-4">
-                <label class="mb-1 block text-xs font-medium text-slate-500">Guruh</label>
+                <label class="mb-1 block text-xs font-medium text-slate-500">{{ $t('users.group') }}</label>
                 <span class="text-slate-800">{{ selectedUser.group }}</span>
               </div>
               
               <div v-if="selectedUser.phone" class="rounded-xl border border-slate-200 p-4">
-                <label class="mb-1 block text-xs font-medium text-slate-500">Telefon</label>
+                <label class="mb-1 block text-xs font-medium text-slate-500">{{ $t('users.phone') }}</label>
                 <span class="text-slate-800">{{ selectedUser.phone }}</span>
               </div>
 
               <div class="rounded-xl border border-slate-200 p-4">
                 <label class="mb-1 block text-xs font-medium text-slate-500">{{ $t('users.status') }}</label>
                 <span :class="selectedUser.isActive ? 'text-emerald-600' : 'text-rose-500'" class="font-medium">
-                  {{ selectedUser.isActive ? 'Faol' : 'Nofaol' }}
+                  {{ selectedUser.isActive ? $t('users.active') : $t('users.inactive') }}
                 </span>
               </div>
             </div>
@@ -457,33 +457,33 @@
                 />
               </div>
               <div v-if="!editingUser">
-                <label class="block text-sm font-medium text-slate-700 mb-2">Parol *</label>
+                <label class="block text-sm font-medium text-slate-700 mb-2">{{ $t('users.password') }} *</label>
                 <input 
                   v-model="form.password"
                   type="text"
                   :required="!editingUser"
                   class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 outline-none"
-                  placeholder="Parol"
+                  :placeholder="$t('users.password')"
                 />
               </div>
             </div>
             
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label class="block text-sm font-medium text-slate-700 mb-2">Rol *</label>
+                <label class="block text-sm font-medium text-slate-700 mb-2">{{ $t('users.roleLabel') }} *</label>
                 <select 
                   v-model="form.role"
                   required
                   class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 outline-none"
                 >
-                  <option value="student">Talaba</option>
-                  <option value="leader">Sardor</option>
-                  <option value="admin">Admin</option>
+                  <option value="student">{{ $t('users.student') }}</option>
+                  <option value="leader">{{ $t('users.groupLeader') }}</option>
+                  <option value="admin">{{ $t('users.admin') }}</option>
                   <option value="superadmin">Super Admin</option>
                 </select>
               </div>
               <div>
-                <label class="block text-sm font-medium text-slate-700 mb-2">Telefon</label>
+                <label class="block text-sm font-medium text-slate-700 mb-2">{{ $t('users.phone') }}</label>
                 <input 
                   v-model="form.phone"
                   type="text"
@@ -500,7 +500,7 @@
                 id="isActive"
                 class="w-4 h-4 text-amber-500 border-slate-300 rounded focus:ring-amber-500"
               />
-              <label for="isActive" class="text-sm font-medium text-slate-700">Faol holat</label>
+              <label for="isActive" class="text-sm font-medium text-slate-700">{{ $t('users.activeStatus') }}</label>
             </div>
             
             <div class="flex gap-3 pt-4">
@@ -544,7 +544,7 @@
           <div v-if="selectedUser" class="space-y-4">
             <div class="rounded-xl bg-slate-50 p-4 text-center">
               <p class="text-slate-600">
-                <strong>{{ selectedUser.name }}</strong> uchun yangi parol o'rnating
+                <strong>{{ selectedUser.name }}</strong> — {{ $t('users.setNewPasswordDesc') }}
               </p>
             </div>
             
@@ -610,8 +610,7 @@
             </div>
             <h2 class="text-lg font-bold text-slate-800">{{ $t('users.deleteTitle') }}</h2>
             <p class="text-sm text-slate-500 mt-2" v-if="selectedUser">
-              <strong>{{ selectedUser.name }}</strong> foydalanuvchisini o'chirmoqchimisiz?
-              Bu amalni qaytarib bo'lmaydi.
+              <strong>{{ selectedUser.name }}</strong> — {{ $t('users.deleteConfirmText') }}
             </p>
           </div>
           
@@ -765,7 +764,7 @@ async function loadUsers() {
     
     users.value = items.map(u => ({
       id: u.id,
-      name: u.full_name || u.name || 'Noma\'lum',
+      name: u.full_name || u.name || t('common.unknown'),
       studentId: u.student_id || '',
       phone: u.phone || '',
       group: u.group_name || '',
@@ -781,7 +780,7 @@ async function loadUsers() {
     totalPages.value = response?.total_pages || 1
   } catch (err) {
     console.error('Error loading users:', err)
-    toast.error('Foydalanuvchilarni yuklashda xatolik')
+    toast.error(t('users.loadError'))
   } finally {
     loading.value = false
   }
@@ -832,12 +831,12 @@ function getRoleBadge(role) {
 
 function getRoleLabel(role) {
   const labels = {
-    student: 'Talaba',
-    leader: 'Sardor',
-    admin: 'Admin',
+    student: t('users.student'),
+    leader: t('users.groupLeader'),
+    admin: t('users.admin'),
     superadmin: 'Super Admin'
   }
-  return labels[role] || 'Foydalanuvchi'
+  return labels[role] || t('users.user')
 }
 
 // View user details
@@ -890,7 +889,7 @@ async function saveUser() {
         is_active: form.value.is_active
       }
       await api.updateUser(editingUser.value.id, updateData)
-      toast.success('Yangilandi', `${form.value.name} ma'lumotlari yangilandi`)
+      toast.success(t('users.updated'), `${form.value.name} ${t('users.dataUpdated')}`)
     } else {
       // Create
       const createData = {
@@ -902,14 +901,14 @@ async function saveUser() {
         phone: form.value.phone || null
       }
       await api.createUser(createData)
-      toast.success('Qo\'shildi', `${form.value.name} muvaffaqiyatli qo'shildi`)
+      toast.success(t('users.added'), `${form.value.name} ${t('users.successAdded')}`)
     }
     
     showFormModal.value = false
     loadUsers()
   } catch (err) {
     console.error('Error saving user:', err)
-    const msg = err?.response?.data?.detail || err?.message || 'Xatolik yuz berdi'
+    const msg = err?.response?.data?.detail || err?.message || t('common.error')
     toast.error(msg)
   } finally {
     saving.value = false
@@ -947,11 +946,11 @@ async function confirmReset() {
       user.plainPassword = newPassword.value
     }
     
-    toast.success('Parol yangilandi', `${selectedUser.value.name} uchun yangi parol o'rnatildi`)
+    toast.success(t('users.passwordUpdated'), `${selectedUser.value.name} ${t('users.newPasswordSet')}`)
     showResetModal.value = false
   } catch (err) {
     console.error('Error resetting password:', err)
-    toast.error('Parolni tiklashda xatolik')
+    toast.error(t('users.passwordResetError'))
   } finally {
     resetting.value = false
   }
@@ -963,15 +962,15 @@ async function toggleUserActive(user, activate) {
     if (activate) {
       await api.request(`/users/${user.id}/activate`, { method: 'POST' })
       user.isActive = true
-      toast.success('Faollashtirildi', `${user.name} faollashtirildi`)
+      toast.success(t('common.activated'), `${user.name} ${t('users.wasActivated')}`)
     } else {
       await api.request(`/users/${user.id}/deactivate`, { method: 'POST' })
       user.isActive = false
-      toast.success('O\'chirildi', `${user.name} nofaol qilindi`)
+      toast.success(t('common.deactivated'), `${user.name} ${t('users.wasDeactivated')}`)
     }
   } catch (err) {
     console.error('Error toggling user:', err)
-    toast.error('Xatolik yuz berdi')
+    toast.error(t('common.error'))
   }
 }
 
@@ -988,12 +987,12 @@ async function deleteUser() {
   deleting.value = true
   try {
     await api.deleteUser(selectedUser.value.id)
-    toast.success('O\'chirildi', `${selectedUser.value.name} o'chirildi`)
+    toast.success(t('common.deleted'), `${selectedUser.value.name} ${t('users.wasDeleted')}`)
     showDeleteModal.value = false
     loadUsers()
   } catch (err) {
     console.error('Error deleting user:', err)
-    const msg = err?.response?.data?.detail || err?.message || 'O\'chirishda xatolik'
+    const msg = err?.response?.data?.detail || err?.message || t('users.deleteError')
     toast.error(msg)
   } finally {
     deleting.value = false
@@ -1003,7 +1002,7 @@ async function deleteUser() {
 // Copy to clipboard
 function copyToClipboard(text) {
   navigator.clipboard.writeText(text)
-  toast.info('Nusxalandi', 'Ma\'lumot clipboard\'ga nusxalandi')
+  toast.info(t('common.copied'))
 }
 
 // Load on mount

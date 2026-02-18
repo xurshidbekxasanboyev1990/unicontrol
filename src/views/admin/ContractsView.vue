@@ -6,7 +6,7 @@
         <h1 class="text-xl sm:text-2xl font-bold text-slate-800">{{ $t('contracts.title') }}</h1>
         <p class="text-sm text-slate-500">
           {{ $t('contracts.totalContracts') }}: {{ totalContracts }}
-          <span v-if="selectedYear"> · {{ selectedYear }} o'quv yili</span>
+          <span v-if="selectedYear"> · {{ selectedYear }} {{ $t('contracts.academicYear') }}</span>
         </p>
       </div>
       <button 
