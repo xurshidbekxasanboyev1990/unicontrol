@@ -1823,7 +1823,7 @@ export const useDataStore = defineStore('data', () => {
       const response = await api.toggleTournamentStatus(id)
       const index = tournaments.value.findIndex(t => t.id === id)
       if (index !== -1) {
-        tournaments.value[index] = { ...tournaments.value[index], ...response }
+        tournaments.value[index] = { ...tournaments.value[index], ...mapTournament(response) }
       }
       return response
     } catch (err) {

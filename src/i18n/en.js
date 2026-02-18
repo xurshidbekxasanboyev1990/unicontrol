@@ -908,6 +908,14 @@ export default {
         fieldNumber: 'Number',
         fieldSelect: 'Select',
         fieldTextarea: 'Large text',
+        studentLabel: 'Student',
+        fromLabel: 'from',
+        toSubjectsLabel: 'to subjects selects',
+        subjectNotSelected: 'No subject selected',
+        participatesAuto: 'subject participates (auto)',
+        selectsOneFrom: 'subjects - selects one',
+        selectsRangeFrom: 'subjects - selects',
+        subjectsCount: 'subjects',
     },
 
     // ============ QUIZ ============

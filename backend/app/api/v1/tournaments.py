@@ -204,7 +204,7 @@ async def toggle_tournament_status(
         raise HTTPException(status_code=404, detail="Musobaqa topilmadi")
     
     # Cycle through statuses
-    status_cycle = ["upcoming", "pending", "active", "completed", "cancelled"]
+    status_cycle = ["upcoming", "active", "completed", "cancelled"]
     current_index = status_cycle.index(tournament.status) if tournament.status in status_cycle else 0
     tournament.status = status_cycle[(current_index + 1) % len(status_cycle)]
     

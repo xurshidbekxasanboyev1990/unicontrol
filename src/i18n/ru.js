@@ -906,6 +906,14 @@ export default {
         fieldNumber: 'Число',
         fieldSelect: 'Выбор',
         fieldTextarea: 'Большой текст',
+        studentLabel: 'Студент',
+        fromLabel: 'от',
+        toSubjectsLabel: 'до предметов выбирает',
+        subjectNotSelected: 'Предмет не выбран',
+        participatesAuto: 'предмет участвует (автоматически)',
+        selectsOneFrom: 'предметов - выбирает один',
+        selectsRangeFrom: 'предметов - выбирает',
+        subjectsCount: 'предметов',
     },
 
     // ============ ЗАДАНИЯ/QUIZ ============

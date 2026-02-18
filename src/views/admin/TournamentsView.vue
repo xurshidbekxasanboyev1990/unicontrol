@@ -127,7 +127,7 @@
             <div class="flex items-center gap-2 text-sm">
               <Clock class="w-4 h-4 text-slate-400" />
               <span :class="isDeadlinePassed(tournament.registrationDeadline) ? 'text-red-500' : 'text-emerald-600'">
-                Ro'yxat: {{ formatDate(tournament.registrationDeadline) }}
+                {{ $t('tournaments.regDeadline') }}: {{ formatDate(tournament.registrationDeadline) }}
               </span>
             </div>
           </div>
@@ -490,36 +490,36 @@
 
                       <!-- Multiple uchun min/max -->
                       <div v-if="rule.selectionMode === 'multiple'" class="flex items-center gap-3 p-3 bg-purple-50 rounded-xl">
-                        <span class="text-sm text-purple-700">Talaba</span>
+                        <span class="text-sm text-purple-700">{{ $t('tournaments.studentLabel') }}</span>
                         <input
                           v-model.number="rule.minSelect"
                           type="number"
                           min="1"
                           class="w-14 px-2 py-1 text-center border border-purple-300 rounded-lg text-sm font-medium"
                         />
-                        <span class="text-sm text-purple-700">dan</span>
+                        <span class="text-sm text-purple-700">{{ $t('tournaments.fromLabel') }}</span>
                         <input
                           v-model.number="rule.maxSelect"
                           type="number"
                           :min="rule.minSelect || 1"
                           class="w-14 px-2 py-1 text-center border border-purple-300 rounded-lg text-sm font-medium"
                         />
-                        <span class="text-sm text-purple-700">gacha fan tanlaydi</span>
+                        <span class="text-sm text-purple-700">{{ $t('tournaments.toSubjectsLabel') }}</span>
                       </div>
 
                       <!-- Natija preview -->
                       <div class="p-3 bg-slate-100 rounded-xl text-sm text-slate-600">
                         <strong class="text-slate-800">{{ getDirectionCode(rule.directionId) }}</strong> talabasi: 
                         <span v-if="!rule.directionId" class="text-amber-600">{{ $t('tournaments.directionNotSelected') }}</span>
-                        <span v-else-if="!rule.allowedSubjectIds?.length" class="text-amber-600">Fan tanlanmagan</span>
+                        <span v-else-if="!rule.allowedSubjectIds?.length" class="text-amber-600">{{ $t('tournaments.subjectNotSelected') }}</span>
                         <span v-else-if="rule.selectionMode === 'fixed'" class="text-blue-600">
-                          {{ getFirstSubjectName(rule.allowedSubjectIds) }} fanidan qatnashadi (avtomatik)
+                          {{ getFirstSubjectName(rule.allowedSubjectIds) }} {{ $t('tournaments.participatesAuto') }}
                         </span>
                         <span v-else-if="rule.selectionMode === 'single'" class="text-emerald-600">
-                          {{ rule.allowedSubjectIds.length }} fandan bittasini tanlaydi
+                          {{ rule.allowedSubjectIds.length }} {{ $t('tournaments.selectsOneFrom') }}
                         </span>
                         <span v-else class="text-purple-600">
-                          {{ rule.allowedSubjectIds.length }} fandan {{ rule.minSelect }}-{{ rule.maxSelect }} tasini tanlaydi
+                          {{ rule.allowedSubjectIds.length }} {{ $t('tournaments.selectsRangeFrom') }} {{ rule.minSelect }}-{{ rule.maxSelect }} {{ $t('tournaments.subjectsCount') }}
                         </span>
                       </div>
                     </div>
@@ -844,6 +844,7 @@ import {
 } from 'lucide-vue-next'
 import { computed, onMounted, ref } from 'vue'
 import CustomSelect from '../../components/ui/CustomSelect.vue'
+import api from '../../services/api'
 import { useDataStore } from '../../stores/data'
 import { useLanguageStore } from '../../stores/language'
 import { useToastStore } from '../../stores/toast'

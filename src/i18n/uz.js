@@ -911,6 +911,14 @@ export default {
         fieldNumber: 'Raqam',
         fieldSelect: 'Tanlash',
         fieldTextarea: 'Katta matn',
+        studentLabel: 'Talaba',
+        fromLabel: 'dan',
+        toSubjectsLabel: 'gacha fan tanlaydi',
+        subjectNotSelected: 'Fan tanlanmagan',
+        participatesAuto: 'fanidan qatnashadi (avtomatik)',
+        selectsOneFrom: 'fandan bittasini tanlaydi',
+        selectsRangeFrom: 'fandan',
+        subjectsCount: 'tasini tanlaydi',
     },
 
     // ============ TOPSHIRIQLAR/QUIZ ============

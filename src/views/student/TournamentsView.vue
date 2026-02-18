@@ -32,9 +32,9 @@
             <h3 class="font-semibold text-slate-800 text-sm line-clamp-1">{{ item.tournament.title }}</h3>
             <span :class="[
               'px-2 py-0.5 text-xs font-medium rounded-full shrink-0',
-              item.registration.status === 'pending' && 'bg-amber-100 text-amber-700',
-              item.registration.status === 'approved' && 'bg-emerald-100 text-emerald-700',
-              item.registration.status === 'rejected' && 'bg-rose-100 text-rose-700'
+              (item.registration.status === 'pending' || item.registration.status === 'registered') && 'bg-amber-100 text-amber-700',
+              (item.registration.status === 'approved' || item.registration.status === 'confirmed') && 'bg-emerald-100 text-emerald-700',
+              (item.registration.status === 'rejected' || item.registration.status === 'cancelled') && 'bg-rose-100 text-rose-700'
             ]">
               {{ getStatusLabel(item.registration.status) }}
             </span>
@@ -547,10 +547,10 @@ const selectedSubjectIds = ref([]) // YANGI: array ga o'zgartirildi
 
 const categories = computed(() => [
   { value: 'all', label: t('common.all'), icon: Trophy },
-  { value: 'intellektual', label: t('ai.analysis'), icon: Brain },
-  { value: 'sport', label: t('clubs.sport'), icon: Dumbbell },
-  { value: 'ijodiy', label: t('clubs.art'), icon: Palette },
-  { value: 'ilmiy', label: t('clubs.science'), icon: FlaskConical }
+  { value: 'intellektual', label: t('tournaments.intellectual'), icon: Brain },
+  { value: 'sport', label: t('tournaments.sport'), icon: Dumbbell },
+  { value: 'ijodiy', label: t('tournaments.creative'), icon: Palette },
+  { value: 'ilmiy', label: t('tournaments.scientific'), icon: FlaskConical }
 ])
 
 const regForm = ref({
@@ -621,9 +621,12 @@ const isRegistered = (tournamentId) => {
 
 const getStatusLabel = (status) => {
   const labels = {
-    pending: t('common.loading'),
-    approved: t('common.active'),
-    rejected: t('common.inactive')
+    registered: t('tournaments.registered'),
+    pending: t('common.pending'),
+    confirmed: t('common.approved'),
+    approved: t('common.approved'),
+    cancelled: t('common.cancelled'),
+    rejected: t('common.rejected')
   }
   return labels[status] || status
 }
