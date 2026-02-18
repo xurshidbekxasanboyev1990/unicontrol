@@ -159,7 +159,7 @@ async def get_attendance_history(
             {
                 "date": str(a.date),
                 "status": a.status.value,
-                "notes": a.notes
+                "notes": getattr(a, 'note', '') or ''
             }
             for a in records
         ],

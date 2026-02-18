@@ -654,6 +654,7 @@
  */
 
 import api from '@/services/api'
+import { useLanguageStore } from '@/stores/language'
 import { useToastStore } from '@/stores/toast'
 import {
     AlertTriangle,
@@ -679,6 +680,7 @@ import {
 import { computed, onMounted, ref } from 'vue'
 
 const toast = useToastStore()
+const { t } = useLanguageStore()
 
 // Pagination state
 const currentPage = ref(1)
