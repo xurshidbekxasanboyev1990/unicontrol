@@ -75,6 +75,9 @@ uploads/
 unicontrol-bot/bot_log.txt
 unicontrol-bot/*.db
 
+# Mobile app (alohida repoda)
+unicontrolmobile/
+
 # Docker volumes
 postgres_data/
 redis_data/
