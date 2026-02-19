@@ -80,6 +80,7 @@ services:
       - DB_NAME=${DB_NAME:-unicontrol}
       - SECRET_KEY=${SECRET_KEY:-unicontrol-secret-key-2026-production}
       - TELEGRAM_BOT_TOKEN=${BOT_TOKEN:-}
+      - CLAUDE_API_KEY=${CLAUDE_API_KEY:-}
     volumes:
       - backend_uploads:/app/uploads
       - backend_logs:/app/logs

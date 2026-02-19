@@ -70,6 +70,7 @@ services:
       - DB_PASSWORD=${DB_PASSWORD:-unicontrol_secret_2026}
       - DB_NAME=${DB_NAME:-unicontrol}
       - TELEGRAM_BOT_TOKEN=${BOT_TOKEN:-}
+      - CLAUDE_API_KEY=${CLAUDE_API_KEY:-}
     ports:
       - "${BACKEND_PORT:-8001}:8000"
     volumes:
