@@ -1495,6 +1495,26 @@ class ApiService {
     async getGroupContracts(groupId, params = {}) {
         return this.request(`/contracts/group/${groupId}${buildQuery(params)}`)
     }
+
+    // ============ GENERIC CRUD METHODS ============
+
+    async get(endpoint, options = {}) {
+        const params = options.params || {}
+        const queryString = buildQuery(params)
+        return this.request(`${endpoint}${queryString}`)
+    }
+
+    async post(endpoint, data = {}, options = {}) {
+        return this.request(endpoint, { method: 'POST', body: JSON.stringify(data) })
+    }
+
+    async put(endpoint, data = {}, options = {}) {
+        return this.request(endpoint, { method: 'PUT', body: JSON.stringify(data) })
+    }
+
+    async delete(endpoint, options = {}) {
+        return this.request(endpoint, { method: 'DELETE' })
+    }
 }
 
 export const api = new ApiService()

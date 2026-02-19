@@ -1,0 +1,14 @@
+node_modules
+dist
+build
+.git
+.env
+.env.*
+unicontrolmobile
+unicontrol-bot
+backend
+*.log
+*.pyc
+__pycache__
+.vscode
+.idea

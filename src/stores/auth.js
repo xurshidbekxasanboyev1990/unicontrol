@@ -54,6 +54,9 @@ export const useAuthStore = defineStore('auth', () => {
   const roles = {
     STUDENT: 'student',
     LEADER: 'leader',
+    TEACHER: 'teacher',
+    ACADEMIC_AFFAIRS: 'academic_affairs',
+    REGISTRAR_OFFICE: 'registrar_office',
     ADMIN: 'admin',
     SUPERADMIN: 'superadmin'
   }
@@ -66,15 +69,24 @@ export const useAuthStore = defineStore('auth', () => {
   /** Sardormi? */
   const isLeader = computed(() => user.value?.role === roles.LEADER)
 
+  /** O'qituvchimi? */
+  const isTeacher = computed(() => user.value?.role === roles.TEACHER)
+
+  /** Akademik ishlar bo'limimi? */
+  const isAcademicAffairs = computed(() => user.value?.role === roles.ACADEMIC_AFFAIRS)
+
+  /** Registrator ofisimi? */
+  const isRegistrarOffice = computed(() => user.value?.role === roles.REGISTRAR_OFFICE)
+
   /** Adminmi? */
   const isAdmin = computed(() => user.value?.role === roles.ADMIN)
 
   /** Super Adminmi? */
   const isSuperAdmin = computed(() => user.value?.role === roles.SUPERADMIN)
 
-  /** Talabalarni boshqara oladimi? (leader, admin, superadmin) */
+  /** Talabalarni boshqara oladimi? (leader, teacher, academic_affairs, admin, superadmin) */
   const canManageStudents = computed(() =>
-    ['leader', 'admin', 'superadmin'].includes(user.value?.role)
+    ['leader', 'teacher', 'academic_affairs', 'admin', 'superadmin'].includes(user.value?.role)
   )
 
   /** Guruhlarni boshqara oladimi? (admin, superadmin) */
@@ -95,6 +107,9 @@ export const useAuthStore = defineStore('auth', () => {
     const labels = {
       student: 'Talaba',
       leader: 'Guruh sardori',
+      teacher: 'O\'qituvchi',
+      academic_affairs: 'Akademik ishlar',
+      registrar_office: 'Registrator ofisi',
       admin: 'Administrator',
       superadmin: 'Super Administrator'
     }
@@ -126,6 +141,9 @@ export const useAuthStore = defineStore('auth', () => {
       const roleMap = {
         'student': 'student',
         'leader': 'leader',
+        'teacher': 'teacher',
+        'academic_affairs': 'academic_affairs',
+        'registrar_office': 'registrar_office',
         'admin': 'admin',
         'superadmin': 'superadmin'
       }
@@ -277,6 +295,9 @@ export const useAuthStore = defineStore('auth', () => {
       const roleMap = {
         'student': 'student',
         'leader': 'leader',
+        'teacher': 'teacher',
+        'academic_affairs': 'academic_affairs',
+        'registrar_office': 'registrar_office',
         'admin': 'admin',
         'superadmin': 'superadmin'
       }
@@ -425,6 +446,9 @@ export const useAuthStore = defineStore('auth', () => {
     // Computed
     isStudent,
     isLeader,
+    isTeacher,
+    isAcademicAffairs,
+    isRegistrarOffice,
     isAdmin,
     isSuperAdmin,
     canManageStudents,

@@ -23,6 +23,9 @@ class UserRole(str, enum.Enum):
     """User role enumeration."""
     STUDENT = "student"
     LEADER = "leader"
+    TEACHER = "teacher"
+    ACADEMIC_AFFAIRS = "academic_affairs"
+    REGISTRAR_OFFICE = "registrar_office"
     ADMIN = "admin"
     SUPERADMIN = "superadmin"
 
@@ -200,6 +203,21 @@ class User(Base):
         return self.role == UserRole.LEADER
     
     @property
+    def is_teacher(self) -> bool:
+        """Check if user is a teacher."""
+        return self.role == UserRole.TEACHER
+    
+    @property
+    def is_academic_affairs(self) -> bool:
+        """Check if user is academic affairs."""
+        return self.role == UserRole.ACADEMIC_AFFAIRS
+    
+    @property
+    def is_registrar_office(self) -> bool:
+        """Check if user is registrar office."""
+        return self.role == UserRole.REGISTRAR_OFFICE
+    
+    @property
     def is_admin(self) -> bool:
         """Check if user is an admin."""
         return self.role == UserRole.ADMIN
@@ -212,7 +230,7 @@ class User(Base):
     @property
     def can_manage_students(self) -> bool:
         """Check if user can manage students."""
-        return self.role in [UserRole.LEADER, UserRole.ADMIN, UserRole.SUPERADMIN]
+        return self.role in [UserRole.TEACHER, UserRole.LEADER, UserRole.ADMIN, UserRole.SUPERADMIN]
     
     @property
     def can_manage_groups(self) -> bool:

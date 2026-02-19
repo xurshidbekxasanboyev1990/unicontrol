@@ -427,19 +427,19 @@ import api from '@/services/api'
 import { useLanguageStore } from '@/stores/language'
 import { useToastStore } from '@/stores/toast'
 import {
-    ChevronLeft,
-    ChevronRight,
-    ChevronsLeft,
-    ChevronsRight,
-    Copy,
-    Eye,
-    EyeOff,
-    Loader2,
-    Lock,
-    RefreshCw,
-    Search,
-    UserX,
-    X
+  ChevronLeft,
+  ChevronRight,
+  ChevronsLeft,
+  ChevronsRight,
+  Copy,
+  Eye,
+  EyeOff,
+  Loader2,
+  Lock,
+  RefreshCw,
+  Search,
+  UserX,
+  X
 } from 'lucide-vue-next'
 import { computed, onMounted, ref } from 'vue'
 
@@ -564,6 +564,9 @@ function getRoleColor(role) {
   const colors = {
     student: 'bg-gradient-to-br from-blue-400 to-blue-600',
     leader: 'bg-gradient-to-br from-emerald-400 to-emerald-600',
+    teacher: 'bg-gradient-to-br from-teal-400 to-teal-600',
+    academic_affairs: 'bg-gradient-to-br from-cyan-400 to-cyan-600',
+    registrar_office: 'bg-gradient-to-br from-indigo-400 to-indigo-600',
     admin: 'bg-gradient-to-br from-violet-400 to-violet-600',
     superadmin: 'bg-gradient-to-br from-amber-400 to-orange-600'
   }
@@ -574,6 +577,9 @@ function getRoleBadge(role) {
   const badges = {
     student: 'bg-blue-100 text-blue-700',
     leader: 'bg-emerald-100 text-emerald-700',
+    teacher: 'bg-teal-100 text-teal-700',
+    academic_affairs: 'bg-cyan-100 text-cyan-700',
+    registrar_office: 'bg-indigo-100 text-indigo-700',
     admin: 'bg-violet-100 text-violet-700',
     superadmin: 'bg-amber-100 text-amber-700'
   }
@@ -584,6 +590,9 @@ function getRoleLabel(role) {
   const labels = {
     student: 'Talaba',
     leader: 'Sardor',
+    teacher: "O'qituvchi",
+    academic_affairs: 'Akademik ishlar',
+    registrar_office: 'Registrator ofisi',
     admin: 'Admin',
     superadmin: 'Super Admin'
   }

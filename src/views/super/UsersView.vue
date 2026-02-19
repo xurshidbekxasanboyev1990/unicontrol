@@ -478,6 +478,9 @@
                 >
                   <option value="student">{{ $t('users.student') }}</option>
                   <option value="leader">{{ $t('users.groupLeader') }}</option>
+                  <option value="teacher">{{ $t('roles.teacher') }}</option>
+                  <option value="academic_affairs">{{ $t('roles.academic_affairs') }}</option>
+                  <option value="registrar_office">{{ $t('roles.registrar_office') }}</option>
                   <option value="admin">{{ $t('users.admin') }}</option>
                   <option value="superadmin">Super Admin</option>
                 </select>
@@ -815,6 +818,9 @@ function getRoleColor(role) {
   const colors = {
     student: 'bg-gradient-to-br from-blue-400 to-blue-600',
     leader: 'bg-gradient-to-br from-emerald-400 to-emerald-600',
+    teacher: 'bg-gradient-to-br from-teal-400 to-teal-600',
+    academic_affairs: 'bg-gradient-to-br from-cyan-400 to-cyan-600',
+    registrar_office: 'bg-gradient-to-br from-indigo-400 to-indigo-600',
     admin: 'bg-gradient-to-br from-violet-400 to-violet-600',
     superadmin: 'bg-gradient-to-br from-amber-400 to-orange-600'
   }
@@ -825,6 +831,9 @@ function getRoleBadge(role) {
   const badges = {
     student: 'bg-blue-100 text-blue-700',
     leader: 'bg-emerald-100 text-emerald-700',
+    teacher: 'bg-teal-100 text-teal-700',
+    academic_affairs: 'bg-cyan-100 text-cyan-700',
+    registrar_office: 'bg-indigo-100 text-indigo-700',
     admin: 'bg-violet-100 text-violet-700',
     superadmin: 'bg-amber-100 text-amber-700'
   }
@@ -835,6 +844,9 @@ function getRoleLabel(role) {
   const labels = {
     student: t('users.student'),
     leader: t('users.groupLeader'),
+    teacher: t('roles.teacher'),
+    academic_affairs: t('roles.academic_affairs'),
+    registrar_office: t('roles.registrar_office'),
     admin: t('users.admin'),
     superadmin: 'Super Admin'
   }

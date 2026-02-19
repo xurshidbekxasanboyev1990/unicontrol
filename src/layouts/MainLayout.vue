@@ -263,6 +263,7 @@
 
 <script setup>
 import {
+  Activity,
   BarChart3,
   Bell,
   BookOpen,
@@ -271,12 +272,17 @@ import {
   Building2,
   Calculator,
   Calendar,
+  CalendarCheck,
+  CalendarClock,
+  CalendarDays,
   CalendarOff,
   ChevronDown,
   ChevronRight,
   ClipboardCheck,
   ClipboardList,
   CreditCard,
+  DoorOpen,
+  FileCheck,
   FileSpreadsheet,
   FileText,
   FileUp,
@@ -293,7 +299,9 @@ import {
   Settings,
   Shield,
   ShieldCheck,
+  Sparkles,
   Store,
+  Table2,
   Trophy,
   User,
   UserCircle,
@@ -324,8 +332,14 @@ const getPollingTypes = () => {
   if (role === 'superadmin' || role === 'admin') {
     // Admin/superadmin uchun faqat guruhlar va stats (boshqalar sahifada yuklanadi)
     return [...base, 'groups']
+  } else if (role === 'academic_affairs') {
+    return [...base, 'groups']
+  } else if (role === 'registrar_office') {
+    return [...base, 'groups']
   } else if (role === 'leader') {
     return [...base, 'attendance']
+  } else if (role === 'teacher') {
+    return [...base, 'schedule']
   } else {
     // student
     return [...base, 'schedule']
@@ -358,6 +372,8 @@ const currentPageTitle = computed(() => {
     'student-canteen': () => t('layout.canteen'),
     'student-tournaments': () => t('layout.tournaments'),
     'student-subscription': () => t('layout.subscription'),
+    'student-exam-schedule': () => t('exams.title'),
+    'student-nb-permits': () => 'NB Ruxsatnomalarim',
     'leader-dashboard': () => t('layout.controlPanel'),
     'leader-attendance': () => t('layout.takeAttendance'),
     'leader-students': () => t('layout.students'),
@@ -370,6 +386,17 @@ const currentPageTitle = computed(() => {
     'leader-settings': () => t('layout.settings'),
     'leader-help': () => t('layout.help'),
     'leader-subscription': () => t('layout.subscription'),
+    'leader-exam-schedule': () => t('exams.title'),
+    'leader-nb-permits': () => 'Guruh NB Ruxsatnomalari',
+    'teacher-dashboard': () => t('layout.controlPanel'),
+    'teacher-schedule': () => t('layout.schedule'),
+    'teacher-groups': () => t('layout.groups'),
+    'teacher-group-students': () => t('teacher.groupStudents'),
+    'teacher-attendance': () => t('layout.attendance'),
+    'teacher-workload': () => t('teacher.workload'),
+    'teacher-profile': () => t('common.profile'),
+    'teacher-help': () => t('layout.help'),
+    'teacher-notifications': () => t('layout.notifications'),
     'admin-dashboard': () => t('layout.controlPanel'),
     'admin-attendance': () => t('layout.attendance') || 'Davomat boshqaruvi',
     'admin-students': () => t('layout.students'),
@@ -419,8 +446,33 @@ const currentPageTitle = computed(() => {
     'super-holidays': () => t('layout.holidays'),
     'admin-import': () => t('importData.title') || 'Import',
     'super-import': () => t('importData.title') || 'Import',
+    'super-workload': () => t('teacher.workload'),
+    'super-workload-import': () => t('workloadImport.title') || "O'qituvchi bandligi import",
+    'super-activity': () => t('activity.title') || 'Faoliyatlar',
+    'super-nb-permits': () => 'NB Ruxsatnomalar',
     'admin-schedule': () => t('layout.schedule'),
+    'admin-nb-permits': () => 'NB Ruxsatnomalar',
     'super-schedule': () => t('layout.schedule'),
+    'academic-dashboard': () => t('layout.controlPanel'),
+    'academic-schedule-editor': () => t('academic.scheduleEditor'),
+    'academic-ai-generate': () => t('academic.aiGenerate'),
+    'academic-groups': () => t('academic.manageGroups'),
+    'academic-workload': () => t('teacher.workload'),
+    'academic-workload-import': () => t('workloadImport.title') || "O'qituvchi bandligi import",
+    'academic-data-manager': () => "Ma'lumotlar boshqaruvi",
+    'academic-rooms': () => t('rooms.title'),
+    'academic-exam-schedule': () => t('exams.title'),
+    'academic-profile': () => t('common.profile'),
+    'academic-help': () => t('layout.help'),
+    'academic-notifications': () => t('layout.notifications'),
+    'registrar-dashboard': () => 'Registrator ofisi',
+    'registrar-students': () => t('layout.students'),
+    'registrar-attendance': () => t('layout.attendance'),
+    'registrar-nb-permits': () => 'NB Ruxsatnomalar',
+    'registrar-profile': () => t('common.profile'),
+    'registrar-help': () => t('layout.help'),
+    'registrar-notifications': () => t('layout.notifications'),
+    'teacher-nb-permits': () => 'NB Ruxsatnomalar',
   }
   const fn = titles[route.name]
   return fn ? fn() : t('layout.controlPanel')
@@ -449,6 +501,8 @@ const menuSections = computed(() => {
         { path: '/student/market', label: t('layout.market'), icon: markRaw(Store) },
         { path: '/student/quizzes', label: t('layout.quizzes'), icon: markRaw(ClipboardList) },
         { path: '/student/credit-module', label: t('layout.creditModule'), icon: markRaw(Calculator) },
+        { path: '/student/exam-schedule', label: t('exams.title'), icon: markRaw(CalendarCheck) },
+        { path: '/student/nb-permits', label: 'NB Ruxsatnomalar', icon: markRaw(FileCheck) },
         { path: '/student/notifications', label: t('layout.notifications'), icon: markRaw(Bell), badge: dataStore.unreadCount > 0 ? String(dataStore.unreadCount) : null }
       ]
     })
@@ -483,6 +537,8 @@ const menuSections = computed(() => {
         { path: '/leader/clubs', label: t('layout.clubs'), icon: markRaw(Palette) },
         { path: '/leader/tournaments', label: t('layout.tournaments'), icon: markRaw(Trophy) },
         { path: '/leader/canteen', label: t('layout.canteen'), icon: markRaw(UtensilsCrossed) },
+        { path: '/leader/exam-schedule', label: t('exams.title'), icon: markRaw(CalendarCheck) },
+        { path: '/leader/nb-permits', label: 'NB Ruxsatnomalar', icon: markRaw(FileCheck) },
         { path: '/leader/files', label: t('layout.files'), icon: markRaw(FolderOpen) },
         { path: '/leader/market', label: t('layout.market'), icon: markRaw(Store) },
         { path: '/leader/quizzes', label: t('layout.quizzes'), icon: markRaw(ClipboardList) },
@@ -496,6 +552,75 @@ const menuSections = computed(() => {
         { path: '/leader/profile', label: t('layout.myProfile'), icon: markRaw(User) },
         { path: '/leader/settings', label: t('layout.settings'), icon: markRaw(Settings) },
         { path: '/leader/help', label: t('layout.help'), icon: markRaw(HelpCircle) }
+      ]
+    })
+  }
+
+  if (authStore.isTeacher) {
+    sections.push({
+      title: t('teacher.teaching'),
+      items: [
+        { path: '/teacher/dashboard', label: t('layout.dashboard'), icon: markRaw(LayoutDashboard) },
+        { path: '/teacher/schedule', label: t('layout.schedule'), icon: markRaw(Calendar) },
+        { path: '/teacher/groups', label: t('layout.groups'), icon: markRaw(Building2) },
+        { path: '/teacher/attendance', label: t('layout.attendance'), icon: markRaw(ClipboardCheck) },
+        { path: '/teacher/workload', label: t('teacher.workload'), icon: markRaw(CalendarClock) },
+        { path: '/teacher/nb-permits', label: 'NB Ruxsatnomalar', icon: markRaw(FileCheck) },
+        { path: '/teacher/notifications', label: t('layout.notifications'), icon: markRaw(Bell), badge: dataStore.unreadCount > 0 ? String(dataStore.unreadCount) : null }
+      ]
+    })
+    sections.push({
+      title: t('common.profile'),
+      items: [
+        { path: '/teacher/profile', label: t('layout.myProfile'), icon: markRaw(User) },
+        { path: '/teacher/help', label: t('layout.help'), icon: markRaw(HelpCircle) }
+      ]
+    })
+  }
+
+  if (authStore.isAcademicAffairs) {
+    sections.push({
+      title: t('academic.title'),
+      items: [
+        { path: '/academic/dashboard', label: t('layout.dashboard'), icon: markRaw(LayoutDashboard) },
+        { path: '/academic/schedule-editor', label: t('academic.scheduleEditor'), icon: markRaw(Table2) },
+        { path: '/academic/ai-generate', label: t('academic.aiGenerate'), icon: markRaw(Sparkles) },
+        { path: '/academic/groups', label: t('academic.manageGroups'), icon: markRaw(Building2) },
+        { path: '/academic/workload', label: t('teacher.workload'), icon: markRaw(CalendarClock) },
+        { path: '/academic/kontingent-import', label: 'Kontingent import', icon: markRaw(Users) },
+        { path: '/academic/schedule-import', label: 'Jadval import', icon: markRaw(CalendarDays) },
+        { path: '/academic/workload-import', label: "Bandlik import", icon: markRaw(FileUp) },
+        { path: '/academic/room-import', label: 'Xona bandlik import', icon: markRaw(DoorOpen) },
+        { path: '/academic/rooms', label: t('rooms.title'), icon: markRaw(DoorOpen) },
+        { path: '/academic/exam-schedule', label: t('exams.title'), icon: markRaw(CalendarCheck) },
+        { path: '/academic/notifications', label: t('layout.notifications'), icon: markRaw(Bell), badge: dataStore.unreadCount > 0 ? String(dataStore.unreadCount) : null }
+      ]
+    })
+    sections.push({
+      title: t('common.profile'),
+      items: [
+        { path: '/academic/profile', label: t('layout.myProfile'), icon: markRaw(User) },
+        { path: '/academic/help', label: t('layout.help'), icon: markRaw(HelpCircle) }
+      ]
+    })
+  }
+
+  if (authStore.isRegistrarOffice) {
+    sections.push({
+      title: 'Registrator ofisi',
+      items: [
+        { path: '/registrar/dashboard', label: t('layout.dashboard'), icon: markRaw(LayoutDashboard) },
+        { path: '/registrar/students', label: t('layout.students'), icon: markRaw(Users) },
+        { path: '/registrar/attendance', label: t('layout.attendance'), icon: markRaw(ClipboardCheck) },
+        { path: '/registrar/nb-permits', label: 'NB Ruxsatnomalar', icon: markRaw(FileCheck) },
+        { path: '/registrar/notifications', label: t('layout.notifications'), icon: markRaw(Bell), badge: dataStore.unreadCount > 0 ? String(dataStore.unreadCount) : null }
+      ]
+    })
+    sections.push({
+      title: t('common.profile'),
+      items: [
+        { path: '/registrar/profile', label: t('layout.myProfile'), icon: markRaw(User) },
+        { path: '/registrar/help', label: t('layout.help'), icon: markRaw(HelpCircle) }
       ]
     })
   }
@@ -515,9 +640,14 @@ const menuSections = computed(() => {
         { path: '/admin/holidays', label: t('layout.holidays'), icon: markRaw(CalendarOff) },
         { path: '/admin/schedule', label: t('layout.schedule'), icon: markRaw(Calendar) },
         { path: '/admin/contracts', label: t('layout.contracts'), icon: markRaw(FileSpreadsheet) },
-        { path: '/admin/import', label: t('importData.title') || 'Import', icon: markRaw(FileUp) },
+        { path: '/admin/kontingent-import', label: 'Kontingent import', icon: markRaw(Users) },
+        { path: '/admin/schedule-import', label: 'Jadval import', icon: markRaw(CalendarDays) },
+        { path: '/admin/workload-import', label: "Bandlik import", icon: markRaw(FileUp) },
+        { path: '/admin/room-import', label: 'Xona bandlik import', icon: markRaw(DoorOpen) },
+        { path: '/admin/workload', label: t('teacher.workload'), icon: markRaw(CalendarClock) },
         { path: '/admin/ai-analysis', label: t('layout.aiAnalysis'), icon: markRaw(Brain) },
-        { path: '/admin/credit-module', label: t('layout.creditModule'), icon: markRaw(Calculator) }
+        { path: '/admin/credit-module', label: t('layout.creditModule'), icon: markRaw(Calculator) },
+        { path: '/admin/nb-permits', label: 'NB Ruxsatnomalar', icon: markRaw(FileCheck) }
       ]
     })
     sections.push({
@@ -547,7 +677,8 @@ const menuSections = computed(() => {
         { path: '/super/users', label: t('layout.users') || 'Foydalanuvchilar', icon: markRaw(Users) },
         { path: '/super/landing', label: t('layout.mainPage'), icon: markRaw(Home) },
         { path: '/super/settings', label: t('layout.settings'), icon: markRaw(Settings) },
-        { path: '/super/logs', label: t('layout.logs'), icon: markRaw(FileText) }
+        { path: '/super/logs', label: t('layout.logs'), icon: markRaw(FileText) },
+        { path: '/super/activity', label: t('activity.title') || 'Faoliyatlar', icon: markRaw(Activity) }
       ]
     })
     sections.push({
@@ -556,7 +687,11 @@ const menuSections = computed(() => {
         { path: '/super/students', label: t('layout.students'), icon: markRaw(Users) },
         { path: '/super/groups', label: t('layout.groups'), icon: markRaw(Building2) },
         { path: '/super/contracts', label: t('layout.contracts'), icon: markRaw(FileSpreadsheet) },
-        { path: '/super/import', label: t('importData.title') || 'Import', icon: markRaw(FileUp) },
+        { path: '/super/kontingent-import', label: 'Kontingent import', icon: markRaw(Users) },
+        { path: '/super/schedule-import', label: 'Jadval import', icon: markRaw(CalendarDays) },
+        { path: '/super/workload-import', label: "Bandlik import", icon: markRaw(FileUp) },
+        { path: '/super/room-import', label: 'Xona bandlik import', icon: markRaw(DoorOpen) },
+        { path: '/super/workload', label: t('teacher.workload'), icon: markRaw(CalendarClock) },
         { path: '/super/tournaments', label: t('layout.tournaments'), icon: markRaw(Trophy) },
         { path: '/super/reports', label: t('layout.reports'), icon: markRaw(BarChart3) },
         { path: '/super/notifications', label: t('layout.notifications'), icon: markRaw(Send), badge: dataStore.unreadCount > 0 ? String(dataStore.unreadCount) : null },
@@ -566,7 +701,8 @@ const menuSections = computed(() => {
         { path: '/super/holidays', label: t('layout.holidays'), icon: markRaw(CalendarOff) },
         { path: '/super/schedule', label: t('layout.schedule'), icon: markRaw(Calendar) },
         { path: '/super/ai-analysis', label: t('layout.aiAnalysis'), icon: markRaw(Brain) },
-        { path: '/super/credit-module', label: t('layout.creditModule'), icon: markRaw(Calculator) }
+        { path: '/super/credit-module', label: t('layout.creditModule'), icon: markRaw(Calculator) },
+        { path: '/super/nb-permits', label: 'NB Ruxsatnomalar', icon: markRaw(FileCheck) }
       ]
     })
     sections.push({
@@ -587,6 +723,9 @@ const isActive = (path) => {
 
 // Rol asosida path larni aniqlash
 const getProfilePath = computed(() => {
+  if (authStore.isRegistrarOffice) return '/registrar/profile'
+  if (authStore.isAcademicAffairs) return '/academic/profile'
+  if (authStore.isTeacher) return '/teacher/profile'
   if (authStore.isLeader) return '/leader/profile'
   if (authStore.isStudent) return '/student/profile'
   if (authStore.isAdmin) return '/admin/profile'
@@ -595,6 +734,9 @@ const getProfilePath = computed(() => {
 })
 
 const getSettingsPath = computed(() => {
+  if (authStore.isRegistrarOffice) return '/registrar/profile'
+  if (authStore.isAcademicAffairs) return '/academic/profile'
+  if (authStore.isTeacher) return '/teacher/profile'
   if (authStore.isLeader) return '/leader/settings'
   if (authStore.isStudent) return '/student/settings'
   if (authStore.isAdmin) return '/admin/settings'
@@ -603,6 +745,9 @@ const getSettingsPath = computed(() => {
 })
 
 const getHelpPath = computed(() => {
+  if (authStore.isRegistrarOffice) return '/registrar/help'
+  if (authStore.isAcademicAffairs) return '/academic/help'
+  if (authStore.isTeacher) return '/teacher/help'
   if (authStore.isLeader) return '/leader/help'
   if (authStore.isStudent) return '/student/help'
   if (authStore.isAdmin) return '/admin/help'
@@ -617,6 +762,9 @@ const handleLogout = () => {
 
 const goToNotifications = () => {
   if (authStore.isStudent) router.push('/student/notifications')
+  else if (authStore.isRegistrarOffice) router.push('/registrar/notifications')
+  else if (authStore.isAcademicAffairs) router.push('/academic/notifications')
+  else if (authStore.isTeacher) router.push('/teacher/notifications')
   else if (authStore.isLeader) router.push('/leader/notifications')
   else if (authStore.isAdmin) router.push('/admin/notifications')
   else if (authStore.isSuperAdmin) router.push('/super/notifications')

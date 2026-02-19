@@ -28,6 +28,7 @@ from app.models.mutoola import (
     SyncDirection,
 )
 from app.models.activity_log import ActivityLog, ActivityAction
+from app.models.teacher_workload import TeacherWorkload
 from app.models.file import File, Folder, FileType
 from app.models.library import (
     Book,
@@ -80,6 +81,9 @@ from app.models.landing import LandingSettings
 from app.models.ai_usage import AIUsage
 from app.models.holiday import Holiday, HolidayType
 from app.models.system_settings import SystemSettings
+from app.models.room import Room
+from app.models.exam_schedule import ExamSchedule
+from app.models.nb_permit import NBPermit, PermitStatus
 
 __all__ = [
     # User
@@ -182,4 +186,11 @@ __all__ = [
     "HolidayType",
     # System Settings
     "SystemSettings",
+    # Room
+    "Room",
+    # Exam Schedule
+    "ExamSchedule",
+    # NB Permit
+    "NBPermit",
+    "PermitStatus",
 ]

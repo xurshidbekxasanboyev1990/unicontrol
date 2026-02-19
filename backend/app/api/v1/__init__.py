@@ -42,6 +42,10 @@ from app.api.v1 import (
     quizzes,
     holidays,
     search,
+    teacher,
+    academic,
+    rooms_exams,
+    registrar,
 )
 
 api_router = APIRouter()
@@ -51,6 +55,34 @@ api_router.include_router(
     auth.router,
     prefix="/auth",
     tags=["Authentication"]
+)
+
+# Teacher Panel
+api_router.include_router(
+    teacher.router,
+    prefix="/teacher",
+    tags=["Teacher Panel"]
+)
+
+# Academic Affairs Panel
+api_router.include_router(
+    academic.router,
+    prefix="/academic",
+    tags=["Academic Affairs"]
+)
+
+# Rooms & Exam Schedule
+api_router.include_router(
+    rooms_exams.router,
+    prefix="/rooms-exams",
+    tags=["Rooms & Exams"]
+)
+
+# Registrar Office (Registrator ofisi)
+api_router.include_router(
+    registrar.router,
+    prefix="/registrar",
+    tags=["Registrar Office"]
 )
 
 # Users

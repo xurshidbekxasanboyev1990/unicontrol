@@ -126,6 +126,17 @@ async def init_db() -> None:
             """)
         )
         logger.info("Database schema updated (telegram_notified column ensured)")
+        
+        # Add REGISTRAR_OFFICE role to enum if not exists
+        await conn.execute(
+            sa.text("""
+                DO $$ BEGIN
+                    ALTER TYPE user_role ADD VALUE IF NOT EXISTS 'REGISTRAR_OFFICE';
+                EXCEPTION WHEN duplicate_object THEN null;
+                END $$;
+            """)
+        )
+        logger.info("Database schema updated (registrar_office role ensured)")
 
 
 async def close_db() -> None:

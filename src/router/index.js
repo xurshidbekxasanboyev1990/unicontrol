@@ -61,6 +61,23 @@ import LeaderSchedule from '../views/leader/ScheduleView.vue'
 import LeaderStudents from '../views/leader/StudentsView.vue'
 import LeaderSubscription from '../views/leader/SubscriptionView.vue'
 
+// Teacher views
+import TeacherAttendance from '../views/teacher/AttendanceView.vue'
+import TeacherDashboard from '../views/teacher/DashboardView.vue'
+import TeacherGroups from '../views/teacher/GroupsView.vue'
+import TeacherProfile from '../views/teacher/ProfileView.vue'
+import TeacherSchedule from '../views/teacher/ScheduleView.vue'
+import TeacherStudents from '../views/teacher/StudentsView.vue'
+import TeacherWorkload from '../views/teacher/WorkloadView.vue'
+
+// Academic Affairs views
+import AcademicAIGenerate from '../views/academic/AIGenerateView.vue'
+import AcademicDashboard from '../views/academic/DashboardView.vue'
+import AcademicExamSchedule from '../views/academic/ExamScheduleView.vue'
+import AcademicGroups from '../views/academic/GroupsView.vue'
+import AcademicRooms from '../views/academic/RoomsView.vue'
+import AcademicScheduleEditor from '../views/academic/ScheduleEditorView.vue'
+
 // Admin views
 import AdminAttendance from '../views/admin/AttendanceView.vue'
 import AdminClubs from '../views/admin/ClubsView.vue'
@@ -68,7 +85,7 @@ import AdminContracts from '../views/admin/ContractsView.vue'
 import AdminDashboard from '../views/admin/DashboardView.vue'
 import AdminGroups from '../views/admin/GroupsView.vue'
 import AdminHolidays from '../views/admin/HolidaysView.vue'
-import AdminImport from '../views/admin/ImportView.vue'
+import AdminNBPermits from '../views/admin/NBPermitsView.vue'
 import AdminNotifications from '../views/admin/NotificationsView.vue'
 import AdminReports from '../views/admin/ReportsView.vue'
 import AdminSchedule from '../views/admin/ScheduleView.vue'
@@ -90,10 +107,35 @@ import SuperSubscriptions from '../views/super/SubscriptionsView.vue'
 import SuperTelegramBot from '../views/super/TelegramBotView.vue'
 import SuperUsers from '../views/super/UsersView.vue'
 
+// Shared views - import pages
+import KontingentImportView from '../views/shared/KontingentImportView.vue'
+import RoomImportView from '../views/shared/RoomImportView.vue'
+import ScheduleImportView from '../views/shared/ScheduleImportView.vue'
+import WorkloadImportView from '../views/shared/WorkloadImportView.vue'
+
+// Super admin - activity
+import SuperActivity from '../views/super/ActivityView.vue'
+
+// Registrar Office views
+import RegistrarAttendance from '../views/registrar/AttendanceView.vue'
+import RegistrarDashboard from '../views/registrar/DashboardView.vue'
+import RegistrarNBPermits from '../views/registrar/NBPermitsView.vue'
+import RegistrarStudents from '../views/registrar/StudentsView.vue'
+
+// Student NB Permits
+import StudentNBPermits from '../views/student/NBPermitsView.vue'
+
+// Leader NB Permits
+import LeaderNBPermits from '../views/leader/NBPermitsView.vue'
+
+// Teacher NB Permits
+import TeacherNBPermits from '../views/teacher/NBPermitsView.vue'
+
 // Market & Shared views
 import AIAnalysisView from '../views/shared/AIAnalysisView.vue'
 import SharedCanteenView from '../views/shared/CanteenView.vue'
 import CreditModuleView from '../views/shared/CreditModuleView.vue'
+import SharedExamSchedule from '../views/shared/ExamScheduleView.vue'
 import LibraryComingSoon from '../views/shared/LibraryComingSoon.vue'
 import MarketAdminView from '../views/shared/MarketAdminView.vue'
 import MarketView from '../views/shared/MarketView.vue'
@@ -134,7 +176,9 @@ const routes = [
       { path: 'tournaments', name: 'student-tournaments', component: StudentTournaments },
       { path: 'market', name: 'student-market', component: MarketView },
       { path: 'quizzes', name: 'student-quizzes', component: QuizView },
-      { path: 'credit-module', name: 'student-credit-module', component: CreditModuleView }
+      { path: 'credit-module', name: 'student-credit-module', component: CreditModuleView },
+      { path: 'exam-schedule', name: 'student-exam-schedule', component: SharedExamSchedule },
+      { path: 'nb-permits', name: 'student-nb-permits', component: StudentNBPermits }
     ]
   },
 
@@ -165,7 +209,70 @@ const routes = [
       { path: 'clubs', name: 'leader-clubs', component: StudentClubs },
       { path: 'canteen', name: 'leader-canteen', component: SharedCanteenView },
       { path: 'tournaments', name: 'leader-tournaments', component: StudentTournaments },
-      { path: 'subscription', name: 'leader-subscription', component: LeaderSubscription }
+      { path: 'subscription', name: 'leader-subscription', component: LeaderSubscription },
+      { path: 'exam-schedule', name: 'leader-exam-schedule', component: SharedExamSchedule },
+      { path: 'nb-permits', name: 'leader-nb-permits', component: LeaderNBPermits }
+    ]
+  },
+
+  // Teacher routes
+  {
+    path: '/teacher',
+    component: MainLayout,
+    meta: { requiresAuth: true, role: 'teacher' },
+    children: [
+      { path: '', redirect: '/teacher/dashboard' },
+      { path: 'dashboard', name: 'teacher-dashboard', component: TeacherDashboard },
+      { path: 'schedule', name: 'teacher-schedule', component: TeacherSchedule },
+      { path: 'groups', name: 'teacher-groups', component: TeacherGroups },
+      { path: 'groups/:id/students', name: 'teacher-group-students', component: TeacherStudents },
+      { path: 'attendance', name: 'teacher-attendance', component: TeacherAttendance },
+      { path: 'workload', name: 'teacher-workload', component: TeacherWorkload },
+      { path: 'nb-permits', name: 'teacher-nb-permits', component: TeacherNBPermits },
+      { path: 'profile', name: 'teacher-profile', component: TeacherProfile },
+      { path: 'help', name: 'teacher-help', component: StudentHelp },
+      { path: 'notifications', name: 'teacher-notifications', component: StudentNotifications }
+    ]
+  },
+
+  // Academic Affairs routes
+  {
+    path: '/academic',
+    component: MainLayout,
+    meta: { requiresAuth: true, role: 'academic_affairs' },
+    children: [
+      { path: '', redirect: '/academic/dashboard' },
+      { path: 'dashboard', name: 'academic-dashboard', component: AcademicDashboard },
+      { path: 'schedule-editor', name: 'academic-schedule-editor', component: AcademicScheduleEditor },
+      { path: 'ai-generate', name: 'academic-ai-generate', component: AcademicAIGenerate },
+      { path: 'groups', name: 'academic-groups', component: AcademicGroups },
+      { path: 'workload', name: 'academic-workload', component: TeacherWorkload },
+      { path: 'workload-import', name: 'academic-workload-import', component: WorkloadImportView },
+      { path: 'kontingent-import', name: 'academic-kontingent-import', component: KontingentImportView },
+      { path: 'schedule-import', name: 'academic-schedule-import', component: ScheduleImportView },
+      { path: 'room-import', name: 'academic-room-import', component: RoomImportView },
+      { path: 'rooms', name: 'academic-rooms', component: AcademicRooms },
+      { path: 'exam-schedule', name: 'academic-exam-schedule', component: AcademicExamSchedule },
+      { path: 'profile', name: 'academic-profile', component: StudentProfile },
+      { path: 'help', name: 'academic-help', component: StudentHelp },
+      { path: 'notifications', name: 'academic-notifications', component: StudentNotifications }
+    ]
+  },
+
+  // Registrar Office routes
+  {
+    path: '/registrar',
+    component: MainLayout,
+    meta: { requiresAuth: true, role: 'registrar_office' },
+    children: [
+      { path: '', redirect: '/registrar/dashboard' },
+      { path: 'dashboard', name: 'registrar-dashboard', component: RegistrarDashboard },
+      { path: 'students', name: 'registrar-students', component: RegistrarStudents },
+      { path: 'attendance', name: 'registrar-attendance', component: RegistrarAttendance },
+      { path: 'nb-permits', name: 'registrar-nb-permits', component: RegistrarNBPermits },
+      { path: 'profile', name: 'registrar-profile', component: StudentProfile },
+      { path: 'help', name: 'registrar-help', component: StudentHelp },
+      { path: 'notifications', name: 'registrar-notifications', component: StudentNotifications }
     ]
   },
 
@@ -190,12 +297,17 @@ const routes = [
       { path: 'subjects', name: 'admin-subjects', component: AdminSubjects },
       { path: 'holidays', name: 'admin-holidays', component: AdminHolidays },
       { path: 'schedule', name: 'admin-schedule', component: AdminSchedule },
-      { path: 'import', name: 'admin-import', component: AdminImport },
+      { path: 'kontingent-import', name: 'admin-kontingent-import', component: KontingentImportView },
+      { path: 'schedule-import', name: 'admin-schedule-import', component: ScheduleImportView },
+      { path: 'workload-import', name: 'admin-workload-import', component: WorkloadImportView },
+      { path: 'room-import', name: 'admin-room-import', component: RoomImportView },
+      { path: 'workload', name: 'admin-workload', component: TeacherWorkload },
       { path: 'profile', name: 'admin-profile', component: StudentProfile },
       { path: 'settings', name: 'admin-settings', component: StudentSettings },
       { path: 'help', name: 'admin-help', component: StudentHelp },
       { path: 'ai-analysis', name: 'admin-ai-analysis', component: AIAnalysisView },
-      { path: 'credit-module', name: 'admin-credit-module', component: CreditModuleView }
+      { path: 'credit-module', name: 'admin-credit-module', component: CreditModuleView },
+      { path: 'nb-permits', name: 'admin-nb-permits', component: AdminNBPermits }
     ]
   },
 
@@ -229,10 +341,16 @@ const routes = [
       { path: 'ai-analysis', name: 'super-ai-analysis', component: AIAnalysisView },
       { path: 'credit-module', name: 'super-credit-module', component: CreditModuleView },
       { path: 'help-manage', name: 'super-help-manage', component: SuperHelpManage },
-      { path: 'import', name: 'super-import', component: AdminImport },
+      { path: 'kontingent-import', name: 'super-kontingent-import', component: KontingentImportView },
+      { path: 'schedule-import', name: 'super-schedule-import', component: ScheduleImportView },
+      { path: 'workload-import', name: 'super-workload-import', component: WorkloadImportView },
+      { path: 'room-import', name: 'super-room-import', component: RoomImportView },
       { path: 'subjects', name: 'super-subjects', component: AdminSubjects },
-      { path: 'clubs', name: 'super-clubs', component: AdminClubs }
-      , { path: 'canteen', name: 'super-canteen', component: SharedCanteenView }
+      { path: 'clubs', name: 'super-clubs', component: AdminClubs },
+      { path: 'canteen', name: 'super-canteen', component: SharedCanteenView },
+      { path: 'workload', name: 'super-workload', component: TeacherWorkload },
+      { path: 'activity', name: 'super-activity', component: SuperActivity },
+      { path: 'nb-permits', name: 'super-nb-permits', component: AdminNBPermits }
     ]
   },
 
@@ -259,6 +377,9 @@ router.beforeEach((to, from, next) => {
   if (to.meta.guest && auth.isAuthenticated) {
     if (auth.isSuperAdmin) return next('/super')
     if (auth.isAdmin) return next('/admin')
+    if (auth.isRegistrarOffice) return next('/registrar')
+    if (auth.isAcademicAffairs) return next('/academic')
+    if (auth.isTeacher) return next('/teacher')
     if (auth.isLeader) return next('/leader')
     return next('/student')
   }
@@ -279,6 +400,21 @@ router.beforeEach((to, from, next) => {
       case 'leader':
         if (!auth.isLeader) {
           return next(auth.isStudent ? '/student' : '/admin')
+        }
+        break
+      case 'teacher':
+        if (!auth.isTeacher) {
+          return next(auth.isAdmin ? '/admin' : auth.isLeader ? '/leader' : '/student')
+        }
+        break
+      case 'academic_affairs':
+        if (!auth.isAcademicAffairs) {
+          return next(auth.isAdmin ? '/admin' : auth.isSuperAdmin ? '/super' : '/student')
+        }
+        break
+      case 'registrar_office':
+        if (!auth.isRegistrarOffice) {
+          return next(auth.isAdmin ? '/admin' : auth.isSuperAdmin ? '/super' : '/student')
         }
         break
       case 'admin':

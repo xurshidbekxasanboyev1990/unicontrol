@@ -161,7 +161,7 @@
         </div>
 
         <!-- Quick Stats -->
-        <div class="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
+        <div class="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-5">
           <div class="rounded-xl bg-green-50 p-3 text-center">
             <p class="text-xl font-bold text-green-600">{{ report.stats?.attendance || 0 }}%</p>
             <p class="text-xs text-green-600/70">{{ $t('reports.attendanceStat') }}</p>
@@ -177,6 +177,10 @@
           <div class="rounded-xl bg-orange-50 p-3 text-center">
             <p class="text-xl font-bold text-orange-600">{{ report.stats?.meetings || 0 }}</p>
             <p class="text-xs text-orange-600/70">{{ $t('reports.meetingsStat') }}</p>
+          </div>
+          <div class="rounded-xl bg-violet-50 p-3 text-center col-span-2 sm:col-span-1">
+            <p class="text-xl font-bold text-violet-600">{{ report.stats?.nbTotal || 0 }}</p>
+            <p class="text-xs text-violet-600/70">NB atrabotka</p>
           </div>
         </div>
       </div>
@@ -386,6 +390,92 @@
                   </div>
                 </div>
               </div>
+            </div>
+          </div>
+
+          <!-- ============ NB ATRABOTKA SECTION (Auto) ============ -->
+          <div v-if="activeSection === 'nb_permits'" class="space-y-4">
+            <div class="flex items-center gap-2 rounded-xl bg-green-50 p-3 text-green-700">
+              <CheckCircle :size="20" />
+              <span class="text-sm">Avtomatik to'ldirildi (NB ruxsatnomalar bazasidan)</span>
+            </div>
+
+            <!-- NB Stats -->
+            <div class="grid grid-cols-2 gap-2 sm:gap-3 sm:grid-cols-4">
+              <div class="rounded-xl border border-violet-200 bg-violet-50 p-3 sm:p-4 text-center">
+                <p class="text-xl sm:text-3xl font-bold text-violet-600">{{ nbPermitsData.length }}</p>
+                <p class="text-[10px] sm:text-xs text-violet-600/70">Jami NB</p>
+              </div>
+              <div class="rounded-xl border border-blue-200 bg-blue-50 p-3 sm:p-4 text-center">
+                <p class="text-xl sm:text-3xl font-bold text-blue-600">{{ nbActiveCount }}</p>
+                <p class="text-[10px] sm:text-xs text-blue-600/70">Faol</p>
+              </div>
+              <div class="rounded-xl border border-emerald-200 bg-emerald-50 p-3 sm:p-4 text-center">
+                <p class="text-xl sm:text-3xl font-bold text-emerald-600">{{ nbApprovedCount }}</p>
+                <p class="text-[10px] sm:text-xs text-emerald-600/70">Oqlangan</p>
+              </div>
+              <div class="rounded-xl border border-red-200 bg-red-50 p-3 sm:p-4 text-center">
+                <p class="text-xl sm:text-3xl font-bold text-red-600">{{ nbRejectedCount }}</p>
+                <p class="text-[10px] sm:text-xs text-red-600/70">Rad etilgan</p>
+              </div>
+            </div>
+
+            <!-- NB by type -->
+            <div class="grid grid-cols-2 gap-3">
+              <div class="rounded-xl border border-red-100 bg-red-50 p-3 text-center">
+                <p class="text-2xl font-bold text-red-700">{{ nbTypeNB }}</p>
+                <p class="text-xs text-red-600">NB (akademik qarzdorlik)</p>
+              </div>
+              <div class="rounded-xl border border-orange-100 bg-orange-50 p-3 text-center">
+                <p class="text-2xl font-bold text-orange-700">{{ nbTypeAtrabotka }}</p>
+                <p class="text-xs text-orange-600">Atrabotka</p>
+              </div>
+            </div>
+
+            <!-- NB Students Table -->
+            <div v-if="nbPermitsData.length > 0" class="rounded-xl border border-slate-200">
+              <div class="border-b border-slate-200 bg-slate-50 px-4 py-3">
+                <h4 class="font-semibold text-slate-700">Talabalar NB ro'yxati</h4>
+              </div>
+              <div class="divide-y divide-slate-100">
+                <div 
+                  v-for="permit in nbPermitsData" 
+                  :key="permit.id"
+                  class="px-4 py-3"
+                >
+                  <div class="flex items-center justify-between gap-2 mb-1">
+                    <div class="min-w-0">
+                      <span class="text-sm font-medium text-slate-700 block truncate">{{ permit.student_name }}</span>
+                      <span class="text-xs text-slate-400">{{ permit.subject_name }}</span>
+                    </div>
+                    <div class="flex items-center gap-2 flex-shrink-0">
+                      <span :class="[
+                        'rounded-lg px-2 py-0.5 text-xs font-medium',
+                        permit.nb_type === 'nb' ? 'bg-red-100 text-red-700' : 'bg-orange-100 text-orange-700'
+                      ]">
+                        {{ permit.nb_type === 'nb' ? 'NB' : 'Atrabotka' }}
+                      </span>
+                      <span :class="[
+                        'rounded-lg px-2 py-0.5 text-xs font-semibold',
+                        permit.status === 'approved' ? 'bg-green-100 text-green-700' :
+                        permit.status === 'rejected' ? 'bg-red-100 text-red-700' :
+                        'bg-amber-100 text-amber-700'
+                      ]">
+                        {{ permit.status === 'approved' ? 'Oqlangan' : permit.status === 'rejected' ? 'Rad etilgan' : 'Kutilmoqda' }}
+                      </span>
+                    </div>
+                  </div>
+                  <div class="flex items-center gap-3 text-xs text-slate-500 mt-1">
+                    <span>O'qituvchi: {{ permit.teacher_name || '—' }}</span>
+                    <span v-if="permit.result_grade" class="text-emerald-600 font-semibold">Baho: {{ permit.result_grade }}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Empty state -->
+            <div v-else class="rounded-xl border border-dashed border-slate-300 bg-slate-50 p-8 text-center">
+              <p class="text-sm text-slate-500">Guruhda NB ruxsatnomalari topilmadi</p>
             </div>
           </div>
 
@@ -745,7 +835,7 @@
         
         <div class="max-h-[70vh] overflow-y-auto p-6">
           <!-- Stats Summary -->
-          <div class="mb-6 grid grid-cols-2 gap-4 sm:grid-cols-4">
+          <div class="mb-6 grid grid-cols-2 gap-4 sm:grid-cols-5">
             <div class="rounded-xl bg-green-50 p-4 text-center">
               <p class="text-2xl font-bold text-green-600">{{ selectedReport.stats?.attendance || 0 }}%</p>
               <p class="text-xs text-green-600/70">{{ $t('reports.attendanceStat') }}</p>
@@ -761,6 +851,10 @@
             <div class="rounded-xl bg-orange-50 p-4 text-center">
               <p class="text-2xl font-bold text-orange-600">{{ selectedReport.stats?.meetings || 0 }}</p>
               <p class="text-xs text-orange-600/70">{{ $t('reports.meetingsStat') }}</p>
+            </div>
+            <div class="rounded-xl bg-violet-50 p-4 text-center col-span-2 sm:col-span-1">
+              <p class="text-2xl font-bold text-violet-600">{{ selectedReport.stats?.nbTotal || 0 }} / {{ selectedReport.stats?.nbApproved || 0 }}</p>
+              <p class="text-xs text-violet-600/70">NB jami / oqlangan</p>
             </div>
           </div>
 
@@ -837,6 +931,7 @@ import {
     CheckCircle,
     Download,
     Eye,
+    FileCheck,
     FileText,
     Image as ImageIcon,
     Pencil,
@@ -876,6 +971,14 @@ const groupInfo = ref(null)
 const groupStudentsList = ref([])
 const contractsData = ref({ items: [], stats: null })
 
+// NB permits data
+const nbPermitsData = ref([])
+const nbActiveCount = computed(() => nbPermitsData.value.filter(p => ['issued', 'pending', 'in_progress'].includes(p.status)).length)
+const nbApprovedCount = computed(() => nbPermitsData.value.filter(p => p.status === 'approved').length)
+const nbRejectedCount = computed(() => nbPermitsData.value.filter(p => p.status === 'rejected').length)
+const nbTypeNB = computed(() => nbPermitsData.value.filter(p => p.nb_type === 'nb').length)
+const nbTypeAtrabotka = computed(() => nbPermitsData.value.filter(p => p.nb_type !== 'nb').length)
+
 // File uploads
 const uploadedImages = ref([])
 const uploadedVideos = ref([])
@@ -910,6 +1013,7 @@ const newReport = ref({
 const reportSections = computed(() => [
   { id: 'attendance', label: t('reports.sectionAttendance'), icon: CheckCircle, auto: true },
   { id: 'contract', label: t('reports.sectionContract'), icon: FileText, auto: true },
+  { id: 'nb_permits', label: 'NB Atrabotka', icon: FileCheck, auto: true },
   { id: 'activities', label: t('reports.sectionActivities'), icon: Calendar, auto: false },
   { id: 'parents', label: t('reports.sectionParents'), icon: Bell, auto: false },
   { id: 'problems', label: t('reports.sectionProblems'), icon: AlertCircle, auto: false },
@@ -1052,6 +1156,14 @@ const loadGroupData = async () => {
         console.log('Students API not available')
       }
 
+      // Load NB permits data
+      try {
+        const nbResp = await api.get('/registrar/group-permits')
+        nbPermitsData.value = nbResp?.items || []
+      } catch (e) {
+        console.log('NB permits API not available:', e)
+      }
+
       // Load real contract data from contracts API
       try {
         const currentYear = new Date().getFullYear()
@@ -1151,7 +1263,7 @@ const filteredOtherReports = computed(() => {
 
 // To'ldirilgan bo'limlar soni
 const completedSections = computed(() => {
-  let count = 2 // Davomat va Kontrakt doimo to'liq
+  let count = 3 // Davomat, Kontrakt va NB Atrabotka doimo to'liq
   
   if (newReport.value.activities.events || newReport.value.activities.achievements) count++
   if (newReport.value.parents.meetings || newReport.value.parents.meetingsCount > 0) count++
@@ -1328,7 +1440,9 @@ const saveDraft = () => {
       attendance: autoData.value.attendance.rate,
       contract: autoData.value.contract.rate,
       activities: newReport.value.activities.events ? 1 : 0,
-      meetings: newReport.value.parents.meetingsCount
+      meetings: newReport.value.parents.meetingsCount,
+      nbTotal: nbPermitsData.value.length,
+      nbApproved: nbApprovedCount.value
     },
     files: {
       images: uploadedImages.value.length,
@@ -1365,7 +1479,9 @@ const submitReport = async () => {
         attendance: autoData.value.attendance.rate,
         contract: autoData.value.contract.rate,
         activities: newReport.value.activities.events ? 1 : 0,
-        meetings: newReport.value.parents.meetingsCount
+        meetings: newReport.value.parents.meetingsCount,
+        nbTotal: nbPermitsData.value.length,
+        nbApproved: nbApprovedCount.value
       },
       files: {
         images: uploadedImages.value.length,
@@ -1523,8 +1639,8 @@ const downloadReport = async (report) => {
     const statData = [
       { label: 'Davomat', value: `${attRate}%`, color: [34, 197, 94] },
       { label: 'Kontrakt', value: `${conRate}%`, color: [59, 130, 246] },
-      { label: 'Tadbirlar', value: `${stats.activities || 0}`, color: [245, 158, 11] },
-      { label: 'Yig\'ilishlar', value: `${stats.meetings || 0}`, color: [239, 68, 68] }
+      { label: 'NB', value: `${stats.nbTotal || nbPermitsData.value.length}`, color: [139, 92, 246] },
+      { label: 'Tadbirlar', value: `${stats.activities || 0}`, color: [245, 158, 11] }
     ]
     
     const boxWidth = 40
@@ -1648,13 +1764,82 @@ const downloadReport = async (report) => {
       y = doc.lastAutoTable.finalY + 15
     }
     
+    // ═══ 3. NB ATRABOTKA JADVALI ═══
+    if (nbPermitsData.value.length > 0) {
+      if (y > 200) {
+        doc.addPage()
+        y = 20
+      }
+      
+      doc.setFontSize(14)
+      doc.setTextColor(30, 41, 59)
+      doc.text('NB Atrabotka Hisoboti', 20, y)
+      y += 5
+      
+      // NB summary
+      const nbSummary = [
+        ['Jami NB ruxsatnomalari', String(nbPermitsData.value.length)],
+        ['Faol (kutilmoqda)', String(nbActiveCount.value)],
+        ['Oqlangan', String(nbApprovedCount.value)],
+        ['Rad etilgan', String(nbRejectedCount.value)],
+        ['NB turi', String(nbTypeNB.value)],
+        ['Atrabotka turi', String(nbTypeAtrabotka.value)]
+      ]
+      
+      autoTable(doc, {
+        startY: y,
+        head: [['Ko\'rsatkich', 'Qiymat']],
+        body: nbSummary,
+        theme: 'striped',
+        headStyles: { fillColor: [139, 92, 246], textColor: 255 },
+        styles: { fontSize: 10, cellPadding: 3 },
+        columnStyles: {
+          0: { cellWidth: 80 },
+          1: { cellWidth: 75, halign: 'right' }
+        }
+      })
+      
+      y = doc.lastAutoTable.finalY + 10
+      
+      // NB students table
+      const nbTableData = nbPermitsData.value.map((p, i) => [
+        i + 1,
+        p.student_name || '',
+        p.subject_name || '',
+        p.nb_type === 'nb' ? 'NB' : 'Atrabotka',
+        p.teacher_name || '-',
+        p.status === 'approved' ? 'Oqlangan' : p.status === 'rejected' ? 'Rad etilgan' : 'Kutilmoqda',
+        p.result_grade || '-'
+      ])
+      
+      autoTable(doc, {
+        startY: y,
+        head: [['#', 'Talaba', 'Fan', 'Turi', 'O\'qituvchi', 'Holat', 'Baho']],
+        body: nbTableData,
+        theme: 'striped',
+        headStyles: { fillColor: [139, 92, 246], textColor: 255 },
+        styles: { fontSize: 8, cellPadding: 2 },
+        columnStyles: {
+          0: { cellWidth: 8 },
+          1: { cellWidth: 35 },
+          2: { cellWidth: 35 },
+          3: { cellWidth: 20, halign: 'center' },
+          4: { cellWidth: 30 },
+          5: { cellWidth: 22, halign: 'center' },
+          6: { cellWidth: 12, halign: 'center' }
+        }
+      })
+      
+      y = doc.lastAutoTable.finalY + 15
+    }
+
     // Check if we need a new page
     if (y > 250) {
       doc.addPage()
       y = 20
     }
     
-    // ═══ 3. MATNLI BO'LIMLAR ═══
+    // ═══ 4. MATNLI BO'LIMLAR ═══
     const sections = [
       { title: 'Guruh Faoliyati', text: content.activities },
       { title: 'Yutuqlar', text: content.achievements },

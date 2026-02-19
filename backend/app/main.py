@@ -21,6 +21,7 @@ from app.config import settings
 from app.database import init_db, close_db
 from app.core.exceptions import APIException
 from app.core.rate_limiter import RateLimitMiddleware
+from app.core.activity_middleware import ActivityLoggingMiddleware
 from app.api.v1 import api_router as api_v1_router
 from app.api.mobile import mobile_router
 
@@ -115,6 +116,9 @@ def create_application() -> FastAPI:
     
     # Rate Limiting (Redis-based)
     app.add_middleware(RateLimitMiddleware)
+    
+    # Activity Logging (track all user actions)
+    app.add_middleware(ActivityLoggingMiddleware)
     
     # Request timing middleware
     @app.middleware("http")

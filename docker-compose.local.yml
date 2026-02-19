@@ -63,7 +63,7 @@ services:
       - DEBUG=true
       - DATABASE_URL=postgresql+asyncpg://${DB_USER:-unicontrol}:${DB_PASSWORD:-unicontrol_secret_2026}@db:5432/${DB_NAME:-unicontrol}
       - REDIS_URL=redis://redis:6379/0
-      - CORS_ORIGINS=http://localhost:3000,http://localhost:5173,http://localhost:5174,http://192.168.213.3:5173,http://192.168.213.3:8000,http://192.168.213.3
+      - CORS_ORIGINS=http://localhost:3000,http://localhost:5173,http://localhost:5174,http://localhost:8001,http://192.168.213.3:5173,http://192.168.213.3:8001,http://192.168.213.3
       - DB_HOST=db
       - DB_PORT=5432
       - DB_USER=${DB_USER:-unicontrol}
@@ -71,7 +71,7 @@ services:
       - DB_NAME=${DB_NAME:-unicontrol}
       - TELEGRAM_BOT_TOKEN=${BOT_TOKEN:-}
     ports:
-      - "${BACKEND_PORT:-8000}:8000"
+      - "${BACKEND_PORT:-8001}:8000"
     volumes:
       - backend_uploads:/app/uploads
     depends_on:
