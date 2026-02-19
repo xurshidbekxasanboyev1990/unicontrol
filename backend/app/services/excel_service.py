@@ -859,6 +859,35 @@ class ExcelService:
 
         wb.close()
 
+        # ── DEDUPLICATE records across sheets ──
+        # When same group appears in multiple sheets (e.g. "Tibbiyot 2-3" and "Tibbiyot 2-3-bosqich"),
+        # keep the record with more data (teacher, room, building filled)
+        dedup_map: Dict[tuple, Dict] = {}
+        for rec in all_records:
+            key = (rec.get("group_id"), rec.get("day"), rec.get("lesson_number", 1))
+            if key[0] is None:
+                continue
+            existing = dedup_map.get(key)
+            if existing is None:
+                dedup_map[key] = rec
+            else:
+                # Score: count non-empty fields
+                def score(r):
+                    s = 0
+                    if r.get("teacher"): s += 2
+                    if r.get("room"): s += 1
+                    if r.get("building"): s += 1
+                    if r.get("subject"): s += 1
+                    return s
+                if score(rec) > score(existing):
+                    dedup_map[key] = rec
+
+        # Rebuild all_records: deduplicated + unmatched (group_id=None)
+        deduped = list(dedup_map.values())
+        unmatched_recs = [r for r in all_records if r.get("group_id") is None]
+        all_records = deduped + unmatched_recs
+        logger.info(f"After dedup: {len(all_records)} records (was {len(deduped) + len(unmatched_recs) - len(unmatched_recs)} matched + {len(unmatched_recs)} unmatched)")
+
         # ── AI ENHANCEMENT ──
         ai_result = None
         if use_ai:
@@ -918,10 +947,11 @@ class ExcelService:
                         Schedule.academic_year == academic_year,
                     )
                 )
-                existing = existing_result.scalars().first()
+                existing_all = existing_result.scalars().all()
 
-                if existing:
-                    # UPDATE existing schedule
+                if existing_all:
+                    # UPDATE first, DELETE duplicates
+                    existing = existing_all[0]
                     existing.subject = rec["subject"]
                     existing.schedule_type = rec.get("schedule_type", ScheduleType.LECTURE)
                     existing.start_time = start_time
@@ -931,6 +961,9 @@ class ExcelService:
                     existing.teacher_name = rec.get("teacher")
                     existing.is_active = True
                     existing.is_cancelled = False
+                    # Remove duplicates if any
+                    for dup in existing_all[1:]:
+                        await self.db.delete(dup)
                     updated += 1
                 else:
                     # INSERT new schedule
@@ -1149,7 +1182,7 @@ class ExcelService:
 
     # Regex to parse cell content: "Subject (type) Teacher Room"
     _CELL_TYPE_RE = re.compile(
-        r"^(.+?)\s*\((ma.ruza|amaliy|lo?baratoriya|seminar|imtihon|konsultatsiya|exam|lab)\)\s*(.*)",
+        r"^(.+?)\s*\((ma.ruza|amaliy|l[ao]?boratoriya|seminar|imtihon|konsultatsiya|exam|lab)\)\s*(.*)",
         re.IGNORECASE,
     )
     # Regex to extract room+building from the rest after teacher name
@@ -1223,6 +1256,7 @@ class ExcelService:
         "amaliy": ScheduleType.PRACTICE,
         "laboratoriya": ScheduleType.LAB,
         "lobaratoriya": ScheduleType.LAB,
+        "lboratoriya": ScheduleType.LAB,
         "lab": ScheduleType.LAB,
         "seminar": ScheduleType.SEMINAR,
         "imtihon": ScheduleType.EXAM,
@@ -1235,7 +1269,7 @@ class ExcelService:
 
     # Type keywords for inline detection
     _TYPE_KEYWORDS_RE = re.compile(
-        r"\b(ma['\`\u2018\u2019]?ruza|amaliy|lo?baratoriya|lab|seminar|imtihon|exam|konsultatsiya|qo['\`\u2018\u2019]?shimcha\s+dars)\b",
+        r"\b(ma['\`\u2018\u2019]?ruza|amaliy|l[ao]?boratoriya|lab|seminar|imtihon|exam|konsultatsiya|qo['\`\u2018\u2019]?shimcha\s+dars)\b",
         re.IGNORECASE,
     )
 
@@ -1366,6 +1400,22 @@ class ExcelService:
 
         # Normalize multiple spaces to single space
         text = re.sub(r'\s{2,}', ' ', text)
+
+        # --- Handle "A guruhga ... / B guruhga ..." subgroup pattern ---
+        # e.g. "Gistologiya amaliy A guruhga A bino 610 Valijonov Sh / Anatomiya amaliy B guruhga A bino 611 Saliyeva M"
+        # Split by " / " where the second part contains "guruhga", and combine meaningfully
+        guruhga_match = re.search(r'\b[AB]\s+guruhga\b', text, re.IGNORECASE)
+        if guruhga_match:
+            # This cell has subgroup data - parse just the A guruhga part as main
+            # Split on " / " followed by subject name (capital letter)
+            parts = re.split(r'\s*/\s*(?=[A-ZА-Я])', text, maxsplit=1)
+            if len(parts) >= 1:
+                # Parse just the first part (A guruhga)
+                part_a = parts[0].strip()
+                # Remove "A guruhga" / "B guruhga" from the text
+                part_a_clean = re.sub(r'\b[AB]\s+guruhga\b\s*', '', part_a, flags=re.IGNORECASE).strip()
+                if part_a_clean:
+                    text = part_a_clean
 
         # --- Format 2: newline-separated ---
         if "\n" in text:
