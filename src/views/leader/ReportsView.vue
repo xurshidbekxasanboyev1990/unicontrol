@@ -925,22 +925,22 @@ import { useToastStore } from '@/stores/toast'
 import { jsPDF } from 'jspdf'
 import autoTable from 'jspdf-autotable'
 import {
-    AlertCircle,
-    Bell,
-    Calendar,
-    CheckCircle,
-    Download,
-    Eye,
-    FileCheck,
-    FileText,
-    Image as ImageIcon,
-    Pencil,
-    Plus,
-    Trash2,
-    Upload,
-    Video,
-    X,
-    XCircle
+  AlertCircle,
+  Bell,
+  Calendar,
+  CheckCircle,
+  Download,
+  Eye,
+  FileCheck,
+  FileText,
+  Image as ImageIcon,
+  Pencil,
+  Plus,
+  Trash2,
+  Upload,
+  Video,
+  X,
+  XCircle
 } from 'lucide-vue-next'
 import { computed, onMounted, ref } from 'vue'
 

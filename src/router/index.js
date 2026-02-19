@@ -122,6 +122,15 @@ import RegistrarDashboard from '../views/registrar/DashboardView.vue'
 import RegistrarNBPermits from '../views/registrar/NBPermitsView.vue'
 import RegistrarStudents from '../views/registrar/StudentsView.vue'
 
+// Dean views
+import DeanAttendance from '../views/dean/AttendanceView.vue'
+import DeanContracts from '../views/dean/ContractsView.vue'
+import DeanDashboard from '../views/dean/DashboardView.vue'
+import DeanNBPermits from '../views/dean/NBPermitsView.vue'
+import DeanSchedule from '../views/dean/ScheduleView.vue'
+import DeanStudents from '../views/dean/StudentsView.vue'
+import DeanWorkload from '../views/dean/WorkloadView.vue'
+
 // Student NB Permits
 import StudentNBPermits from '../views/student/NBPermitsView.vue'
 
@@ -276,6 +285,26 @@ const routes = [
     ]
   },
 
+  // Dean routes
+  {
+    path: '/dean',
+    component: MainLayout,
+    meta: { requiresAuth: true, role: 'dean' },
+    children: [
+      { path: '', redirect: '/dean/dashboard' },
+      { path: 'dashboard', name: 'dean-dashboard', component: DeanDashboard },
+      { path: 'students', name: 'dean-students', component: DeanStudents },
+      { path: 'attendance', name: 'dean-attendance', component: DeanAttendance },
+      { path: 'schedule', name: 'dean-schedule', component: DeanSchedule },
+      { path: 'workload', name: 'dean-workload', component: DeanWorkload },
+      { path: 'contracts', name: 'dean-contracts', component: DeanContracts },
+      { path: 'nb-permits', name: 'dean-nb-permits', component: DeanNBPermits },
+      { path: 'profile', name: 'dean-profile', component: StudentProfile },
+      { path: 'help', name: 'dean-help', component: StudentHelp },
+      { path: 'notifications', name: 'dean-notifications', component: StudentNotifications }
+    ]
+  },
+
   // Admin routes
   {
     path: '/admin',
@@ -377,6 +406,7 @@ router.beforeEach((to, from, next) => {
   if (to.meta.guest && auth.isAuthenticated) {
     if (auth.isSuperAdmin) return next('/super')
     if (auth.isAdmin) return next('/admin')
+    if (auth.isDean) return next('/dean')
     if (auth.isRegistrarOffice) return next('/registrar')
     if (auth.isAcademicAffairs) return next('/academic')
     if (auth.isTeacher) return next('/teacher')
@@ -391,40 +421,56 @@ router.beforeEach((to, from, next) => {
       return next()
     }
 
+    // Foydalanuvchini o'z dashboard'iga yo'naltirish uchun helper
+    const getUserHome = () => {
+      if (auth.isAdmin) return '/admin'
+      if (auth.isDean) return '/dean'
+      if (auth.isRegistrarOffice) return '/registrar'
+      if (auth.isAcademicAffairs) return '/academic'
+      if (auth.isTeacher) return '/teacher'
+      if (auth.isLeader) return '/leader'
+      return '/student'
+    }
+
     switch (routeRole) {
       case 'student':
         if (!auth.isStudent && !auth.isLeader) {
-          return next('/admin')
+          return next(getUserHome())
         }
         break
       case 'leader':
         if (!auth.isLeader) {
-          return next(auth.isStudent ? '/student' : '/admin')
+          return next(getUserHome())
         }
         break
       case 'teacher':
         if (!auth.isTeacher) {
-          return next(auth.isAdmin ? '/admin' : auth.isLeader ? '/leader' : '/student')
+          return next(getUserHome())
         }
         break
       case 'academic_affairs':
         if (!auth.isAcademicAffairs) {
-          return next(auth.isAdmin ? '/admin' : auth.isSuperAdmin ? '/super' : '/student')
+          return next(getUserHome())
         }
         break
       case 'registrar_office':
         if (!auth.isRegistrarOffice) {
-          return next(auth.isAdmin ? '/admin' : auth.isSuperAdmin ? '/super' : '/student')
+          return next(getUserHome())
+        }
+        break
+      case 'dean':
+        if (!auth.isDean) {
+          return next(getUserHome())
         }
         break
       case 'admin':
         if (!auth.isAdmin && !auth.isSuperAdmin) {
-          return next(auth.isLeader ? '/leader' : '/student')
+          return next(getUserHome())
         }
         break
       case 'superadmin':
         if (!auth.isSuperAdmin) {
-          return next(auth.isAdmin ? '/admin' : '/student')
+          return next(getUserHome())
         }
         break
     }

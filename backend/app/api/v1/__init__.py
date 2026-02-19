@@ -46,6 +46,7 @@ from app.api.v1 import (
     academic,
     rooms_exams,
     registrar,
+    dean,
 )
 
 api_router = APIRouter()
@@ -83,6 +84,13 @@ api_router.include_router(
     registrar.router,
     prefix="/registrar",
     tags=["Registrar Office"]
+)
+
+# Dean Panel (Dekanat)
+api_router.include_router(
+    dean.router,
+    prefix="/dean",
+    tags=["Dean Panel"]
 )
 
 # Users

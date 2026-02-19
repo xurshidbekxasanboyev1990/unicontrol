@@ -135,39 +135,61 @@
           <div 
             v-for="notification in sortedAnnouncements" 
             :key="notification.id"
-            class="p-4 flex items-start gap-4"
+            class="overflow-hidden transition-all"
           >
-            <div 
-              class="w-10 h-10 rounded-xl flex items-center justify-center"
-              :class="getTypeClass(notification.type)"
+            <!-- Clickable Header -->
+            <div
+              @click="expandedAnnouncementId = expandedAnnouncementId === notification.id ? null : notification.id"
+              class="p-4 flex items-start gap-4 cursor-pointer hover:bg-slate-50 transition-colors"
             >
-              <component :is="getTypeIcon(notification.type)" class="w-5 h-5" />
-            </div>
-            <div class="flex-1 min-w-0">
-              <div class="flex items-center gap-2 flex-wrap">
-                <h3 class="font-semibold text-slate-800">{{ notification.title }}</h3>
-                <span 
-                  v-if="notification.group"
-                  class="px-2 py-0.5 bg-slate-100 text-slate-600 rounded text-xs"
-                >
-                  {{ notification.group }}
-                </span>
-                <span 
-                  v-else
-                  class="px-2 py-0.5 bg-violet-100 text-violet-600 rounded text-xs"
-                >
-                  {{ $t('notifications.toEveryone') }}
-                </span>
+              <div 
+                class="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+                :class="getTypeClass(notification.type)"
+              >
+                <component :is="getTypeIcon(notification.type)" class="w-5 h-5" />
               </div>
-              <p class="text-sm text-slate-600 mt-1">{{ notification.message }}</p>
-              <p class="text-xs text-slate-400 mt-2">{{ formatDate(notification.date) }}</p>
+              <div class="flex-1 min-w-0">
+                <div class="flex items-center gap-2 flex-wrap">
+                  <h3 class="font-semibold text-slate-800">{{ notification.title }}</h3>
+                  <span 
+                    v-if="notification.group"
+                    class="px-2 py-0.5 bg-slate-100 text-slate-600 rounded text-xs"
+                  >
+                    {{ notification.group }}
+                  </span>
+                  <span 
+                    v-else
+                    class="px-2 py-0.5 bg-violet-100 text-violet-600 rounded text-xs"
+                  >
+                    {{ $t('notifications.toEveryone') }}
+                  </span>
+                </div>
+                <p v-if="expandedAnnouncementId !== notification.id" class="text-sm text-slate-500 mt-1 line-clamp-1">{{ notification.message }}</p>
+                <p class="text-xs text-slate-400 mt-1">{{ formatDate(notification.date) }}</p>
+              </div>
+              <ChevronDown
+                :size="16"
+                class="text-slate-400 transition-transform duration-200 flex-shrink-0 mt-2"
+                :class="{ 'rotate-180': expandedAnnouncementId === notification.id }"
+              />
             </div>
-            <button 
-              @click="deleteNotification(notification.id, 'announcement')"
-              class="p-2 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-colors"
-            >
-              <Trash2 class="w-4 h-4" />
-            </button>
+            <!-- Expandable content -->
+            <Transition name="expand">
+              <div v-if="expandedAnnouncementId === notification.id" class="border-t border-slate-100">
+                <div class="px-4 pb-4 pt-3 pl-[72px]">
+                  <p class="text-sm text-slate-700 whitespace-pre-line leading-relaxed">{{ notification.message }}</p>
+                  <div class="flex items-center gap-2 mt-3">
+                    <button 
+                      @click.stop="deleteNotification(notification.id, 'announcement')"
+                      class="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium text-red-600 bg-red-50 hover:bg-red-100 transition-colors"
+                    >
+                      <Trash2 class="w-3.5 h-3.5" />
+                      {{ $t('common.delete') }}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </Transition>
           </div>
         </div>
 
@@ -227,50 +249,70 @@
           <div 
             v-for="notification in filteredPersonalNotifications" 
             :key="notification.id"
-            class="p-4 flex items-start gap-4 transition-colors"
+            class="overflow-hidden transition-all"
             :class="notification.isRead ? '' : 'bg-blue-50/50'"
           >
-            <div 
-              class="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
-              :class="getTypeClass(notification.type)"
+            <!-- Clickable Header -->
+            <div
+              @click="togglePersonalNotif(notification)"
+              class="p-4 flex items-start gap-4 cursor-pointer hover:bg-slate-50/50 transition-colors"
             >
-              <component :is="getTypeIcon(notification.type)" class="w-5 h-5" />
-            </div>
-            <div class="flex-1 min-w-0">
-              <div class="flex items-center gap-2 flex-wrap">
-                <h3 class="font-semibold text-slate-800">{{ notification.title }}</h3>
-                <span 
-                  class="px-2 py-0.5 rounded text-xs"
-                  :class="getTypeBadgeClass(notification.type)"
-                >
-                  {{ getTypeLabel(notification.type) }}
-                </span>
-                <span v-if="!notification.isRead" class="w-2 h-2 rounded-full bg-blue-500"></span>
-              </div>
-              <p class="text-sm text-slate-600 mt-1">{{ notification.message }}</p>
-              <div class="flex items-center gap-3 mt-2">
-                <p class="text-xs text-slate-400">{{ formatDate(notification.date) }}</p>
-                <span v-if="notification.senderName" class="text-xs text-slate-400">
-                  {{ $t('notifications.from') }}: {{ notification.senderName }}
-                </span>
-              </div>
-            </div>
-            <div class="flex flex-col gap-1">
-              <button
-                v-if="!notification.isRead"
-                @click="markAsRead(notification.id)"
-                class="p-2 text-slate-400 hover:text-blue-500 hover:bg-blue-50 rounded-lg transition-colors"
-                :title="$t('notifications.markAsRead')"
+              <div 
+                class="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+                :class="getTypeClass(notification.type)"
               >
-                <Check class="w-4 h-4" />
-              </button>
-              <button 
-                @click="deleteNotification(notification.id, 'personal')"
-                class="p-2 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-colors"
-              >
-                <Trash2 class="w-4 h-4" />
-              </button>
+                <component :is="getTypeIcon(notification.type)" class="w-5 h-5" />
+              </div>
+              <div class="flex-1 min-w-0">
+                <div class="flex items-center gap-2 flex-wrap">
+                  <h3 class="font-semibold text-slate-800">{{ notification.title }}</h3>
+                  <span 
+                    class="px-2 py-0.5 rounded text-xs"
+                    :class="getTypeBadgeClass(notification.type)"
+                  >
+                    {{ getTypeLabel(notification.type) }}
+                  </span>
+                  <span v-if="!notification.isRead" class="w-2 h-2 rounded-full bg-blue-500"></span>
+                </div>
+                <p v-if="expandedPersonalId !== notification.id" class="text-sm text-slate-500 mt-1 line-clamp-1">{{ notification.message }}</p>
+                <div class="flex items-center gap-3 mt-1">
+                  <p class="text-xs text-slate-400">{{ formatDate(notification.date) }}</p>
+                  <span v-if="notification.senderName" class="text-xs text-slate-400">
+                    {{ $t('notifications.from') }}: {{ notification.senderName }}
+                  </span>
+                </div>
+              </div>
+              <ChevronDown
+                :size="16"
+                class="text-slate-400 transition-transform duration-200 flex-shrink-0 mt-2"
+                :class="{ 'rotate-180': expandedPersonalId === notification.id }"
+              />
             </div>
+            <!-- Expandable content -->
+            <Transition name="expand">
+              <div v-if="expandedPersonalId === notification.id" class="border-t border-slate-100">
+                <div class="px-4 pb-4 pt-3 pl-[72px]">
+                  <p class="text-sm text-slate-700 whitespace-pre-line leading-relaxed">{{ notification.message }}</p>
+                  <div class="flex items-center gap-2 mt-3">
+                    <button
+                      v-if="!notification.isRead"
+                      @click.stop="markAsRead(notification.id)"
+                      class="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium text-blue-600 bg-blue-50 hover:bg-blue-100 transition-colors"
+                    >
+                      <Check class="w-3.5 h-3.5" />
+                      {{ $t('notifications.markAsRead') }}
+                    </button>
+                    <button 
+                      @click.stop="deleteNotification(notification.id, 'personal')"
+                      class="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium text-red-600 bg-red-50 hover:bg-red-100 transition-colors"
+                    >
+                      <Trash2 class="w-3.5 h-3.5" />
+                      {{ $t('common.delete') }}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </Transition>
           </div>
         </div>
 
@@ -295,6 +337,7 @@ import {
     BellOff,
     Check,
     CheckCheck,
+    ChevronDown,
     CreditCard,
     Info,
     Megaphone,
@@ -320,6 +363,8 @@ const activeSection = ref('announcements')
 const notifFilter = ref('all')
 const announcements = ref([])
 const personalNotifications = ref([])
+const expandedAnnouncementId = ref(null)
+const expandedPersonalId = ref(null)
 
 const newNotification = reactive({
   title: '',
@@ -492,6 +537,17 @@ const markAsRead = async (id) => {
   }
 }
 
+function togglePersonalNotif(notification) {
+  if (expandedPersonalId.value === notification.id) {
+    expandedPersonalId.value = null
+  } else {
+    expandedPersonalId.value = notification.id
+    if (!notification.isRead) {
+      markAsRead(notification.id)
+    }
+  }
+}
+
 const markAllAsRead = async () => {
   try {
     // Mark all personal notifications as read
@@ -579,3 +635,17 @@ onMounted(() => {
   loadNotifications()
 })
 </script>
+
+<style scoped>
+.expand-enter-active,
+.expand-leave-active {
+  transition: all 0.25s ease;
+  max-height: 500px;
+  overflow: hidden;
+}
+.expand-enter-from,
+.expand-leave-to {
+  max-height: 0;
+  opacity: 0;
+}
+</style>

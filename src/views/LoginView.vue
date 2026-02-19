@@ -275,11 +275,15 @@ const handleLogin = async () => {
       const redirectPath = {
         student: '/student',
         leader: '/leader',
+        teacher: '/teacher',
+        academic_affairs: '/academic',
+        registrar_office: '/registrar',
+        dean: '/dean',
         admin: '/admin',
         superadmin: '/super'
       }[authStore.user.role] || '/student'
       
-      router.push(redirectPath)
+      await router.push(redirectPath)
     } else if (result.blocked) {
       isBlocked.value = true
     } else {

@@ -26,6 +26,7 @@ class UserRole(str, enum.Enum):
     TEACHER = "teacher"
     ACADEMIC_AFFAIRS = "academic_affairs"
     REGISTRAR_OFFICE = "registrar_office"
+    DEAN = "dean"
     ADMIN = "admin"
     SUPERADMIN = "superadmin"
 
@@ -216,6 +217,11 @@ class User(Base):
     def is_registrar_office(self) -> bool:
         """Check if user is registrar office."""
         return self.role == UserRole.REGISTRAR_OFFICE
+    
+    @property
+    def is_dean(self) -> bool:
+        """Check if user is dean office."""
+        return self.role == UserRole.DEAN
     
     @property
     def is_admin(self) -> bool:

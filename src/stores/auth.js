@@ -57,6 +57,7 @@ export const useAuthStore = defineStore('auth', () => {
     TEACHER: 'teacher',
     ACADEMIC_AFFAIRS: 'academic_affairs',
     REGISTRAR_OFFICE: 'registrar_office',
+    DEAN: 'dean',
     ADMIN: 'admin',
     SUPERADMIN: 'superadmin'
   }
@@ -77,6 +78,9 @@ export const useAuthStore = defineStore('auth', () => {
 
   /** Registrator ofisimi? */
   const isRegistrarOffice = computed(() => user.value?.role === roles.REGISTRAR_OFFICE)
+
+  /** Dekanatmi? */
+  const isDean = computed(() => user.value?.role === roles.DEAN)
 
   /** Adminmi? */
   const isAdmin = computed(() => user.value?.role === roles.ADMIN)
@@ -110,6 +114,7 @@ export const useAuthStore = defineStore('auth', () => {
       teacher: 'O\'qituvchi',
       academic_affairs: 'Akademik ishlar',
       registrar_office: 'Registrator ofisi',
+      dean: 'Dekanat',
       admin: 'Administrator',
       superadmin: 'Super Administrator'
     }
@@ -144,6 +149,7 @@ export const useAuthStore = defineStore('auth', () => {
         'teacher': 'teacher',
         'academic_affairs': 'academic_affairs',
         'registrar_office': 'registrar_office',
+        'dean': 'dean',
         'admin': 'admin',
         'superadmin': 'superadmin'
       }
@@ -298,6 +304,7 @@ export const useAuthStore = defineStore('auth', () => {
         'teacher': 'teacher',
         'academic_affairs': 'academic_affairs',
         'registrar_office': 'registrar_office',
+        'dean': 'dean',
         'admin': 'admin',
         'superadmin': 'superadmin'
       }
@@ -449,6 +456,7 @@ export const useAuthStore = defineStore('auth', () => {
     isTeacher,
     isAcademicAffairs,
     isRegistrarOffice,
+    isDean,
     isAdmin,
     isSuperAdmin,
     canManageStudents,

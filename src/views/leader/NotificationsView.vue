@@ -98,11 +98,14 @@
         <div
           v-for="notif in filteredInbox"
           :key="notif.id"
-          @click="openNotification(notif)"
-          class="rounded-xl sm:rounded-2xl border bg-white p-3 sm:p-4 shadow-sm transition-all hover:shadow-md cursor-pointer"
+          class="rounded-xl sm:rounded-2xl border bg-white shadow-sm transition-all overflow-hidden"
           :class="notif.is_read ? 'border-slate-200' : 'border-emerald-200 bg-emerald-50/30'"
         >
-          <div class="flex items-start gap-3">
+          <!-- Clickable Header -->
+          <div
+            @click="toggleExpandNotif(notif)"
+            class="flex items-start gap-3 p-3 sm:p-4 cursor-pointer hover:bg-slate-50/50 transition-colors"
+          >
             <!-- Type Icon -->
             <div
               class="flex-shrink-0 w-9 h-9 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl flex items-center justify-center"
@@ -118,24 +121,27 @@
                   <h3 class="text-sm font-semibold text-slate-800 truncate" :class="{ 'font-bold': !notif.is_read }">
                     {{ notif.title }}
                   </h3>
-                  <p class="text-xs sm:text-sm text-slate-600 mt-0.5 line-clamp-2">{{ notif.message }}</p>
+                  <p v-if="expandedNotifId !== notif.id" class="text-xs sm:text-sm text-slate-500 mt-0.5 line-clamp-1">{{ notif.message }}</p>
                 </div>
-                <!-- Unread dot -->
-                <div v-if="!notif.is_read" class="flex-shrink-0 w-2.5 h-2.5 rounded-full bg-emerald-500 mt-1.5"></div>
+                <div class="flex items-center gap-2 flex-shrink-0">
+                  <div v-if="!notif.is_read" class="w-2.5 h-2.5 rounded-full bg-emerald-500"></div>
+                  <ChevronDown
+                    :size="16"
+                    class="text-slate-400 transition-transform duration-200"
+                    :class="{ 'rotate-180': expandedNotifId === notif.id }"
+                  />
+                </div>
               </div>
 
               <div class="flex flex-wrap items-center gap-2 sm:gap-3 mt-2">
-                <!-- Sender -->
                 <div v-if="notif.sender_name" class="flex items-center gap-1">
                   <Users :size="12" class="text-slate-400" />
                   <span class="text-xs text-slate-500">{{ notif.sender_name }}</span>
                 </div>
-                <!-- Date -->
                 <div class="flex items-center gap-1">
                   <Clock :size="12" class="text-slate-400" />
                   <span class="text-xs text-slate-500">{{ formatNotifDate(notif.created_at) }}</span>
                 </div>
-                <!-- Type badge -->
                 <span class="text-xs px-2 py-0.5 rounded-full font-medium"
                       :class="getTypeBadgeClass(notif.type)">
                   {{ getTypeLabel(notif.type) }}
@@ -143,6 +149,25 @@
               </div>
             </div>
           </div>
+
+          <!-- Expandable Content -->
+          <Transition name="expand">
+            <div v-if="expandedNotifId === notif.id" class="border-t border-slate-100">
+              <div class="p-4 pl-16 sm:pl-[68px] space-y-3">
+                <p class="text-sm text-slate-700 whitespace-pre-line leading-relaxed">{{ notif.message }}</p>
+                <div class="flex items-center gap-2 pt-1">
+                  <button
+                    v-if="!notif.is_read"
+                    @click.stop="markSingleRead(notif)"
+                    class="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium text-emerald-600 bg-emerald-50 hover:bg-emerald-100 transition-colors"
+                  >
+                    <Check :size="14" />
+                    {{ $t('notifications.markAsRead') }}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </Transition>
         </div>
       </div>
 
@@ -487,21 +512,23 @@ import { useAuthStore } from '@/stores/auth'
 import { useDataStore } from '@/stores/data'
 import { useToastStore } from '@/stores/toast'
 import {
-    AlertTriangle,
-    Bell,
-    CheckCheck,
-    CheckCircle,
-    Clock,
-    History,
-    Info,
-    MessageSquare,
-    PenLine,
-    RefreshCw,
-    Send,
-    Trash2,
-    Users,
-    X,
-    Zap
+  AlertTriangle,
+  Bell,
+  Check,
+  CheckCheck,
+  CheckCircle,
+  ChevronDown,
+  Clock,
+  History,
+  Info,
+  MessageSquare,
+  PenLine,
+  RefreshCw,
+  Send,
+  Trash2,
+  Users,
+  X,
+  Zap
 } from 'lucide-vue-next'
 import { computed, markRaw, onMounted, ref } from 'vue'
 import api from '../../services/api'
@@ -529,6 +556,7 @@ const activeTab = ref('inbox')
 // Inbox state
 const inboxNotifications = ref([])
 const inboxLoading = ref(false)
+const expandedNotifId = ref(null)
 const inboxFilter = ref('all')
 
 // Filter
@@ -927,6 +955,23 @@ function formatNotifDate(dateStr) {
   }
 }
 
+// Bildirishnomani kengaytirish/yopish
+function toggleExpandNotif(notif) {
+  if (expandedNotifId.value === notif.id) {
+    expandedNotifId.value = null
+  } else {
+    expandedNotifId.value = notif.id
+    if (!notif.is_read) {
+      openNotification(notif)
+    }
+  }
+}
+
+// Bitta bildirishnomani o'qilgan deb belgilash (button orqali)
+async function markSingleRead(notif) {
+  await openNotification(notif)
+}
+
 // Bildirishnomani ochish — o'qilgan deb belgilash
 async function openNotification(notif) {
   if (!notif.is_read) {
@@ -965,3 +1010,17 @@ onMounted(() => {
   loadData()
 })
 </script>
+
+<style scoped>
+.expand-enter-active,
+.expand-leave-active {
+  transition: all 0.25s ease;
+  max-height: 500px;
+  overflow: hidden;
+}
+.expand-enter-from,
+.expand-leave-to {
+  max-height: 0;
+  opacity: 0;
+}
+</style>

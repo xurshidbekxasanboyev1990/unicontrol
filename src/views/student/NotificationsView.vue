@@ -60,59 +60,83 @@
           <div
             v-for="notification in filteredNotifications"
             :key="notification.id"
-            class="flex gap-4 rounded-2xl border bg-white p-4 shadow-sm transition-all"
+            class="rounded-2xl border bg-white shadow-sm transition-all overflow-hidden"
             :class="notification.isRead ? 'border-slate-200' : 'border-blue-200 bg-blue-50/50'"
           >
-          <!-- Icon -->
-          <div 
-            class="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl"
-            :class="getNotificationIconBg(notification.type)"
+          <!-- Clickable Header -->
+          <div
+            @click="toggleExpand(notification)"
+            class="flex gap-4 p-4 cursor-pointer hover:bg-slate-50/50 transition-colors"
           >
-            <component 
-              :is="getNotificationIcon(notification.type)" 
-              :size="24" 
-              :class="getNotificationIconColor(notification.type)"
-            />
+            <!-- Icon -->
+            <div 
+              class="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl"
+              :class="getNotificationIconBg(notification.type)"
+            >
+              <component 
+                :is="getNotificationIcon(notification.type)" 
+                :size="24" 
+                :class="getNotificationIconColor(notification.type)"
+              />
+            </div>
+
+            <!-- Title Row -->
+            <div class="flex-1 min-w-0">
+              <div class="flex items-start justify-between gap-2">
+                <h3 class="font-medium text-slate-800">{{ notification.title }}</h3>
+                <span class="flex-shrink-0 text-xs text-slate-400">{{ notification.time || formatTime(notification.createdAt) }}</span>
+              </div>
+              <p class="mt-1 text-sm text-slate-500 line-clamp-1" v-if="expandedId !== notification.id">{{ notification.message }}</p>
+            </div>
+
+            <!-- Expand Arrow -->
+            <div class="flex items-center flex-shrink-0">
+              <ChevronDown
+                :size="18"
+                class="text-slate-400 transition-transform duration-200"
+                :class="{ 'rotate-180': expandedId === notification.id }"
+              />
+            </div>
           </div>
 
-          <!-- Content -->
-          <div class="flex-1 min-w-0">
-            <div class="flex items-start justify-between gap-2">
-              <h3 class="font-medium text-slate-800">{{ notification.title }}</h3>
-              <span class="flex-shrink-0 text-xs text-slate-400">{{ notification.time || formatTime(notification.createdAt) }}</span>
-            </div>
-            <p class="mt-1 text-sm text-slate-600">{{ notification.message }}</p>
-            
-            <!-- Action Button -->
-            <div v-if="notification.actionUrl" class="mt-3">
-              <button
-                @click="handleAction(notification)"
-                class="inline-flex items-center gap-1 rounded-lg bg-blue-500 px-3 py-1.5 text-sm text-white hover:bg-blue-600"
-              >
-                {{ notification.actionText || $t('common.view') }}
-                <ArrowRight :size="14" />
-              </button>
-            </div>
-          </div>
+          <!-- Expandable Content -->
+          <Transition name="expand">
+            <div v-if="expandedId === notification.id" class="px-4 pb-4 border-t border-slate-100">
+              <div class="pt-3 pl-16">
+                <p class="text-sm text-slate-600 whitespace-pre-line">{{ notification.message }}</p>
+                
+                <!-- Action Button -->
+                <div v-if="notification.actionUrl" class="mt-3">
+                  <button
+                    @click.stop="handleAction(notification)"
+                    class="inline-flex items-center gap-1 rounded-lg bg-blue-500 px-3 py-1.5 text-sm text-white hover:bg-blue-600"
+                  >
+                    {{ notification.actionText || $t('common.view') }}
+                    <ArrowRight :size="14" />
+                  </button>
+                </div>
 
-          <!-- Actions -->
-          <div class="flex flex-col gap-2">
-            <button
-              v-if="!notification.isRead"
-              @click="markAsRead(notification.id)"
-              class="rounded-lg p-2 text-slate-400 hover:bg-slate-100 hover:text-blue-500"
-              :title="$t('notifications.markAsRead')"
-            >
-              <Check :size="18" />
-            </button>
-            <button
-              @click="deleteNotification(notification.id)"
-              class="rounded-lg p-2 text-slate-400 hover:bg-slate-100 hover:text-red-500"
-              :title="$t('common.delete')"
-            >
-              <Trash2 :size="18" />
-            </button>
-          </div>
+                <!-- Actions -->
+                <div class="flex items-center gap-2 mt-3">
+                  <button
+                    v-if="!notification.isRead"
+                    @click.stop="markAsRead(notification.id)"
+                    class="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium text-blue-600 bg-blue-50 hover:bg-blue-100 transition-colors"
+                  >
+                    <Check :size="14" />
+                    {{ $t('notifications.markAsRead') }}
+                  </button>
+                  <button
+                    @click.stop="deleteNotification(notification.id)"
+                    class="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium text-red-600 bg-red-50 hover:bg-red-100 transition-colors"
+                  >
+                    <Trash2 :size="14" />
+                    {{ $t('common.delete') }}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </Transition>
         </div>
         </TransitionGroup>
 
@@ -176,15 +200,16 @@ import { useDataStore } from '@/stores/data'
 import { useLanguageStore } from '@/stores/language'
 import { useToastStore } from '@/stores/toast'
 import {
-  AlertTriangle,
-  ArrowRight,
-  Bell, BellRing,
-  BookOpen,
-  Calendar,
-  Check, CheckCheck,
-  Info, Loader2,
-  Megaphone,
-  Trash2
+    AlertTriangle,
+    ArrowRight,
+    Bell, BellRing,
+    BookOpen,
+    Calendar,
+    Check, CheckCheck,
+    ChevronDown,
+    Info, Loader2,
+    Megaphone,
+    Trash2
 } from 'lucide-vue-next'
 import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
@@ -199,6 +224,7 @@ const { t } = useLanguageStore()
 const loading = ref(true)
 const error = ref(null)
 const activeTab = ref('all')
+const expandedId = ref(null)
 const pushEnabled = ref(true)
 const pushSettings = ref({
   announcements: true,
@@ -265,6 +291,18 @@ const formatTime = (dateStr) => {
   if (diffDays === 1) return t('notifications.daysAgo', { days: 1 })
   if (diffDays < 7) return t('notifications.daysAgo', { days: diffDays })
   return date.toLocaleDateString('uz-UZ')
+}
+
+// Toggle expand
+function toggleExpand(notification) {
+  if (expandedId.value === notification.id) {
+    expandedId.value = null
+  } else {
+    expandedId.value = notification.id
+    if (!notification.isRead && !notification.read) {
+      markAsRead(notification.id)
+    }
+  }
 }
 
 // Methods
@@ -354,5 +392,18 @@ onMounted(() => {
 .list-leave-to {
   opacity: 0;
   transform: translateX(-30px);
+}
+.expand-enter-active,
+.expand-leave-active {
+  transition: all 0.25s ease;
+  max-height: 500px;
+  overflow: hidden;
+}
+.expand-enter-from,
+.expand-leave-to {
+  max-height: 0;
+  opacity: 0;
+  padding-top: 0;
+  padding-bottom: 0;
 }
 </style>

@@ -1149,7 +1149,7 @@ class ExcelService:
 
     # Regex to parse cell content: "Subject (type) Teacher Room"
     _CELL_TYPE_RE = re.compile(
-        r"^(.+?)\s*\((ma.ruza|amaliy|laboratoriya|seminar|imtihon|konsultatsiya|exam|lab)\)\s*(.*)",
+        r"^(.+?)\s*\((ma.ruza|amaliy|lo?baratoriya|seminar|imtihon|konsultatsiya|exam|lab)\)\s*(.*)",
         re.IGNORECASE,
     )
     # Regex to extract room+building from the rest after teacher name
@@ -1169,19 +1169,75 @@ class ExcelService:
         r"^(.+?)\s+([A-Z])\s+bino$",
         re.IGNORECASE,
     )
+
+    # ── NEW: Pattern for plain-text medical schedule cells ──
+    # Matches: "... X bino NNN" or "... X bino" (room optional) at the end
+    # Examples: "Anatomiya A bino 305", "Tib kimyo D bino 309", "TKK C bino"
+    # Also handles no space before letter: "Lotin tiliA bino 504"
+    _PLAIN_BINO_RE = re.compile(
+        r'^(.+?)\s*([A-ZА-Я])\s+bino\s+(.+)$',
+        re.IGNORECASE,
+    )
+    # Pattern for "X bino" WITHOUT room number (e.g., "TKK C bino")
+    _PLAIN_BINO_NO_ROOM_RE = re.compile(
+        r'^(.+?)\s+([A-ZА-Я])\s+bino\s*$',
+        re.IGNORECASE,
+    )
+
+    # Known medical/university subject keywords for smarter splitting
+    _KNOWN_SUBJECTS = [
+        "anatomiya", "biologiya", "tib kimyo", "tibbiy kimyo", "kimyo",
+        "fiziologiya", "normal fiziologiya", "patologik fiziologiya",
+        "gistologiya", "farmakologiya", "mikrobiologiya", "biokimyo",
+        "lotin tili", "ingliz tili", "rus tili", "nemis tili",
+        "tkk", "pkrs", "odk", "dinshunoslik", "falsafa",
+        "stomatologiya", "stomatologiyaga kirish",
+        "farmatsiya", "farmatsevtika", "farmatsevtikada axborot texnologiyalari",
+        "gigiyena", "jamoat salomatligi", "davolash ishi",
+        "pediatriya", "akusherlik", "jarrohlik",
+        "psixologiya", "pedagogika", "sotsiologiya",
+        "informatika", "matematika", "fizika",
+        "tarix", "iqtisodiyot", "huquqshunoslik",
+        "noorganik kimyo", "organik kimyo", "analitik kimyo",
+        "tibbiyotda xorijiy til", "tibbiyotda axborot texnologiyalari",
+        "oʻzbekistonning eng yangi tarixi", "o'zbekiston tarixi",
+        "direktor bilan uchrashuv",
+        "valeologiya", "ekologiya", "genetika",
+        "patologik anatomiya", "yuqumli kasalliklar",
+        "umumiy jarrohlik", "ichki kasalliklar",
+        "teri-tanosil kasalliklari", "nerv kasalliklari",
+        "otorinolaringologiya", "oftalmologiya",
+        "tibbiy fizika", "tibbiy biologiya",
+        "milliy istiqlol g'oyasi", "milliy g'oya",
+        "harbiy tayyorgarlik", "jismoniy tarbiya",
+        "ommaviy axborot vositalari", "sotsiologiya",
+    ]
+
     # Map type keywords to ScheduleType
     _CELL_TYPE_MAP = {
         "ma'ruza": ScheduleType.LECTURE,
         "ma`ruza": ScheduleType.LECTURE,
         "maruza": ScheduleType.LECTURE,
+        "ma\u2018ruza": ScheduleType.LECTURE,
+        "ma\u2019ruza": ScheduleType.LECTURE,
         "amaliy": ScheduleType.PRACTICE,
         "laboratoriya": ScheduleType.LAB,
+        "lobaratoriya": ScheduleType.LAB,
         "lab": ScheduleType.LAB,
         "seminar": ScheduleType.SEMINAR,
         "imtihon": ScheduleType.EXAM,
         "exam": ScheduleType.EXAM,
         "konsultatsiya": ScheduleType.CONSULTATION,
+        "qo'shimcha dars": ScheduleType.PRACTICE,
+        "qo\u2018shimcha dars": ScheduleType.PRACTICE,
+        "qo`shimcha dars": ScheduleType.PRACTICE,
     }
+
+    # Type keywords for inline detection
+    _TYPE_KEYWORDS_RE = re.compile(
+        r"\b(ma['\`\u2018\u2019]?ruza|amaliy|lo?baratoriya|lab|seminar|imtihon|exam|konsultatsiya|qo['\`\u2018\u2019]?shimcha\s+dars)\b",
+        re.IGNORECASE,
+    )
 
     def _split_room_building(self, raw_room: str):
         """Split '307-xona A bino' into room='307-xona' and building='A bino'."""
@@ -1192,21 +1248,124 @@ class ExcelService:
             return m.group(1).strip(), f"{m.group(2)} bino"
         return raw_room.strip(), None
 
+    def _find_known_subject(self, text: str):
+        """
+        Try to find a known subject at the start of the text.
+        Returns (subject, rest_of_text) or (None, text).
+        """
+        text_lower = text.lower().strip()
+        # Sort by length descending to match longest first
+        for subj in sorted(self._KNOWN_SUBJECTS, key=len, reverse=True):
+            if text_lower.startswith(subj):
+                rest = text[len(subj):].strip()
+                subject = text[:len(subj)].strip()
+                return subject, rest
+        return None, text
+
+    def _split_room_and_teacher_after_bino(self, after_bino: str):
+        """
+        Split room and teacher from text after "X bino".
+
+        Patterns:
+        - "305" → room="305", teacher=None
+        - "312 / 323" → room="312 / 323", teacher=None
+        - "312 / 323 Abdurahmonov Sh / Abduraxmonov T" → room="312 / 323", teacher="Abdurahmonov Sh / Abduraxmonov T"
+        - "511/401 To'ychiyeva Sh Turg'unova D" → room="511/401", teacher="To'ychiyeva Sh / Turg'unova D"
+        - "Faollar zali" → room="Faollar zali", teacher=None
+        - "06 B" → room="06 B", teacher=None
+        - "A guruhga A bino 305" → room="A guruhga A bino 305", teacher=None (edge case)
+
+        Returns (room, teacher)
+        """
+        if not after_bino:
+            return None, None
+
+        text = after_bino.strip().rstrip('/')  # Remove trailing slash
+
+        # Special named rooms
+        named_rooms = ['faollar zali', 'sport zal', 'a guruhga', 'b guruhga']
+        for nr in named_rooms:
+            if text.lower().startswith(nr):
+                return text, None
+
+        # Try to split: rooms are numbers/digits, teachers are names (start with uppercase letter)
+        # Pattern: room part = digits/slashes at start, teacher part = names after
+        # Examples: "312 / 323 Abdurahmonov Sh / Abduraxmonov T"
+        #           "511/401 To'ychiyeva Sh"
+        #           "305"
+        #           "06 B"
+        #           "404 / 406 Jo'raboyev A / Sidiqjanov N"
+
+        # Strategy: scan tokens, room tokens are digits or single letters after digits or "/"
+        # Once we hit a word that looks like a name (not a number, not "/" , not single letter), that starts the teacher
+        tokens = text.split()
+        room_parts = []
+        teacher_start_idx = None
+
+        i = 0
+        while i < len(tokens):
+            token = tokens[i]
+            clean = token.strip('/')
+
+            # Is this a room-like token?
+            if re.match(r'^\d+[A-Za-z]?/?$', clean):
+                room_parts.append(token)
+                i += 1
+                continue
+            # Slash separator between rooms
+            if token == '/':
+                room_parts.append(token)
+                i += 1
+                continue
+            # Single uppercase letter after room number (like "06 B")
+            if len(clean) == 1 and clean.isupper() and room_parts:
+                room_parts.append(token)
+                i += 1
+                continue
+            # Room with slash like "511/401" or "602/603"
+            if re.match(r'^\d+/\d+$', clean):
+                room_parts.append(token)
+                i += 1
+                continue
+
+            # This token doesn't look like a room → start of teacher
+            teacher_start_idx = i
+            break
+            i += 1
+
+        if room_parts:
+            room = " ".join(room_parts).strip().rstrip('/')
+        else:
+            room = text  # Fallback: entire text is room
+
+        if teacher_start_idx is not None and teacher_start_idx < len(tokens):
+            teacher = " ".join(tokens[teacher_start_idx:]).strip().rstrip('/')
+            if teacher and len(teacher) >= 2:
+                return room, teacher
+
+        return room, None
+
     def _parse_cell_content(self, raw: str):
         """
-        Parse schedule cell content.
+        Parse schedule cell content — supports ALL formats including plain text.
 
         Formats supported:
-        1. "Subject (type) Teacher Room"  — e.g.  Falsafa (ma'ruza) Ustoz 307-xona A bino
-        2. "Subject\\nTeacher\\nRoom"       — newline-separated
-        3. "Subject Teacher Room"           — plain with room at end
-        4. "Subject"                        — subject only
+        1. "Subject (type) Teacher Room"       — parenthesized type
+        2. "Subject\\nTeacher\\nRoom"           — newline-separated
+        3. "Subject Teacher X bino Room"       — plain text with "X bino NNN" pattern
+        4. "Subject type Teacher X bino Room"  — inline type keyword (ma'ruza, amaliy, lab)
+        5. "Subject X bino Room"               — no teacher, just subject + location
+        6. "Subject Teacher Room"              — old regex-based fallback
+        7. "Subject"                           — subject only
 
         Returns (subject, schedule_type, teacher, room, building)
         """
         text = raw.strip()
-        if not text or text == "-":
+        if not text or text in ("-", "—", " ", ","):
             return None, None, None, None, None
+
+        # Normalize multiple spaces to single space
+        text = re.sub(r'\s{2,}', ' ', text)
 
         # --- Format 2: newline-separated ---
         if "\n" in text:
@@ -1215,7 +1374,7 @@ class ExcelService:
             teacher = lines[1] if len(lines) > 1 else None
             raw_room = lines[2] if len(lines) > 2 else None
             room, building = self._split_room_building(raw_room) if raw_room else (None, None)
-            
+
             # Check if subject line itself contains type in parentheses
             stype = ScheduleType.LECTURE
             if subject:
@@ -1224,11 +1383,10 @@ class ExcelService:
                     subject = m.group(1).strip()
                     stype_raw = m.group(2).strip().lower().replace("\u2018", "'").replace("\u2019", "'")
                     stype = self._CELL_TYPE_MAP.get(stype_raw, ScheduleType.LECTURE)
-                    # If there's text after type, it might be teacher
                     extra = m.group(3).strip()
                     if extra and not teacher:
                         teacher = extra
-            
+
             return subject, stype, teacher, room, building
 
         # --- Format 1: "Subject (type) Teacher Room" ---
@@ -1243,27 +1401,107 @@ class ExcelService:
             room = None
             building = None
             if rest:
-                rm = self._CELL_ROOM_RE.match(rest)
-                if rm:
-                    teacher = rm.group(1).strip()
-                    room, building = self._split_room_building(rm.group(2).strip())
+                # Try "X bino NNN" at end of rest
+                bm = self._PLAIN_BINO_RE.match(rest)
+                if bm:
+                    teacher = bm.group(1).strip() or None
+                    building = f"{bm.group(2).upper()} bino"
+                    room = bm.group(3).strip()
                 else:
-                    # Try to find room pattern at the end of rest
-                    room_at_end = re.search(
-                        r'\s+(\d{2,4}[A-Za-z]?-xona(?:\s+[A-Z]\s+bino)?|'
-                        r'Sport\s+zal(?:\s+[A-Z]\s+bino)?|'
-                        r'L-\d+(?:\s+[A-Z]\s+bino)?|'
-                        r'Faollar\s+zali(?:\s+[A-Z]\s+bino)?)$',
-                        rest, re.IGNORECASE
-                    )
-                    if room_at_end:
-                        teacher = rest[:room_at_end.start()].strip() or None
-                        room, building = self._split_room_building(room_at_end.group(1).strip())
+                    rm = self._CELL_ROOM_RE.match(rest)
+                    if rm:
+                        teacher = rm.group(1).strip()
+                        room, building = self._split_room_building(rm.group(2).strip())
                     else:
                         teacher = rest
             return subject, stype, teacher, room, building
 
-        # --- Format 3: plain string, try to extract room at end ---
+        # --- Format 3/4/5: Plain text with "X bino NNN" pattern ---
+        # This is the main pattern for medical schedule cells
+        bm = self._PLAIN_BINO_RE.match(text)
+        if bm:
+            before_bino = bm.group(1).strip()  # Everything before "X bino"
+            bino_letter = bm.group(2).upper()
+            after_bino = bm.group(3).strip()    # Everything after "X bino"
+            building = f"{bino_letter} bino"
+
+            # Parse after_bino: can be "305", "312 / 323", "312 / 323 Teacher1 / Teacher2"
+            # or "Faollar zali", "A guruhga A bino 305"
+            room, after_teacher = self._split_room_and_teacher_after_bino(after_bino)
+
+            # Now parse "before_bino" to extract subject, optional type, optional teacher
+            subject = None
+            before_teacher = None
+            stype = ScheduleType.LECTURE
+
+            # Check for inline type keyword
+            type_match = self._TYPE_KEYWORDS_RE.search(before_bino)
+            if type_match:
+                subject = before_bino[:type_match.start()].strip()
+                stype_raw = type_match.group(1).strip().lower().replace("\u2018", "'").replace("\u2019", "'")
+                stype = self._CELL_TYPE_MAP.get(stype_raw, ScheduleType.LECTURE)
+                before_teacher = before_bino[type_match.end():].strip() or None
+            else:
+                # Try known subjects
+                known_subj, rest_after_subj = self._find_known_subject(before_bino)
+                if known_subj:
+                    subject = known_subj
+                    before_teacher = rest_after_subj.strip() or None
+                    if before_teacher and len(before_teacher.strip()) < 2:
+                        before_teacher = None
+                else:
+                    # Heuristic splitting for unknown subjects
+                    words = before_bino.split()
+                    if len(words) <= 2:
+                        subject = before_bino
+                    else:
+                        subject = before_bino
+                        for split_at in range(len(words) - 1, 0, -1):
+                            potential_teacher = " ".join(words[split_at:])
+                            potential_subject = " ".join(words[:split_at])
+                            first_char = potential_teacher[0] if potential_teacher else ''
+                            if first_char.isupper() and len(potential_teacher) > 2:
+                                ps_lower = potential_subject.lower().strip()
+                                is_known = any(ps_lower == k or ps_lower.startswith(k) for k in self._KNOWN_SUBJECTS)
+                                if is_known:
+                                    subject = potential_subject
+                                    before_teacher = potential_teacher
+                                    break
+
+            # Combine teacher from before_bino and after_bino
+            teacher = None
+            if before_teacher and after_teacher:
+                teacher = f"{before_teacher} / {after_teacher}" if before_teacher != after_teacher else before_teacher
+            elif before_teacher:
+                teacher = before_teacher
+            elif after_teacher:
+                teacher = after_teacher
+
+            return subject, stype, teacher, room, building
+
+        # --- Format 3b: "Subject X bino" — no room number ---
+        bm_no_room = self._PLAIN_BINO_NO_ROOM_RE.match(text)
+        if bm_no_room:
+            before_bino = bm_no_room.group(1).strip()
+            bino_letter = bm_no_room.group(2).upper()
+            building = f"{bino_letter} bino"
+            # Parse before_bino same way
+            type_match = self._TYPE_KEYWORDS_RE.search(before_bino)
+            if type_match:
+                subject = before_bino[:type_match.start()].strip()
+                stype_raw = type_match.group(1).strip().lower().replace("\u2018", "'").replace("\u2019", "'")
+                stype = self._CELL_TYPE_MAP.get(stype_raw, ScheduleType.LECTURE)
+                teacher = before_bino[type_match.end():].strip() or None
+                return subject, stype, teacher, None, building
+            known_subj, rest = self._find_known_subject(before_bino)
+            if known_subj:
+                teacher = rest.strip() or None
+                if teacher and len(teacher.strip()) < 2:
+                    teacher = None
+                return known_subj, ScheduleType.LECTURE, teacher, None, building
+            return before_bino, ScheduleType.LECTURE, None, None, building
+
+        # --- Format 6: Try old room pattern at end (without "bino") ---
         room_at_end = re.search(
             r'\s+(\d{2,4}[A-Za-z]?-xona(?:\s+[A-Z]\s+bino)?|'
             r'Sport\s+zal(?:\s+[A-Z]\s+bino)?|'
@@ -1275,6 +1513,16 @@ class ExcelService:
             subject = text[:room_at_end.start()].strip()
             room, building = self._split_room_building(room_at_end.group(1).strip())
             return subject, ScheduleType.LECTURE, None, room, building
+
+        # --- Format 7: Subject only ---
+        # Check for inline type keyword even without room
+        type_match = self._TYPE_KEYWORDS_RE.search(text)
+        if type_match:
+            subject = text[:type_match.start()].strip()
+            stype_raw = type_match.group(1).strip().lower().replace("\u2018", "'").replace("\u2019", "'")
+            stype = self._CELL_TYPE_MAP.get(stype_raw, ScheduleType.LECTURE)
+            teacher = text[type_match.end():].strip() or None
+            return subject, stype, teacher, None, None
 
         return text, ScheduleType.LECTURE, None, None, None
 
@@ -1345,6 +1593,9 @@ class ExcelService:
         skip_values = {"kun", "day", "para", "vaqt", "time", "hafta kuni", "dars",
                         "soat", "№", "lesson", "hour", "", "dars vaqti"}
 
+        # Stream/flow names to skip (not group names)
+        stream_re = re.compile(r'^\d+-?\s*(oqim|поток|stream|bosqich|kurs)$', re.IGNORECASE)
+
         for try_row in [2, 3, 4]:
             found_groups = 0
             temp_cols = {}
@@ -1354,6 +1605,9 @@ class ExcelService:
                     continue
                 name = str(val).strip()
                 if name.lower() in skip_values or len(name) < 2:
+                    continue
+                # Skip stream/flow headers like "1-oqim", "2-oqim"
+                if stream_re.match(name):
                     continue
                 # Skip if same value as row 1 merged header (faculty name, not group)
                 row1_val = get_cell(1, col_idx)
@@ -1384,6 +1638,9 @@ class ExcelService:
                     continue
                 name = str(val).strip()
                 if name.lower() in skip_values or len(name) < 2:
+                    continue
+                # Skip stream/flow headers like "1-oqim", "2-oqim"
+                if stream_re.match(name):
                     continue
                 if re.search(r'[A-Za-zА-Яа-яЎўҚқҒғҲҳ]', name) and re.search(r'\d', name):
                     matched = fuzzy_match_group(name, group_lookup)
@@ -1558,6 +1815,9 @@ class ExcelService:
 
                     raw_text = str(cell_val).strip()
                     if not raw_text or raw_text in ("-", "—", " "):
+                        continue
+                    # Skip formula cells (e.g., =COUNTIF(...))
+                    if raw_text.startswith("="):
                         continue
 
                     # Check if this cell is from a merged range covering multiple group columns

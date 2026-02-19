@@ -336,6 +336,8 @@ const getPollingTypes = () => {
     return [...base, 'groups']
   } else if (role === 'registrar_office') {
     return [...base, 'groups']
+  } else if (role === 'dean') {
+    return [...base, 'groups']
   } else if (role === 'leader') {
     return [...base, 'attendance']
   } else if (role === 'teacher') {
@@ -473,6 +475,16 @@ const currentPageTitle = computed(() => {
     'registrar-help': () => t('layout.help'),
     'registrar-notifications': () => t('layout.notifications'),
     'teacher-nb-permits': () => 'NB Ruxsatnomalar',
+    'dean-dashboard': () => 'Dekanat paneli',
+    'dean-students': () => 'Talabalar kontingenti',
+    'dean-attendance': () => t('layout.attendance'),
+    'dean-schedule': () => t('layout.schedule'),
+    'dean-workload': () => t('teacher.workload'),
+    'dean-contracts': () => t('layout.contracts'),
+    'dean-nb-permits': () => 'NB Ruxsatnomalar',
+    'dean-profile': () => t('common.profile'),
+    'dean-help': () => t('layout.help'),
+    'dean-notifications': () => t('layout.notifications'),
   }
   const fn = titles[route.name]
   return fn ? fn() : t('layout.controlPanel')
@@ -625,6 +637,29 @@ const menuSections = computed(() => {
     })
   }
 
+  if (authStore.isDean) {
+    sections.push({
+      title: 'Dekanat',
+      items: [
+        { path: '/dean/dashboard', label: t('layout.dashboard'), icon: markRaw(LayoutDashboard) },
+        { path: '/dean/students', label: 'Talabalar kontingenti', icon: markRaw(Users) },
+        { path: '/dean/attendance', label: t('layout.attendance'), icon: markRaw(ClipboardCheck) },
+        { path: '/dean/schedule', label: t('layout.schedule'), icon: markRaw(Calendar) },
+        { path: '/dean/workload', label: t('teacher.workload'), icon: markRaw(CalendarClock) },
+        { path: '/dean/contracts', label: t('layout.contracts'), icon: markRaw(FileSpreadsheet) },
+        { path: '/dean/nb-permits', label: 'NB Ruxsatnomalar', icon: markRaw(FileCheck) },
+        { path: '/dean/notifications', label: t('layout.notifications'), icon: markRaw(Bell), badge: dataStore.unreadCount > 0 ? String(dataStore.unreadCount) : null }
+      ]
+    })
+    sections.push({
+      title: t('common.profile'),
+      items: [
+        { path: '/dean/profile', label: t('layout.myProfile'), icon: markRaw(User) },
+        { path: '/dean/help', label: t('layout.help'), icon: markRaw(HelpCircle) }
+      ]
+    })
+  }
+
   if (authStore.isAdmin) {
     sections.push({
       title: t('layout.management'),
@@ -723,6 +758,7 @@ const isActive = (path) => {
 
 // Rol asosida path larni aniqlash
 const getProfilePath = computed(() => {
+  if (authStore.isDean) return '/dean/profile'
   if (authStore.isRegistrarOffice) return '/registrar/profile'
   if (authStore.isAcademicAffairs) return '/academic/profile'
   if (authStore.isTeacher) return '/teacher/profile'
@@ -734,6 +770,7 @@ const getProfilePath = computed(() => {
 })
 
 const getSettingsPath = computed(() => {
+  if (authStore.isDean) return '/dean/profile'
   if (authStore.isRegistrarOffice) return '/registrar/profile'
   if (authStore.isAcademicAffairs) return '/academic/profile'
   if (authStore.isTeacher) return '/teacher/profile'
@@ -745,6 +782,7 @@ const getSettingsPath = computed(() => {
 })
 
 const getHelpPath = computed(() => {
+  if (authStore.isDean) return '/dean/help'
   if (authStore.isRegistrarOffice) return '/registrar/help'
   if (authStore.isAcademicAffairs) return '/academic/help'
   if (authStore.isTeacher) return '/teacher/help'
@@ -762,6 +800,7 @@ const handleLogout = () => {
 
 const goToNotifications = () => {
   if (authStore.isStudent) router.push('/student/notifications')
+  else if (authStore.isDean) router.push('/dean/notifications')
   else if (authStore.isRegistrarOffice) router.push('/registrar/notifications')
   else if (authStore.isAcademicAffairs) router.push('/academic/notifications')
   else if (authStore.isTeacher) router.push('/teacher/notifications')
