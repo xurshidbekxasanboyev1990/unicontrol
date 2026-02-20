@@ -132,11 +132,16 @@ AI_ALLOWED_PLANS = {"pro", "unlimited"}
 async def check_ai_subscription(db: AsyncSession, user: User):
     """
     Check if user's group has AI access (pro or unlimited plan).
-    Admin and superadmin always have access.
+    Admin, superadmin, teacher, dean, academic_affairs, registrar always have access.
     Raises 403 if subscription doesn't include AI.
     """
-    # Admin va superadmin har doim ruxsat
-    if user.role in (UserRole.ADMIN, UserRole.SUPERADMIN):
+    # Admin, superadmin va xodim rollari har doim ruxsat
+    STAFF_ROLES = (
+        UserRole.ADMIN, UserRole.SUPERADMIN,
+        UserRole.TEACHER, UserRole.DEAN,
+        UserRole.ACADEMIC_AFFAIRS, UserRole.REGISTRAR_OFFICE
+    )
+    if user.role in STAFF_ROLES:
         return True
 
     # Student yoki leader — guruh obunasini tekshirish
@@ -278,9 +283,14 @@ async def check_ai_access(
     AI sahifasiga kirish huquqini tekshirish.
     Returns: { has_access: bool, current_plan: str|null, required_plans: [...] }
     """
-    # Admin va superadmin har doim ruxsat
-    if current_user.role in (UserRole.ADMIN, UserRole.SUPERADMIN):
-        return {"has_access": True, "current_plan": "admin", "required_plans": list(AI_ALLOWED_PLANS)}
+    # Admin, superadmin va xodim rollari har doim ruxsat
+    STAFF_ROLES = (
+        UserRole.ADMIN, UserRole.SUPERADMIN,
+        UserRole.TEACHER, UserRole.DEAN,
+        UserRole.ACADEMIC_AFFAIRS, UserRole.REGISTRAR_OFFICE
+    )
+    if current_user.role in STAFF_ROLES:
+        return {"has_access": True, "current_plan": "staff", "required_plans": list(AI_ALLOWED_PLANS)}
 
     # Student/Leader — guruh obunasini tekshirish
     student_result = await db.execute(

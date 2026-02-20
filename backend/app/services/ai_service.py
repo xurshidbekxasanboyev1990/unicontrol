@@ -139,17 +139,24 @@ class AIService:
             "is_active": student.is_active,
         }
         
-        system_prompt = """Sen UniControl o'quv markazi boshqaruv tizimining AI tahlilchisisiz.
-Talaba haqida berilgan ma'lumotlarni tahlil qilib, JSON formatda javob ber.
+        system_prompt = """Sen UniControl universitetlar uchun boshqaruv tizimining AI tahlilchisisiz.
+Talaba haqida berilgan ma'lumotlarni chuqur tahlil qilib, JSON formatda javob ber.
+
+Tahlil qoidalari:
+- Davomat 90%+ = a'lo, 80-89% = yaxshi, 70-79% = o'rtacha, 70% dan past = xavfli
+- Kech qolishlarni ham hisobga ol (3 ta kechikish = 1 sababsiz)
+- Haftalik trendni aniqlash: yaxshilanayaptimi yoki yomonlashayaptimi
+- Aniq va amaliy tavsiyalar berish, motivatsion til ishlatish
+- Agar ma'lumot kam bo'lsa, mavjud ma'lumot asosida xulosa chiqar
 
 JSON format:
 {
-    "summary": "Talaba haqida umumiy xulosa (2-3 gap)",
+    "summary": "Talaba haqida umumiy xulosa (3-4 gap, aniq raqamlar bilan)",
     "strengths": ["Kuchli tomon 1", "Kuchli tomon 2"],
     "areas_for_improvement": ["Yaxshilash kerak 1", "Yaxshilash kerak 2"],
-    "recommendations": ["Tavsiya 1", "Tavsiya 2", "Tavsiya 3"],
+    "recommendations": ["Aniq va amaliy tavsiya 1", "Tavsiya 2", "Tavsiya 3"],
     "risk_level": "low|medium|high",
-    "predicted_performance": "Bashorat matni"
+    "predicted_performance": "Bashorat matni (aniq raqamlar bilan)"
 }
 
 O'zbek tilida javob ber. Aniq va foydali tavsiyalar ber."""
@@ -514,6 +521,10 @@ JSON formatda javob ber."""
         role_desc = {
             "student": "talaba",
             "leader": "guruh sardori",
+            "teacher": "o'qituvchi",
+            "dean": "dekan",
+            "academic_affairs": "o'quv bo'limi xodimi",
+            "registrar_office": "registratura xodimi",
             "admin": "administrator",
             "superadmin": "bosh administrator"
         }
@@ -521,12 +532,23 @@ JSON formatda javob ber."""
         system_prompt = f"""Sen UniControl o'quv markazi boshqaruv tizimining AI yordamchisisiz.
 Foydalanuvchi roli: {role_desc.get(user_role, user_role)}
 
+UniControl tizimi haqida:
+- UniControl — universitetlar va o'quv markazlari uchun boshqaruv platformasi
+- 8 ta rol mavjud: talaba, guruh sardori, o'qituvchi, o'quv bo'limi, registratura, dekan, admin, superadmin
+- Asosiy funksiyalar: dars jadvali, davomat, AI tahlil, hisobotlar, bildirishnomalar, obuna boshqaruvi
+- Dars jadvali: haftalik jadval, toq/juft hafta rotatsiyasi (biweekly), Excel import qo'llab-quvvatlaydi
+- Davomat: QR kod, avtomatik belgilash, statistika, haftalik/oylik hisobotlar
+- AI tahlil: talaba tahlili, guruh tahlili, davomat bashorati, AI chat yordamchi
+- Obuna rejalari: Start (asosiy), Plus (kengaytirilgan), Pro (AI + premium), Unlimited (cheksiz)
+- Faqat Pro va Unlimited obunalarda AI tahlil mavjud
+
 Vazifalaring:
-- O'quv markazi bilan bog'liq savollarga javob berish
-- Davomat, o'qish, guruh boshqaruvi haqida maslahat berish
-- Talabalar va o'qituvchilarga yordam berish
+- O'quv markazi bilan bog'liq barcha savollarga batafsil javob berish
+- Davomat, o'qish, guruh boshqaruvi, dars jadvali haqida maslahat berish
+- Talabalar va o'qituvchilarga amaliy yordam berish
 - O'zbek tilida samimiy va professional javob berish
-- Qisqa va aniq javob berish (5-6 gap)
+- Qisqa va aniq javob berish (5-8 gap), kerak bo'lsa ko'proq
+- Jadval, davomat statistikasi haqida savollar bo'lsa, aniq raqamlardan foydalanish
 
 Agar savol o'quv markazi bilan bog'liq bo'lmasa, muloyimlik bilan buni ayt.
 Har javob oxirida 2-3 ta tegishli qo'shimcha savol taklif qil."""
@@ -661,35 +683,46 @@ Xulosa qil. JSON formatda javob ber."""
         groups_r = await self.db.execute(select(func.count(Group.id)))
         total_groups = groups_r.scalar() or 0
         
+        # Schedule statistics
+        schedule_r = await self.db.execute(
+            select(func.count(Schedule.id)).where(Schedule.is_active == True)
+        )
+        total_schedules = schedule_r.scalar() or 0
+        
         context = {
             "total_students": total_students,
             "total_groups": total_groups,
+            "total_schedules": total_schedules,
             "overall_attendance_rate": overall_rate,
             "total_attendance_records": total_att,
             "date_range": f"{date_30} - {today}",
             "user_role": user_role
         }
         
-        system_prompt = """Sen UniControl dashboard uchun insight generatsiya qiluvchi AI siz.
-Berilgan statistikadan foydali xulosalar chiqar.
+        system_prompt = """Sen UniControl universitetlar uchun boshqaruv tizimining AI tizimisiz.
+Berilgan statistikadan foydali, amaliy xulosalar va tavsiyalar chiqar.
+
+Tahlil qoidalari:
+- Davomat 90%+ = a'lo natija, 80-89% = yaxshi, 70-79% = diqqat kerak, <70% = xavfli
+- Haqiqiy raqamlarga asoslanib xulosa chiqar
+- Amaliy va aniq tavsiyalar ber (masalan: "Dushanba kuni davomat past, darslar vaqtini tekshiring")
+- Ijobiy va salbiy tomonlarni muvozanatli yoz
 
 JSON format:
 {
     "insights": [
-        {"type": "positive", "title": "Sarlavha", "description": "Tavsif", "action": null}
+        {"type": "positive|warning|negative|info", "title": "Sarlavha", "description": "Tavsif", "action": null}
     ],
     "metrics": [
-        {"label": "Metrika nomi", "value": "85%", "trend": 5, "type": "attendance"}
+        {"label": "Metrika nomi", "value": "85%", "trend": 5, "type": "attendance|warning|info|performance"}
     ],
     "recommendations": [
-        {"title": "Tavsiya", "description": "Batafsil", "priority": "high"}
+        {"title": "Tavsiya", "description": "Batafsil", "priority": "high|medium|low"}
     ],
-    "summary": "Umumiy holat"
+    "summary": "Umumiy holat (2-3 gap, aniq raqamlar bilan)"
 }
 
-type qiymatlari: positive, warning, negative, info
-priority: high, medium, low
-O'zbek tilida, qisqa javob ber."""
+O'zbek tilida, qisqa va aniq javob ber."""
 
         user_prompt = f"""Dashboard insight:
 

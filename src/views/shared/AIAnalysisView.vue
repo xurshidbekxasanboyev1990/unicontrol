@@ -535,6 +535,14 @@
           <div v-else class="py-8 text-center">
             <MessageCircle :size="40" class="text-slate-200 mx-auto mb-3" />
             <p class="text-sm text-slate-400">{{ $t('ai.startConversation') }}</p>
+            <!-- Initial suggestions -->
+            <div class="mt-4 flex flex-wrap justify-center gap-2">
+              <button v-for="s in defaultSuggestions" :key="s"
+                      @click="chatInput = s; sendChat()"
+                      class="text-xs px-3 py-1.5 bg-emerald-50 text-emerald-600 rounded-full hover:bg-emerald-100 transition-colors">
+                {{ s }}
+              </button>
+            </div>
           </div>
 
           <!-- Chat Input -->
@@ -873,6 +881,23 @@ const chatInput = ref('')
 const chatLoading = ref(false)
 const chatSuggestions = ref([])
 const chatContainer = ref(null)
+
+const defaultSuggestions = computed(() => {
+  if (isStudentRole.value) {
+    return [
+      "Davomatimni qanday yaxshilasam bo'ladi?",
+      "Bu hafta qanday darslarim bor?",
+      "O'qish bo'yicha maslahat bering",
+      "Imtihonga qanday tayyorlanish kerak?"
+    ]
+  }
+  return [
+    "Guruh davomati qanday?",
+    "Dars jadvali haqida ma'lumot bering",
+    "O'qitish sifatini qanday oshirish mumkin?",
+    "Eng faol talabalar kimlar?"
+  ]
+})
 
 // ---- Computed ----
 const isStudentRole = computed(() => authStore.isStudent && !authStore.isLeader && !authStore.isAdmin && !authStore.isSuperAdmin)

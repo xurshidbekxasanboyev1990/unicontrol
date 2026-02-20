@@ -40,7 +40,11 @@
               <span class="text-[10px] text-gray-400">{{ lesson.end_time }}</span>
             </div>
             <div class="flex-1 min-w-0">
-              <p class="text-sm font-medium text-gray-900 truncate">{{ lesson.subject }}</p>
+              <div class="flex items-center gap-1.5">
+                <p class="text-sm font-medium text-gray-900 truncate">{{ lesson.subject }}</p>
+                <span v-if="lesson.week_type === 'odd'" class="shrink-0 px-1.5 py-0.5 rounded text-[10px] font-bold bg-blue-100 text-blue-700">Toq</span>
+                <span v-else-if="lesson.week_type === 'even'" class="shrink-0 px-1.5 py-0.5 rounded text-[10px] font-bold bg-orange-100 text-orange-700">Juft</span>
+              </div>
               <p class="text-xs text-gray-500">
                 {{ lesson.group_name }}
                 <span v-if="lesson.room" class="ml-1">• {{ lesson.room }}</span>

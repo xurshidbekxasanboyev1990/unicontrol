@@ -238,6 +238,7 @@ const routes = [
       { path: 'attendance', name: 'teacher-attendance', component: TeacherAttendance },
       { path: 'workload', name: 'teacher-workload', component: TeacherWorkload },
       { path: 'nb-permits', name: 'teacher-nb-permits', component: TeacherNBPermits },
+      { path: 'ai-analysis', name: 'teacher-ai-analysis', component: AIAnalysisView },
       { path: 'profile', name: 'teacher-profile', component: TeacherProfile },
       { path: 'help', name: 'teacher-help', component: StudentHelp },
       { path: 'notifications', name: 'teacher-notifications', component: StudentNotifications }
@@ -299,6 +300,7 @@ const routes = [
       { path: 'workload', name: 'dean-workload', component: DeanWorkload },
       { path: 'contracts', name: 'dean-contracts', component: DeanContracts },
       { path: 'nb-permits', name: 'dean-nb-permits', component: DeanNBPermits },
+      { path: 'ai-analysis', name: 'dean-ai-analysis', component: AIAnalysisView },
       { path: 'profile', name: 'dean-profile', component: StudentProfile },
       { path: 'help', name: 'dean-help', component: StudentHelp },
       { path: 'notifications', name: 'dean-notifications', component: StudentNotifications }

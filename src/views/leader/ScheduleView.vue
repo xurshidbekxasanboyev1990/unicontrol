@@ -162,6 +162,10 @@
                 <p class="font-medium truncate">{{ getLessonAt(day, timeSlot).subject || getLessonAt(day, timeSlot).subjectName }}</p>
                 <p v-if="getLessonAt(day, timeSlot).teacher" class="text-xs opacity-80 truncate">{{ getLessonAt(day, timeSlot).teacher }}</p>
                 <p class="text-xs opacity-70 truncate">{{ getLessonAt(day, timeSlot).room || getLessonAt(day, timeSlot).roomNumber }}</p>
+                <span v-if="getLessonAt(day, timeSlot).weekType && getLessonAt(day, timeSlot).weekType !== 'all'" 
+                  class="inline-block mt-1 px-1.5 py-0.5 rounded text-[9px] font-bold bg-white/20">
+                  {{ getLessonAt(day, timeSlot).weekType === 'odd' ? 'Toq' : 'Juft' }}
+                </span>
               </div>
             </div>
           </div>
@@ -431,6 +435,7 @@ function normalizeScheduleItem(item) {
     room: location,
     roomNumber: location,
     building: building,
+    weekType: item.week_type || 'all',
     type: item.schedule_type || item.type || item.lesson_type || 'lecture'
   }
 }

@@ -42,6 +42,13 @@ class ScheduleType(str, Enum):
     CONSULTATION = "consultation"
 
 
+class WeekType(str, Enum):
+    """Week type for biweekly rotation schedules (juft/toq hafta)."""
+    ALL = "all"      # Every week (default)
+    ODD = "odd"      # Toq hafta (odd weeks: 1, 3, 5...)
+    EVEN = "even"    # Juft hafta (even weeks: 2, 4, 6...)
+
+
 class Schedule(Base):
     """
     Schedule model.
@@ -117,6 +124,15 @@ class Schedule(Base):
         Integer,
         nullable=True,
         comment="Lesson number (para)"
+    )
+    
+    # Week type (biweekly rotation: juft/toq hafta)
+    week_type: Mapped[str] = mapped_column(
+        SAEnum(WeekType),
+        nullable=False,
+        default=WeekType.ALL,
+        server_default="ALL",
+        comment="Week type: all=every week, odd=toq hafta, even=juft hafta"
     )
     
     # Room/Location

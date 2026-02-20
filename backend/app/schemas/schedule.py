@@ -11,7 +11,7 @@ from datetime import datetime, date, time
 from typing import Optional, List
 from pydantic import BaseModel, Field, ConfigDict
 
-from app.models.schedule import WeekDay, ScheduleType
+from app.models.schedule import WeekDay, ScheduleType, WeekType
 
 
 class ScheduleBase(BaseModel):
@@ -25,6 +25,7 @@ class ScheduleBase(BaseModel):
     start_time: time
     end_time: time
     lesson_number: Optional[int] = None
+    week_type: WeekType = WeekType.ALL
     room: Optional[str] = Field(None, max_length=100)
     building: Optional[str] = Field(None, max_length=100)
     teacher_name: Optional[str] = Field(None, max_length=150)
@@ -50,6 +51,7 @@ class ScheduleUpdate(BaseModel):
     start_time: Optional[time] = None
     end_time: Optional[time] = None
     lesson_number: Optional[int] = None
+    week_type: Optional[WeekType] = None
     room: Optional[str] = Field(None, max_length=100)
     building: Optional[str] = Field(None, max_length=100)
     teacher_name: Optional[str] = Field(None, max_length=150)
@@ -78,6 +80,7 @@ class ScheduleResponse(BaseModel):
     time_range: str
     duration_minutes: int
     lesson_number: Optional[int] = None
+    week_type: WeekType = WeekType.ALL
     room: Optional[str] = None
     building: Optional[str] = None
     location: Optional[str] = None

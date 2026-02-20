@@ -102,6 +102,14 @@
                       <MapPin class="w-3.5 h-3.5 text-slate-400" />
                       {{ lesson.room }}
                     </span>
+                    <span v-if="lesson.weekType && lesson.weekType !== 'all'" 
+                      :class="[
+                        'inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold',
+                        lesson.weekType === 'odd' ? 'bg-blue-100 text-blue-700' : 'bg-purple-100 text-purple-700'
+                      ]"
+                    >
+                      {{ lesson.weekType === 'odd' ? 'Toq hafta' : 'Juft hafta' }}
+                    </span>
                   </div>
                 </div>
 
@@ -190,36 +198,48 @@
                       isToday(day) ? 'border-emerald-100 bg-emerald-50/30' : 'border-slate-100'
                     ]"
                   >
-                    <div
-                      v-if="getLesson(day, time)"
-                      class="rounded-xl p-3 h-full transition-all duration-200 hover:scale-[1.02] hover:shadow-md cursor-default relative overflow-hidden group"
-                      :style="{
-                        backgroundColor: getColor(getLesson(day, time).subject).ultra,
-                        borderLeft: `3px solid ${getColor(getLesson(day, time).subject).main}`
-                      }"
-                    >
-                      <!-- Decorative corner -->
-                      <div class="absolute top-0 right-0 w-8 h-8 opacity-10 rounded-bl-xl"
-                        :style="{ backgroundColor: getColor(getLesson(day, time).subject).main }"
-                      ></div>
+                    <template v-if="getLessons(day, time).length > 0">
+                      <div
+                        v-for="(lesson, lIdx) in getLessons(day, time)"
+                        :key="lesson.id || lIdx"
+                        class="rounded-xl p-3 transition-all duration-200 hover:scale-[1.02] hover:shadow-md cursor-default relative overflow-hidden group"
+                        :class="{ 'mt-1.5': lIdx > 0 }"
+                        :style="{
+                          backgroundColor: getColor(lesson.subject).ultra,
+                          borderLeft: `3px solid ${getColor(lesson.subject).main}`
+                        }"
+                      >
+                        <!-- Decorative corner -->
+                        <div class="absolute top-0 right-0 w-8 h-8 opacity-10 rounded-bl-xl"
+                          :style="{ backgroundColor: getColor(lesson.subject).main }"
+                        ></div>
 
-                      <p class="font-bold text-slate-800 text-[13px] leading-snug mb-2 pr-4">
-                        {{ getLesson(day, time).subject }}
-                      </p>
-                      <div class="space-y-1">
-                        <div v-if="getLesson(day, time).teacher" class="flex items-center gap-1.5 text-[11px] text-slate-500">
-                          <User class="w-3 h-3 flex-shrink-0" :style="{ color: getColor(getLesson(day, time).subject).main }" />
-                          <span class="truncate">{{ getLesson(day, time).teacher }}</span>
-                        </div>
-                        <div v-if="getLesson(day, time).room" class="flex items-center gap-1.5 text-[11px] text-slate-500">
-                          <MapPin class="w-3 h-3 flex-shrink-0" :style="{ color: getColor(getLesson(day, time).subject).main }" />
-                          <span class="truncate">{{ getLesson(day, time).room }}</span>
+                        <p class="font-bold text-slate-800 text-[13px] leading-snug mb-2 pr-4">
+                          {{ lesson.subject }}
+                        </p>
+                        <div class="space-y-1">
+                          <div v-if="lesson.weekType && lesson.weekType !== 'all'"
+                            :class="[
+                              'inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-bold mb-1',
+                              lesson.weekType === 'odd' ? 'bg-blue-100 text-blue-700' : 'bg-purple-100 text-purple-700'
+                            ]"
+                          >
+                            {{ lesson.weekType === 'odd' ? 'Toq' : 'Juft' }}
+                          </div>
+                          <div v-if="lesson.teacher" class="flex items-center gap-1.5 text-[11px] text-slate-500">
+                            <User class="w-3 h-3 flex-shrink-0" :style="{ color: getColor(lesson.subject).main }" />
+                            <span class="truncate">{{ lesson.teacher }}</span>
+                          </div>
+                          <div v-if="lesson.room" class="flex items-center gap-1.5 text-[11px] text-slate-500">
+                            <MapPin class="w-3 h-3 flex-shrink-0" :style="{ color: getColor(lesson.subject).main }" />
+                            <span class="truncate">{{ lesson.room }}</span>
+                          </div>
                         </div>
                       </div>
-                    </div>
+                    </template>
 
                     <!-- Empty cell indicator -->
-                    <div v-else class="h-full min-h-[80px] flex items-center justify-center">
+                    <div v-if="getLessons(day, time).length === 0" class="h-full min-h-[80px] flex items-center justify-center">
                       <div class="w-1.5 h-1.5 rounded-full bg-slate-200"></div>
                     </div>
                   </td>
@@ -408,6 +428,7 @@ async function loadSchedule() {
           room: location,
           building: building,
           lessonNumber: s.lesson_number || null,
+          weekType: s.week_type || 'all',
           groupId: s.group_id
         }
       })
@@ -456,6 +477,15 @@ const isToday = (day) => day === currentDayName.value
 const getLesson = (day, time) => {
   const slotStart = time.split('-')[0]?.trim()
   return schedule.value.find(s => {
+    if (s.day !== day) return false
+    const lessonStart = (s.time || '').split('-')[0]?.trim()
+    return s.time === time || lessonStart === slotStart
+  })
+}
+
+const getLessons = (day, time) => {
+  const slotStart = time.split('-')[0]?.trim()
+  return schedule.value.filter(s => {
     if (s.day !== day) return false
     const lessonStart = (s.time || '').split('-')[0]?.trim()
     return s.time === time || lessonStart === slotStart

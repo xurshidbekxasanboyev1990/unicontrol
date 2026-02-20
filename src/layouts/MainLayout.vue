@@ -438,6 +438,8 @@ const currentPageTitle = computed(() => {
     'admin-credit-module': () => t('layout.creditModule'),
     'super-credit-module': () => t('layout.creditModule'),
     'leader-ai-analysis': () => t('layout.aiAnalysis'),
+    'teacher-ai-analysis': () => t('layout.aiAnalysis'),
+    'dean-ai-analysis': () => t('layout.aiAnalysis'),
     'leader-library': () => t('layout.library'),
     'leader-clubs': () => t('layout.clubs'),
     'leader-canteen': () => t('layout.canteen'),
@@ -578,6 +580,7 @@ const menuSections = computed(() => {
         { path: '/teacher/attendance', label: t('layout.attendance'), icon: markRaw(ClipboardCheck) },
         { path: '/teacher/workload', label: t('teacher.workload'), icon: markRaw(CalendarClock) },
         { path: '/teacher/nb-permits', label: 'NB Ruxsatnomalar', icon: markRaw(FileCheck) },
+        ...(hasAIAccess.value ? [{ path: '/teacher/ai-analysis', label: t('layout.aiAnalysis'), icon: markRaw(Brain) }] : []),
         { path: '/teacher/notifications', label: t('layout.notifications'), icon: markRaw(Bell), badge: dataStore.unreadCount > 0 ? String(dataStore.unreadCount) : null }
       ]
     })
@@ -648,6 +651,7 @@ const menuSections = computed(() => {
         { path: '/dean/workload', label: t('teacher.workload'), icon: markRaw(CalendarClock) },
         { path: '/dean/contracts', label: t('layout.contracts'), icon: markRaw(FileSpreadsheet) },
         { path: '/dean/nb-permits', label: 'NB Ruxsatnomalar', icon: markRaw(FileCheck) },
+        ...(hasAIAccess.value ? [{ path: '/dean/ai-analysis', label: t('layout.aiAnalysis'), icon: markRaw(Brain) }] : []),
         { path: '/dean/notifications', label: t('layout.notifications'), icon: markRaw(Bell), badge: dataStore.unreadCount > 0 ? String(dataStore.unreadCount) : null }
       ]
     })

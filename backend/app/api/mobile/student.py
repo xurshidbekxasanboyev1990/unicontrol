@@ -212,7 +212,8 @@ async def get_today_schedule(
                 "start_time": s.start_time.strftime("%H:%M"),
                 "end_time": s.end_time.strftime("%H:%M"),
                 "room": s.room,
-                "teacher": s.teacher_name
+                "teacher": s.teacher_name,
+                "week_type": s.week_type.value if s.week_type else "all",
             }
             for s in schedules.scalars().all()
         ]
@@ -255,6 +256,7 @@ async def get_week_schedule(
             "end_time": s.end_time.strftime("%H:%M"),
             "room": s.room,
             "teacher": s.teacher_name,
+            "week_type": s.week_type.value if s.week_type else "all",
             "is_cancelled": s.is_cancelled
         })
     

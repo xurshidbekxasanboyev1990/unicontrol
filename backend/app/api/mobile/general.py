@@ -82,6 +82,7 @@ async def mobile_schedule(
             "teacher": s.teacher_name,
             "day_of_week": s.day_of_week.name,
             "day": s.day_of_week.name,
+            "week_type": s.week_type.value if s.week_type else "all",
             "is_cancelled": s.is_cancelled,
         })
     return {"schedule": items}
@@ -136,6 +137,7 @@ async def mobile_schedule_today(
                 "end_time": s.end_time.strftime("%H:%M"),
                 "room": s.room,
                 "teacher": s.teacher_name,
+                "week_type": s.week_type.value if s.week_type else "all",
                 "is_cancelled": s.is_cancelled,
             }
             for s in schedules.scalars().all()
@@ -193,6 +195,7 @@ async def mobile_schedule_week(
             "end_time": s.end_time.strftime("%H:%M"),
             "room": s.room,
             "teacher": s.teacher_name,
+            "week_type": s.week_type.value if s.week_type else "all",
             "is_cancelled": s.is_cancelled,
         })
 

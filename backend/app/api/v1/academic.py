@@ -18,7 +18,7 @@ from pydantic import BaseModel
 
 from app.database import get_db
 from app.models.user import User, UserRole
-from app.models.schedule import Schedule, WeekDay, ScheduleType
+from app.models.schedule import Schedule, WeekDay, ScheduleType, WeekType
 from app.models.group import Group
 from app.models.student import Student
 from app.models.teacher_workload import TeacherWorkload
@@ -57,6 +57,7 @@ class ScheduleCreateRequest(BaseModel):
     start_time: str  # HH:MM
     end_time: str  # HH:MM
     lesson_number: Optional[int] = None
+    week_type: Optional[str] = "all"
     room: Optional[str] = None
     building: Optional[str] = None
     teacher_name: Optional[str] = None
@@ -73,6 +74,7 @@ class ScheduleUpdateRequest(BaseModel):
     start_time: Optional[str] = None
     end_time: Optional[str] = None
     lesson_number: Optional[int] = None
+    week_type: Optional[str] = None
     room: Optional[str] = None
     building: Optional[str] = None
     teacher_name: Optional[str] = None
@@ -202,6 +204,7 @@ def schedule_to_dict(s: Schedule) -> dict:
         "end_time": s.end_time.strftime("%H:%M") if s.end_time else None,
         "time_range": s.time_range,
         "lesson_number": s.lesson_number,
+        "week_type": s.week_type.value if s.week_type else "all",
         "room": s.room,
         "building": s.building,
         "teacher_name": s.teacher_name,
@@ -440,6 +443,12 @@ async def academic_create_schedule(
         db, data.teacher_name, data.teacher_id
     )
     
+    # Resolve week_type
+    try:
+        week_type = WeekType(data.week_type) if data.week_type else WeekType.ALL
+    except ValueError:
+        week_type = WeekType.ALL
+    
     schedule = Schedule(
         group_id=data.group_id,
         subject=data.subject,
@@ -449,6 +458,7 @@ async def academic_create_schedule(
         start_time=parse_time(data.start_time),
         end_time=parse_time(data.end_time),
         lesson_number=data.lesson_number,
+        week_type=week_type,
         room=data.room,
         building=data.building,
         teacher_name=resolved_teacher_name,
@@ -515,6 +525,7 @@ async def academic_create_lecture_multi_group(
             start_time=parse_time(data.start_time),
             end_time=parse_time(data.end_time),
             lesson_number=data.lesson_number,
+            week_type=WeekType.ALL,
             room=data.room,
             building=data.building,
             teacher_name=resolved_teacher_name,
@@ -588,6 +599,12 @@ async def academic_bulk_create(
             # Auto-resolve teacher
             resolved_id, resolved_name = quick_resolve_teacher(item.teacher_name, item.teacher_id)
             
+            # Resolve week_type for item
+            try:
+                item_week_type = WeekType(item.week_type) if item.week_type else WeekType.ALL
+            except ValueError:
+                item_week_type = WeekType.ALL
+            
             schedule = Schedule(
                 group_id=item.group_id,
                 subject=item.subject,
@@ -597,6 +614,7 @@ async def academic_bulk_create(
                 start_time=parse_time(item.start_time),
                 end_time=parse_time(item.end_time),
                 lesson_number=item.lesson_number,
+                week_type=item_week_type,
                 room=item.room,
                 building=item.building,
                 teacher_name=resolved_name,
@@ -645,6 +663,11 @@ async def academic_update_schedule(
         elif field == "day_of_week":
             try:
                 value = WeekDay(value)
+            except ValueError:
+                continue
+        elif field == "week_type":
+            try:
+                value = WeekType(value)
             except ValueError:
                 continue
         elif field in ("start_time", "end_time"):
@@ -1158,7 +1181,7 @@ async def academic_export_all_schedules(
         title_cell.alignment = center
 
         # Headers
-        headers = ["Kun", "Para", "Vaqt", "Fan", "O'qituvchi", "Xona"]
+        headers = ["Kun", "Para", "Vaqt", "Fan", "O'qituvchi", "Xona", "Hafta"]
         for col, h in enumerate(headers, 1):
             cell = ws.cell(3, col, h)
             cell.font = header_font
@@ -1187,8 +1210,11 @@ async def academic_export_all_schedules(
                 ws.cell(row, 4, s.subject or "")
                 ws.cell(row, 5, s.teacher_name or "")
                 ws.cell(row, 6, s.room or "")
+                wt = s.week_type.value if s.week_type else "all"
+                wt_label = {"all": "Har hafta", "odd": "Toq hafta", "even": "Juft hafta"}.get(wt, wt)
+                ws.cell(row, 7, wt_label)
 
-                for col in range(1, 7):
+                for col in range(1, 8):
                     ws.cell(row, col).border = thin_border
                     ws.cell(row, col).alignment = center
 

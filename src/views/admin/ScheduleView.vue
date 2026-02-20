@@ -93,6 +93,7 @@
                 <th class="text-left px-4 py-3 text-xs font-bold text-slate-500 uppercase">{{ $t('schedule.teacher') }}</th>
                 <th class="text-left px-4 py-3 text-xs font-bold text-slate-500 uppercase">{{ $t('schedule.room') }}</th>
                 <th class="text-left px-4 py-3 text-xs font-bold text-slate-500 uppercase">{{ $t('common.type') }}</th>
+                <th class="text-left px-4 py-3 text-xs font-bold text-slate-500 uppercase">Hafta</th>
                 <th class="text-center px-4 py-3 text-xs font-bold text-slate-500 uppercase">{{ $t('common.actions') }}</th>
               </tr>
             </thead>
@@ -112,6 +113,11 @@
                   <span :class="typeClass(s.schedule_type)" class="px-2 py-0.5 rounded-lg text-xs font-medium">
                     {{ typeLabel(s.schedule_type) }}
                   </span>
+                </td>
+                <td class="px-4 py-3">
+                  <span v-if="s.week_type === 'odd'" class="px-2 py-0.5 rounded-lg text-xs font-medium bg-blue-100 text-blue-700">Toq hafta</span>
+                  <span v-else-if="s.week_type === 'even'" class="px-2 py-0.5 rounded-lg text-xs font-medium bg-orange-100 text-orange-700">Juft hafta</span>
+                  <span v-else class="px-2 py-0.5 rounded-lg text-xs font-medium bg-slate-100 text-slate-500">Har hafta</span>
                 </td>
                 <td class="px-4 py-3 text-center">
                   <div class="flex items-center justify-center gap-1">
@@ -173,14 +179,20 @@
                   <div class="mt-1 text-[10px] text-slate-400 font-bold">{{ idx + 1 }}-{{ $t('schedule.lessonPeriod') }}</div>
                 </td>
                 <td v-for="day in weekDayKeys" :key="day + slot" class="px-2 py-2 border-b border-l border-slate-100 align-top" :class="isTodayDay(day) && 'bg-emerald-50/30'">
-                  <div v-if="getWeekLesson(day, slot)" class="rounded-xl p-2.5 text-sm cursor-pointer hover:shadow-md transition-all" :class="getSubjectBg(getWeekLesson(day, slot).subject)" @click="editSchedule(getWeekLesson(day, slot))">
-                    <p class="font-bold text-slate-800 text-[13px] leading-snug mb-1">{{ getWeekLesson(day, slot).subject }}</p>
-                    <p v-if="getWeekLesson(day, slot).teacher_name" class="text-[11px] text-slate-500 flex items-center gap-1">
-                      <User class="w-3 h-3" /> {{ getWeekLesson(day, slot).teacher_name }}
-                    </p>
-                    <p v-if="getWeekLesson(day, slot).room || getWeekLesson(day, slot).location" class="text-[11px] text-slate-500 flex items-center gap-1">
-                      <MapPin class="w-3 h-3" /> {{ getWeekLesson(day, slot).location || getWeekLesson(day, slot).room }}
-                    </p>
+                  <div v-if="getWeekLessons(day, slot).length > 0" class="space-y-1">
+                    <div v-for="lesson in getWeekLessons(day, slot)" :key="lesson.id" class="rounded-xl p-2.5 text-sm cursor-pointer hover:shadow-md transition-all" :class="getSubjectBg(lesson.subject)" @click="editSchedule(lesson)">
+                      <div class="flex items-center gap-1 mb-1">
+                        <p class="font-bold text-slate-800 text-[13px] leading-snug truncate flex-1">{{ lesson.subject }}</p>
+                        <span v-if="lesson.week_type === 'odd'" class="shrink-0 px-1 py-0.5 rounded text-[9px] font-bold bg-blue-100 text-blue-700">Toq</span>
+                        <span v-else-if="lesson.week_type === 'even'" class="shrink-0 px-1 py-0.5 rounded text-[9px] font-bold bg-orange-100 text-orange-700">Juft</span>
+                      </div>
+                      <p v-if="lesson.teacher_name" class="text-[11px] text-slate-500 flex items-center gap-1">
+                        <User class="w-3 h-3" /> {{ lesson.teacher_name }}
+                      </p>
+                      <p v-if="lesson.room || lesson.location" class="text-[11px] text-slate-500 flex items-center gap-1">
+                        <MapPin class="w-3 h-3" /> {{ lesson.location || lesson.room }}
+                      </p>
+                    </div>
                   </div>
                   <div v-else class="h-full min-h-[60px] flex items-center justify-center">
                     <button @click="quickAdd(day, idx + 1, slot)" class="w-6 h-6 rounded-full border-2 border-dashed border-slate-200 flex items-center justify-center hover:border-emerald-400 hover:text-emerald-500 text-slate-300 transition-colors">
@@ -280,6 +292,15 @@
                 <option value="seminar">{{ $t('schedule.seminar') }}</option>
               </select>
             </div>
+            <!-- Week Type -->
+            <div>
+              <label class="block text-sm font-medium text-slate-700 mb-1">Hafta turi</label>
+              <select v-model="form.week_type" class="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-emerald-500">
+                <option value="all">Har hafta</option>
+                <option value="odd">Toq hafta</option>
+                <option value="even">Juft hafta</option>
+              </select>
+            </div>
           </div>
           <div class="p-6 border-t border-slate-100 flex gap-3">
             <button @click="showModal = false" class="flex-1 py-2.5 bg-slate-100 text-slate-700 rounded-xl font-medium hover:bg-slate-200 transition-colors">{{ $t('common.cancel') }}</button>
@@ -369,6 +390,7 @@ const defaultForm = () => ({
   room: '',
   building: '',
   teacher_name: '',
+  week_type: 'all',
 })
 
 const form = ref(defaultForm())
@@ -458,9 +480,9 @@ const isTodayDay = (day) => {
   return map[new Date().getDay()] === day
 }
 
-const getWeekLesson = (day, slot) => {
+const getWeekLessons = (day, slot) => {
   const slotStart = slot.split('-')[0]?.trim()
-  return schedules.value.find(s => {
+  return schedules.value.filter(s => {
     if (s.day_of_week !== day) return false
     const tr = (s.time_range || '').replace(/\s/g, '').replace(/(\d{2}:\d{2}):\d{2}/g, '$1')
     const start = tr.split('-')[0]?.trim()
@@ -523,6 +545,7 @@ function editSchedule(s) {
     room: s.room || '',
     building: s.building || '',
     teacher_name: s.teacher_name || '',
+    week_type: s.week_type || 'all',
   }
   showModal.value = true
 }

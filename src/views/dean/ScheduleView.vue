@@ -99,10 +99,16 @@
             <tr v-for="slot in timeSlots" :key="slot" class="hover:bg-slate-50/50 transition-colors">
               <td class="p-3 sm:p-4 text-sm font-medium text-slate-600 whitespace-nowrap">{{ slot }}</td>
               <td v-for="day in weekDays" :key="day.key" class="p-2" :class="{ 'bg-emerald-50/50': isToday(day.key) }">
-                <div v-if="getLesson(day.key, slot)" class="p-2 rounded-xl text-xs" :class="lessonBg(getLesson(day.key, slot))">
-                  <p class="font-semibold text-slate-800 truncate">{{ getLesson(day.key, slot).subject }}</p>
-                  <p class="text-slate-500 mt-0.5 truncate">{{ getLesson(day.key, slot).teacher_name }}</p>
-                  <p class="text-slate-400 mt-0.5">{{ getLesson(day.key, slot).room || '' }}</p>
+                <div v-if="getLessons(day.key, slot).length > 0" class="space-y-1">
+                  <div v-for="lesson in getLessons(day.key, slot)" :key="lesson.id" class="p-2 rounded-xl text-xs" :class="lessonBg(lesson)">
+                    <div class="flex items-center gap-1">
+                      <p class="font-semibold text-slate-800 truncate flex-1">{{ lesson.subject }}</p>
+                      <span v-if="lesson.week_type === 'odd'" class="shrink-0 px-1 py-0.5 rounded text-[9px] font-bold bg-blue-100 text-blue-700">Toq</span>
+                      <span v-else-if="lesson.week_type === 'even'" class="shrink-0 px-1 py-0.5 rounded text-[9px] font-bold bg-orange-100 text-orange-700">Juft</span>
+                    </div>
+                    <p class="text-slate-500 mt-0.5 truncate">{{ lesson.teacher_name }}</p>
+                    <p class="text-slate-400 mt-0.5">{{ lesson.room || '' }}</p>
+                  </div>
                 </div>
               </td>
             </tr>
@@ -190,10 +196,9 @@ const lessonBg = (lesson) => {
   return types[lesson.schedule_type] || 'bg-slate-50 border border-slate-200'
 }
 
-const getLesson = (dayKey, timeSlot) => {
-  return schedule.value.find(s => {
+const getLessons = (dayKey, timeSlot) => {
+  return schedule.value.filter(s => {
     const dayMatch = s.day_of_week?.toLowerCase() === dayKey
-    // Compare time_range with or without spaces around dash
     const normalizedTimeRange = (s.time_range || '').replace(/\s/g, '')
     const normalizedSlot = timeSlot.replace(/\s/g, '')
     const timeMatch = normalizedTimeRange === normalizedSlot ||

@@ -223,6 +223,7 @@ async def teacher_dashboard(
             "time_range": s.time_range,
             "room": s.room,
             "lesson_number": s.lesson_number,
+            "week_type": s.week_type.value if s.week_type else "all",
             "schedule_type": s.schedule_type.value if s.schedule_type else None,
         })
     
@@ -283,6 +284,7 @@ async def teacher_schedule(
             "room": s.room,
             "building": s.building,
             "lesson_number": s.lesson_number,
+            "week_type": s.week_type.value if s.week_type else "all",
             "schedule_type": s.schedule_type.value if s.schedule_type else None,
             "is_cancelled": s.is_cancelled,
             "semester": s.semester,

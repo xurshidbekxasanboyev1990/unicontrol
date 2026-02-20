@@ -38,7 +38,7 @@ from app.config import now_tashkent
 from app.models.student import Student
 from app.models.group import Group
 from app.models.attendance import Attendance, AttendanceStatus
-from app.models.schedule import Schedule, WeekDay, ScheduleType
+from app.models.schedule import Schedule, WeekDay, ScheduleType, WeekType
 from app.core.exceptions import BadRequestException
 
 logger = logging.getLogger(__name__)
@@ -860,33 +860,88 @@ class ExcelService:
         wb.close()
 
         # ── DEDUPLICATE records across sheets ──
-        # When same group appears in multiple sheets (e.g. "Tibbiyot 2-3" and "Tibbiyot 2-3-bosqich"),
-        # keep the record with more data (teacher, room, building filled)
-        dedup_map: Dict[tuple, Dict] = {}
+        # "bosqich" (stage/phase) sheets contain COMPLEMENTARY schedule data (lectures vs practicals).
+        # When the SAME (group, day, lesson_number) appears with DIFFERENT subjects across sheets,
+        # it means biweekly rotation (juft/toq hafta — even/odd weeks). KEEP BOTH.
+        # When same subject appears in multiple sheets → true duplicate, keep the richer one.
+        
+        dedup_map: Dict[tuple, List[Dict]] = {}  # key → list of records
         for rec in all_records:
             key = (rec.get("group_id"), rec.get("day"), rec.get("lesson_number", 1))
             if key[0] is None:
                 continue
-            existing = dedup_map.get(key)
-            if existing is None:
-                dedup_map[key] = rec
+            if key not in dedup_map:
+                dedup_map[key] = [rec]
             else:
-                # Score: count non-empty fields
-                def score(r):
-                    s = 0
-                    if r.get("teacher"): s += 2
-                    if r.get("room"): s += 1
-                    if r.get("building"): s += 1
-                    if r.get("subject"): s += 1
-                    return s
-                if score(rec) > score(existing):
-                    dedup_map[key] = rec
+                dedup_map[key].append(rec)
+        
+        def _score(r):
+            s = 0
+            if r.get("teacher"): s += 2
+            if r.get("room"): s += 1
+            if r.get("building"): s += 1
+            if r.get("subject"): s += 1
+            return s
+        
+        def _norm_subject(subj):
+            """Normalize subject for comparison."""
+            if not subj:
+                return ""
+            s = re.sub(r'\s+', ' ', str(subj).strip().lower())
+            # Remove common suffixes for comparison
+            s = re.sub(r'\b(amaliy|lab|laboratoriya|ma\'?ruza|seminar|maruza)\b', '', s)
+            s = re.sub(r'\s+', ' ', s).strip()
+            return s
+        
+        deduped: List[Dict] = []
+        biweekly_conflicts = 0
+        
+        for key, recs in dedup_map.items():
+            if len(recs) == 1:
+                # No conflict — single record, week_type = ALL
+                recs[0]["week_type"] = "all"
+                deduped.append(recs[0])
+            else:
+                # Multiple records for same slot — group by normalized subject
+                from collections import defaultdict
+                subj_groups = defaultdict(list)
+                for r in recs:
+                    ns = _norm_subject(r.get("subject"))
+                    subj_groups[ns].append(r)
+                
+                unique_subjects = list(subj_groups.keys())
+                
+                if len(unique_subjects) == 1:
+                    # Same subject from multiple sheets — true duplicate, keep best
+                    best = max(recs, key=_score)
+                    best["week_type"] = "all"
+                    deduped.append(best)
+                elif len(unique_subjects) == 2:
+                    # TWO different subjects for same slot = biweekly rotation
+                    biweekly_conflicts += 1
+                    for i, ns in enumerate(unique_subjects):
+                        best = max(subj_groups[ns], key=_score)
+                        best["week_type"] = "odd" if i == 0 else "even"
+                        deduped.append(best)
+                else:
+                    # 3+ different subjects (unlikely) — keep first two as odd/even, rest as all
+                    biweekly_conflicts += 1
+                    for i, ns in enumerate(unique_subjects):
+                        best = max(subj_groups[ns], key=_score)
+                        if i == 0:
+                            best["week_type"] = "odd"
+                        elif i == 1:
+                            best["week_type"] = "even"
+                        else:
+                            best["week_type"] = "all"
+                        deduped.append(best)
 
         # Rebuild all_records: deduplicated + unmatched (group_id=None)
-        deduped = list(dedup_map.values())
         unmatched_recs = [r for r in all_records if r.get("group_id") is None]
+        for r in unmatched_recs:
+            r["week_type"] = "all"
         all_records = deduped + unmatched_recs
-        logger.info(f"After dedup: {len(all_records)} records (was {len(deduped) + len(unmatched_recs) - len(unmatched_recs)} matched + {len(unmatched_recs)} unmatched)")
+        logger.info(f"After dedup: {len(all_records)} records ({len(deduped)} matched + {len(unmatched_recs)} unmatched, {biweekly_conflicts} biweekly conflicts detected)")
 
         # ── AI ENHANCEMENT ──
         ai_result = None
@@ -930,6 +985,13 @@ class ExcelService:
                 start_time = rec.get("start_time")
                 end_time = rec.get("end_time")
                 lesson_num = rec.get("lesson_number", 1)
+                week_type_val = rec.get("week_type", "all")
+                
+                # Convert string week_type to enum
+                try:
+                    week_type_enum = WeekType(week_type_val)
+                except (ValueError, KeyError):
+                    week_type_enum = WeekType.ALL
 
                 # Use default time slots if not provided
                 if not start_time or not end_time:
@@ -937,12 +999,13 @@ class ExcelService:
                     start_time = start_time or parse_time(slot[0])
                     end_time = end_time or parse_time(slot[1])
 
-                # Check if schedule already exists by unique key
+                # Check if schedule already exists by unique key (now including week_type)
                 existing_result = await self.db.execute(
                     select(Schedule).where(
                         Schedule.group_id == rec["group_id"],
                         Schedule.day_of_week == rec["day"],
                         Schedule.lesson_number == lesson_num,
+                        Schedule.week_type == week_type_enum,
                         Schedule.semester == semester,
                         Schedule.academic_year == academic_year,
                     )
@@ -959,6 +1022,7 @@ class ExcelService:
                     existing.room = rec.get("room")
                     existing.building = rec.get("building")
                     existing.teacher_name = rec.get("teacher")
+                    existing.week_type = week_type_enum
                     existing.is_active = True
                     existing.is_cancelled = False
                     # Remove duplicates if any
@@ -975,6 +1039,7 @@ class ExcelService:
                         start_time=start_time,
                         end_time=end_time,
                         lesson_number=lesson_num,
+                        week_type=week_type_enum,
                         room=rec.get("room"),
                         building=rec.get("building"),
                         teacher_name=rec.get("teacher"),
