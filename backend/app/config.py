@@ -109,15 +109,15 @@ class Settings(BaseSettings):
     # OPENAI API (faqat AI tahlil/chat uchun)
     # ====================
     OPENAI_API_KEY: Optional[str] = None
-    OPENAI_MODEL: str = "gpt-4o-mini"
-    OPENAI_MAX_TOKENS: int = 2000
+    OPENAI_MODEL: str = "gpt-5.2"
+    OPENAI_MAX_TOKENS: int = 4000
     OPENAI_TEMPERATURE: float = 0.7
     
     # ====================
     # CLAUDE API (jadval import, generatsiya, bandlik uchun)
     # ====================
     CLAUDE_API_KEY: Optional[str] = None
-    CLAUDE_MODEL: str = "claude-sonnet-4-20250514"
+    CLAUDE_MODEL: str = "claude-opus-4-6"
     
     # ====================
     # KUAF MUTOOLA API

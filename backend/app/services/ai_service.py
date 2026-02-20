@@ -1,11 +1,11 @@
 """
 UniControl - AI Service
 =======================
-Handles AI analysis using OpenAI API (GPT-4o-mini).
+Handles AI analysis using OpenAI API (GPT-5.2).
 Full integration: student analysis, group analysis, chat, predictions, etc.
 
 Author: UniControl Team
-Version: 2.0.0
+Version: 3.0.0
 """
 
 import json
@@ -29,7 +29,7 @@ from app.core.exceptions import BadRequestException, ExternalAPIException, NotFo
 
 
 class AIService:
-    """AI analysis service using OpenAI GPT-4o-mini."""
+    """AI analysis service using OpenAI GPT-5.2."""
     
     def __init__(self, db: AsyncSession):
         self.db = db

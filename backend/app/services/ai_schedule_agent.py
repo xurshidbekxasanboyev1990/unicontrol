@@ -29,7 +29,7 @@ from app.models.schedule import ScheduleType, WeekDay
 
 CLAUDE_API_KEY = os.getenv("CLAUDE_API_KEY", "")
 CLAUDE_API_URL = "https://api.anthropic.com/v1/messages"
-CLAUDE_MODEL = os.getenv("CLAUDE_MODEL", "claude-sonnet-4-20250514")
+CLAUDE_MODEL = os.getenv("CLAUDE_MODEL", "claude-opus-4-6")
 
 # Fallback: if Claude key not set, try to use settings
 def _get_claude_key():

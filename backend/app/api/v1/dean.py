@@ -276,6 +276,93 @@ async def dean_faculties(
     return {"faculties": faculties}
 
 
+@router.get("/faculties-tree")
+async def dean_faculties_tree(
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(require_dean)
+):
+    """
+    Get hierarchical faculty → direction → groups tree for kontingent.
+    3 super-faculties: IT va Texnika, Tibbiyot, Ijtimoiy-gumanitar.
+    """
+    from app.core.faculty_mapping import FACULTY_ORDER, get_super_faculty
+    
+    result = await db.execute(
+        select(
+            Group.id,
+            Group.name,
+            Group.faculty,
+            Group.course_year,
+            func.count(Student.id).label('students_count')
+        )
+        .outerjoin(Student, and_(Student.group_id == Group.id, Student.is_active == True))
+        .where(Group.is_active == True)
+        .group_by(Group.id, Group.name, Group.faculty, Group.course_year)
+        .order_by(Group.faculty, Group.name)
+    )
+    rows = result.all()
+    
+    tree = {}
+    for row in rows:
+        direction = row.faculty or "Boshqa"
+        super_faculty = get_super_faculty(direction)
+        
+        if super_faculty not in tree:
+            tree[super_faculty] = {}
+        if direction not in tree[super_faculty]:
+            tree[super_faculty][direction] = []
+        
+        tree[super_faculty][direction].append({
+            "id": row.id,
+            "name": row.name,
+            "course_year": row.course_year,
+            "students_count": row.students_count or 0,
+        })
+    
+    faculties = []
+    for faculty_name in FACULTY_ORDER:
+        if faculty_name in tree:
+            directions = []
+            for dir_name, groups in sorted(tree[faculty_name].items()):
+                directions.append({
+                    "name": dir_name,
+                    "groups": sorted(groups, key=lambda g: g["name"]),
+                    "groups_count": len(groups),
+                    "students_count": sum(g["students_count"] for g in groups),
+                })
+            faculties.append({
+                "name": faculty_name,
+                "directions": directions,
+                "directions_count": len(directions),
+                "groups_count": sum(d["groups_count"] for d in directions),
+                "students_count": sum(d["students_count"] for d in directions),
+            })
+    
+    if "Boshqa" in tree:
+        directions = []
+        for dir_name, groups in sorted(tree["Boshqa"].items()):
+            directions.append({
+                "name": dir_name,
+                "groups": sorted(groups, key=lambda g: g["name"]),
+                "groups_count": len(groups),
+                "students_count": sum(g["students_count"] for g in groups),
+            })
+        faculties.append({
+            "name": "Boshqa",
+            "directions": directions,
+            "directions_count": len(directions),
+            "groups_count": sum(d["groups_count"] for d in directions),
+            "students_count": sum(d["students_count"] for d in directions),
+        })
+    
+    return {
+        "faculties": faculties,
+        "total_faculties": len(faculties),
+        "total_directions": sum(f["directions_count"] for f in faculties),
+        "total_groups": sum(f["groups_count"] for f in faculties),
+    }
+
+
 @router.get("/groups")
 async def dean_groups(
     faculty: Optional[str] = None,
