@@ -222,13 +222,13 @@ class Schedule(Base):
     group: Mapped["Group"] = relationship(
         "Group",
         back_populates="schedules",
-        lazy="joined"
+        lazy="selectin"
     )
     
     teacher: Mapped[Optional["User"]] = relationship(
         "User",
         foreign_keys=[teacher_id],
-        lazy="joined"
+        lazy="noload"
     )
     
     def __repr__(self) -> str:

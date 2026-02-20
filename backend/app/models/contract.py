@@ -183,7 +183,7 @@ class Contract(Base):
     student: Mapped["Student"] = relationship(
         "Student",
         foreign_keys=[student_id],
-        lazy="joined"
+        lazy="selectin"
     )
     
     def __repr__(self) -> str:

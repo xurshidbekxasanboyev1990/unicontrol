@@ -137,7 +137,7 @@ async def dean_dashboard(
         contract_result = await db.execute(
             select(
                 func.count(Contract.id),
-                func.coalesce(func.sum(Contract.paid_amount), 0),
+                func.coalesce(func.sum(Contract.total_paid), 0),
                 func.coalesce(func.sum(Contract.contract_amount), 0)
             )
         )
@@ -699,46 +699,49 @@ async def dean_schedule(
     faculty: Optional[str] = None,
     course_year: Optional[int] = None,
     teacher: Optional[str] = None,
+    page: int = 1,
+    per_page: int = 100,
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(require_dean)
 ):
-    """Get schedule (read-only)."""
+    """Get schedule (read-only) with pagination."""
+    from sqlalchemy.orm import joinedload, load_only
+
     query = (
         select(Schedule)
-        .where(and_(Schedule.is_active == True))
+        .options(joinedload(Schedule.group).load_only(Group.name))
+        .where(Schedule.is_active == True)
     )
 
     if group_id:
         query = query.where(Schedule.group_id == group_id)
 
-    # Filter by faculty through group
+    # Filter by faculty through group — use subquery instead of loading all group IDs
     if faculty:
-        faculty_groups = await db.execute(
-            select(Group.id).where(and_(Group.is_active == True, Group.faculty == faculty))
-        )
-        faculty_group_ids = [r[0] for r in faculty_groups.all()]
-        if faculty_group_ids:
-            query = query.where(Schedule.group_id.in_(faculty_group_ids))
-        else:
-            query = query.where(Schedule.id == -1)
+        faculty_subq = select(Group.id).where(
+            and_(Group.is_active == True, Group.faculty == faculty)
+        ).scalar_subquery()
+        query = query.where(Schedule.group_id.in_(faculty_subq))
 
-    # Filter by course year through group
+    # Filter by course year through group — use subquery
     if course_year:
-        course_groups = await db.execute(
-            select(Group.id).where(and_(Group.is_active == True, Group.course_year == course_year))
-        )
-        course_group_ids = [r[0] for r in course_groups.all()]
-        if course_group_ids:
-            query = query.where(Schedule.group_id.in_(course_group_ids))
-        else:
-            query = query.where(Schedule.id == -1)
+        course_subq = select(Group.id).where(
+            and_(Group.is_active == True, Group.course_year == course_year)
+        ).scalar_subquery()
+        query = query.where(Schedule.group_id.in_(course_subq))
 
     if teacher:
         query = query.where(Schedule.teacher_name.ilike(f"%{teacher}%"))
 
-    query = query.order_by(Schedule.day_of_week, Schedule.start_time)
+    # Total count
+    count_q = select(func.count()).select_from(query.subquery())
+    total = (await db.execute(count_q)).scalar() or 0
+
+    # Paginate
+    offset = (page - 1) * per_page
+    query = query.order_by(Schedule.day_of_week, Schedule.start_time).offset(offset).limit(per_page)
     result = await db.execute(query)
-    schedules = result.scalars().all()
+    schedules = result.unique().scalars().all()
 
     items = []
     for s in schedules:
@@ -747,7 +750,7 @@ async def dean_schedule(
             "subject": s.subject,
             "subject_code": s.subject_code,
             "group_id": s.group_id,
-            "group_name": s.group_name,
+            "group_name": s.group.name if s.group else None,
             "teacher_name": s.teacher_name,
             "day_of_week": s.day_of_week.value if s.day_of_week else None,
             "start_time": s.start_time.strftime("%H:%M") if s.start_time else None,
@@ -761,7 +764,7 @@ async def dean_schedule(
             "is_cancelled": s.is_cancelled,
         })
 
-    return {"items": items, "total": len(items)}
+    return {"items": items, "total": total, "page": page, "per_page": per_page}
 
 
 # ============================================
@@ -859,27 +862,33 @@ async def dean_contracts(
     """Get contract information (read-only)."""
     try:
         from app.models.contract import Contract
+        from sqlalchemy.orm import joinedload, contains_eager
 
-        query = select(Contract)
+        query = select(Contract).options(
+            joinedload(Contract.student).joinedload(Student.group)
+        )
 
         if search:
-            query = query.where(
+            # Search via student relationship
+            query = query.join(Contract.student).where(
                 or_(
-                    Contract.student_name.ilike(f"%{search}%"),
-                    Contract.student_id_number.ilike(f"%{search}%"),
+                    Student.name.ilike(f"%{search}%"),
+                    Student.student_id.ilike(f"%{search}%"),
                 )
             )
 
         if group_id:
-            query = query.where(Contract.group_id == group_id)
+            query = query.join(Student, Student.id == Contract.student_id).where(
+                Student.group_id == group_id
+            )
 
         if academic_year:
             query = query.where(Contract.academic_year == academic_year)
 
         if has_debt is True:
-            query = query.where(Contract.paid_amount < Contract.contract_amount)
+            query = query.where(Contract.total_paid < Contract.contract_amount)
         elif has_debt is False:
-            query = query.where(Contract.paid_amount >= Contract.contract_amount)
+            query = query.where(Contract.total_paid >= Contract.contract_amount)
 
         # Count
         count_q = select(func.count()).select_from(query.subquery())
@@ -889,10 +898,12 @@ async def dean_contracts(
         stats_q = select(
             func.count(Contract.id),
             func.coalesce(func.sum(Contract.contract_amount), 0),
-            func.coalesce(func.sum(Contract.paid_amount), 0),
+            func.coalesce(func.sum(Contract.total_paid), 0),
         )
         if group_id:
-            stats_q = stats_q.where(Contract.group_id == group_id)
+            stats_q = stats_q.join(Student, Student.id == Contract.student_id).where(
+                Student.group_id == group_id
+            )
         if academic_year:
             stats_q = stats_q.where(Contract.academic_year == academic_year)
 
@@ -906,11 +917,14 @@ async def dean_contracts(
             "payment_percentage": round(float(sr[2] or 0) / float(sr[1] or 1) * 100, 1),
         }
 
-        # Paginate
+        # Paginate — order by student name via relationship
         offset = (page - 1) * per_page
-        query = query.order_by(Contract.student_name).offset(offset).limit(per_page)
+        # Ensure student is joined for ordering
+        if not search and not group_id:
+            query = query.join(Contract.student, isouter=True)
+        query = query.order_by(Student.name).offset(offset).limit(per_page)
         result = await db.execute(query)
-        contracts = result.scalars().all()
+        contracts = result.unique().scalars().all()
 
         items = []
         for c in contracts:
@@ -920,8 +934,8 @@ async def dean_contracts(
                 "student_id_number": getattr(c, 'student_id_number', ''),
                 "group_name": getattr(c, 'group_name', ''),
                 "contract_amount": float(c.contract_amount or 0),
-                "paid_amount": float(c.paid_amount or 0),
-                "debt": float((c.contract_amount or 0) - (c.paid_amount or 0)),
+                "paid_amount": float(c.total_paid or 0),
+                "debt": float((c.contract_amount or 0) - (c.total_paid or 0)),
                 "academic_year": c.academic_year,
                 "payment_form": getattr(c, 'payment_form', ''),
                 "education_form": getattr(c, 'education_form', ''),
