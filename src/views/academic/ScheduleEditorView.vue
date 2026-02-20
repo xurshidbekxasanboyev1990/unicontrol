@@ -1,35 +1,116 @@
 <template>
   <div class="space-y-4">
-    <!-- Toolbar -->
-    <div class="flex flex-wrap items-center gap-3 rounded-2xl bg-white p-4 shadow-sm border border-gray-100">
-      <!-- Group selector -->
-      <div class="flex items-center gap-2">
-        <label class="text-sm font-medium text-gray-600">{{ t('academic.groups') }}:</label>
-        <select 
-          v-model="selectedGroupIds" 
-          multiple
-          class="rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 min-w-[200px] max-h-[120px]"
-        >
-          <option v-for="g in allGroups" :key="g.id" :value="g.id">{{ g.name }}</option>
-        </select>
+    <!-- Toolbar: Faculty → Direction → Group cascading filter -->
+    <div class="rounded-2xl bg-white p-4 shadow-sm border border-gray-100 space-y-3">
+      <!-- Top row: Faculty tabs + actions -->
+      <div class="flex flex-wrap items-center gap-3">
+        <div class="flex items-center gap-2 flex-1 min-w-0">
+          <label class="text-sm font-medium text-gray-600 whitespace-nowrap">{{ t('academic.faculty') }}:</label>
+          <div class="flex flex-wrap gap-1.5">
+            <button
+              v-for="fac in facultiesTree"
+              :key="fac.name"
+              @click="selectFaculty(fac.name)"
+              :class="[
+                'rounded-lg px-3 py-1.5 text-sm font-medium transition-all border',
+                selectedFaculty === fac.name
+                  ? 'bg-emerald-600 text-white border-emerald-600 shadow-sm'
+                  : 'bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100'
+              ]"
+            >
+              {{ fac.name }}
+              <span class="ml-1 text-xs opacity-70">({{ fac.groups_count }})</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-2">
+          <button @click="loadSchedule" :disabled="selectedGroupIds.length === 0" class="rounded-xl bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 transition-colors flex items-center gap-2 disabled:opacity-50">
+            <RefreshCw :size="14" />
+            {{ t('academic.load') }}
+          </button>
+          <button @click="showAddModal = true" class="rounded-xl bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700 transition-colors flex items-center gap-2">
+            <Plus :size="14" />
+            {{ t('academic.addLesson') }}
+          </button>
+          <button @click="$router.push('/academic/ai-generate')" class="rounded-xl bg-purple-600 px-4 py-2 text-sm font-medium text-white hover:bg-purple-700 transition-colors flex items-center gap-2">
+            <Brain :size="14" />
+            AI
+          </button>
+        </div>
       </div>
 
-      <button @click="loadSchedule" class="rounded-xl bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 transition-colors flex items-center gap-2">
-        <RefreshCw :size="14" />
-        {{ t('academic.load') }}
-      </button>
+      <!-- Direction → Group filter (shows when faculty selected) -->
+      <div v-if="selectedFaculty && currentFacultyData" class="border-t border-gray-100 pt-3">
+        <div class="flex flex-wrap items-start gap-4">
+          <!-- Direction selector -->
+          <div class="min-w-[200px]">
+            <label class="text-xs font-medium text-gray-500 mb-1 block">{{ t('academic.direction') }}:</label>
+            <div class="space-y-1 max-h-[160px] overflow-y-auto pr-1">
+              <label
+                v-for="dir in currentFacultyData.directions"
+                :key="dir.name"
+                class="flex items-center gap-2 rounded-lg px-2 py-1.5 cursor-pointer transition-colors text-sm"
+                :class="selectedDirections.includes(dir.name) ? 'bg-emerald-50 text-emerald-800 ring-1 ring-emerald-200' : 'hover:bg-gray-50 text-gray-700'"
+              >
+                <input
+                  type="checkbox"
+                  :value="dir.name"
+                  v-model="selectedDirections"
+                  class="rounded text-emerald-600 focus:ring-emerald-500 h-3.5 w-3.5"
+                />
+                <span class="truncate flex-1">{{ dir.name }}</span>
+                <span class="text-xs text-gray-400 flex-shrink-0">{{ dir.groups_count }}</span>
+              </label>
+            </div>
+            <button 
+              v-if="currentFacultyData.directions.length > 1"
+              @click="toggleAllDirections" 
+              class="mt-1.5 text-xs text-emerald-600 hover:text-emerald-700 font-medium"
+            >
+              {{ allDirectionsSelected ? t('academic.deselectAll') : t('academic.selectAll') }}
+            </button>
+          </div>
 
-      <div class="flex-1"></div>
-
-      <button @click="showAddModal = true" class="rounded-xl bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700 transition-colors flex items-center gap-2">
-        <Plus :size="14" />
-        {{ t('academic.addLesson') }}
-      </button>
-
-      <button @click="$router.push('/academic/ai-generate')" class="rounded-xl bg-purple-600 px-4 py-2 text-sm font-medium text-white hover:bg-purple-700 transition-colors flex items-center gap-2">
-        <Brain :size="14" />
-        AI
-      </button>
+          <!-- Group selector (shows groups from selected directions) -->
+          <div class="flex-1 min-w-[300px]">
+            <div class="flex items-center justify-between mb-1">
+              <label class="text-xs font-medium text-gray-500">{{ t('academic.groups') }}:</label>
+              <div class="flex items-center gap-2">
+                <span class="text-xs text-gray-400">
+                  {{ selectedGroupIds.length }} / {{ filteredGroups.length }} {{ t('academic.selected') }}
+                </span>
+                <button 
+                  v-if="filteredGroups.length > 0"
+                  @click="toggleAllGroups" 
+                  class="text-xs text-emerald-600 hover:text-emerald-700 font-medium"
+                >
+                  {{ allGroupsSelected ? t('academic.deselectAll') : t('academic.selectAll') }}
+                </button>
+              </div>
+            </div>
+            <div class="flex flex-wrap gap-1.5 max-h-[160px] overflow-y-auto p-1">
+              <label
+                v-for="g in filteredGroups"
+                :key="g.id"
+                class="flex items-center gap-1.5 rounded-lg border px-2 py-1 cursor-pointer transition-all text-xs"
+                :class="selectedGroupIds.includes(g.id) 
+                  ? 'bg-emerald-50 border-emerald-300 text-emerald-800 shadow-sm' 
+                  : 'bg-white border-gray-200 text-gray-600 hover:border-gray-300 hover:bg-gray-50'"
+              >
+                <input
+                  type="checkbox"
+                  :value="g.id"
+                  v-model="selectedGroupIds"
+                  class="rounded text-emerald-600 focus:ring-emerald-500 h-3 w-3"
+                />
+                <span class="font-medium">{{ g.name }}</span>
+                <span class="text-gray-400">({{ g.students_count }})</span>
+              </label>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
 
     <!-- Loading -->
@@ -298,6 +379,11 @@ const selectedGroupIds = ref([])
 const scheduleGrid = ref({})
 const scheduleItems = ref([])
 
+// Hierarchical filter state
+const facultiesTree = ref([])
+const selectedFaculty = ref(null)
+const selectedDirections = ref([])
+
 const showAddModal = ref(false)
 const showEditModal = ref(false)
 const editingId = ref(null)
@@ -314,6 +400,69 @@ const manualTeacherInput = ref(false)
 const otherGroupsForLink = computed(() => {
   return allGroups.value.filter(g => g.id !== form.group_id)
 })
+
+// ===== Hierarchical filter computed =====
+const currentFacultyData = computed(() => {
+  if (!selectedFaculty.value) return null
+  return facultiesTree.value.find(f => f.name === selectedFaculty.value) || null
+})
+
+const allDirectionsSelected = computed(() => {
+  if (!currentFacultyData.value) return false
+  return currentFacultyData.value.directions.every(d => selectedDirections.value.includes(d.name))
+})
+
+const filteredGroups = computed(() => {
+  if (!currentFacultyData.value || selectedDirections.value.length === 0) return []
+  const groups = []
+  for (const dir of currentFacultyData.value.directions) {
+    if (selectedDirections.value.includes(dir.name)) {
+      groups.push(...dir.groups)
+    }
+  }
+  return groups.sort((a, b) => a.name.localeCompare(b.name))
+})
+
+const allGroupsSelected = computed(() => {
+  if (filteredGroups.value.length === 0) return false
+  return filteredGroups.value.every(g => selectedGroupIds.value.includes(g.id))
+})
+
+function selectFaculty(facultyName) {
+  if (selectedFaculty.value === facultyName) return
+  selectedFaculty.value = facultyName
+  selectedDirections.value = []
+  selectedGroupIds.value = []
+  // Auto-select all directions
+  if (currentFacultyData.value) {
+    selectedDirections.value = currentFacultyData.value.directions.map(d => d.name)
+  }
+}
+
+function toggleAllDirections() {
+  if (!currentFacultyData.value) return
+  if (allDirectionsSelected.value) {
+    selectedDirections.value = []
+    selectedGroupIds.value = []
+  } else {
+    selectedDirections.value = currentFacultyData.value.directions.map(d => d.name)
+  }
+}
+
+function toggleAllGroups() {
+  if (allGroupsSelected.value) {
+    // Deselect all filtered groups
+    const filteredIds = new Set(filteredGroups.value.map(g => g.id))
+    selectedGroupIds.value = selectedGroupIds.value.filter(id => !filteredIds.has(id))
+  } else {
+    // Select all filtered groups
+    const existing = new Set(selectedGroupIds.value)
+    for (const g of filteredGroups.value) {
+      existing.add(g.id)
+    }
+    selectedGroupIds.value = [...existing]
+  }
+}
 
 const form = reactive({
   group_id: null,
@@ -467,6 +616,15 @@ const loadGroups = async () => {
   }
 }
 
+const loadFacultiesTree = async () => {
+  try {
+    const res = await api.request('/academic/faculties-tree')
+    facultiesTree.value = res.faculties || []
+  } catch (e) {
+    console.error('Failed to load faculties tree:', e)
+  }
+}
+
 const loadSchedule = async () => {
   if (selectedGroupIds.value.length === 0) return
   loading.value = true
@@ -547,21 +705,35 @@ const deleteSchedule = async (id) => {
 }
 
 onMounted(async () => {
-  await loadGroups()
-  await loadTeachers()
+  await Promise.all([loadGroups(), loadFacultiesTree(), loadTeachers()])
+  
   // If ?group= query param exists, select that group
   const queryGroup = route.query.group
   if (queryGroup) {
     const gId = Number(queryGroup)
-    if (gId && allGroups.value.some(g => g.id === gId)) {
+    if (gId) {
       selectedGroupIds.value = [gId]
-    } else if (gId) {
-      selectedGroupIds.value = [gId]
+      // Try to find and select the faculty/direction for this group
+      for (const fac of facultiesTree.value) {
+        for (const dir of fac.directions) {
+          if (dir.groups.some(g => g.id === gId)) {
+            selectedFaculty.value = fac.name
+            selectedDirections.value = [dir.name]
+            break
+          }
+        }
+        if (selectedFaculty.value) break
+      }
     }
-  } else if (allGroups.value.length > 0) {
+  } else if (facultiesTree.value.length > 0) {
+    // Auto-select first faculty and all its directions
+    selectFaculty(facultiesTree.value[0].name)
     // Auto-select first 6 groups
-    selectedGroupIds.value = allGroups.value.slice(0, 6).map(g => g.id)
+    if (filteredGroups.value.length > 0) {
+      selectedGroupIds.value = filteredGroups.value.slice(0, 6).map(g => g.id)
+    }
   }
+  
   if (selectedGroupIds.value.length > 0) {
     await loadSchedule()
   }

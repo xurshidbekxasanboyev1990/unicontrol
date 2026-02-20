@@ -1,9 +1,9 @@
 """
-UniControl - AI Schedule Import Agent v2
-==========================================
-Intelligent AI agent that enhances Excel schedule import:
+UniControl - AI Schedule Import Agent v3 (Claude)
+===================================================
+Intelligent AI agent that enhances Excel schedule import using Claude API.
 
-1. Smart Group Matching — Uses GPT to match Excel group names to DB groups
+1. Smart Group Matching — Uses Claude to match Excel group names to DB groups
    even when names differ significantly (abbreviations, typos, different formats)
 
 2. Smart Cell Parsing — ALL cells go through AI for accurate parsing
@@ -14,70 +14,111 @@ Intelligent AI agent that enhances Excel schedule import:
 4. Bulk Processing — Sends data in batches for efficiency
 
 Author: UniControl Team
-Version: 2.0.0
+Version: 3.0.0 — Switched from OpenAI to Claude API
 """
 
 import json
+import os
 import re
 from typing import Optional, List, Dict, Any, Tuple
 from loguru import logger
 
-import openai
-from app.config import settings
+import httpx
 from app.models.schedule import ScheduleType, WeekDay
+
+
+CLAUDE_API_KEY = os.getenv("CLAUDE_API_KEY", "")
+CLAUDE_API_URL = "https://api.anthropic.com/v1/messages"
+CLAUDE_MODEL = os.getenv("CLAUDE_MODEL", "claude-sonnet-4-20250514")
+
+# Fallback: if Claude key not set, try to use settings
+def _get_claude_key():
+    key = CLAUDE_API_KEY
+    if not key:
+        try:
+            from app.config import settings
+            key = getattr(settings, 'CLAUDE_API_KEY', '') or ''
+        except Exception:
+            pass
+    return key
 
 
 class AIScheduleAgent:
     """
     AI agent for intelligent schedule import matching.
-    Uses OpenAI GPT-4o-mini for smart matching when fuzzy/regex fails.
+    Uses Claude API for smart matching when fuzzy/regex fails.
     """
 
     def __init__(self):
-        if settings.OPENAI_API_KEY:
-            self.client = openai.AsyncOpenAI(api_key=settings.OPENAI_API_KEY)
-        else:
-            self.client = None
-        self.model = settings.OPENAI_MODEL or "gpt-4o-mini"
+        self.api_key = _get_claude_key()
+        self.model = CLAUDE_MODEL
         self.total_tokens_used = 0
 
     def is_available(self) -> bool:
         """Check if AI is available (API key configured)."""
-        return self.client is not None
+        return bool(self.api_key)
 
-    async def _call_openai(
+    async def _call_claude(
         self,
         system_prompt: str,
         user_prompt: str,
         max_tokens: int = 4000,
         temperature: float = 0.05,
     ) -> Optional[str]:
-        """Call OpenAI API and return content. Returns None on failure."""
-        if not self.client:
+        """Call Claude API and return content. Returns None on failure."""
+        if not self.api_key:
             return None
 
         try:
-            response = await self.client.chat.completions.create(
-                model=self.model,
-                messages=[
-                    {"role": "system", "content": system_prompt},
-                    {"role": "user", "content": user_prompt},
-                ],
-                temperature=temperature,
-                max_tokens=max_tokens,
-                response_format={"type": "json_object"},
-            )
+            async with httpx.AsyncClient(timeout=120.0) as client:
+                response = await client.post(
+                    CLAUDE_API_URL,
+                    headers={
+                        "x-api-key": self.api_key,
+                        "anthropic-version": "2023-06-01",
+                        "content-type": "application/json",
+                    },
+                    json={
+                        "model": self.model,
+                        "max_tokens": max_tokens,
+                        "temperature": temperature,
+                        "system": system_prompt,
+                        "messages": [
+                            {"role": "user", "content": user_prompt}
+                        ],
+                    },
+                )
 
-            self.total_tokens_used += response.usage.total_tokens
-            content = response.choices[0].message.content
-            logger.info(
-                f"AI Schedule Agent: {response.usage.total_tokens} tokens used "
-                f"(total: {self.total_tokens_used})"
-            )
-            return content
+                if response.status_code != 200:
+                    logger.error(f"Claude API error: {response.status_code} - {response.text}")
+                    return None
 
+                data = response.json()
+                content = data.get("content", [{}])[0].get("text", "")
+                
+                # Track token usage
+                usage = data.get("usage", {})
+                tokens = (usage.get("input_tokens", 0) + usage.get("output_tokens", 0))
+                self.total_tokens_used += tokens
+                
+                logger.info(
+                    f"AI Schedule Agent (Claude): {tokens} tokens used "
+                    f"(total: {self.total_tokens_used})"
+                )
+                
+                # Extract JSON from response (Claude may wrap in ```json ... ```)
+                if "```json" in content:
+                    content = content.split("```json")[1].split("```")[0].strip()
+                elif "```" in content:
+                    content = content.split("```")[1].split("```")[0].strip()
+                
+                return content
+
+        except httpx.TimeoutException:
+            logger.error("Claude API timeout in AI Schedule Agent")
+            return None
         except Exception as e:
-            logger.error(f"AI Schedule Agent OpenAI call failed: {e}")
+            logger.error(f"AI Schedule Agent Claude call failed: {e}")
             return None
 
     # ═══════════════════════════════════════════════════════
@@ -135,7 +176,7 @@ Bazadagi guruh nomlari:
 
 Har bir Excel guruh nomini bazadagi eng mos guruhga moslashtir."""
 
-        content = await self._call_openai(system_prompt, user_prompt, max_tokens=4000)
+        content = await self._call_claude(system_prompt, user_prompt, max_tokens=4000)
         if not content:
             return {}
 
@@ -239,7 +280,7 @@ JSON formatda javob ber:
 
 Har bir katakchadan fan, tur, o'qituvchi, xona, binoni ajrat. Aniq bo'lmasa null qo'y."""
 
-        content = await self._call_openai(system_prompt, user_prompt, max_tokens=4000)
+        content = await self._call_claude(system_prompt, user_prompt, max_tokens=4000)
         if not content:
             return []
 
@@ -346,7 +387,7 @@ JSON formatda javob ber:
 
 Tahlil qil va aniq takliflar ber."""
 
-        content = await self._call_openai(system_prompt, user_prompt, max_tokens=2000)
+        content = await self._call_claude(system_prompt, user_prompt, max_tokens=2000)
         if not content:
             return {"suggestions": [], "anomalies": [], "quality_score": 0}
 

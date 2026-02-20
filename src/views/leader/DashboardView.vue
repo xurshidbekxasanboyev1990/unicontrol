@@ -620,37 +620,80 @@ const todayLessons = computed(() => {
   )
 })
 
-// Attendance stats
+// Attendance stats — count UNIQUE students (not records, since 1 student can have multiple lessons)
 const presentToday = computed(() => {
-  return attendanceToday.value.filter(a => a.status === 'present' || a.status === 'keldi').length
+  const presentStudents = new Set()
+  attendanceToday.value.forEach(a => {
+    if (a.status === 'present' || a.status === 'keldi') {
+      presentStudents.add(a.student_id || a.student?.id)
+    }
+  })
+  return presentStudents.size
 })
 
 const absentToday = computed(() => {
-  return attendanceToday.value.filter(a => a.status === 'absent' || a.status === 'kelmadi').length
+  // Students who have ONLY absent records (not present in any lesson today)
+  const presentStudents = new Set()
+  const allStudents = new Set()
+  attendanceToday.value.forEach(a => {
+    const sid = a.student_id || a.student?.id
+    allStudents.add(sid)
+    if (a.status === 'present' || a.status === 'keldi' || a.status === 'late' || a.status === 'kechikdi') {
+      presentStudents.add(sid)
+    }
+  })
+  // Absent = students with records but never present/late
+  let absentCount = 0
+  allStudents.forEach(sid => {
+    if (!presentStudents.has(sid)) absentCount++
+  })
+  // Also add students with no records at all (if attendance was taken)
+  if (allStudents.size > 0) {
+    const studentsWithoutRecords = groupStudents.value.length - allStudents.size
+    absentCount += Math.max(0, studentsWithoutRecords)
+  }
+  return absentCount
 })
 
 const lateToday = computed(() => {
-  return attendanceToday.value.filter(a => a.status === 'late' || a.status === 'kechikdi').length
+  const lateStudents = new Set()
+  const presentStudents = new Set()
+  attendanceToday.value.forEach(a => {
+    const sid = a.student_id || a.student?.id
+    if (a.status === 'present' || a.status === 'keldi') {
+      presentStudents.add(sid)
+    }
+    if (a.status === 'late' || a.status === 'kechikdi') {
+      lateStudents.add(sid)
+    }
+  })
+  // Late = students marked late but not present in any other lesson
+  let count = 0
+  lateStudents.forEach(sid => {
+    if (!presentStudents.has(sid)) count++
+  })
+  return count
 })
 
 const attendanceRate = computed(() => {
   const total = groupStudents.value.length || 1
-  return Math.round(((presentToday.value + lateToday.value) / total) * 100)
+  const rate = Math.round(((presentToday.value + lateToday.value) / total) * 100)
+  return Math.min(rate, 100) // Cap at 100%
 })
 
 const presentPercent = computed(() => {
   const total = groupStudents.value.length || 1
-  return Math.round((presentToday.value / total) * 100)
+  return Math.min(Math.round((presentToday.value / total) * 100), 100)
 })
 
 const latePercent = computed(() => {
   const total = groupStudents.value.length || 1
-  return Math.round((lateToday.value / total) * 100)
+  return Math.min(Math.round((lateToday.value / total) * 100), 100)
 })
 
 const absentPercent = computed(() => {
   const total = groupStudents.value.length || 1
-  return Math.round((absentToday.value / total) * 100)
+  return Math.min(Math.round((absentToday.value / total) * 100), 100)
 })
 
 // Methods

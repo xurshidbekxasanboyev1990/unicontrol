@@ -778,6 +778,152 @@ async def academic_faculties(
 
 
 # ============================================
+# FACULTY HIERARCHY (Fakultet → Yo'nalish → Guruh)
+# ============================================
+
+# Mapping: direction (Group.faculty) → super-faculty
+FACULTY_MAPPING = {
+    # IT va Texnika fakulteti
+    "Kompyuter injiniringi": "IT va Texnika",
+    "Kompyuter injiniringi (Kompyuter injiniringi)": "IT va Texnika",
+    "Iqtisodiyot": "IT va Texnika",
+    "Iqtisodiyot (tarmoqlar va sohalar bo'yicha)": "IT va Texnika",
+    "Moliya va moliyaviy texnologiyalar": "IT va Texnika",
+    
+    # Tibbiyot fakulteti
+    "Davolash ishi": "Tibbiyot",
+    "Pediatriya ishi": "Tibbiyot",
+    "Stomatologiya": "Tibbiyot",
+    "Farmatsiya": "Tibbiyot",
+    "Farmatsiya (turlari bo'yicha)": "Tibbiyot",
+    
+    # Ijtimoiy-gumanitar fakulteti
+    "Boshlang\u0027ich ta\u0027lim": "Ijtimoiy-gumanitar",
+    "Boshlangʻich taʼlim": "Ijtimoiy-gumanitar",
+    "Maktabgacha ta'lim": "Ijtimoiy-gumanitar",
+    "Filologiya va tillarni o'qitish (ingliz tili)": "Ijtimoiy-gumanitar",
+    "Filologiya va tillarni o'qitish (o'zbek tili)": "Ijtimoiy-gumanitar",
+    "Filologiya va tillarni o'qitish (rus tili)": "Ijtimoiy-gumanitar",
+    "Lingvistika (ingliz tili)": "Ijtimoiy-gumanitar",
+    "Psixologiya": "Ijtimoiy-gumanitar",
+    "Psixologiya (faoliyat turlari bo'yicha)": "Ijtimoiy-gumanitar",
+    "Tarix": "Ijtimoiy-gumanitar",
+    "Tarix (mamlakatlar va yo'nalishlar bo'yicha)": "Ijtimoiy-gumanitar",
+}
+
+FACULTY_ORDER = ["IT va Texnika", "Tibbiyot", "Ijtimoiy-gumanitar"]
+
+
+def get_super_faculty(direction: str) -> str:
+    """Get super-faculty for a direction. Falls back to 'Boshqa' if not found."""
+    if not direction:
+        return "Boshqa"
+    # Exact match first
+    if direction in FACULTY_MAPPING:
+        return FACULTY_MAPPING[direction]
+    # Try case-insensitive match
+    for key, val in FACULTY_MAPPING.items():
+        if key.lower() == direction.lower():
+            return val
+    # Try partial match
+    direction_lower = direction.lower()
+    if "kompyuter" in direction_lower or "iqtisod" in direction_lower or "moliya" in direction_lower:
+        return "IT va Texnika"
+    if "davolash" in direction_lower or "pediatr" in direction_lower or "stomat" in direction_lower or "farma" in direction_lower:
+        return "Tibbiyot"
+    return "Ijtimoiy-gumanitar"
+
+
+@router.get("/faculties-tree")
+async def academic_faculties_tree(
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(require_academic)
+):
+    """
+    Get hierarchical faculty → direction → groups tree from kontingent data.
+    Groups come from student/group database (kontingent), not from schedule.
+    """
+    # Get all active groups with student counts
+    result = await db.execute(
+        select(
+            Group.id,
+            Group.name,
+            Group.faculty,
+            Group.course_year,
+            func.count(Student.id).label('students_count')
+        )
+        .outerjoin(Student, and_(Student.group_id == Group.id, Student.is_active == True))
+        .where(Group.is_active == True)
+        .group_by(Group.id, Group.name, Group.faculty, Group.course_year)
+        .order_by(Group.faculty, Group.name)
+    )
+    rows = result.all()
+    
+    # Build tree: faculty → directions → groups
+    tree = {}
+    for row in rows:
+        direction = row.faculty or "Boshqa"
+        super_faculty = get_super_faculty(direction)
+        
+        if super_faculty not in tree:
+            tree[super_faculty] = {}
+        if direction not in tree[super_faculty]:
+            tree[super_faculty][direction] = []
+        
+        tree[super_faculty][direction].append({
+            "id": row.id,
+            "name": row.name,
+            "course_year": row.course_year,
+            "students_count": row.students_count or 0,
+        })
+    
+    # Format as ordered list
+    faculties = []
+    for faculty_name in FACULTY_ORDER:
+        if faculty_name in tree:
+            directions = []
+            for dir_name, groups in sorted(tree[faculty_name].items()):
+                directions.append({
+                    "name": dir_name,
+                    "groups": sorted(groups, key=lambda g: g["name"]),
+                    "groups_count": len(groups),
+                    "students_count": sum(g["students_count"] for g in groups),
+                })
+            faculties.append({
+                "name": faculty_name,
+                "directions": directions,
+                "directions_count": len(directions),
+                "groups_count": sum(d["groups_count"] for d in directions),
+                "students_count": sum(d["students_count"] for d in directions),
+            })
+    
+    # Add 'Boshqa' if any unmatched
+    if "Boshqa" in tree:
+        directions = []
+        for dir_name, groups in sorted(tree["Boshqa"].items()):
+            directions.append({
+                "name": dir_name,
+                "groups": sorted(groups, key=lambda g: g["name"]),
+                "groups_count": len(groups),
+                "students_count": sum(g["students_count"] for g in groups),
+            })
+        faculties.append({
+            "name": "Boshqa",
+            "directions": directions,
+            "directions_count": len(directions),
+            "groups_count": sum(d["groups_count"] for d in directions),
+            "students_count": sum(d["students_count"] for d in directions),
+        })
+    
+    return {
+        "faculties": faculties,
+        "total_faculties": len(faculties),
+        "total_directions": sum(f["directions_count"] for f in faculties),
+        "total_groups": sum(f["groups_count"] for f in faculties),
+    }
+
+
+# ============================================
 # AI GENERATION
 # ============================================
 

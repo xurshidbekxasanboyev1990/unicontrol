@@ -71,6 +71,8 @@ services:
       - DB_NAME=${DB_NAME:-unicontrol}
       - TELEGRAM_BOT_TOKEN=${BOT_TOKEN:-}
       - CLAUDE_API_KEY=${CLAUDE_API_KEY:-}
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      - OPENAI_MODEL=${OPENAI_MODEL:-gpt-4o-mini}
     ports:
       - "${BACKEND_PORT:-8001}:8000"
     volumes:

@@ -106,12 +106,18 @@ class Settings(BaseSettings):
             return [origin.strip() for origin in self.CORS_ORIGINS.split(",") if origin.strip()]
     
     # ====================
-    # OPENAI API
+    # OPENAI API (faqat AI tahlil/chat uchun)
     # ====================
     OPENAI_API_KEY: Optional[str] = None
     OPENAI_MODEL: str = "gpt-4o-mini"
     OPENAI_MAX_TOKENS: int = 2000
     OPENAI_TEMPERATURE: float = 0.7
+    
+    # ====================
+    # CLAUDE API (jadval import, generatsiya, bandlik uchun)
+    # ====================
+    CLAUDE_API_KEY: Optional[str] = None
+    CLAUDE_MODEL: str = "claude-sonnet-4-20250514"
     
     # ====================
     # KUAF MUTOOLA API

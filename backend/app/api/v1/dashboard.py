@@ -148,26 +148,42 @@ async def get_leader_dashboard(
     )
     students_count = students_result.scalar() or 0
     
-    # Get today's attendance
+    # Get today's attendance — count UNIQUE students
     today = today_tashkent()
-    today_attendance = await db.execute(
+    today_present_result = await db.execute(
         select(
-            func.count(Attendance.id).label('total'),
-            func.sum(case((Attendance.status == AttendanceStatus.PRESENT, 1), else_=0)).label('present')
+            func.count(func.distinct(Attendance.student_id)).label('unique_total'),
+            func.count(func.distinct(case(
+                (Attendance.status == AttendanceStatus.PRESENT, Attendance.student_id),
+                else_=None
+            ))).label('unique_present'),
+            func.count(func.distinct(case(
+                (Attendance.status == AttendanceStatus.LATE, Attendance.student_id),
+                else_=None
+            ))).label('unique_late')
         ).join(Student).where(
             Student.group_id == group.id,
             Attendance.date == today
         )
     )
-    today_stats = today_attendance.first()
+    today_stats = today_present_result.first()
     
-    # Get this week attendance trend
+    today_present = (today_stats.unique_present or 0) + (today_stats.unique_late or 0)
+    
+    # Get this week attendance trend — also use unique students
     week_start = today - timedelta(days=today.weekday())
     week_attendance = await db.execute(
         select(
             Attendance.date,
-            func.count(Attendance.id).label('total'),
-            func.sum(case((Attendance.status == AttendanceStatus.PRESENT, 1), else_=0)).label('present')
+            func.count(func.distinct(Attendance.student_id)).label('unique_total'),
+            func.count(func.distinct(case(
+                (Attendance.status == AttendanceStatus.PRESENT, Attendance.student_id),
+                else_=None
+            ))).label('unique_present'),
+            func.count(func.distinct(case(
+                (Attendance.status == AttendanceStatus.LATE, Attendance.student_id),
+                else_=None
+            ))).label('unique_late')
         ).join(Student).where(
             Student.group_id == group.id,
             Attendance.date >= week_start
@@ -176,9 +192,9 @@ async def get_leader_dashboard(
     weekly_trend = [
         {
             "date": str(row.date),
-            "total": row.total,
-            "present": row.present or 0,
-            "rate": round(((row.present or 0) / (row.total or 1)) * 100, 1)
+            "total": students_count,
+            "present": (row.unique_present or 0) + (row.unique_late or 0),
+            "rate": round((((row.unique_present or 0) + (row.unique_late or 0)) / (students_count or 1)) * 100, 1)
         }
         for row in week_attendance.fetchall()
     ]
@@ -203,9 +219,9 @@ async def get_leader_dashboard(
             "course_year": group.course_year
         },
         "today_attendance": {
-            "total": today_stats.total or 0,
-            "present": today_stats.present or 0,
-            "rate": round(((today_stats.present or 0) / (students_count or 1)) * 100, 1)
+            "total": students_count,
+            "present": today_present,
+            "rate": round((today_present / (students_count or 1)) * 100, 1)
         },
         "weekly_trend": weekly_trend,
         "pending_reports": pending_reports
@@ -234,12 +250,16 @@ async def get_admin_dashboard(
         )
     )
     
-    # Today's stats
+    # Today's stats — count unique students
     today = today_tashkent()
+    total_students = students_count.scalar() or 0
     today_attendance = await db.execute(
         select(
-            func.count(Attendance.id).label('total'),
-            func.sum(case((Attendance.status == AttendanceStatus.PRESENT, 1), else_=0)).label('present')
+            func.count(func.distinct(Attendance.student_id)).label('unique_students'),
+            func.count(func.distinct(case(
+                (Attendance.status == AttendanceStatus.PRESENT, Attendance.student_id),
+                else_=None
+            ))).label('unique_present')
         ).where(Attendance.date == today)
     )
     today_stats = today_attendance.first()
@@ -249,41 +269,46 @@ async def get_admin_dashboard(
         select(func.count(Report.id)).where(Report.status == 'pending')
     )
     
-    # Low attendance groups (below 80%)
+    # Low attendance groups (below 80%) — use unique students per group
     week_start = today - timedelta(days=7)
     low_attendance_groups = await db.execute(
         select(
             Group.id,
             Group.name,
-            func.count(Attendance.id).label('total'),
-            func.sum(case((Attendance.status == AttendanceStatus.PRESENT, 1), else_=0)).label('present')
+            func.count(func.distinct(Attendance.student_id)).label('unique_students'),
+            func.count(func.distinct(case(
+                (Attendance.status == AttendanceStatus.PRESENT, Attendance.student_id),
+                else_=None
+            ))).label('unique_present')
         ).join(Student, Student.group_id == Group.id)
         .join(Attendance, Attendance.student_id == Student.id)
         .where(Attendance.date >= week_start)
         .group_by(Group.id)
         .having(
-            (func.sum(case((Attendance.status == AttendanceStatus.PRESENT, 1), else_=0)) / 
-             func.count(Attendance.id) * 100) < 80
+            (func.count(func.distinct(case(
+                (Attendance.status == AttendanceStatus.PRESENT, Attendance.student_id),
+                else_=None
+            ))) * 100 / func.count(func.distinct(Attendance.student_id))) < 80
         )
     )
     
     return {
         "stats": {
             "groups": groups_count.scalar() or 0,
-            "students": students_count.scalar() or 0,
+            "students": total_students,
             "leaders": leaders_count.scalar() or 0
         },
         "today_attendance": {
-            "total": today_stats.total or 0,
-            "present": today_stats.present or 0,
-            "rate": round(((today_stats.present or 0) / (today_stats.total or 1)) * 100, 1)
+            "total": today_stats.unique_students or 0,
+            "present": today_stats.unique_present or 0,
+            "rate": round(((today_stats.unique_present or 0) / (today_stats.unique_students or 1)) * 100, 1)
         },
         "pending_reports": pending_reports.scalar() or 0,
         "low_attendance_groups": [
             {
                 "id": row.id,
                 "name": row.name,
-                "rate": round(((row.present or 0) / (row.total or 1)) * 100, 1)
+                "rate": round(((row.unique_present or 0) / (row.unique_students or 1)) * 100, 1)
             }
             for row in low_attendance_groups.fetchall()
         ]
