@@ -13,39 +13,39 @@
 
     <!-- Filters -->
     <div class="bg-white rounded-2xl border border-slate-200 p-4 space-y-3">
-      <!-- Faculty tabs -->
+      <!-- Faculty tabs (real DB data) -->
       <div class="flex flex-wrap items-center gap-2">
-        <label class="text-sm font-medium text-slate-600 whitespace-nowrap">Fakultet:</label>
+        <label class="text-sm font-medium text-slate-600 whitespace-nowrap">Yo'nalish:</label>
         <button
-          @click="selectSuperFaculty('')"
+          @click="selectFaculty('')"
           :class="[
             'rounded-lg px-3 py-1.5 text-sm font-medium transition-all border',
-            !selectedSuperFaculty
+            !selectedFaculty
               ? 'bg-emerald-600 text-white border-emerald-600 shadow-sm'
               : 'bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100'
           ]"
         >
           Barchasi
-          <span class="ml-1 text-xs opacity-70">({{ totalGroupCount }})</span>
+          <span class="ml-1 text-xs opacity-70">({{ totalStudentCount }})</span>
         </button>
         <button
-          v-for="fac in facultiesTree"
+          v-for="fac in facultiesList"
           :key="fac.name"
-          @click="selectSuperFaculty(fac.name)"
+          @click="selectFaculty(fac.name)"
           :class="[
             'rounded-lg px-3 py-1.5 text-sm font-medium transition-all border',
-            selectedSuperFaculty === fac.name
+            selectedFaculty === fac.name
               ? 'bg-emerald-600 text-white border-emerald-600 shadow-sm'
               : 'bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100'
           ]"
         >
-          {{ fac.name }}
+          {{ fac.short_name }}
           <span class="ml-1 text-xs opacity-70">({{ fac.students_count }})</span>
         </button>
       </div>
 
-      <!-- Direction + Group + Search filters -->
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+      <!-- Search + Course + Group filters -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
         <!-- Search -->
         <div class="relative lg:col-span-2">
           <Search class="w-5 h-5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
@@ -59,16 +59,10 @@
           <Loader2 v-if="searching" class="w-5 h-5 text-emerald-500 absolute right-3 top-1/2 -translate-y-1/2 animate-spin" />
         </div>
 
-        <!-- Direction filter (yo'nalish) -->
-        <select v-model="filterFaculty" @change="onFacultyChange" class="px-3 py-2.5 rounded-xl border border-slate-200 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 outline-none text-sm">
-          <option value="">Barcha yo'nalishlar</option>
-          <option v-for="d in availableDirections" :key="d" :value="d">{{ d }}</option>
-        </select>
-
         <!-- Course filter -->
         <select v-model="filterCourse" @change="onCourseChange" class="px-3 py-2.5 rounded-xl border border-slate-200 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 outline-none text-sm">
           <option value="">Barcha kurslar</option>
-          <option v-for="c in courseYears" :key="c" :value="c">{{ c }}-kurs</option>
+          <option v-for="c in availableCourses" :key="c" :value="c">{{ c }}-kurs</option>
         </select>
 
         <!-- Group filter -->
@@ -81,15 +75,9 @@
       <!-- Active filters -->
       <div v-if="hasActiveFilters" class="flex items-center gap-2 flex-wrap">
         <span class="text-xs text-slate-500">Filtrlar:</span>
-        <span v-if="selectedSuperFaculty" class="inline-flex items-center gap-1 px-2 py-1 bg-teal-100 text-teal-700 rounded-lg text-xs">
-          {{ selectedSuperFaculty }}
-          <button @click="selectSuperFaculty('')" class="hover:text-teal-900">
-            <X class="w-3 h-3" />
-          </button>
-        </span>
-        <span v-if="filterFaculty" class="inline-flex items-center gap-1 px-2 py-1 bg-emerald-100 text-emerald-700 rounded-lg text-xs">
-          {{ filterFaculty }}
-          <button @click="filterFaculty = ''; onFacultyChange()" class="hover:text-emerald-900">
+        <span v-if="selectedFaculty" class="inline-flex items-center gap-1 px-2 py-1 bg-teal-100 text-teal-700 rounded-lg text-xs">
+          {{ selectedFaculty }}
+          <button @click="selectFaculty('')" class="hover:text-teal-900">
             <X class="w-3 h-3" />
           </button>
         </span>
@@ -208,23 +196,19 @@ const loading = ref(false)
 const searching = ref(false)
 const students = ref([])
 const allGroups = ref([])
-const faculties = ref([])
-const facultiesTree = ref([])
-const selectedSuperFaculty = ref('')
+const facultiesList = ref([])
+const selectedFaculty = ref('')
 const searchQuery = ref('')
-const filterFaculty = ref('')
 const filterCourse = ref('')
 const filterGroupId = ref('')
 const currentPage = ref(1)
 const pageSize = 30
 const totalItems = ref(0)
 
-const courseYears = [1, 2, 3, 4]
-
 const totalPages = computed(() => Math.ceil(totalItems.value / pageSize))
 
-const totalGroupCount = computed(() => {
-  return facultiesTree.value.reduce((sum, f) => sum + f.students_count, 0)
+const totalStudentCount = computed(() => {
+  return facultiesList.value.reduce((sum, f) => sum + f.students_count, 0)
 })
 
 const visiblePages = computed(() => {
@@ -236,36 +220,22 @@ const visiblePages = computed(() => {
   return pages
 })
 
-// Available directions based on selected super-faculty
-const availableDirections = computed(() => {
-  if (!selectedSuperFaculty.value) {
-    // Show all directions from tree
-    const dirs = []
-    for (const fac of facultiesTree.value) {
-      for (const dir of fac.directions) {
-        dirs.push(dir.name)
-      }
-    }
-    return dirs.sort()
+// Available courses from groups
+const availableCourses = computed(() => {
+  const courses = new Set()
+  let g = allGroups.value
+  if (selectedFaculty.value) {
+    g = g.filter(gr => gr.faculty === selectedFaculty.value)
   }
-  const fac = facultiesTree.value.find(f => f.name === selectedSuperFaculty.value)
-  if (!fac) return faculties.value
-  return fac.directions.map(d => d.name).sort()
+  g.forEach(gr => { if (gr.course_year) courses.add(gr.course_year) })
+  return [...courses].sort()
 })
 
 // Filter groups based on selected faculty and course
 const filteredGroups = computed(() => {
   let g = allGroups.value
-  // Filter by super-faculty first (check if the group's faculty is in the selected super-faculty's directions)
-  if (selectedSuperFaculty.value) {
-    const fac = facultiesTree.value.find(f => f.name === selectedSuperFaculty.value)
-    if (fac) {
-      const dirNames = new Set(fac.directions.map(d => d.name))
-      g = g.filter(gr => dirNames.has(gr.faculty))
-    }
-  }
-  if (filterFaculty.value) {
-    g = g.filter(gr => gr.faculty === filterFaculty.value)
+  if (selectedFaculty.value) {
+    g = g.filter(gr => gr.faculty === selectedFaculty.value)
   }
   if (filterCourse.value) {
     g = g.filter(gr => gr.course_year === Number(filterCourse.value))
@@ -280,12 +250,11 @@ const selectedGroupName = computed(() => {
 })
 
 const hasActiveFilters = computed(() => {
-  return selectedSuperFaculty.value || filterFaculty.value || filterCourse.value || filterGroupId.value
+  return selectedFaculty.value || filterCourse.value || filterGroupId.value
 })
 
-const selectSuperFaculty = (name) => {
-  selectedSuperFaculty.value = name
-  filterFaculty.value = ''
+const selectFaculty = (name) => {
+  selectedFaculty.value = name
   filterGroupId.value = ''
   currentPage.value = 1
   loadStudents()
@@ -301,12 +270,6 @@ const debouncedSearch = () => {
   }, 400)
 }
 
-const onFacultyChange = () => {
-  filterGroupId.value = ''
-  currentPage.value = 1
-  loadStudents()
-}
-
 const onCourseChange = () => {
   filterGroupId.value = ''
   currentPage.value = 1
@@ -319,8 +282,7 @@ const onFilterChange = () => {
 }
 
 const clearAllFilters = () => {
-  selectedSuperFaculty.value = ''
-  filterFaculty.value = ''
+  selectedFaculty.value = ''
   filterCourse.value = ''
   filterGroupId.value = ''
   searchQuery.value = ''
@@ -337,10 +299,10 @@ const loadStudents = async () => {
     params.append('per_page', pageSize)
     if (searchQuery.value) params.append('search', searchQuery.value)
     if (filterGroupId.value) params.append('group_id', filterGroupId.value)
-    if (filterFaculty.value) params.append('faculty', filterFaculty.value)
+    if (selectedFaculty.value) params.append('faculty', selectedFaculty.value)
     if (filterCourse.value) params.append('course_year', filterCourse.value)
     const resp = await api.get(`/dean/students?${params}`)
-    students.value = resp.items || resp.students || []
+    students.value = resp.items || []
     totalItems.value = resp.total || 0
   } catch (err) {
     console.error('Dean students error:', err)
@@ -353,7 +315,7 @@ const loadStudents = async () => {
 const loadGroups = async () => {
   try {
     const resp = await api.get('/dean/groups')
-    allGroups.value = resp.items || resp.groups || resp || []
+    allGroups.value = resp.items || []
   } catch (err) {
     console.error('Dean groups error:', err)
   }
@@ -361,19 +323,15 @@ const loadGroups = async () => {
 
 const loadFaculties = async () => {
   try {
-    const resp = await api.get('/dean/faculties')
-    faculties.value = resp.faculties || resp || []
+    const resp = await api.get('/dean/faculties-tree')
+    const facs = resp.faculties || []
+    // Create short names for tabs (truncate long names)
+    facultiesList.value = facs.map(f => ({
+      ...f,
+      short_name: f.name.length > 25 ? f.name.substring(0, 22) + '...' : f.name,
+    }))
   } catch (err) {
     console.error('Dean faculties error:', err)
-  }
-}
-
-const loadFacultiesTree = async () => {
-  try {
-    const resp = await api.get('/dean/faculties-tree')
-    facultiesTree.value = resp.faculties || resp || []
-  } catch (err) {
-    console.error('Dean faculties-tree error:', err)
   }
 }
 
@@ -387,6 +345,5 @@ onMounted(() => {
   loadStudents()
   loadGroups()
   loadFaculties()
-  loadFacultiesTree()
 })
 </script>

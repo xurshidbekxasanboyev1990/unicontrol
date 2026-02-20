@@ -276,11 +276,10 @@ async def dean_faculties_tree(
     current_user: User = Depends(require_dean)
 ):
     """
-    Get hierarchical faculty → direction → groups tree for kontingent.
-    3 super-faculties: IT va Texnika, Tibbiyot, Ijtimoiy-gumanitar.
+    Get flat faculty list with groups for kontingent.
+    Uses REAL data from DB (groups.faculty) — no hardcoded mappings.
+    Each faculty = one direction from imported Excel.
     """
-    from app.core.faculty_mapping import FACULTY_ORDER, get_super_faculty
-    
     result = await db.execute(
         select(
             Group.id,
@@ -295,64 +294,36 @@ async def dean_faculties_tree(
         .order_by(Group.faculty, Group.name)
     )
     rows = result.all()
-    
-    tree = {}
+
+    # Build faculty → groups mapping from actual DB data
+    faculty_map = {}
     for row in rows:
-        direction = row.faculty or "Boshqa"
-        super_faculty = get_super_faculty(direction)
-        
-        if super_faculty not in tree:
-            tree[super_faculty] = {}
-        if direction not in tree[super_faculty]:
-            tree[super_faculty][direction] = []
-        
-        tree[super_faculty][direction].append({
+        faculty_name = row.faculty or "Boshqa"
+        if faculty_name not in faculty_map:
+            faculty_map[faculty_name] = []
+        faculty_map[faculty_name].append({
             "id": row.id,
             "name": row.name,
             "course_year": row.course_year,
             "students_count": row.students_count or 0,
         })
-    
+
+    # Each faculty is a flat entry (no super-faculty grouping)
     faculties = []
-    for faculty_name in FACULTY_ORDER:
-        if faculty_name in tree:
-            directions = []
-            for dir_name, groups in sorted(tree[faculty_name].items()):
-                directions.append({
-                    "name": dir_name,
-                    "groups": sorted(groups, key=lambda g: g["name"]),
-                    "groups_count": len(groups),
-                    "students_count": sum(g["students_count"] for g in groups),
-                })
-            faculties.append({
-                "name": faculty_name,
-                "directions": directions,
-                "directions_count": len(directions),
-                "groups_count": sum(d["groups_count"] for d in directions),
-                "students_count": sum(d["students_count"] for d in directions),
-            })
-    
-    if "Boshqa" in tree:
-        directions = []
-        for dir_name, groups in sorted(tree["Boshqa"].items()):
-            directions.append({
-                "name": dir_name,
-                "groups": sorted(groups, key=lambda g: g["name"]),
-                "groups_count": len(groups),
-                "students_count": sum(g["students_count"] for g in groups),
-            })
+    for faculty_name in sorted(faculty_map.keys()):
+        groups = faculty_map[faculty_name]
         faculties.append({
-            "name": "Boshqa",
-            "directions": directions,
-            "directions_count": len(directions),
-            "groups_count": sum(d["groups_count"] for d in directions),
-            "students_count": sum(d["students_count"] for d in directions),
+            "name": faculty_name,
+            "directions": [{"name": faculty_name, "groups": sorted(groups, key=lambda g: g["name"]), "groups_count": len(groups), "students_count": sum(g["students_count"] for g in groups)}],
+            "directions_count": 1,
+            "groups_count": len(groups),
+            "students_count": sum(g["students_count"] for g in groups),
         })
-    
+
     return {
         "faculties": faculties,
         "total_faculties": len(faculties),
-        "total_directions": sum(f["directions_count"] for f in faculties),
+        "total_directions": len(faculties),
         "total_groups": sum(f["groups_count"] for f in faculties),
     }
 
@@ -848,10 +819,74 @@ async def dean_workload_departments(
 # CONTRACTS (Read-only)
 # ============================================
 
+@router.get("/contracts/filters")
+async def dean_contracts_filters(
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(require_dean)
+):
+    """Get available filter options for contracts from actual DB data."""
+    try:
+        from app.models.contract import Contract
+
+        # Faculties (from groups table — real imported data)
+        fac_result = await db.execute(
+            select(distinct(Group.faculty))
+            .where(and_(Group.is_active == True, Group.faculty.isnot(None), Group.faculty != ""))
+            .order_by(Group.faculty)
+        )
+        faculties = [r[0] for r in fac_result.all() if r[0]]
+
+        # Directions (from contracts table)
+        dir_result = await db.execute(
+            select(distinct(Contract.direction))
+            .where(and_(Contract.direction.isnot(None), Contract.direction != ""))
+            .order_by(Contract.direction)
+        )
+        directions = [r[0] for r in dir_result.all() if r[0]]
+
+        # Education forms
+        ef_result = await db.execute(
+            select(distinct(Contract.education_form))
+            .where(and_(Contract.education_form.isnot(None), Contract.education_form != ""))
+            .order_by(Contract.education_form)
+        )
+        education_forms = [r[0] for r in ef_result.all() if r[0]]
+
+        # Courses
+        course_result = await db.execute(
+            select(distinct(Contract.course))
+            .where(Contract.course.isnot(None))
+            .order_by(Contract.course)
+        )
+        courses = [r[0] for r in course_result.all() if r[0]]
+
+        # Academic years
+        ay_result = await db.execute(
+            select(distinct(Contract.academic_year))
+            .where(and_(Contract.academic_year.isnot(None), Contract.academic_year != ""))
+            .order_by(Contract.academic_year)
+        )
+        academic_years = [r[0] for r in ay_result.all() if r[0]]
+
+        return {
+            "faculties": faculties,
+            "directions": directions,
+            "education_forms": education_forms,
+            "courses": courses,
+            "academic_years": academic_years,
+        }
+    except Exception:
+        return {"faculties": [], "directions": [], "education_forms": [], "courses": [], "academic_years": []}
+
+
 @router.get("/contracts")
 async def dean_contracts(
     search: Optional[str] = None,
     group_id: Optional[int] = None,
+    faculty: Optional[str] = None,
+    direction: Optional[str] = None,
+    course: Optional[str] = None,
+    education_form: Optional[str] = None,
     academic_year: Optional[str] = None,
     has_debt: Optional[bool] = None,
     page: int = 1,
@@ -859,18 +894,23 @@ async def dean_contracts(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(require_dean)
 ):
-    """Get contract information (read-only)."""
+    """Get contract information (read-only) with full filters."""
     try:
         from app.models.contract import Contract
-        from sqlalchemy.orm import joinedload, contains_eager
 
-        query = select(Contract).options(
-            joinedload(Contract.student).joinedload(Student.group)
+        # Base query: always join Student+Group for filtering/ordering
+        query = (
+            select(Contract)
+            .join(Student, Student.id == Contract.student_id)
+            .outerjoin(Group, Group.id == Student.group_id)
+            .options(
+                joinedload(Contract.student).joinedload(Student.group)
+            )
         )
 
+        # --- Filters ---
         if search:
-            # Search via student relationship
-            query = query.join(Contract.student).where(
+            query = query.where(
                 or_(
                     Student.name.ilike(f"%{search}%"),
                     Student.student_id.ilike(f"%{search}%"),
@@ -878,9 +918,19 @@ async def dean_contracts(
             )
 
         if group_id:
-            query = query.join(Student, Student.id == Contract.student_id).where(
-                Student.group_id == group_id
-            )
+            query = query.where(Student.group_id == group_id)
+
+        if faculty:
+            query = query.where(Group.faculty == faculty)
+
+        if direction:
+            query = query.where(Contract.direction == direction)
+
+        if course:
+            query = query.where(Contract.course == course)
+
+        if education_form:
+            query = query.where(Contract.education_form == education_form)
 
         if academic_year:
             query = query.where(Contract.academic_year == academic_year)
@@ -894,51 +944,99 @@ async def dean_contracts(
         count_q = select(func.count()).select_from(query.subquery())
         total = (await db.execute(count_q)).scalar() or 0
 
-        # Stats
-        stats_q = select(
-            func.count(Contract.id),
-            func.coalesce(func.sum(Contract.contract_amount), 0),
-            func.coalesce(func.sum(Contract.total_paid), 0),
-        )
-        if group_id:
-            stats_q = stats_q.join(Student, Student.id == Contract.student_id).where(
-                Student.group_id == group_id
+        # Stats — rebuild the same filter conditions
+        stats_base = (
+            select(
+                func.count(Contract.id),
+                func.coalesce(func.sum(Contract.contract_amount), 0),
+                func.coalesce(func.sum(Contract.total_paid), 0),
             )
+            .join(Student, Student.id == Contract.student_id)
+            .outerjoin(Group, Group.id == Student.group_id)
+        )
+        if search:
+            stats_base = stats_base.where(
+                or_(Student.name.ilike(f"%{search}%"), Student.student_id.ilike(f"%{search}%"))
+            )
+        if group_id:
+            stats_base = stats_base.where(Student.group_id == group_id)
+        if faculty:
+            stats_base = stats_base.where(Group.faculty == faculty)
+        if direction:
+            stats_base = stats_base.where(Contract.direction == direction)
+        if course:
+            stats_base = stats_base.where(Contract.course == course)
+        if education_form:
+            stats_base = stats_base.where(Contract.education_form == education_form)
         if academic_year:
-            stats_q = stats_q.where(Contract.academic_year == academic_year)
+            stats_base = stats_base.where(Contract.academic_year == academic_year)
+        if has_debt is True:
+            stats_base = stats_base.where(Contract.total_paid < Contract.contract_amount)
+        elif has_debt is False:
+            stats_base = stats_base.where(Contract.total_paid >= Contract.contract_amount)
 
-        stats_result = await db.execute(stats_q)
+        stats_result = await db.execute(stats_base)
         sr = stats_result.one()
+
+        total_amount = float(sr[1] or 0)
+        total_paid_val = float(sr[2] or 0)
         stats = {
-            "total_contracts": sr[0] or 0,
-            "total_contract_amount": float(sr[1] or 0),
-            "total_paid": float(sr[2] or 0),
-            "total_debt": float((sr[1] or 0) - (sr[2] or 0)),
-            "payment_percentage": round(float(sr[2] or 0) / float(sr[1] or 1) * 100, 1),
+            "total": sr[0] or 0,
+            "paid": 0,
+            "unpaid": 0,
+            "total_contract_amount": total_amount,
+            "total_paid": total_paid_val,
+            "total_debt": total_amount - total_paid_val,
+            "payment_percentage": round(total_paid_val / max(total_amount, 1) * 100, 1),
         }
 
-        # Paginate — order by student name via relationship
+        # Paid/unpaid counts
+        paid_count_q = (
+            select(func.count(Contract.id))
+            .join(Student, Student.id == Contract.student_id)
+            .outerjoin(Group, Group.id == Student.group_id)
+            .where(Contract.total_paid >= Contract.contract_amount)
+        )
+        if group_id:
+            paid_count_q = paid_count_q.where(Student.group_id == group_id)
+        if faculty:
+            paid_count_q = paid_count_q.where(Group.faculty == faculty)
+        if direction:
+            paid_count_q = paid_count_q.where(Contract.direction == direction)
+        if course:
+            paid_count_q = paid_count_q.where(Contract.course == course)
+        if education_form:
+            paid_count_q = paid_count_q.where(Contract.education_form == education_form)
+        if academic_year:
+            paid_count_q = paid_count_q.where(Contract.academic_year == academic_year)
+
+        paid_count = (await db.execute(paid_count_q)).scalar() or 0
+        stats["paid"] = paid_count
+        stats["unpaid"] = (sr[0] or 0) - paid_count
+
+        # Paginate
         offset = (page - 1) * per_page
-        # Ensure student is joined for ordering
-        if not search and not group_id:
-            query = query.join(Contract.student, isouter=True)
         query = query.order_by(Student.name).offset(offset).limit(per_page)
         result = await db.execute(query)
         contracts = result.unique().scalars().all()
 
         items = []
         for c in contracts:
+            debt = float((c.contract_amount or 0) - (c.total_paid or 0))
             items.append({
                 "id": c.id,
                 "student_name": c.student_name,
-                "student_id_number": getattr(c, 'student_id_number', ''),
+                "student_id_number": getattr(c, 'student_jshshir', '') or getattr(c, 'student_id_number', ''),
                 "group_name": getattr(c, 'group_name', ''),
+                "direction": c.direction or '',
+                "course": c.course or '',
+                "education_form": c.education_form or '',
                 "contract_amount": float(c.contract_amount or 0),
                 "paid_amount": float(c.total_paid or 0),
-                "debt": float((c.contract_amount or 0) - (c.total_paid or 0)),
+                "debt": debt,
+                "is_paid": debt <= 0,
                 "academic_year": c.academic_year,
-                "payment_form": getattr(c, 'payment_form', ''),
-                "education_form": getattr(c, 'education_form', ''),
+                "grant_percentage": float(c.grant_percentage or 0),
             })
 
         return {"items": items, "total": total, "stats": stats}
