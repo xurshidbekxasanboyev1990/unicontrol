@@ -10,6 +10,7 @@ Version: 1.0.0
 from datetime import datetime, date, time
 from enum import Enum
 from typing import Optional, TYPE_CHECKING
+import sqlalchemy as sa
 from sqlalchemy import String, Integer, DateTime, Date, Time, ForeignKey, Text, Boolean, Enum as SAEnum
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -146,18 +147,19 @@ class Attendance(Base):
     student: Mapped["Student"] = relationship(
         "Student",
         back_populates="attendances",
-        lazy="joined"
+        lazy="selectin"
     )
     
     recorded_by_user: Mapped[Optional["User"]] = relationship(
         "User",
         foreign_keys=[recorded_by],
-        lazy="joined"
+        lazy="noload"
     )
     
-    # Unique constraint (one attendance per student per date per lesson)
+    # Indexes and constraints
     __table_args__ = (
-        # Index for common queries
+        sa.Index("ix_attendance_date_status", "date", "status"),
+        sa.Index("ix_attendance_student_date", "student_id", "date"),
         {"sqlite_autoincrement": True},
     )
     

@@ -114,30 +114,42 @@ def create_application() -> FastAPI:
     # GZip Compression
     app.add_middleware(GZipMiddleware, minimum_size=1000)
     
-    # Rate Limiting (Redis-based)
+    # Rate Limiting (Redis-based) - pure ASGI middleware
     app.add_middleware(RateLimitMiddleware)
     
-    # Activity Logging (track all user actions)
+    # Activity Logging (track all user actions) - pure ASGI middleware
     app.add_middleware(ActivityLoggingMiddleware)
     
-    # Request timing middleware
-    @app.middleware("http")
-    async def add_process_time_header(request: Request, call_next):
-        """Add X-Process-Time header to all responses."""
-        start_time = time.time()
-        response = await call_next(request)
-        process_time = time.time() - start_time
-        response.headers["X-Process-Time"] = str(round(process_time * 1000, 2))
-        return response
+    # Request timing + logging middleware (pure ASGI)
+    class TimingMiddleware:
+        """Pure ASGI middleware for request timing and logging."""
+        def __init__(self, app):
+            self.app = app
+        
+        async def __call__(self, scope, receive, send):
+            if scope["type"] != "http":
+                await self.app(scope, receive, send)
+                return
+            
+            start_time = time.time()
+            path = scope.get("path", "")
+            method = scope.get("method", "GET")
+            logger.debug(f"{method} {path}")
+            
+            async def send_wrapper(message):
+                if message["type"] == "http.response.start":
+                    process_time = time.time() - start_time
+                    # Add process time header
+                    headers = list(message.get("headers", []))
+                    headers.append([b"x-process-time", str(round(process_time * 1000, 2)).encode()])
+                    message["headers"] = headers
+                    status = message.get("status", 200)
+                    logger.debug(f"Response status: {status}")
+                await send(message)
+            
+            await self.app(scope, receive, send_wrapper)
     
-    # Request logging middleware
-    @app.middleware("http")
-    async def log_requests(request: Request, call_next):
-        """Log all incoming requests."""
-        logger.debug(f"{request.method} {request.url.path}")
-        response = await call_next(request)
-        logger.debug(f"Response status: {response.status_code}")
-        return response
+    app.add_middleware(TimingMiddleware)
     
     # ====================
     # EXCEPTION HANDLERS

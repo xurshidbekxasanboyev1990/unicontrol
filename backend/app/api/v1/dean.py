@@ -60,43 +60,36 @@ async def dean_dashboard(
     """Get dean dashboard statistics."""
     today = today_tashkent()
 
-    # Total students
-    total_students_result = await db.execute(
-        select(func.count(Student.id)).where(Student.is_active == True)
-    )
-    total_students = total_students_result.scalar() or 0
+    # Combined query: total students + total groups in parallel
+    import asyncio
+    
+    async def get_counts():
+        total_students_result = await db.execute(
+            select(func.count(Student.id)).where(Student.is_active == True)
+        )
+        total_groups_result = await db.execute(
+            select(func.count(Group.id)).where(Group.is_active == True)
+        )
+        return total_students_result.scalar() or 0, total_groups_result.scalar() or 0
 
-    # Total groups
-    total_groups_result = await db.execute(
-        select(func.count(Group.id)).where(Group.is_active == True)
-    )
-    total_groups = total_groups_result.scalar() or 0
+    total_students, total_groups = await get_counts()
 
-    # Today attendance
-    today_present = await db.execute(
-        select(func.count(Attendance.id)).where(
-            and_(
-                Attendance.date == today,
+    # Combined attendance query: present, absent, total in ONE query
+    attendance_stats = await db.execute(
+        select(
+            func.count(Attendance.id).label("total"),
+            func.count(Attendance.id).filter(
                 Attendance.status.in_([AttendanceStatus.PRESENT, AttendanceStatus.LATE])
-            )
-        )
-    )
-    present_count = today_present.scalar() or 0
-
-    today_absent = await db.execute(
-        select(func.count(Attendance.id)).where(
-            and_(
-                Attendance.date == today,
+            ).label("present"),
+            func.count(Attendance.id).filter(
                 Attendance.status == AttendanceStatus.ABSENT
-            )
-        )
+            ).label("absent"),
+        ).where(Attendance.date == today)
     )
-    absent_count = today_absent.scalar() or 0
-
-    today_total = await db.execute(
-        select(func.count(Attendance.id)).where(Attendance.date == today)
-    )
-    total_today = today_total.scalar() or 0
+    att_row = attendance_stats.one()
+    total_today = att_row.total or 0
+    present_count = att_row.present or 0
+    absent_count = att_row.absent or 0
 
     attendance_rate = round(present_count / total_today * 100, 1) if total_today > 0 else 0
 
@@ -117,20 +110,23 @@ async def dean_dashboard(
     )
     today_lessons = today_lessons_result.scalar() or 0
 
-    # NB permits stats (try)
+    # NB permits stats (combined single query)
     nb_stats = {"total": 0, "active": 0, "approved": 0}
     try:
         from app.models.nb_permit import NBPermit
-        total_nb = await db.execute(select(func.count(NBPermit.id)))
-        nb_stats["total"] = total_nb.scalar() or 0
-        active_nb = await db.execute(
-            select(func.count(NBPermit.id)).where(NBPermit.status.in_(["issued", "pending", "in_progress"]))
+        nb_result = await db.execute(
+            select(
+                func.count(NBPermit.id).label("total"),
+                func.count(NBPermit.id).filter(
+                    NBPermit.status.in_(["issued", "pending", "in_progress"])
+                ).label("active"),
+                func.count(NBPermit.id).filter(
+                    NBPermit.status == "approved"
+                ).label("approved"),
+            )
         )
-        nb_stats["active"] = active_nb.scalar() or 0
-        approved_nb = await db.execute(
-            select(func.count(NBPermit.id)).where(NBPermit.status == "approved")
-        )
-        nb_stats["approved"] = approved_nb.scalar() or 0
+        nb_row = nb_result.one()
+        nb_stats = {"total": nb_row.total or 0, "active": nb_row.active or 0, "approved": nb_row.approved or 0}
     except Exception:
         pass
 
@@ -226,17 +222,15 @@ async def dean_students(
     offset = (page - 1) * per_page
     query = query.order_by(Student.name).offset(offset).limit(per_page)
 
+    # Eager load group relationship to avoid N+1
+    from sqlalchemy.orm import joinedload
+    query = query.options(joinedload(Student.group))
     result = await db.execute(query)
-    students = result.scalars().all()
+    students = result.scalars().unique().all()
 
     items = []
     for s in students:
-        # Get group name
-        group_name = ""
-        if s.group_id:
-            grp = await db.execute(select(Group.name).where(Group.id == s.group_id))
-            gn = grp.scalar()
-            group_name = gn or ""
+        group_name = s.group.name if s.group else ""
 
         items.append({
             "id": s.id,
@@ -371,7 +365,18 @@ async def dean_groups(
     current_user: User = Depends(require_dean)
 ):
     """Get all groups with optional filters."""
-    query = select(Group).where(Group.is_active == True)
+    # Single query with LEFT JOIN + GROUP BY (no N+1)
+    query = (
+        select(
+            Group,
+            func.count(Student.id).label("students_count")
+        )
+        .outerjoin(
+            Student,
+            and_(Student.group_id == Group.id, Student.is_active == True)
+        )
+        .where(Group.is_active == True)
+    )
 
     if faculty:
         query = query.where(Group.faculty == faculty)
@@ -379,24 +384,18 @@ async def dean_groups(
     if course_year:
         query = query.where(Group.course_year == course_year)
 
-    query = query.order_by(Group.name)
+    query = query.group_by(Group.id).order_by(Group.name)
     result = await db.execute(query)
-    groups = result.scalars().all()
+    rows = result.all()
 
     items = []
-    for g in groups:
-        student_count = await db.execute(
-            select(func.count(Student.id)).where(
-                and_(Student.group_id == g.id, Student.is_active == True)
-            )
-        )
-        cnt = student_count.scalar() or 0
+    for g, cnt in rows:
         items.append({
             "id": g.id,
             "name": g.name,
             "faculty": g.faculty,
             "course_year": g.course_year,
-            "students_count": cnt,
+            "students_count": cnt or 0,
         })
 
     return {"items": items, "total": len(items)}

@@ -127,6 +127,27 @@ async def init_db() -> None:
         )
         logger.info("Database schema updated (telegram_notified column ensured)")
         
+        # Add composite indexes for performance
+        await conn.execute(
+            sa.text("""
+                CREATE INDEX IF NOT EXISTS ix_attendance_date_status 
+                ON attendances (date, status)
+            """)
+        )
+        await conn.execute(
+            sa.text("""
+                CREATE INDEX IF NOT EXISTS ix_attendance_student_date 
+                ON attendances (student_id, date)
+            """)
+        )
+        await conn.execute(
+            sa.text("""
+                CREATE INDEX IF NOT EXISTS ix_students_group_active 
+                ON students (group_id, is_active)
+            """)
+        )
+        logger.info("Database indexes ensured")
+        
         # Add REGISTRAR_OFFICE role to enum if not exists
         await conn.execute(
             sa.text("""

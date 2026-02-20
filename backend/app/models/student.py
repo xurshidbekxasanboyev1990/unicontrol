@@ -218,20 +218,20 @@ class Student(Base):
     user: Mapped[Optional["User"]] = relationship(
         "User",
         foreign_keys=[user_id],
-        lazy="joined"
+        lazy="noload"
     )
     
     group: Mapped[Optional["Group"]] = relationship(
         "Group",
         back_populates="students",
         foreign_keys=[group_id],
-        lazy="joined"
+        lazy="selectin"
     )
     
     attendances: Mapped[List["Attendance"]] = relationship(
         "Attendance",
         back_populates="student",
-        lazy="selectin"
+        lazy="noload"
     )
     
     def __repr__(self) -> str:
