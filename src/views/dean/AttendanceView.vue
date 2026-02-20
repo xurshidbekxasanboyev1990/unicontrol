@@ -8,6 +8,14 @@
       </div>
       <div class="flex items-center gap-3">
         <button
+          @click="exportAttendance"
+          :disabled="exporting"
+          class="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-blue-500 to-indigo-500 text-white rounded-xl hover:shadow-lg hover:shadow-blue-500/25 transition-all text-sm font-medium disabled:opacity-50"
+        >
+          <FileSpreadsheet class="w-4 h-4" />
+          {{ exporting ? 'Yuklanmoqda...' : 'Excel export' }}
+        </button>
+        <button
           @click="showImportModal = true"
           class="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-xl hover:shadow-lg hover:shadow-emerald-500/25 transition-all text-sm font-medium"
         >
@@ -216,6 +224,7 @@ const importFile = ref(null)
 const importing = ref(false)
 const isDragging = ref(false)
 const importResult = ref(null)
+const exporting = ref(false)
 
 const totalPages = computed(() => Math.ceil(totalItems.value / pageSize))
 
@@ -326,6 +335,37 @@ const importAttendance = async () => {
     }
   } finally {
     importing.value = false
+  }
+}
+
+const exportAttendance = async () => {
+  exporting.value = true
+  try {
+    const params = new URLSearchParams()
+    if (filterDate.value) params.append('date_val', filterDate.value)
+    if (filterGroup.value) {
+      // Resolve group_id from group name
+      const grp = groups.value.find(g => g.name === filterGroup.value)
+      if (grp) params.append('group_id', grp.id)
+    }
+    if (filterStatus.value) params.append('status_filter', filterStatus.value)
+
+    const resp = await fetch(`${api.baseUrl}/dean/attendance/export?${params}`, {
+      headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+    })
+    if (!resp.ok) throw new Error('Export xatolik')
+    const blob = await resp.blob()
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `davomat_${filterDate.value || 'all'}.xlsx`
+    a.click()
+    URL.revokeObjectURL(url)
+  } catch (err) {
+    console.error('Export error:', err)
+    alert('Excel export qilishda xatolik yuz berdi')
+  } finally {
+    exporting.value = false
   }
 }
 

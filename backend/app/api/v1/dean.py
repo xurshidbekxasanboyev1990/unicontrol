@@ -472,6 +472,47 @@ async def dean_attendance(
     return {"items": items, "stats": stats}
 
 
+@router.get("/attendance/export")
+async def dean_attendance_export(
+    date_val: Optional[str] = None,
+    group_id: Optional[int] = None,
+    status_filter: Optional[str] = None,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(require_dean)
+):
+    """Export attendance to print-ready Excel."""
+    from fastapi.responses import StreamingResponse
+    from app.services.excel_service import ExcelService
+
+    today = today_tashkent()
+    target_date = today
+    if date_val:
+        try:
+            target_date = date.fromisoformat(date_val)
+        except ValueError:
+            target_date = today
+
+    service = ExcelService(db)
+    file_data = await service.export_attendance_printable(
+        group_id=group_id,
+        date_from=target_date,
+        date_to=target_date,
+        status_filter=status_filter,
+    )
+
+    # Build filename
+    fname_parts = ["davomat", target_date.strftime("%d_%m_%Y")]
+    if group_id:
+        fname_parts.insert(1, f"guruh_{group_id}")
+    filename = "_".join(fname_parts) + ".xlsx"
+
+    return StreamingResponse(
+        file_data,
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'}
+    )
+
+
 @router.post("/attendance/import")
 async def dean_attendance_import(
     file: UploadFile = File(...),

@@ -278,6 +278,214 @@ class ExcelService:
             })
         return self._create_excel_file(pd.DataFrame(data), "Davomat")
 
+    async def export_attendance_printable(
+        self,
+        group_id: Optional[int] = None,
+        date_from: Optional[date] = None,
+        date_to: Optional[date] = None,
+        status_filter: Optional[str] = None,
+        faculty: Optional[str] = None,
+    ) -> io.BytesIO:
+        """
+        Export attendance to print-ready Excel.
+        Large cells, bold fonts, borders — ready to print and paste on boards.
+        """
+        query = (
+            select(Attendance)
+            .options(joinedload(Attendance.student).joinedload(Student.group))
+        )
+        if group_id:
+            query = query.join(Student, Student.id == Attendance.student_id).where(Student.group_id == group_id)
+        elif faculty:
+            query = query.join(Student, Student.id == Attendance.student_id).join(Group, Group.id == Student.group_id).where(Group.faculty == faculty)
+
+        if date_from:
+            query = query.where(Attendance.date >= date_from)
+        if date_to:
+            query = query.where(Attendance.date <= date_to)
+        if status_filter:
+            try:
+                query = query.where(Attendance.status == AttendanceStatus(status_filter))
+            except ValueError:
+                pass
+
+        query = query.order_by(Attendance.date.desc(), Attendance.student_id)
+
+        result = await self.db.execute(query)
+        attendances = result.unique().scalars().all()
+
+        status_map = {
+            AttendanceStatus.PRESENT: "✅ Keldi",
+            AttendanceStatus.ABSENT: "❌ Kelmadi",
+            AttendanceStatus.LATE: "⏰ Kechikdi",
+            AttendanceStatus.EXCUSED: "📋 Sababli",
+        }
+
+        # Build print-ready Excel
+        output = io.BytesIO()
+        wb = Workbook()
+        ws = wb.active
+        ws.title = "Davomat"
+
+        # Print setup — A4 landscape
+        ws.page_setup.orientation = 'landscape'
+        ws.page_setup.paperSize = 9  # A4
+        ws.page_setup.fitToWidth = 1
+        ws.page_setup.fitToHeight = 0
+        ws.page_margins.left = 0.4
+        ws.page_margins.right = 0.4
+        ws.page_margins.top = 0.5
+        ws.page_margins.bottom = 0.5
+
+        # Styles
+        title_font = Font(bold=True, size=16, color="1B4332")
+        subtitle_font = Font(size=11, color="6B7280")
+        header_font = Font(bold=True, size=12, color="FFFFFF")
+        header_fill = PatternFill(start_color="059669", end_color="059669", fill_type="solid")
+        data_font = Font(size=12)
+        data_font_bold = Font(bold=True, size=12)
+        center_align = Alignment(horizontal="center", vertical="center", wrap_text=True)
+        left_align = Alignment(horizontal="left", vertical="center", wrap_text=True)
+        thick_border = Border(
+            left=Side(style='medium'), right=Side(style='medium'),
+            top=Side(style='medium'), bottom=Side(style='medium')
+        )
+        thin_border = Border(
+            left=Side(style='thin'), right=Side(style='thin'),
+            top=Side(style='thin'), bottom=Side(style='thin')
+        )
+
+        # Status colors
+        status_fills = {
+            AttendanceStatus.PRESENT: PatternFill(start_color="D1FAE5", end_color="D1FAE5", fill_type="solid"),
+            AttendanceStatus.ABSENT: PatternFill(start_color="FEE2E2", end_color="FEE2E2", fill_type="solid"),
+            AttendanceStatus.LATE: PatternFill(start_color="FEF3C7", end_color="FEF3C7", fill_type="solid"),
+            AttendanceStatus.EXCUSED: PatternFill(start_color="DBEAFE", end_color="DBEAFE", fill_type="solid"),
+        }
+
+        # Determine group name for title
+        group_name = ""
+        if attendances and attendances[0].student and attendances[0].student.group:
+            group_name = attendances[0].student.group.name
+
+        # Title row
+        ncols = 7
+        ws.merge_cells(start_row=1, start_column=1, end_row=1, end_column=ncols)
+        title_text = "DAVOMAT HISOBOTI"
+        if group_name:
+            title_text += f" — {group_name}"
+        title_cell = ws.cell(1, 1, title_text)
+        title_cell.font = title_font
+        title_cell.alignment = center_align
+        ws.row_dimensions[1].height = 40
+
+        # Subtitle row (date range)
+        ws.merge_cells(start_row=2, start_column=1, end_row=2, end_column=ncols)
+        date_text = f"Sana: {now_tashkent().strftime('%d.%m.%Y %H:%M')}"
+        if date_from and date_to:
+            date_text = f"{date_from.strftime('%d.%m.%Y')} — {date_to.strftime('%d.%m.%Y')}"
+        elif date_from:
+            date_text = f"{date_from.strftime('%d.%m.%Y')} dan"
+        elif date_to:
+            date_text = f"{date_to.strftime('%d.%m.%Y')} gacha"
+        sub_cell = ws.cell(2, 1, date_text)
+        sub_cell.font = subtitle_font
+        sub_cell.alignment = center_align
+        ws.row_dimensions[2].height = 25
+
+        # Stats row
+        total = len(attendances)
+        present = sum(1 for a in attendances if a.status == AttendanceStatus.PRESENT)
+        absent = sum(1 for a in attendances if a.status == AttendanceStatus.ABSENT)
+        late = sum(1 for a in attendances if a.status == AttendanceStatus.LATE)
+        excused = sum(1 for a in attendances if a.status == AttendanceStatus.EXCUSED)
+        ws.merge_cells(start_row=3, start_column=1, end_row=3, end_column=ncols)
+        stats_text = f"Jami: {total}  |  ✅ Keldi: {present}  |  ❌ Kelmadi: {absent}  |  ⏰ Kechikdi: {late}  |  📋 Sababli: {excused}"
+        stats_cell = ws.cell(3, 1, stats_text)
+        stats_cell.font = Font(size=11, bold=True, color="374151")
+        stats_cell.alignment = center_align
+        ws.row_dimensions[3].height = 30
+
+        # Header row (row 5)
+        headers = ["#", "Sana", "Talaba", "Guruh", "Holat", "Fan / Para", "Izoh"]
+        col_widths = [6, 16, 35, 20, 20, 25, 25]
+        for col_idx, (h, w) in enumerate(zip(headers, col_widths), 1):
+            cell = ws.cell(5, col_idx, h)
+            cell.font = header_font
+            cell.fill = header_fill
+            cell.alignment = center_align
+            cell.border = thick_border
+            ws.column_dimensions[get_column_letter(col_idx)].width = w
+        ws.row_dimensions[5].height = 35
+
+        # Data rows — large cells
+        for idx, a in enumerate(attendances, 1):
+            row = idx + 5
+
+            # Row height — big for easy reading / printing
+            ws.row_dimensions[row].height = 38
+
+            # #
+            c = ws.cell(row, 1, idx)
+            c.font = data_font
+            c.alignment = center_align
+            c.border = thin_border
+
+            # Date
+            c = ws.cell(row, 2, a.date.strftime("%d.%m.%Y"))
+            c.font = data_font_bold
+            c.alignment = center_align
+            c.border = thin_border
+
+            # Student name
+            c = ws.cell(row, 3, a.student.name if a.student else "")
+            c.font = data_font_bold
+            c.alignment = left_align
+            c.border = thin_border
+
+            # Group
+            c = ws.cell(row, 4, a.student.group.name if a.student and a.student.group else "")
+            c.font = data_font
+            c.alignment = center_align
+            c.border = thin_border
+
+            # Status — colored
+            status_text = status_map.get(a.status, "")
+            c = ws.cell(row, 5, status_text)
+            c.font = data_font_bold
+            c.alignment = center_align
+            c.border = thin_border
+            if a.status in status_fills:
+                c.fill = status_fills[a.status]
+
+            # Subject / Para
+            fan_text = a.subject or ""
+            if a.lesson_number:
+                fan_text += f" ({a.lesson_number}-para)"
+            if a.late_minutes and a.late_minutes > 0:
+                fan_text += f" [{a.late_minutes} min]"
+            c = ws.cell(row, 6, fan_text)
+            c.font = data_font
+            c.alignment = left_align
+            c.border = thin_border
+
+            # Note
+            c = ws.cell(row, 7, a.note or "")
+            c.font = data_font
+            c.alignment = left_align
+            c.border = thin_border
+
+        # Footer
+        footer_row = len(attendances) + 7
+        ws.merge_cells(start_row=footer_row, start_column=1, end_row=footer_row, end_column=ncols)
+        footer_cell = ws.cell(footer_row, 1, f"UniControl — {now_tashkent().strftime('%d.%m.%Y %H:%M')}")
+        footer_cell.font = Font(size=9, italic=True, color="9CA3AF")
+        footer_cell.alignment = Alignment(horizontal="right")
+
+        wb.save(output)
+        output.seek(0)
+        return output
+
     async def export_payments(self, group_id: Optional[int] = None) -> io.BytesIO:
         """Export payment report to Excel."""
         query = select(Student).options(joinedload(Student.group))

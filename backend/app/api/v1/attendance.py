@@ -234,6 +234,59 @@ async def get_group_summary(
     return await service.get_group_attendance_summary(group_id, date_from, date_to)
 
 
+@router.get("/export/printable")
+async def export_attendance_printable(
+    group_id: Optional[int] = None,
+    date_from: Optional[date] = None,
+    date_to: Optional[date] = None,
+    status_filter: Optional[str] = None,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(require_leader)
+):
+    """
+    Export attendance to print-ready Excel.
+    Leaders: auto-resolves own group. Dean+ can pass group_id.
+    """
+    from fastapi.responses import StreamingResponse
+    from app.services.excel_service import ExcelService
+
+    # Leader auto-resolve group
+    if not group_id and current_user.role == UserRole.LEADER:
+        grp_result = await db.execute(
+            select(Group).where(Group.leader_id == current_user.id)
+        )
+        grp = grp_result.scalars().first()
+        if grp:
+            group_id = grp.id
+
+    if not date_from:
+        date_from = today_tashkent()
+    if not date_to:
+        date_to = date_from
+
+    service = ExcelService(db)
+    file_data = await service.export_attendance_printable(
+        group_id=group_id,
+        date_from=date_from,
+        date_to=date_to,
+        status_filter=status_filter,
+    )
+
+    fname_parts = ["davomat"]
+    if group_id:
+        fname_parts.append(f"guruh_{group_id}")
+    fname_parts.append(date_from.strftime("%d_%m_%Y"))
+    if date_to != date_from:
+        fname_parts.append(date_to.strftime("%d_%m_%Y"))
+    filename = "_".join(fname_parts) + ".xlsx"
+
+    return StreamingResponse(
+        file_data,
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'}
+    )
+
+
 @router.get("/{attendance_id}", response_model=AttendanceResponse)
 async def get_attendance(
     attendance_id: int,

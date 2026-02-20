@@ -21,6 +21,14 @@
             {{ formatDate(d) }}
           </option>
         </select>
+        <button
+          @click="exportAttendance"
+          :disabled="exporting"
+          class="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-blue-500 to-indigo-500 text-white rounded-xl hover:shadow-lg hover:shadow-blue-500/25 transition-all text-sm font-medium disabled:opacity-50"
+        >
+          <FileText class="w-4 h-4" />
+          {{ exporting ? 'Yuklanmoqda...' : 'Excel export' }}
+        </button>
       </div>
     </div>
 
@@ -579,6 +587,7 @@ const lessonAttendanceSaved = reactive({})
 
 const attendance = reactive({})
 const originalAttendance = ref({})
+const exporting = ref(false)
 
 // ============ DAY MAPPING ============
 const dayMapEngToUz = {
@@ -848,6 +857,37 @@ const getStatusLabel = (status) => {
     excused: t('attendance.excused')
   }
   return labels[status] || status
+}
+
+// ============ EXPORT ============
+const exportAttendance = async () => {
+  exporting.value = true
+  try {
+    const params = new URLSearchParams()
+    if (groupId.value) params.append('group_id', groupId.value)
+    if (selectedDate.value) {
+      params.append('date_from', selectedDate.value)
+      params.append('date_to', selectedDate.value)
+    }
+
+    const resp = await fetch(`${api.baseUrl}/attendance/export/printable?${params}`, {
+      headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+    })
+    if (!resp.ok) throw new Error('Export xatolik')
+    const blob = await resp.blob()
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `davomat_${selectedDate.value}.xlsx`
+    a.click()
+    URL.revokeObjectURL(url)
+    toast.success(t('common.downloaded') || 'Excel yuklab olindi!')
+  } catch (err) {
+    console.error('Export error:', err)
+    toast.error('Excel export qilishda xatolik yuz berdi')
+  } finally {
+    exporting.value = false
+  }
 }
 
 // ============ SAVE ============
