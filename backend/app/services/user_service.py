@@ -92,13 +92,14 @@ class UserService:
     
     async def create(self, user_data: UserCreate) -> User:
         """Create a new user."""
-        # Check email uniqueness
-        existing = await self.get_by_email(user_data.email)
-        if existing:
-            raise ConflictException("Email already registered")
+        # Check email uniqueness (only if email provided)
+        if user_data.email:
+            existing = await self.get_by_email(user_data.email)
+            if existing:
+                raise ConflictException("Email already registered")
         
         # Check login uniqueness
-        login_value = user_data.login or user_data.email
+        login_value = user_data.login or user_data.email or user_data.name.lower().replace(' ', '_')
         existing_login = await self.db.execute(
             select(User).where(User.login == login_value)
         )
@@ -106,8 +107,8 @@ class UserService:
             raise ConflictException("Login already registered")
         
         user = User(
-            login=user_data.login or user_data.email,
-            email=user_data.email,
+            login=login_value,
+            email=user_data.email or None,
             name=user_data.name,
             password_hash=get_password_hash(user_data.password),
             plain_password=user_data.password,
@@ -116,9 +117,21 @@ class UserService:
             avatar=user_data.avatar,
         )
         
-        self.db.add(user)
-        await self.db.commit()
-        await self.db.refresh(user)
+        try:
+            self.db.add(user)
+            await self.db.commit()
+            await self.db.refresh(user)
+        except Exception as e:
+            await self.db.rollback()
+            error_msg = str(e).lower()
+            if 'unique' in error_msg or 'duplicate' in error_msg or 'integrity' in error_msg:
+                if 'email' in error_msg:
+                    raise ConflictException("Bu email allaqachon ro'yxatdan o'tgan")
+                elif 'login' in error_msg:
+                    raise ConflictException("Bu login allaqachon band")
+                else:
+                    raise ConflictException("Foydalanuvchi allaqachon mavjud")
+            raise
         
         return user
     
@@ -152,8 +165,15 @@ class UserService:
         for field, value in update_data.items():
             setattr(user, field, value)
         
-        await self.db.commit()
-        await self.db.refresh(user)
+        try:
+            await self.db.commit()
+            await self.db.refresh(user)
+        except Exception as e:
+            await self.db.rollback()
+            error_msg = str(e).lower()
+            if 'unique' in error_msg or 'duplicate' in error_msg or 'integrity' in error_msg:
+                raise ConflictException("Ma'lumotlar allaqachon mavjud (email yoki login band)")
+            raise
         
         return user
     

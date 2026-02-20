@@ -435,13 +435,12 @@
                 />
               </div>
               <div>
-                <label class="block text-sm font-medium text-slate-700 mb-2">Email *</label>
+                <label class="block text-sm font-medium text-slate-700 mb-2">Email</label>
                 <input 
                   v-model="form.email"
                   type="email"
-                  required
                   class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 outline-none"
-                  placeholder="email@example.com"
+                  placeholder="email@example.com (ixtiyoriy)"
                 />
               </div>
             </div>
@@ -897,7 +896,7 @@ async function saveUser() {
       // Update
       const updateData = {
         name: form.value.name,
-        email: form.value.email,
+        email: form.value.email || null,
         role: form.value.role,
         phone: form.value.phone || null,
         is_active: form.value.is_active
@@ -908,8 +907,8 @@ async function saveUser() {
       // Create
       const createData = {
         name: form.value.name,
-        email: form.value.email,
-        login: form.value.login || form.value.email,
+        email: form.value.email || null,
+        login: form.value.login || form.value.email || form.value.name.toLowerCase().replace(/\s+/g, '_'),
         password: form.value.password,
         role: form.value.role,
         phone: form.value.phone || null

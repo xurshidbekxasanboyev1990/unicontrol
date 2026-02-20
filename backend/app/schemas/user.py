@@ -16,7 +16,7 @@ from app.models.user import UserRole
 
 class UserBase(BaseModel):
     """Base user schema."""
-    email: EmailStr
+    email: Optional[EmailStr] = None
     name: str = Field(..., min_length=2, max_length=150)
     role: UserRole = UserRole.STUDENT
     phone: Optional[str] = Field(None, max_length=20)
