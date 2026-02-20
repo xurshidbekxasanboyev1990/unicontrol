@@ -4,14 +4,49 @@
     <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
       <div>
         <h1 class="text-2xl font-bold text-slate-800">Talabalar</h1>
-        <p class="text-sm text-slate-500 mt-1">Talabalar ro'yxati va ma'lumotlari</p>
+        <p class="text-sm text-slate-500 mt-1">
+          <span v-if="loading">Yuklanmoqda...</span>
+          <span v-else>{{ total }} ta talaba</span>
+        </p>
       </div>
     </div>
 
     <!-- Filters -->
-    <div class="bg-white rounded-2xl border border-slate-200/60 p-4">
-      <div class="flex flex-col sm:flex-row gap-3">
-        <div class="flex-1 relative">
+    <div class="bg-white rounded-2xl border border-slate-200/60 p-4 space-y-3">
+      <!-- Faculty tabs -->
+      <div class="flex flex-wrap items-center gap-2">
+        <label class="text-sm font-medium text-slate-600 whitespace-nowrap">Yo'nalish:</label>
+        <button
+          @click="selectFaculty('')"
+          :class="[
+            'rounded-lg px-3 py-1.5 text-sm font-medium transition-all border',
+            !selectedFaculty
+              ? 'bg-emerald-600 text-white border-emerald-600 shadow-sm'
+              : 'bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100'
+          ]"
+        >
+          Barchasi
+          <span class="ml-1 text-xs opacity-70">({{ totalStudentCount }})</span>
+        </button>
+        <button
+          v-for="fac in facultiesList"
+          :key="fac.name"
+          @click="selectFaculty(fac.name)"
+          :class="[
+            'rounded-lg px-3 py-1.5 text-sm font-medium transition-all border',
+            selectedFaculty === fac.name
+              ? 'bg-emerald-600 text-white border-emerald-600 shadow-sm'
+              : 'bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100'
+          ]"
+        >
+          {{ fac.short_name }}
+          <span class="ml-1 text-xs opacity-70">({{ fac.students_count }})</span>
+        </button>
+      </div>
+
+      <!-- Search + Course + Group -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+        <div class="flex-1 relative lg:col-span-2">
           <Search class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
           <input
             v-model="search"
@@ -21,14 +56,34 @@
             class="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-300"
           />
         </div>
-        <select
-          v-model="selectedGroup"
-          @change="loadStudents"
-          class="px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
-        >
-          <option :value="null">Barcha guruhlar</option>
-          <option v-for="g in groups" :key="g.id" :value="g.id">{{ g.name }} ({{ g.faculty }})</option>
+
+        <select v-model="filterCourse" @change="onCourseChange" class="px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20">
+          <option value="">Barcha kurslar</option>
+          <option v-for="c in availableCourses" :key="c" :value="c">{{ c }}-kurs</option>
         </select>
+
+        <select v-model="selectedGroup" @change="onFilterChange" class="px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20">
+          <option :value="null">Barcha guruhlar</option>
+          <option v-for="g in filteredGroups" :key="g.id" :value="g.id">{{ g.name }} ({{ g.faculty }})</option>
+        </select>
+      </div>
+
+      <!-- Active filters -->
+      <div v-if="hasActiveFilters" class="flex items-center gap-2 flex-wrap">
+        <span class="text-xs text-slate-500">Filtrlar:</span>
+        <span v-if="selectedFaculty" class="inline-flex items-center gap-1 px-2 py-1 bg-teal-100 text-teal-700 rounded-lg text-xs">
+          {{ selectedFaculty }}
+          <button @click="selectFaculty('')" class="hover:text-teal-900"><X class="w-3 h-3" /></button>
+        </span>
+        <span v-if="filterCourse" class="inline-flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-700 rounded-lg text-xs">
+          {{ filterCourse }}-kurs
+          <button @click="filterCourse = ''; onCourseChange()" class="hover:text-blue-900"><X class="w-3 h-3" /></button>
+        </span>
+        <span v-if="selectedGroup" class="inline-flex items-center gap-1 px-2 py-1 bg-violet-100 text-violet-700 rounded-lg text-xs">
+          {{ selectedGroupName }}
+          <button @click="selectedGroup = null; onFilterChange()" class="hover:text-violet-900"><X class="w-3 h-3" /></button>
+        </span>
+        <button @click="clearAllFilters" class="text-xs text-rose-500 hover:text-rose-700 underline ml-2">Tozalash</button>
       </div>
     </div>
 
@@ -38,6 +93,7 @@
         <table class="w-full text-sm">
           <thead>
             <tr class="bg-slate-50 border-b border-slate-200">
+              <th class="text-left px-4 py-3 font-semibold text-slate-600">#</th>
               <th class="text-left px-4 py-3 font-semibold text-slate-600">Talaba</th>
               <th class="text-left px-4 py-3 font-semibold text-slate-600">ID</th>
               <th class="text-left px-4 py-3 font-semibold text-slate-600">Guruh</th>
@@ -49,10 +105,11 @@
           </thead>
           <tbody>
             <tr
-              v-for="s in students"
+              v-for="(s, idx) in students"
               :key="s.id"
               class="border-b border-slate-100 hover:bg-slate-50/50 transition-colors"
             >
+              <td class="px-4 py-3 text-xs text-slate-500">{{ (page - 1) * limit + idx + 1 }}</td>
               <td class="px-4 py-3">
                 <div class="flex items-center gap-3">
                   <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center text-white text-xs font-bold">
@@ -106,11 +163,11 @@
       <!-- Pagination -->
       <div class="px-4 py-3 bg-slate-50 border-t border-slate-200 flex items-center justify-between">
         <p class="text-xs text-slate-500">
-          Jami: {{ total }} talaba
+          {{ (page - 1) * limit + 1 }} - {{ Math.min(page * limit, total) }} / {{ total }}
         </p>
         <div class="flex items-center gap-2">
           <button
-            @click="page > 1 && (page--, loadStudents())"
+            @click="goToPage(page - 1)"
             :disabled="page <= 1"
             class="px-3 py-1.5 text-xs bg-white border border-slate-200 rounded-lg hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed"
           >
@@ -118,7 +175,7 @@
           </button>
           <span class="text-xs text-slate-600">{{ page }} / {{ totalPages }}</span>
           <button
-            @click="page < totalPages && (page++, loadStudents())"
+            @click="goToPage(page + 1)"
             :disabled="page >= totalPages"
             class="px-3 py-1.5 text-xs bg-white border border-slate-200 rounded-lg hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed"
           >
@@ -146,7 +203,6 @@
             </button>
           </div>
           <div v-if="detailData" class="p-6 space-y-6">
-            <!-- Student Info -->
             <div class="grid grid-cols-2 gap-4">
               <div>
                 <label class="text-xs font-medium text-slate-500">To'liq ism</label>
@@ -182,7 +238,6 @@
               </div>
             </div>
 
-            <!-- Attendance Stats -->
             <div class="bg-slate-50 rounded-xl p-4">
               <h4 class="text-sm font-semibold text-slate-700 mb-3">Davomat statistikasi</h4>
               <div class="grid grid-cols-3 gap-4">
@@ -207,7 +262,6 @@
               </div>
             </div>
 
-            <!-- NB Permits -->
             <div v-if="detailData.permits.length > 0">
               <h4 class="text-sm font-semibold text-slate-700 mb-3">NB Ruxsatnomalar</h4>
               <div class="space-y-2">
@@ -252,7 +306,10 @@ const router = useRouter()
 const loading = ref(false)
 const students = ref([])
 const groups = ref([])
+const facultiesList = ref([])
+const selectedFaculty = ref('')
 const search = ref('')
+const filterCourse = ref('')
 const selectedGroup = ref(null)
 const page = ref(1)
 const total = ref(0)
@@ -264,6 +321,30 @@ const detailData = ref(null)
 let searchTimeout = null
 
 const totalPages = computed(() => Math.ceil(total.value / limit) || 1)
+const totalStudentCount = computed(() => facultiesList.value.reduce((sum, f) => sum + f.students_count, 0))
+
+const availableCourses = computed(() => {
+  const courses = new Set()
+  let g = groups.value
+  if (selectedFaculty.value) g = g.filter(gr => gr.faculty === selectedFaculty.value)
+  g.forEach(gr => { if (gr.course_year) courses.add(gr.course_year) })
+  return [...courses].sort()
+})
+
+const filteredGroups = computed(() => {
+  let g = groups.value
+  if (selectedFaculty.value) g = g.filter(gr => gr.faculty === selectedFaculty.value)
+  if (filterCourse.value) g = g.filter(gr => gr.course_year === Number(filterCourse.value))
+  return g
+})
+
+const selectedGroupName = computed(() => {
+  if (!selectedGroup.value) return ''
+  const g = groups.value.find(gr => gr.id === selectedGroup.value)
+  return g ? g.name : ''
+})
+
+const hasActiveFilters = computed(() => selectedFaculty.value || filterCourse.value || selectedGroup.value)
 
 const formatMoney = (val) => {
   if (!val) return '0'
@@ -296,6 +377,13 @@ const statusLabel = (status) => {
   return map[status] || status
 }
 
+const selectFaculty = (name) => {
+  selectedFaculty.value = name
+  selectedGroup.value = null
+  page.value = 1
+  loadStudents()
+}
+
 const debouncedSearch = () => {
   clearTimeout(searchTimeout)
   searchTimeout = setTimeout(() => {
@@ -304,13 +392,41 @@ const debouncedSearch = () => {
   }, 400)
 }
 
+const onCourseChange = () => {
+  selectedGroup.value = null
+  page.value = 1
+  loadStudents()
+}
+
+const onFilterChange = () => {
+  page.value = 1
+  loadStudents()
+}
+
+const clearAllFilters = () => {
+  selectedFaculty.value = ''
+  filterCourse.value = ''
+  selectedGroup.value = null
+  search.value = ''
+  page.value = 1
+  loadStudents()
+}
+
+const goToPage = (p) => {
+  if (p < 1 || p > totalPages.value) return
+  page.value = p
+  loadStudents()
+}
+
 const loadStudents = async () => {
   loading.value = true
   try {
     const params = { page: page.value, limit }
     if (search.value) params.search = search.value
     if (selectedGroup.value) params.group_id = selectedGroup.value
-    
+    if (selectedFaculty.value) params.faculty = selectedFaculty.value
+    if (filterCourse.value) params.course_year = filterCourse.value
+
     const resp = await api.get('/registrar/students', { params })
     students.value = resp.items || []
     total.value = resp.total || 0
@@ -327,6 +443,18 @@ const loadGroups = async () => {
     groups.value = resp.items || []
   } catch (err) {
     console.error('Groups error:', err)
+  }
+}
+
+const loadFaculties = async () => {
+  try {
+    const resp = await api.get('/registrar/faculties')
+    facultiesList.value = (resp.faculty_counts || []).map(f => ({
+      ...f,
+      short_name: f.name.length > 25 ? f.name.substring(0, 22) + '...' : f.name,
+    }))
+  } catch (err) {
+    console.error('Faculties error:', err)
   }
 }
 
@@ -347,5 +475,6 @@ const createPermitForStudent = (student) => {
 onMounted(() => {
   loadStudents()
   loadGroups()
+  loadFaculties()
 })
 </script>

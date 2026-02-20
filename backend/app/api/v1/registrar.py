@@ -149,11 +149,43 @@ async def get_registrar_dashboard(
 # STUDENTS
 # ============================================
 
+@router.get("/faculties")
+async def registrar_faculties(
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(require_registrar)
+):
+    """Get distinct faculties and course years from actual DB data."""
+    fac_result = await db.execute(
+        select(
+            Group.faculty,
+            func.count(Student.id).label('students_count')
+        )
+        .outerjoin(Student, and_(Student.group_id == Group.id, Student.is_active == True))
+        .where(and_(Group.is_active == True, Group.faculty.isnot(None), Group.faculty != ""))
+        .group_by(Group.faculty)
+        .order_by(Group.faculty)
+    )
+    faculty_counts = [
+        {"name": r[0], "students_count": r[1] or 0}
+        for r in fac_result.all() if r[0]
+    ]
+
+    cy_result = await db.execute(
+        select(distinct(Group.course_year))
+        .where(and_(Group.is_active == True, Group.course_year.isnot(None)))
+        .order_by(Group.course_year)
+    )
+    course_years = [r[0] for r in cy_result.all() if r[0]]
+
+    return {"faculty_counts": faculty_counts, "course_years": course_years}
+
+
 @router.get("/students")
 async def get_students(
     search: Optional[str] = None,
     group_id: Optional[int] = None,
     faculty: Optional[str] = None,
+    course_year: Optional[int] = None,
     page: int = 1,
     limit: int = 50,
     db: AsyncSession = Depends(get_db),
@@ -178,6 +210,12 @@ async def get_students(
     
     if faculty:
         query = query.join(Group, Student.group_id == Group.id).where(Group.faculty == faculty)
+
+    if course_year:
+        # If faculty already joined Group, just add where clause
+        if not faculty:
+            query = query.join(Group, Student.group_id == Group.id)
+        query = query.where(Group.course_year == course_year)
     
     # Count
     count_q = select(func.count()).select_from(query.subquery())

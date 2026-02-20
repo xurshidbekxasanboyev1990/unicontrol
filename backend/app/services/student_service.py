@@ -61,7 +61,9 @@ class StudentService:
         group_id: Optional[int] = None,
         is_active: Optional[bool] = None,
         is_graduated: Optional[bool] = None,
-        search: Optional[str] = None
+        search: Optional[str] = None,
+        faculty: Optional[str] = None,
+        course_year: Optional[int] = None
     ) -> Tuple[List[Student], int]:
         """
         List students with pagination and filters.
@@ -99,6 +101,30 @@ class StudentService:
                 (Student.phone.ilike(search_filter)) |
                 (Student.email.ilike(search_filter))
             )
+
+        # Filter by faculty through group
+        if faculty:
+            faculty_groups_q = select(Group.id).where(Group.is_active == True, Group.faculty == faculty)
+            faculty_group_ids_result = await self.db.execute(faculty_groups_q)
+            faculty_group_ids = [r[0] for r in faculty_group_ids_result.all()]
+            if faculty_group_ids:
+                query = query.where(Student.group_id.in_(faculty_group_ids))
+                count_query = count_query.where(Student.group_id.in_(faculty_group_ids))
+            else:
+                query = query.where(Student.id == -1)
+                count_query = count_query.where(Student.id == -1)
+
+        # Filter by course year through group
+        if course_year:
+            course_groups_q = select(Group.id).where(Group.is_active == True, Group.course_year == course_year)
+            course_group_ids_result = await self.db.execute(course_groups_q)
+            course_group_ids = [r[0] for r in course_group_ids_result.all()]
+            if course_group_ids:
+                query = query.where(Student.group_id.in_(course_group_ids))
+                count_query = count_query.where(Student.group_id.in_(course_group_ids))
+            else:
+                query = query.where(Student.id == -1)
+                count_query = count_query.where(Student.id == -1)
         
         # Get total count
         total_result = await self.db.execute(count_query)

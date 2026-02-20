@@ -781,8 +781,6 @@ async def academic_faculties(
 # FACULTY HIERARCHY (Fakultet → Yo'nalish → Guruh)
 # ============================================
 
-from app.core.faculty_mapping import FACULTY_MAPPING, FACULTY_ORDER, get_super_faculty
-
 
 @router.get("/faculties-tree")
 async def academic_faculties_tree(
@@ -790,10 +788,9 @@ async def academic_faculties_tree(
     current_user: User = Depends(require_academic)
 ):
     """
-    Get hierarchical faculty → direction → groups tree from kontingent data.
-    Groups come from student/group database (kontingent), not from schedule.
+    Get flat faculty list with groups for kontingent.
+    Uses REAL data from DB (groups.faculty) — no hardcoded mappings.
     """
-    # Get all active groups with student counts
     result = await db.execute(
         select(
             Group.id,
@@ -808,67 +805,35 @@ async def academic_faculties_tree(
         .order_by(Group.faculty, Group.name)
     )
     rows = result.all()
-    
-    # Build tree: faculty → directions → groups
-    tree = {}
+
+    # Build faculty → groups mapping from actual DB data
+    faculty_map = {}
     for row in rows:
-        direction = row.faculty or "Boshqa"
-        super_faculty = get_super_faculty(direction)
-        
-        if super_faculty not in tree:
-            tree[super_faculty] = {}
-        if direction not in tree[super_faculty]:
-            tree[super_faculty][direction] = []
-        
-        tree[super_faculty][direction].append({
+        faculty_name = row.faculty or "Boshqa"
+        if faculty_name not in faculty_map:
+            faculty_map[faculty_name] = []
+        faculty_map[faculty_name].append({
             "id": row.id,
             "name": row.name,
             "course_year": row.course_year,
             "students_count": row.students_count or 0,
         })
-    
-    # Format as ordered list
+
     faculties = []
-    for faculty_name in FACULTY_ORDER:
-        if faculty_name in tree:
-            directions = []
-            for dir_name, groups in sorted(tree[faculty_name].items()):
-                directions.append({
-                    "name": dir_name,
-                    "groups": sorted(groups, key=lambda g: g["name"]),
-                    "groups_count": len(groups),
-                    "students_count": sum(g["students_count"] for g in groups),
-                })
-            faculties.append({
-                "name": faculty_name,
-                "directions": directions,
-                "directions_count": len(directions),
-                "groups_count": sum(d["groups_count"] for d in directions),
-                "students_count": sum(d["students_count"] for d in directions),
-            })
-    
-    # Add 'Boshqa' if any unmatched
-    if "Boshqa" in tree:
-        directions = []
-        for dir_name, groups in sorted(tree["Boshqa"].items()):
-            directions.append({
-                "name": dir_name,
-                "groups": sorted(groups, key=lambda g: g["name"]),
-                "groups_count": len(groups),
-                "students_count": sum(g["students_count"] for g in groups),
-            })
+    for faculty_name in sorted(faculty_map.keys()):
+        groups = faculty_map[faculty_name]
         faculties.append({
-            "name": "Boshqa",
-            "directions": directions,
-            "directions_count": len(directions),
-            "groups_count": sum(d["groups_count"] for d in directions),
-            "students_count": sum(d["students_count"] for d in directions),
+            "name": faculty_name,
+            "directions": [{"name": faculty_name, "groups": sorted(groups, key=lambda g: g["name"]), "groups_count": len(groups), "students_count": sum(g["students_count"] for g in groups)}],
+            "directions_count": 1,
+            "groups_count": len(groups),
+            "students_count": sum(g["students_count"] for g in groups),
         })
-    
+
     return {
         "faculties": faculties,
         "total_faculties": len(faculties),
-        "total_directions": sum(f["directions_count"] for f in faculties),
+        "total_directions": len(faculties),
         "total_groups": sum(f["groups_count"] for f in faculties),
     }
 

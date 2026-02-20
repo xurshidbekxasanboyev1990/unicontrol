@@ -11,7 +11,7 @@ from datetime import date, timedelta
 from typing import Optional, List
 from decimal import Decimal
 from fastapi import APIRouter, Depends, Query, status
-from sqlalchemy import extract, and_, or_, select
+from sqlalchemy import extract, and_, or_, select, func, distinct
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import get_db
@@ -27,9 +27,51 @@ from app.schemas.student import (
 from app.core.dependencies import get_current_active_user, require_leader, require_admin
 from app.models.user import User
 from app.models.student import Student
+from app.models.group import Group
 from app.config import TASHKENT_TZ
 
 router = APIRouter()
+
+
+@router.get("/faculties")
+async def student_faculties(
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_active_user)
+):
+    """Get distinct faculties and course years from actual DB data."""
+    # Faculties
+    fac_result = await db.execute(
+        select(distinct(Group.faculty))
+        .where(and_(Group.is_active == True, Group.faculty.isnot(None), Group.faculty != ""))
+        .order_by(Group.faculty)
+    )
+    faculties = [r[0] for r in fac_result.all() if r[0]]
+
+    # Course years
+    cy_result = await db.execute(
+        select(distinct(Group.course_year))
+        .where(and_(Group.is_active == True, Group.course_year.isnot(None)))
+        .order_by(Group.course_year)
+    )
+    course_years = [r[0] for r in cy_result.all() if r[0]]
+
+    # Faculty with student counts
+    fac_counts_result = await db.execute(
+        select(
+            Group.faculty,
+            func.count(Student.id).label('students_count')
+        )
+        .outerjoin(Student, and_(Student.group_id == Group.id, Student.is_active == True))
+        .where(and_(Group.is_active == True, Group.faculty.isnot(None), Group.faculty != ""))
+        .group_by(Group.faculty)
+        .order_by(Group.faculty)
+    )
+    faculty_counts = [
+        {"name": r[0], "students_count": r[1] or 0}
+        for r in fac_counts_result.all() if r[0]
+    ]
+
+    return {"faculties": faculties, "course_years": course_years, "faculty_counts": faculty_counts}
 
 
 @router.get("", response_model=StudentListResponse)
@@ -40,6 +82,8 @@ async def list_students(
     is_active: Optional[bool] = None,
     is_graduated: Optional[bool] = None,
     search: Optional[str] = None,
+    faculty: Optional[str] = None,
+    course_year: Optional[int] = None,
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_active_user)
 ):
@@ -53,7 +97,9 @@ async def list_students(
         group_id=group_id,
         is_active=is_active,
         is_graduated=is_graduated,
-        search=search
+        search=search,
+        faculty=faculty,
+        course_year=course_year
     )
     
     return StudentListResponse(
