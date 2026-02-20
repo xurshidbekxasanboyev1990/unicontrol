@@ -109,6 +109,7 @@ class Settings(BaseSettings):
     # OPENAI API (faqat AI tahlil/chat uchun)
     # ====================
     OPENAI_API_KEY: Optional[str] = None
+    OPENAI_API_BASE_URL: Optional[str] = None  # Custom base URL (masalan: proxy yoki Azure)
     OPENAI_MODEL: str = "gpt-5.2"
     OPENAI_MAX_TOKENS: int = 4000
     OPENAI_TEMPERATURE: float = 0.7
@@ -117,7 +118,11 @@ class Settings(BaseSettings):
     # CLAUDE API (jadval import, generatsiya, bandlik uchun)
     # ====================
     CLAUDE_API_KEY: Optional[str] = None
+    CLAUDE_API_URL: str = "https://api.anthropic.com/v1/messages"
     CLAUDE_MODEL: str = "claude-opus-4-6"
+    CLAUDE_MAX_TOKENS: int = 8000
+    CLAUDE_TEMPERATURE: float = 0.05
+    CLAUDE_ANTHROPIC_VERSION: str = "2023-06-01"
     
     # ====================
     # KUAF MUTOOLA API

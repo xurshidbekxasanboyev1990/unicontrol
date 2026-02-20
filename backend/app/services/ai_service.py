@@ -29,12 +29,15 @@ from app.core.exceptions import BadRequestException, ExternalAPIException, NotFo
 
 
 class AIService:
-    """AI analysis service using OpenAI GPT-5.2."""
+    """AI analysis service — model va API sozlamalari .env dan olinadi."""
     
     def __init__(self, db: AsyncSession):
         self.db = db
         if settings.OPENAI_API_KEY:
-            self.client = openai.AsyncOpenAI(api_key=settings.OPENAI_API_KEY)
+            kwargs = {"api_key": settings.OPENAI_API_KEY}
+            if settings.OPENAI_API_BASE_URL:
+                kwargs["base_url"] = settings.OPENAI_API_BASE_URL
+            self.client = openai.AsyncOpenAI(**kwargs)
         else:
             self.client = None
     
@@ -47,11 +50,13 @@ class AIService:
         self,
         system_prompt: str,
         user_prompt: str,
-        max_tokens: int = 2000,
-        temperature: float = 0.7,
+        max_tokens: int = None,
+        temperature: float = None,
         response_format: str = None
     ) -> tuple:
-        """Call OpenAI API and return (content, tokens_used)."""
+        """Call OpenAI API and return (content, tokens_used). Defaults from settings."""
+        max_tokens = max_tokens or settings.OPENAI_MAX_TOKENS
+        temperature = temperature if temperature is not None else settings.OPENAI_TEMPERATURE
         self._check_api_key()
         
         try:

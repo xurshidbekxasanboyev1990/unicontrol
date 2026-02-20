@@ -18,40 +18,29 @@ Version: 3.0.0 — Switched from OpenAI to Claude API
 """
 
 import json
-import os
 import re
 from typing import Optional, List, Dict, Any, Tuple
 from loguru import logger
 
 import httpx
+from app.config import settings
 from app.models.schedule import ScheduleType, WeekDay
-
-
-CLAUDE_API_KEY = os.getenv("CLAUDE_API_KEY", "")
-CLAUDE_API_URL = "https://api.anthropic.com/v1/messages"
-CLAUDE_MODEL = os.getenv("CLAUDE_MODEL", "claude-opus-4-6")
-
-# Fallback: if Claude key not set, try to use settings
-def _get_claude_key():
-    key = CLAUDE_API_KEY
-    if not key:
-        try:
-            from app.config import settings
-            key = getattr(settings, 'CLAUDE_API_KEY', '') or ''
-        except Exception:
-            pass
-    return key
 
 
 class AIScheduleAgent:
     """
     AI agent for intelligent schedule import matching.
     Uses Claude API for smart matching when fuzzy/regex fails.
+    All config from .env via settings.
     """
 
     def __init__(self):
-        self.api_key = _get_claude_key()
-        self.model = CLAUDE_MODEL
+        self.api_key = settings.CLAUDE_API_KEY or ""
+        self.api_url = settings.CLAUDE_API_URL
+        self.model = settings.CLAUDE_MODEL
+        self.max_tokens = settings.CLAUDE_MAX_TOKENS
+        self.temperature = settings.CLAUDE_TEMPERATURE
+        self.anthropic_version = settings.CLAUDE_ANTHROPIC_VERSION
         self.total_tokens_used = 0
 
     def is_available(self) -> bool:
@@ -62,21 +51,23 @@ class AIScheduleAgent:
         self,
         system_prompt: str,
         user_prompt: str,
-        max_tokens: int = 4000,
-        temperature: float = 0.05,
+        max_tokens: int = None,
+        temperature: float = None,
     ) -> Optional[str]:
         """Call Claude API and return content. Returns None on failure."""
+        max_tokens = max_tokens or self.max_tokens
+        temperature = temperature if temperature is not None else self.temperature
         if not self.api_key:
             return None
 
         try:
             async with httpx.AsyncClient(timeout=120.0) as client:
-                response = await client.post(
-                    CLAUDE_API_URL,
+                resp = await client.post(
+                    self.api_url,
                     headers={
                         "x-api-key": self.api_key,
-                        "anthropic-version": "2023-06-01",
-                        "content-type": "application/json",
+                        "anthropic-version": self.anthropic_version,
+                        "content-type": "application/json"
                     },
                     json={
                         "model": self.model,

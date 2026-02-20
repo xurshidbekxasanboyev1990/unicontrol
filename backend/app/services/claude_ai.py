@@ -7,17 +7,14 @@ Author: UniControl Team
 Version: 1.0.0
 """
 
-import os
 import httpx
 import json
 import logging
 from typing import List, Dict, Any, Optional
 
-logger = logging.getLogger(__name__)
+from app.config import settings
 
-CLAUDE_API_KEY = os.getenv("CLAUDE_API_KEY", "")
-CLAUDE_API_URL = "https://api.anthropic.com/v1/messages"
-CLAUDE_MODEL = os.getenv("CLAUDE_MODEL", "claude-opus-4-6")
+logger = logging.getLogger(__name__)
 
 
 async def generate_schedule_with_ai(
@@ -131,15 +128,15 @@ Ranglarni turli fanlar uchun turlicha ber (masalan: #E3F2FD - ko'k, #FFF3E0 - sa
     try:
         async with httpx.AsyncClient(timeout=120.0) as client:
             response = await client.post(
-                CLAUDE_API_URL,
+                settings.CLAUDE_API_URL,
                 headers={
-                    "x-api-key": CLAUDE_API_KEY,
-                    "anthropic-version": "2023-06-01",
+                    "x-api-key": settings.CLAUDE_API_KEY or "",
+                    "anthropic-version": settings.CLAUDE_ANTHROPIC_VERSION,
                     "content-type": "application/json"
                 },
                 json={
-                    "model": CLAUDE_MODEL,
-                    "max_tokens": 8000,
+                    "model": settings.CLAUDE_MODEL,
+                    "max_tokens": settings.CLAUDE_MAX_TOKENS,
                     "messages": [
                         {
                             "role": "user",
@@ -239,15 +236,15 @@ Javobni faqat JSON formatda ber:
     try:
         async with httpx.AsyncClient(timeout=120.0) as client:
             response = await client.post(
-                CLAUDE_API_URL,
+                settings.CLAUDE_API_URL,
                 headers={
-                    "x-api-key": CLAUDE_API_KEY,
-                    "anthropic-version": "2023-06-01",
+                    "x-api-key": settings.CLAUDE_API_KEY or "",
+                    "anthropic-version": settings.CLAUDE_ANTHROPIC_VERSION,
                     "content-type": "application/json"
                 },
                 json={
-                    "model": CLAUDE_MODEL,
-                    "max_tokens": 8000,
+                    "model": settings.CLAUDE_MODEL,
+                    "max_tokens": settings.CLAUDE_MAX_TOKENS,
                     "messages": [
                         {
                             "role": "user",
