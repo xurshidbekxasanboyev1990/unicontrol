@@ -222,40 +222,61 @@ async def init_db() -> None:
         )
         logger.info("Database schema updated (schedules table columns ensured)")
         
-        # Add missing user roles to enum if not exists
-        await conn.execute(
-            sa.text("""
-                DO $$ BEGIN
-                    ALTER TYPE user_role ADD VALUE IF NOT EXISTS 'TEACHER';
-                EXCEPTION WHEN duplicate_object THEN null;
-                END $$;
-            """)
+        logger.info("Database schema updated (all table columns ensured)")
+
+    # Add missing user roles to enum - MUST run outside transaction
+    # ALTER TYPE ... ADD VALUE cannot run inside a transaction block
+    raw_conn = await engine.raw_connection()
+    try:
+        await raw_conn.driver_connection.execute(
+            "ALTER TYPE user_role ADD VALUE IF NOT EXISTS 'TEACHER'"
         )
-        await conn.execute(
-            sa.text("""
-                DO $$ BEGIN
-                    ALTER TYPE user_role ADD VALUE IF NOT EXISTS 'ACADEMIC_AFFAIRS';
-                EXCEPTION WHEN duplicate_object THEN null;
-                END $$;
-            """)
+    except Exception:
+        pass
+    try:
+        await raw_conn.driver_connection.execute(
+            "ALTER TYPE user_role ADD VALUE IF NOT EXISTS 'ACADEMIC_AFFAIRS'"
         )
-        await conn.execute(
-            sa.text("""
-                DO $$ BEGIN
-                    ALTER TYPE user_role ADD VALUE IF NOT EXISTS 'REGISTRAR_OFFICE';
-                EXCEPTION WHEN duplicate_object THEN null;
-                END $$;
-            """)
+    except Exception:
+        pass
+    try:
+        await raw_conn.driver_connection.execute(
+            "ALTER TYPE user_role ADD VALUE IF NOT EXISTS 'REGISTRAR_OFFICE'"
         )
-        await conn.execute(
-            sa.text("""
-                DO $$ BEGIN
-                    ALTER TYPE user_role ADD VALUE IF NOT EXISTS 'DEAN';
-                EXCEPTION WHEN duplicate_object THEN null;
-                END $$;
-            """)
+    except Exception:
+        pass
+    try:
+        await raw_conn.driver_connection.execute(
+            "ALTER TYPE user_role ADD VALUE IF NOT EXISTS 'DEAN'"
         )
-        logger.info("Database schema updated (all user roles ensured)")
+    except Exception:
+        pass
+    try:
+        await raw_conn.driver_connection.execute(
+            "ALTER TYPE user_role ADD VALUE IF NOT EXISTS 'LEADER'"
+        )
+    except Exception:
+        pass
+    try:
+        await raw_conn.driver_connection.execute(
+            "ALTER TYPE user_role ADD VALUE IF NOT EXISTS 'STUDENT'"
+        )
+    except Exception:
+        pass
+    try:
+        await raw_conn.driver_connection.execute(
+            "ALTER TYPE user_role ADD VALUE IF NOT EXISTS 'ADMIN'"
+        )
+    except Exception:
+        pass
+    try:
+        await raw_conn.driver_connection.execute(
+            "ALTER TYPE user_role ADD VALUE IF NOT EXISTS 'SUPERADMIN'"
+        )
+    except Exception:
+        pass
+    await raw_conn.close()
+    logger.info("Database schema updated (all user roles ensured)")
 
 
 async def close_db() -> None:
