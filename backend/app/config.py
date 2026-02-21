@@ -110,7 +110,7 @@ class Settings(BaseSettings):
     # ====================
     OPENAI_API_KEY: Optional[str] = None
     OPENAI_API_BASE_URL: Optional[str] = None  # Custom base URL (masalan: proxy yoki Azure)
-    OPENAI_MODEL: str = "gpt-5.2"
+    OPENAI_MODEL: str = "gpt-4o-mini"
     OPENAI_MAX_TOKENS: int = 4000
     OPENAI_TEMPERATURE: float = 0.7
     

@@ -1,11 +1,11 @@
 """
 UniControl - AI Service
 =======================
-Handles AI analysis using OpenAI API (GPT-5.2).
+Handles AI analysis using OpenAI API (gpt-4o-mini).
 Full integration: student analysis, group analysis, chat, predictions, etc.
 
 Author: UniControl Team
-Version: 3.0.0
+Version: 3.0.1
 """
 
 import json
