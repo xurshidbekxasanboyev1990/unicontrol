@@ -237,6 +237,191 @@ class ExcelService:
 
         return self._create_excel_file(pd.DataFrame(data), "Talabalar ro'yxati")
 
+    async def export_my_data(self, current_user) -> io.BytesIO:
+        """
+        Export only the authenticated user's own data.
+        
+        - Student/Leader: own profile + attendance + group info
+        - Teacher: own profile + schedule + workload  
+        - Admin/SuperAdmin/Dean/Academic/Registrar: own profile info only
+        """
+        from app.models.user import UserRole
+        from app.models.schedule import Schedule
+        
+        role = current_user.role
+        
+        if role in (UserRole.STUDENT, UserRole.LEADER):
+            return await self._export_student_own_data(current_user)
+        elif role == UserRole.TEACHER:
+            return await self._export_teacher_own_data(current_user)
+        else:
+            # Admin, SuperAdmin, Dean, Academic Affairs, Registrar - just profile
+            return await self._export_user_profile_data(current_user)
+
+    async def _export_student_own_data(self, current_user) -> io.BytesIO:
+        """Export student's own profile and attendance data."""
+        # Find student profile linked to this user
+        student_query = select(Student).options(
+            joinedload(Student.group)
+        ).where(Student.user_id == current_user.id)
+        
+        result = await self.db.execute(student_query)
+        student = result.unique().scalar_one_or_none()
+        
+        if not student:
+            # No student profile - export just user info
+            return await self._export_user_profile_data(current_user)
+        
+        # Sheet 1: Personal info
+        profile_data = [{
+            "Ma'lumot": "F.I.O",
+            "Qiymat": student.name
+        }, {
+            "Ma'lumot": "Talaba ID",
+            "Qiymat": student.student_id
+        }, {
+            "Ma'lumot": "Guruh",
+            "Qiymat": student.group.name if student.group else ""
+        }, {
+            "Ma'lumot": "Telefon",
+            "Qiymat": student.phone or ""
+        }, {
+            "Ma'lumot": "Email",
+            "Qiymat": student.email or ""
+        }, {
+            "Ma'lumot": "Tug'ilgan sana",
+            "Qiymat": student.birth_date.strftime("%d.%m.%Y") if student.birth_date else ""
+        }, {
+            "Ma'lumot": "Jinsi",
+            "Qiymat": "Erkak" if student.gender == "male" else "Ayol" if student.gender == "female" else ""
+        }, {
+            "Ma'lumot": "Manzil",
+            "Qiymat": student.address or ""
+        }, {
+            "Ma'lumot": "Kontrakt summasi",
+            "Qiymat": str(float(student.contract_amount))
+        }, {
+            "Ma'lumot": "To'langan",
+            "Qiymat": str(float(student.contract_paid))
+        }, {
+            "Ma'lumot": "Qolgan summa",
+            "Qiymat": str(float(student.contract_remaining))
+        }, {
+            "Ma'lumot": "Holati",
+            "Qiymat": "Faol" if student.is_active else "Nofaol"
+        }]
+        
+        # Sheet 2: Attendance (last 90 days)
+        from datetime import timedelta
+        date_from = date.today() - timedelta(days=90)
+        
+        att_query = select(Attendance).where(
+            Attendance.student_id == student.id,
+            Attendance.date >= date_from
+        ).order_by(Attendance.date.desc())
+        
+        att_result = await self.db.execute(att_query)
+        attendances = att_result.scalars().all()
+        
+        att_data = []
+        for a in attendances:
+            att_data.append({
+                "Sana": a.date.strftime("%d.%m.%Y") if a.date else "",
+                "Holat": a.status.value if a.status else "",
+                "Fan": a.subject or "",
+                "Izoh": a.note or ""
+            })
+        
+        # Create multi-sheet Excel
+        output = io.BytesIO()
+        with pd.ExcelWriter(output, engine='openpyxl') as writer:
+            pd.DataFrame(profile_data).to_excel(writer, sheet_name="Shaxsiy ma'lumotlar", index=False)
+            if att_data:
+                pd.DataFrame(att_data).to_excel(writer, sheet_name="Davomat", index=False)
+        
+        output.seek(0)
+        return output
+
+    async def _export_teacher_own_data(self, current_user) -> io.BytesIO:
+        """Export teacher's own schedule and workload data."""
+        from app.models.schedule import Schedule
+        
+        # Teacher's schedule - match by teacher_id or teacher_name
+        schedule_query = select(Schedule).options(
+            joinedload(Schedule.group)
+        ).where(
+            (Schedule.teacher_id == current_user.id) | (Schedule.teacher_name == current_user.name)
+        )
+        
+        sch_result = await self.db.execute(schedule_query)
+        schedules = sch_result.unique().scalars().all()
+        
+        schedule_data = []
+        for s in schedules:
+            schedule_data.append({
+                "Kun": s.day_of_week.value if s.day_of_week else "",
+                "Boshlanish": s.start_time.strftime("%H:%M") if s.start_time else "",
+                "Tugash": s.end_time.strftime("%H:%M") if s.end_time else "",
+                "Fan": s.subject or "",
+                "Guruh": s.group.name if s.group else "",
+                "Xona": s.room or "",
+                "Turi": s.schedule_type.value if s.schedule_type else ""
+            })
+        
+        # Profile info
+        profile_data = [{
+            "Ma'lumot": "F.I.O",
+            "Qiymat": current_user.name
+        }, {
+            "Ma'lumot": "Login",
+            "Qiymat": current_user.login
+        }, {
+            "Ma'lumot": "Email",
+            "Qiymat": current_user.email or ""
+        }, {
+            "Ma'lumot": "Telefon",
+            "Qiymat": current_user.phone or ""
+        }, {
+            "Ma'lumot": "Rol",
+            "Qiymat": current_user.role.value
+        }]
+        
+        output = io.BytesIO()
+        with pd.ExcelWriter(output, engine='openpyxl') as writer:
+            pd.DataFrame(profile_data).to_excel(writer, sheet_name="Shaxsiy ma'lumotlar", index=False)
+            if schedule_data:
+                pd.DataFrame(schedule_data).to_excel(writer, sheet_name="Dars jadvali", index=False)
+        
+        output.seek(0)
+        return output
+
+    async def _export_user_profile_data(self, current_user) -> io.BytesIO:
+        """Export basic user profile data (for admin/superadmin/dean/etc)."""
+        profile_data = [{
+            "Ma'lumot": "F.I.O",
+            "Qiymat": current_user.name
+        }, {
+            "Ma'lumot": "Login",
+            "Qiymat": current_user.login
+        }, {
+            "Ma'lumot": "Email",
+            "Qiymat": current_user.email or ""
+        }, {
+            "Ma'lumot": "Telefon",
+            "Qiymat": current_user.phone or ""
+        }, {
+            "Ma'lumot": "Rol",
+            "Qiymat": current_user.role.value
+        }, {
+            "Ma'lumot": "Holati",
+            "Qiymat": "Faol" if current_user.is_active else "Nofaol"
+        }, {
+            "Ma'lumot": "Oxirgi kirish",
+            "Qiymat": current_user.last_login.strftime("%d.%m.%Y %H:%M") if current_user.last_login else ""
+        }]
+        
+        return self._create_excel_file(pd.DataFrame(profile_data), "Shaxsiy ma'lumotlar")
+
     async def export_attendance(
         self,
         group_id: Optional[int] = None,

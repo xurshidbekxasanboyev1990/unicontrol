@@ -346,7 +346,7 @@ async function downloadData() {
   toast.info(t('settings.downloading'))
   
   try {
-    const response = await api.exportToExcel('students', { my_data: true })
+    const response = await api.exportMyData()
     
     const url = window.URL.createObjectURL(new Blob([response]))
     const link = document.createElement('a')

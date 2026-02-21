@@ -19,7 +19,7 @@ import io
 from app.database import get_db
 from app.services.excel_service import ExcelService
 from app.core.dependencies import get_current_active_user, require_admin, require_leader, require_superadmin
-from app.models.user import User
+from app.models.user import User, UserRole
 
 router = APIRouter()
 
@@ -328,6 +328,33 @@ async def import_kontingent(
 
 
 # Export Endpoints
+
+@router.get("/export/my-data")
+async def export_my_data(
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_active_user)
+):
+    """
+    Export current user's own data to Excel file.
+    
+    Each role gets only their own relevant data:
+    - Student/Leader: their own student profile, attendance, grades
+    - Teacher: their own schedule and workload
+    - Admin/SuperAdmin: their own profile info only
+    - Dean/Academic/Registrar: their own profile info only
+    """
+    service = ExcelService(db)
+    file_data = await service.export_my_data(current_user)
+    
+    return StreamingResponse(
+        file_data,
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={
+            "Content-Disposition": f"attachment; filename=my_data_{current_user.login}.xlsx"
+        }
+    )
+
+
 @router.get("/export/students")
 async def export_students(
     group_id: Optional[int] = None,
@@ -338,8 +365,24 @@ async def export_students(
     Export students to Excel file.
     
     Requires leader role or higher.
+    Leaders can only export their own group's students.
+    Admins and superadmins can export all or filter by group.
     """
+    from app.models.student import Student
+    from sqlalchemy import select as sa_select
+    
     service = ExcelService(db)
+    
+    # Leaders can only export their own group's students
+    if current_user.role == UserRole.LEADER and not group_id:
+        # Find leader's student profile to get their group_id
+        result = await db.execute(
+            sa_select(Student).where(Student.user_id == current_user.id)
+        )
+        student_profile = result.scalar_one_or_none()
+        if student_profile and student_profile.group_id:
+            group_id = student_profile.group_id
+    
     file_data = await service.export_students(
         group_id=group_id
     )

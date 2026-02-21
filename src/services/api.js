@@ -613,6 +613,20 @@ class ApiService {
         return response.blob()
     }
 
+    async exportMyData() {
+        const token = this.getToken()
+
+        const response = await fetch(`${this.baseUrl}/excel/export/my-data`, {
+            headers: token ? { 'Authorization': `Bearer ${token}` } : {}
+        })
+
+        if (!response.ok) {
+            throw new Error('Export failed')
+        }
+
+        return response.blob()
+    }
+
     async importSchedulesFromExcel(file, academicYear = '2025-2026', semester = 2, useAi = true) {
         const formData = new FormData()
         formData.append('file', file)
