@@ -351,7 +351,7 @@ const exportAttendance = async () => {
     if (filterStatus.value) params.append('status_filter', filterStatus.value)
 
     const resp = await fetch(`${api.baseUrl}/dean/attendance/export?${params}`, {
-      headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+      headers: { 'Authorization': `Bearer ${localStorage.getItem('access_token')}` }
     })
     if (!resp.ok) throw new Error('Export xatolik')
     const blob = await resp.blob()

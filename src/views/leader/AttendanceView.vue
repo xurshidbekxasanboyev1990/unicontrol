@@ -871,7 +871,7 @@ const exportAttendance = async () => {
     }
 
     const resp = await fetch(`${api.baseUrl}/attendance/export/printable?${params}`, {
-      headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+      headers: { 'Authorization': `Bearer ${localStorage.getItem('access_token')}` }
     })
     if (!resp.ok) throw new Error('Export xatolik')
     const blob = await resp.blob()
