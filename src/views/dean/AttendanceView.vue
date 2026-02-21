@@ -27,24 +27,42 @@
 
     <!-- Filters -->
     <div class="bg-white rounded-2xl border border-slate-200 p-4">
-      <div class="flex flex-col sm:flex-row gap-3">
-        <input
-          v-model="filterDate"
-          type="date"
-          class="px-4 py-2.5 rounded-xl border border-slate-200 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 outline-none"
-          @change="loadAttendance"
-        />
-        <select v-model="filterGroup" @change="loadAttendance" class="px-4 py-2.5 rounded-xl border border-slate-200 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 outline-none">
-          <option value="">Barcha guruhlar</option>
-          <option v-for="group in groups" :key="group.id" :value="group.name">{{ group.name }}</option>
-        </select>
-        <select v-model="filterStatus" @change="loadAttendance" class="px-4 py-2.5 rounded-xl border border-slate-200 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 outline-none">
-          <option value="">Barcha holatlar</option>
-          <option value="present">Kelgan</option>
-          <option value="absent">Kelmagan</option>
-          <option value="late">Kechikkan</option>
-          <option value="excused">Sababli</option>
-        </select>
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+        <div>
+          <label class="block text-xs font-medium text-slate-500 mb-1">Sanadan</label>
+          <input
+            v-model="filterDateFrom"
+            type="date"
+            class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 outline-none text-sm"
+            @change="loadAttendance"
+          />
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-slate-500 mb-1">Sanagacha</label>
+          <input
+            v-model="filterDateTo"
+            type="date"
+            class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 outline-none text-sm"
+            @change="loadAttendance"
+          />
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-slate-500 mb-1">Guruh</label>
+          <select v-model="filterGroup" @change="loadAttendance" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 outline-none text-sm">
+            <option value="">Barcha guruhlar</option>
+            <option v-for="group in groups" :key="group.id" :value="group.name">{{ group.name }}</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-slate-500 mb-1">Holat</label>
+          <select v-model="filterStatus" @change="loadAttendance" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 outline-none text-sm">
+            <option value="">Barcha holatlar</option>
+            <option value="present">Kelgan</option>
+            <option value="absent">Kelmagan</option>
+            <option value="late">Kechikkan</option>
+            <option value="excused">Sababli</option>
+          </select>
+        </div>
       </div>
     </div>
 
@@ -211,7 +229,8 @@ import api from '../../services/api'
 const loading = ref(false)
 const attendance = ref([])
 const groups = ref([])
-const filterDate = ref(new Date().toISOString().split('T')[0])
+const filterDateFrom = ref(new Date().toISOString().split('T')[0])
+const filterDateTo = ref(new Date().toISOString().split('T')[0])
 const filterGroup = ref('')
 const filterStatus = ref('')
 const currentPage = ref(1)
@@ -263,7 +282,8 @@ const loadAttendance = async () => {
     const params = new URLSearchParams()
     params.append('page', currentPage.value)
     params.append('page_size', pageSize)
-    if (filterDate.value) params.append('date', filterDate.value)
+    if (filterDateFrom.value) params.append('date_from', filterDateFrom.value)
+    if (filterDateTo.value) params.append('date_to', filterDateTo.value)
     if (filterGroup.value) params.append('group', filterGroup.value)
     if (filterStatus.value) params.append('status', filterStatus.value)
     const resp = await api.get(`/dean/attendance?${params}`)
@@ -342,7 +362,8 @@ const exportAttendance = async () => {
   exporting.value = true
   try {
     const params = new URLSearchParams()
-    if (filterDate.value) params.append('date_val', filterDate.value)
+    if (filterDateFrom.value) params.append('date_from', filterDateFrom.value)
+    if (filterDateTo.value) params.append('date_to', filterDateTo.value)
     if (filterGroup.value) {
       // Resolve group_id from group name
       const grp = groups.value.find(g => g.name === filterGroup.value)
@@ -358,7 +379,7 @@ const exportAttendance = async () => {
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
     a.href = url
-    a.download = `davomat_${filterDate.value || 'all'}.xlsx`
+    a.download = `davomat_${filterDateFrom.value || 'all'}_${filterDateTo.value || ''}.xlsx`
     a.click()
     URL.revokeObjectURL(url)
   } catch (err) {

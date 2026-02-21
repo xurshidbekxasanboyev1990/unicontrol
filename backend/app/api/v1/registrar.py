@@ -337,6 +337,8 @@ async def get_student_detail(
 @router.get("/attendance")
 async def get_attendance(
     date_val: Optional[date] = None,
+    date_from: Optional[date] = None,
+    date_to: Optional[date] = None,
     group_id: Optional[int] = None,
     status_filter: Optional[str] = None,
     page: int = 1,
@@ -345,9 +347,13 @@ async def get_attendance(
     current_user: User = Depends(require_registrar)
 ):
     """Get attendance records (read-only view for registrar)."""
-    target_date = date_val or date.today()
-    
-    query = select(Attendance).where(Attendance.date == target_date)
+    if date_from or date_to:
+        d_from = date_from or date.today()
+        d_to = date_to or d_from
+        query = select(Attendance).where(Attendance.date >= d_from).where(Attendance.date <= d_to)
+    else:
+        target_date = date_val or date.today()
+        query = select(Attendance).where(Attendance.date == target_date)
     
     if group_id:
         query = query.join(Student, Attendance.student_id == Student.id).where(Student.group_id == group_id)

@@ -379,6 +379,8 @@ async def dean_groups(
 @router.get("/attendance")
 async def dean_attendance(
     date_val: Optional[str] = None,
+    date_from: Optional[str] = None,
+    date_to: Optional[str] = None,
     group_id: Optional[int] = None,
     status_filter: Optional[str] = None,
     db: AsyncSession = Depends(get_db),
@@ -386,19 +388,36 @@ async def dean_attendance(
 ):
     """Get attendance records (read-only)."""
     today = today_tashkent()
-    target_date = today
 
-    if date_val:
+    # Support date range (date_from/date_to) or single date (date_val)
+    if date_from or date_to:
         try:
-            target_date = date.fromisoformat(date_val)
+            d_from = date.fromisoformat(date_from) if date_from else today
         except ValueError:
-            target_date = today
+            d_from = today
+        try:
+            d_to = date.fromisoformat(date_to) if date_to else d_from
+        except ValueError:
+            d_to = d_from
 
-    query = (
-        select(Attendance)
-        .join(Student, Student.id == Attendance.student_id)
-        .where(Attendance.date == target_date)
-    )
+        query = (
+            select(Attendance)
+            .join(Student, Student.id == Attendance.student_id)
+            .where(Attendance.date >= d_from)
+            .where(Attendance.date <= d_to)
+        )
+    else:
+        target_date = today
+        if date_val:
+            try:
+                target_date = date.fromisoformat(date_val)
+            except ValueError:
+                target_date = today
+        query = (
+            select(Attendance)
+            .join(Student, Student.id == Attendance.student_id)
+            .where(Attendance.date == target_date)
+        )
 
     if group_id:
         query = query.where(Student.group_id == group_id)
@@ -445,6 +464,8 @@ async def dean_attendance(
 @router.get("/attendance/export")
 async def dean_attendance_export(
     date_val: Optional[str] = None,
+    date_from: Optional[str] = None,
+    date_to: Optional[str] = None,
     group_id: Optional[int] = None,
     status_filter: Optional[str] = None,
     db: AsyncSession = Depends(get_db),
@@ -455,18 +476,29 @@ async def dean_attendance_export(
     from app.services.excel_service import ExcelService
 
     today = today_tashkent()
-    target_date = today
-    if date_val:
+    if date_from or date_to:
         try:
-            target_date = date.fromisoformat(date_val)
+            d_from = date.fromisoformat(date_from) if date_from else today
         except ValueError:
-            target_date = today
+            d_from = today
+        try:
+            d_to = date.fromisoformat(date_to) if date_to else d_from
+        except ValueError:
+            d_to = d_from
+    else:
+        d_from = today
+        if date_val:
+            try:
+                d_from = date.fromisoformat(date_val)
+            except ValueError:
+                pass
+        d_to = d_from
 
     service = ExcelService(db)
     file_data = await service.export_attendance_printable(
         group_id=group_id,
-        date_from=target_date,
-        date_to=target_date,
+        date_from=d_from,
+        date_to=d_to,
         status_filter=status_filter,
     )
 

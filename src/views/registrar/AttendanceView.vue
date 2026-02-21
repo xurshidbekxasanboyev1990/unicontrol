@@ -10,32 +10,50 @@
 
     <!-- Filters -->
     <div class="bg-white rounded-2xl border border-slate-200/60 p-4">
-      <div class="flex flex-col sm:flex-row gap-3">
-        <input
-          v-model="selectedDate"
-          @change="loadAttendance"
-          type="date"
-          class="px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
-        />
-        <select
-          v-model="selectedGroup"
-          @change="loadAttendance"
-          class="px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
-        >
-          <option :value="null">Barcha guruhlar</option>
-          <option v-for="g in groups" :key="g.id" :value="g.id">{{ g.name }}</option>
-        </select>
-        <select
-          v-model="statusFilter"
-          @change="loadAttendance"
-          class="px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
-        >
-          <option :value="null">Barcha status</option>
-          <option value="present">Kelgan</option>
-          <option value="absent">Kelmagan</option>
-          <option value="late">Kechikkan</option>
-          <option value="excused">Sababli</option>
-        </select>
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+        <div>
+          <label class="block text-xs font-medium text-slate-500 mb-1">Sanadan</label>
+          <input
+            v-model="dateFrom"
+            @change="loadAttendance"
+            type="date"
+            class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+          />
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-slate-500 mb-1">Sanagacha</label>
+          <input
+            v-model="dateTo"
+            @change="loadAttendance"
+            type="date"
+            class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+          />
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-slate-500 mb-1">Guruh</label>
+          <select
+            v-model="selectedGroup"
+            @change="loadAttendance"
+            class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+          >
+            <option :value="null">Barcha guruhlar</option>
+            <option v-for="g in groups" :key="g.id" :value="g.id">{{ g.name }}</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-slate-500 mb-1">Status</label>
+          <select
+            v-model="statusFilter"
+            @change="loadAttendance"
+            class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+          >
+            <option :value="null">Barcha status</option>
+            <option value="present">Kelgan</option>
+            <option value="absent">Kelmagan</option>
+            <option value="late">Kechikkan</option>
+            <option value="excused">Sababli</option>
+          </select>
+        </div>
       </div>
     </div>
 
@@ -127,7 +145,8 @@ const loading = ref(false)
 const records = ref([])
 const groups = ref([])
 const attendanceStats = ref(null)
-const selectedDate = ref(new Date().toISOString().split('T')[0])
+const dateFrom = ref(new Date().toISOString().split('T')[0])
+const dateTo = ref(new Date().toISOString().split('T')[0])
 const selectedGroup = ref(null)
 const statusFilter = ref(null)
 
@@ -165,7 +184,8 @@ const loadAttendance = async () => {
   loading.value = true
   try {
     const params = {}
-    if (selectedDate.value) params.date_val = selectedDate.value
+    if (dateFrom.value) params.date_from = dateFrom.value
+    if (dateTo.value) params.date_to = dateTo.value
     if (selectedGroup.value) params.group_id = selectedGroup.value
     if (statusFilter.value) params.status_filter = statusFilter.value
 
