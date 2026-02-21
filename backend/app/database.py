@@ -225,57 +225,38 @@ async def init_db() -> None:
         logger.info("Database schema updated (all table columns ensured)")
 
     # Add missing user roles to enum - MUST run outside transaction
-    # ALTER TYPE ... ADD VALUE cannot run inside a transaction block
-    raw_conn = await engine.raw_connection()
+    # ALTER TYPE ... ADD VALUE cannot run inside a transaction block in PostgreSQL
+    # Use direct asyncpg connection (not through SQLAlchemy) to avoid auto-transaction
+    import asyncpg
+    
+    # Parse the database URL to get connection params
+    db_url = settings.DATABASE_URL.replace("postgresql+asyncpg://", "postgresql://")
+    
     try:
-        await raw_conn.driver_connection.execute(
-            "ALTER TYPE user_role ADD VALUE IF NOT EXISTS 'TEACHER'"
-        )
-    except Exception:
-        pass
-    try:
-        await raw_conn.driver_connection.execute(
-            "ALTER TYPE user_role ADD VALUE IF NOT EXISTS 'ACADEMIC_AFFAIRS'"
-        )
-    except Exception:
-        pass
-    try:
-        await raw_conn.driver_connection.execute(
-            "ALTER TYPE user_role ADD VALUE IF NOT EXISTS 'REGISTRAR_OFFICE'"
-        )
-    except Exception:
-        pass
-    try:
-        await raw_conn.driver_connection.execute(
-            "ALTER TYPE user_role ADD VALUE IF NOT EXISTS 'DEAN'"
-        )
-    except Exception:
-        pass
-    try:
-        await raw_conn.driver_connection.execute(
-            "ALTER TYPE user_role ADD VALUE IF NOT EXISTS 'LEADER'"
-        )
-    except Exception:
-        pass
-    try:
-        await raw_conn.driver_connection.execute(
-            "ALTER TYPE user_role ADD VALUE IF NOT EXISTS 'STUDENT'"
-        )
-    except Exception:
-        pass
-    try:
-        await raw_conn.driver_connection.execute(
-            "ALTER TYPE user_role ADD VALUE IF NOT EXISTS 'ADMIN'"
-        )
-    except Exception:
-        pass
-    try:
-        await raw_conn.driver_connection.execute(
-            "ALTER TYPE user_role ADD VALUE IF NOT EXISTS 'SUPERADMIN'"
-        )
-    except Exception:
-        pass
-    await raw_conn.close()
+        pg_conn = await asyncpg.connect(db_url)
+        try:
+            # Check existing enum values first
+            existing = await pg_conn.fetch(
+                "SELECT enumlabel FROM pg_enum JOIN pg_type ON pg_enum.enumtypid = pg_type.oid WHERE pg_type.typname = 'user_role'"
+            )
+            existing_values = {row['enumlabel'] for row in existing}
+            logger.info(f"Existing user_role enum values: {existing_values}")
+            
+            needed_values = ['STUDENT', 'LEADER', 'TEACHER', 'ACADEMIC_AFFAIRS', 'REGISTRAR_OFFICE', 'DEAN', 'ADMIN', 'SUPERADMIN']
+            for val in needed_values:
+                if val not in existing_values:
+                    try:
+                        await pg_conn.execute(f"ALTER TYPE user_role ADD VALUE '{val}'")
+                        logger.info(f"Added enum value: {val}")
+                    except Exception as e:
+                        logger.warning(f"Could not add enum value {val}: {e}")
+                else:
+                    logger.info(f"Enum value already exists: {val}")
+        finally:
+            await pg_conn.close()
+    except Exception as e:
+        logger.error(f"Failed to update user_role enum: {e}")
+    
     logger.info("Database schema updated (all user roles ensured)")
 
 
