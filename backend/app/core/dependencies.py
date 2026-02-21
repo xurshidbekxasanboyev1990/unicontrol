@@ -139,8 +139,8 @@ async def require_leader(
 async def require_teacher(
     current_user: User = Depends(get_current_active_user)
 ) -> User:
-    """Require teacher role."""
-    if current_user.role not in [UserRole.SUPERADMIN, UserRole.ADMIN, UserRole.TEACHER]:
+    """Require teacher role or academic affairs."""
+    if current_user.role not in [UserRole.SUPERADMIN, UserRole.ADMIN, UserRole.TEACHER, UserRole.ACADEMIC_AFFAIRS]:
         raise ForbiddenException("Teacher access required")
     return current_user
 
