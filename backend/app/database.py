@@ -148,6 +148,15 @@ async def init_db() -> None:
         )
         logger.info("Database indexes ensured")
         
+        # Add week_type column to schedules if not exists
+        await conn.execute(
+            sa.text("""
+                ALTER TABLE schedules 
+                ADD COLUMN IF NOT EXISTS week_type VARCHAR(10) NOT NULL DEFAULT 'ALL'
+            """)
+        )
+        logger.info("Database schema updated (week_type column ensured)")
+        
         # Add REGISTRAR_OFFICE role to enum if not exists
         await conn.execute(
             sa.text("""
