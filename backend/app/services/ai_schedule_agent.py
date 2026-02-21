@@ -80,11 +80,11 @@ class AIScheduleAgent:
                     },
                 )
 
-                if response.status_code != 200:
-                    logger.error(f"Claude API error: {response.status_code} - {response.text}")
+                if resp.status_code != 200:
+                    logger.error(f"Claude API error: {resp.status_code} - {resp.text}")
                     return None
 
-                data = response.json()
+                data = resp.json()
                 content = data.get("content", [{}])[0].get("text", "")
                 
                 # Track token usage

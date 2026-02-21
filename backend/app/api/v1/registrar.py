@@ -359,7 +359,10 @@ async def get_attendance(
         query = query.join(Student, Attendance.student_id == Student.id).where(Student.group_id == group_id)
     
     if status_filter:
-        query = query.where(Attendance.status == status_filter)
+        try:
+            query = query.where(Attendance.status == AttendanceStatus(status_filter))
+        except ValueError:
+            pass
     
     count_q = select(func.count()).select_from(query.subquery())
     total = await db.scalar(count_q) or 0
@@ -394,7 +397,7 @@ async def get_attendance(
         "excused": sum(1 for i in items if i["status"] == "excused"),
     }
     
-    return {"items": items, "total": total, "stats": day_stats, "date": str(target_date)}
+    return {"items": items, "total": total, "stats": day_stats, "date": str(date_from or date_val or date.today())}
 
 
 # ============================================

@@ -50,7 +50,7 @@
           <label class="block text-xs font-medium text-slate-500 mb-1">Guruh</label>
           <select v-model="filterGroup" @change="loadAttendance" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 outline-none text-sm">
             <option value="">Barcha guruhlar</option>
-            <option v-for="group in groups" :key="group.id" :value="group.name">{{ group.name }}</option>
+            <option v-for="group in groups" :key="group.id" :value="group.id">{{ group.name }}</option>
           </select>
         </div>
         <div>
@@ -284,8 +284,8 @@ const loadAttendance = async () => {
     params.append('page_size', pageSize)
     if (filterDateFrom.value) params.append('date_from', filterDateFrom.value)
     if (filterDateTo.value) params.append('date_to', filterDateTo.value)
-    if (filterGroup.value) params.append('group', filterGroup.value)
-    if (filterStatus.value) params.append('status', filterStatus.value)
+    if (filterGroup.value) params.append('group_id', filterGroup.value)
+    if (filterStatus.value) params.append('status_filter', filterStatus.value)
     const resp = await api.get(`/dean/attendance?${params}`)
     attendance.value = resp.records || resp.items || []
     totalItems.value = resp.total || 0
@@ -299,7 +299,7 @@ const loadAttendance = async () => {
 const loadGroups = async () => {
   try {
     const resp = await api.get('/dean/groups')
-    groups.value = resp.groups || resp || []
+    groups.value = resp.items || resp.groups || resp || []
   } catch (err) {
     console.error('Dean groups error:', err)
   }
@@ -364,11 +364,7 @@ const exportAttendance = async () => {
     const params = new URLSearchParams()
     if (filterDateFrom.value) params.append('date_from', filterDateFrom.value)
     if (filterDateTo.value) params.append('date_to', filterDateTo.value)
-    if (filterGroup.value) {
-      // Resolve group_id from group name
-      const grp = groups.value.find(g => g.name === filterGroup.value)
-      if (grp) params.append('group_id', grp.id)
-    }
+    if (filterGroup.value) params.append('group_id', filterGroup.value)
     if (filterStatus.value) params.append('status_filter', filterStatus.value)
 
     const resp = await fetch(`${api.baseUrl}/dean/attendance/export?${params}`, {

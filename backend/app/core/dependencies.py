@@ -121,8 +121,8 @@ async def require_superadmin(
 async def require_admin(
     current_user: User = Depends(get_current_active_user)
 ) -> User:
-    """Require admin or higher role."""
-    if current_user.role not in [UserRole.SUPERADMIN, UserRole.ADMIN]:
+    """Require admin or higher role (includes academic affairs)."""
+    if current_user.role not in [UserRole.SUPERADMIN, UserRole.ADMIN, UserRole.ACADEMIC_AFFAIRS]:
         raise ForbiddenException("Admin access required")
     return current_user
 
