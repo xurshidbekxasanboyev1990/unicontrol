@@ -114,6 +114,6 @@ async def update_settings(
     
     await db.commit()
     await db.refresh(settings)
-    logger.info(f"Settings updated by {current_user.username}: {list(update_data.keys())}")
+    logger.info(f"Settings updated by {current_user.login}: {list(update_data.keys())}")
     
     return settings.to_dict()
