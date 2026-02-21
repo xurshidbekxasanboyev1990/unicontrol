@@ -117,6 +117,7 @@ export default {
         teacher: 'Teacher',
         academic_affairs: 'Academic Affairs',
         registrar_office: 'Registrar Office',
+        dean: 'Dean',
         admin: 'Administrator',
         superadmin: 'Super Admin',
         user: 'User',

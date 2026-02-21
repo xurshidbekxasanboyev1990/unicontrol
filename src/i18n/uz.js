@@ -118,6 +118,7 @@ export default {
         teacher: 'O\'qituvchi',
         academic_affairs: 'Akademik ishlar',
         registrar_office: 'Registrator ofisi',
+        dean: 'Dekan',
         admin: 'Administrator',
         superadmin: 'Super Admin',
         user: 'Foydalanuvchi',

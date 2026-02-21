@@ -46,6 +46,10 @@
           <option value="">{{ $t('users.allRoles') }}</option>
           <option value="student">{{ $t('users.student') }}</option>
           <option value="leader">{{ $t('users.groupLeader') }}</option>
+          <option value="teacher">{{ $t('roles.teacher') }}</option>
+          <option value="academic_affairs">{{ $t('roles.academic_affairs') }}</option>
+          <option value="registrar_office">{{ $t('roles.registrar_office') }}</option>
+          <option value="dean">{{ $t('roles.dean') }}</option>
           <option value="admin">{{ $t('users.admin') }}</option>
         </select>
       </div>
@@ -567,6 +571,7 @@ function getRoleColor(role) {
     teacher: 'bg-gradient-to-br from-teal-400 to-teal-600',
     academic_affairs: 'bg-gradient-to-br from-cyan-400 to-cyan-600',
     registrar_office: 'bg-gradient-to-br from-indigo-400 to-indigo-600',
+    dean: 'bg-gradient-to-br from-rose-400 to-rose-600',
     admin: 'bg-gradient-to-br from-violet-400 to-violet-600',
     superadmin: 'bg-gradient-to-br from-amber-400 to-orange-600'
   }
@@ -580,6 +585,7 @@ function getRoleBadge(role) {
     teacher: 'bg-teal-100 text-teal-700',
     academic_affairs: 'bg-cyan-100 text-cyan-700',
     registrar_office: 'bg-indigo-100 text-indigo-700',
+    dean: 'bg-rose-100 text-rose-700',
     admin: 'bg-violet-100 text-violet-700',
     superadmin: 'bg-amber-100 text-amber-700'
   }
@@ -593,6 +599,7 @@ function getRoleLabel(role) {
     teacher: "O'qituvchi",
     academic_affairs: 'Akademik ishlar',
     registrar_office: 'Registrator ofisi',
+    dean: 'Dekan',
     admin: 'Admin',
     superadmin: 'Super Admin'
   }

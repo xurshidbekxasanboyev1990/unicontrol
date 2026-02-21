@@ -381,7 +381,15 @@ const routes = [
       { path: 'canteen', name: 'super-canteen', component: SharedCanteenView },
       { path: 'workload', name: 'super-workload', component: TeacherWorkload },
       { path: 'activity', name: 'super-activity', component: SuperActivity },
-      { path: 'nb-permits', name: 'super-nb-permits', component: AdminNBPermits }
+      { path: 'nb-permits', name: 'super-nb-permits', component: AdminNBPermits },
+      { path: 'schedule-editor', name: 'super-schedule-editor', component: AcademicScheduleEditor },
+      { path: 'ai-generate', name: 'super-ai-generate', component: AcademicAIGenerate },
+      { path: 'rooms', name: 'super-rooms', component: AcademicRooms },
+      { path: 'exam-schedule', name: 'super-exam-schedule', component: SharedExamSchedule },
+      { path: 'quizzes', name: 'super-quizzes', component: QuizView },
+      { path: 'library', name: 'super-library', component: LibraryComingSoon },
+      { path: 'analytics', name: 'super-analytics', component: LeaderAnalytics },
+      { path: 'files', name: 'super-files', component: LeaderFileManager }
     ]
   },
 

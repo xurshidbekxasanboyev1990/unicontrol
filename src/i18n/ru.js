@@ -117,6 +117,7 @@ export default {
         teacher: 'Преподаватель',
         academic_affairs: 'Учебный отдел',
         registrar_office: 'Регистрационный отдел',
+        dean: 'Декан',
         admin: 'Администратор',
         superadmin: 'Супер Админ',
         user: 'Пользователь',

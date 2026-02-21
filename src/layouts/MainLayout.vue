@@ -726,22 +726,48 @@ const menuSections = computed(() => {
         { path: '/super/students', label: t('layout.students'), icon: markRaw(Users) },
         { path: '/super/groups', label: t('layout.groups'), icon: markRaw(Building2) },
         { path: '/super/contracts', label: t('layout.contracts'), icon: markRaw(FileSpreadsheet) },
+        { path: '/super/subjects', label: t('layout.subjects'), icon: markRaw(BookOpen) },
+        { path: '/super/holidays', label: t('layout.holidays'), icon: markRaw(CalendarOff) },
+        { path: '/super/schedule', label: t('layout.schedule'), icon: markRaw(Calendar) },
+        { path: '/super/workload', label: t('teacher.workload'), icon: markRaw(CalendarClock) },
+        { path: '/super/rooms', label: t('rooms.title'), icon: markRaw(DoorOpen) },
+        { path: '/super/nb-permits', label: 'NB Ruxsatnomalar', icon: markRaw(FileCheck) }
+      ]
+    })
+    sections.push({
+      title: t('academic.title'),
+      items: [
+        { path: '/super/schedule-editor', label: t('academic.scheduleEditor'), icon: markRaw(Table2) },
+        { path: '/super/ai-generate', label: t('academic.aiGenerate'), icon: markRaw(Sparkles) },
+        { path: '/super/exam-schedule', label: t('exams.title'), icon: markRaw(CalendarCheck) },
         { path: '/super/kontingent-import', label: 'Kontingent import', icon: markRaw(Users) },
         { path: '/super/schedule-import', label: 'Jadval import', icon: markRaw(CalendarDays) },
         { path: '/super/workload-import', label: "Bandlik import", icon: markRaw(FileUp) },
-        { path: '/super/room-import', label: 'Xona bandlik import', icon: markRaw(DoorOpen) },
-        { path: '/super/workload', label: t('teacher.workload'), icon: markRaw(CalendarClock) },
+        { path: '/super/room-import', label: 'Xona bandlik import', icon: markRaw(DoorOpen) }
+      ]
+    })
+    sections.push({
+      title: t('layout.services'),
+      items: [
+        { path: '/super/clubs', label: t('layout.clubs'), icon: markRaw(Palette) },
         { path: '/super/tournaments', label: t('layout.tournaments'), icon: markRaw(Trophy) },
+        { path: '/super/canteen', label: t('layout.canteen'), icon: markRaw(UtensilsCrossed) },
+        { path: '/super/market', label: t('layout.market'), icon: markRaw(Store) },
+        { path: '/super/library', label: t('layout.library'), icon: markRaw(BookOpen) },
+        { path: '/super/quizzes', label: t('layout.quizzes'), icon: markRaw(ClipboardList) },
+        { path: '/super/credit-module', label: t('layout.creditModule'), icon: markRaw(Calculator) },
+        { path: '/super/ai-analysis', label: t('layout.aiAnalysis'), icon: markRaw(Brain) }
+      ]
+    })
+    sections.push({
+      title: t('layout.reports') + ' & ' + t('layout.analytics'),
+      items: [
         { path: '/super/reports', label: t('layout.reports'), icon: markRaw(BarChart3) },
+        { path: '/super/analytics', label: t('layout.analytics'), icon: markRaw(BarChart3) },
+        { path: '/super/files', label: t('layout.files'), icon: markRaw(FolderOpen) },
         { path: '/super/notifications', label: t('layout.notifications'), icon: markRaw(Send), badge: dataStore.unreadCount > 0 ? String(dataStore.unreadCount) : null },
         { path: '/super/subscriptions', label: t('layout.subscriptions'), icon: markRaw(CreditCard) },
-        { path: '/super/market', label: t('layout.market'), icon: markRaw(Store) },
-        { path: '/super/telegram-bot', label: t('layout.telegramBot'), icon: markRaw(Bot) },
-        { path: '/super/holidays', label: t('layout.holidays'), icon: markRaw(CalendarOff) },
-        { path: '/super/schedule', label: t('layout.schedule'), icon: markRaw(Calendar) },
-        { path: '/super/ai-analysis', label: t('layout.aiAnalysis'), icon: markRaw(Brain) },
-        { path: '/super/credit-module', label: t('layout.creditModule'), icon: markRaw(Calculator) },
-        { path: '/super/nb-permits', label: 'NB Ruxsatnomalar', icon: markRaw(FileCheck) }
+        { path: '/super/telegram-bot', label: t('layout.telegramBot'), icon: markRaw(Bot) }
       ]
     })
     sections.push({
