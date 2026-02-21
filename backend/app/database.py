@@ -157,7 +157,88 @@ async def init_db() -> None:
         )
         logger.info("Database schema updated (week_type column ensured)")
         
-        # Add REGISTRAR_OFFICE role to enum if not exists
+        # Add missing columns to users table
+        await conn.execute(
+            sa.text("""
+                ALTER TABLE users ADD COLUMN IF NOT EXISTS plain_password VARCHAR(255);
+                ALTER TABLE users ADD COLUMN IF NOT EXISTS refresh_token VARCHAR(500);
+                ALTER TABLE users ADD COLUMN IF NOT EXISTS settings TEXT;
+                ALTER TABLE users ADD COLUMN IF NOT EXISTS device_tokens JSONB;
+                ALTER TABLE users ADD COLUMN IF NOT EXISTS is_first_login BOOLEAN NOT NULL DEFAULT FALSE;
+                ALTER TABLE users ADD COLUMN IF NOT EXISTS is_verified BOOLEAN NOT NULL DEFAULT FALSE;
+            """)
+        )
+        logger.info("Database schema updated (users table columns ensured)")
+        
+        # Add missing columns to students table
+        await conn.execute(
+            sa.text("""
+                ALTER TABLE students ADD COLUMN IF NOT EXISTS commute VARCHAR(100);
+                ALTER TABLE students ADD COLUMN IF NOT EXISTS passport VARCHAR(20);
+                ALTER TABLE students ADD COLUMN IF NOT EXISTS jshshir VARCHAR(20);
+                ALTER TABLE students ADD COLUMN IF NOT EXISTS gender VARCHAR(10);
+                ALTER TABLE students ADD COLUMN IF NOT EXISTS contract_paid NUMERIC(12,2) NOT NULL DEFAULT 0;
+                ALTER TABLE students ADD COLUMN IF NOT EXISTS is_graduated BOOLEAN NOT NULL DEFAULT FALSE;
+                ALTER TABLE students ADD COLUMN IF NOT EXISTS is_leader BOOLEAN NOT NULL DEFAULT FALSE;
+                ALTER TABLE students ADD COLUMN IF NOT EXISTS mutoola_student_id VARCHAR(100);
+                ALTER TABLE students ADD COLUMN IF NOT EXISTS extra_data TEXT;
+            """)
+        )
+        logger.info("Database schema updated (students table columns ensured)")
+        
+        # Add missing columns to groups table
+        await conn.execute(
+            sa.text("""
+                ALTER TABLE groups ADD COLUMN IF NOT EXISTS contract_amount NUMERIC(12,2) NOT NULL DEFAULT 0;
+                ALTER TABLE groups ADD COLUMN IF NOT EXISTS mutoola_group_id VARCHAR(100);
+            """)
+        )
+        logger.info("Database schema updated (groups table columns ensured)")
+        
+        # Add missing columns to attendances table
+        await conn.execute(
+            sa.text("""
+                ALTER TABLE attendances ADD COLUMN IF NOT EXISTS lesson_number INTEGER;
+                ALTER TABLE attendances ADD COLUMN IF NOT EXISTS excuse_reason VARCHAR(500);
+                ALTER TABLE attendances ADD COLUMN IF NOT EXISTS recorded_by INTEGER;
+            """)
+        )
+        logger.info("Database schema updated (attendances table columns ensured)")
+        
+        # Add missing columns to schedules table (beyond week_type)
+        await conn.execute(
+            sa.text("""
+                ALTER TABLE schedules ADD COLUMN IF NOT EXISTS subject_code VARCHAR(50);
+                ALTER TABLE schedules ADD COLUMN IF NOT EXISTS specific_date DATE;
+                ALTER TABLE schedules ADD COLUMN IF NOT EXISTS building VARCHAR(100);
+                ALTER TABLE schedules ADD COLUMN IF NOT EXISTS teacher_id INTEGER;
+                ALTER TABLE schedules ADD COLUMN IF NOT EXISTS description TEXT;
+                ALTER TABLE schedules ADD COLUMN IF NOT EXISTS semester VARCHAR(20);
+                ALTER TABLE schedules ADD COLUMN IF NOT EXISTS academic_year VARCHAR(20);
+                ALTER TABLE schedules ADD COLUMN IF NOT EXISTS is_cancelled BOOLEAN NOT NULL DEFAULT FALSE;
+                ALTER TABLE schedules ADD COLUMN IF NOT EXISTS cancellation_reason VARCHAR(500);
+                ALTER TABLE schedules ADD COLUMN IF NOT EXISTS color VARCHAR(20);
+            """)
+        )
+        logger.info("Database schema updated (schedules table columns ensured)")
+        
+        # Add missing user roles to enum if not exists
+        await conn.execute(
+            sa.text("""
+                DO $$ BEGIN
+                    ALTER TYPE user_role ADD VALUE IF NOT EXISTS 'TEACHER';
+                EXCEPTION WHEN duplicate_object THEN null;
+                END $$;
+            """)
+        )
+        await conn.execute(
+            sa.text("""
+                DO $$ BEGIN
+                    ALTER TYPE user_role ADD VALUE IF NOT EXISTS 'ACADEMIC_AFFAIRS';
+                EXCEPTION WHEN duplicate_object THEN null;
+                END $$;
+            """)
+        )
         await conn.execute(
             sa.text("""
                 DO $$ BEGIN
@@ -166,7 +247,15 @@ async def init_db() -> None:
                 END $$;
             """)
         )
-        logger.info("Database schema updated (registrar_office role ensured)")
+        await conn.execute(
+            sa.text("""
+                DO $$ BEGIN
+                    ALTER TYPE user_role ADD VALUE IF NOT EXISTS 'DEAN';
+                EXCEPTION WHEN duplicate_object THEN null;
+                END $$;
+            """)
+        )
+        logger.info("Database schema updated (all user roles ensured)")
 
 
 async def close_db() -> None:
