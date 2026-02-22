@@ -16,7 +16,6 @@ from app.api.mobile import (
     teacher,
     dean,
     registrar,
-    academic,
     push,
     general,
     dashboard,
@@ -71,13 +70,6 @@ mobile_router.include_router(
     registrar.router,
     prefix="/registrar",
     tags=["Mobile Registrar"]
-)
-
-# Academic Affairs Mobile
-mobile_router.include_router(
-    academic.router,
-    prefix="/academic",
-    tags=["Mobile Academic"]
 )
 
 # Dashboard (unified)
