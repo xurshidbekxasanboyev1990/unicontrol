@@ -41,6 +41,14 @@ async def get_dashboard_stats(
         return await _student_dashboard(db, current_user)
     elif role == UserRole.LEADER:
         return await _leader_dashboard(db, current_user)
+    elif role == UserRole.TEACHER:
+        return await _teacher_dashboard(db, current_user)
+    elif role == UserRole.DEAN:
+        return await _dean_dashboard(db, current_user)
+    elif role == UserRole.REGISTRAR_OFFICE:
+        return await _registrar_dashboard(db, current_user)
+    elif role == UserRole.ACADEMIC_AFFAIRS:
+        return await _academic_dashboard(db, current_user)
     elif role in (UserRole.ADMIN, UserRole.SUPERADMIN):
         return await _admin_dashboard(db, current_user)
     else:
@@ -361,4 +369,273 @@ async def _admin_dashboard(db: AsyncSession, user: User):
         "unread_notifications": unread,
         "pending_reports": pending,
         "today_lessons": 0,
+    }
+
+
+# ============================================
+# TEACHER DASHBOARD
+# ============================================
+
+async def _teacher_dashboard(db: AsyncSession, user: User):
+    """Teacher dashboard stats for mobile."""
+    from app.models.schedule import Schedule, WeekDay
+    from sqlalchemy import distinct
+    from sqlalchemy.orm import joinedload
+
+    today = today_tashkent()
+    day_map = {
+        0: WeekDay.MONDAY, 1: WeekDay.TUESDAY, 2: WeekDay.WEDNESDAY,
+        3: WeekDay.THURSDAY, 4: WeekDay.FRIDAY, 5: WeekDay.SATURDAY,
+        6: WeekDay.SUNDAY,
+    }
+    today_weekday = day_map[today.weekday()]
+
+    # Group IDs from schedule
+    gids_result = await db.execute(
+        select(distinct(Schedule.group_id)).where(
+            Schedule.teacher_id == user.id, Schedule.is_active == True
+        )
+    )
+    group_ids = [r[0] for r in gids_result.all()]
+
+    total_students = 0
+    if group_ids:
+        total_students = (await db.execute(
+            select(func.count(Student.id)).where(
+                Student.group_id.in_(group_ids), Student.is_active == True
+            )
+        )).scalar() or 0
+
+    # Today's lessons count
+    today_lessons = (await db.execute(
+        select(func.count(Schedule.id)).where(
+            Schedule.teacher_id == user.id,
+            Schedule.is_active == True,
+            Schedule.is_cancelled == False,
+            Schedule.day_of_week == today_weekday,
+        )
+    )).scalar() or 0
+
+    weekly_lessons = (await db.execute(
+        select(func.count(Schedule.id)).where(
+            Schedule.teacher_id == user.id,
+            Schedule.is_active == True,
+            Schedule.is_cancelled == False,
+        )
+    )).scalar() or 0
+
+    # Today's attendance rate for my groups
+    today_attendance_rate = 0.0
+    if group_ids:
+        total_att = (await db.execute(
+            select(func.count(Attendance.id))
+            .join(Student, Student.id == Attendance.student_id)
+            .where(Attendance.date == today, Student.group_id.in_(group_ids))
+        )).scalar() or 0
+        present_att = (await db.execute(
+            select(func.count(Attendance.id))
+            .join(Student, Student.id == Attendance.student_id)
+            .where(
+                Attendance.date == today,
+                Student.group_id.in_(group_ids),
+                Attendance.status.in_([AttendanceStatus.PRESENT, AttendanceStatus.LATE]),
+            )
+        )).scalar() or 0
+        if total_att > 0:
+            today_attendance_rate = round(present_att / total_att * 100, 1)
+
+    # Unread notifications
+    unread = (await db.execute(
+        select(func.count(Notification.id)).where(
+            Notification.user_id == user.id, Notification.is_read == False
+        )
+    )).scalar() or 0
+
+    return {
+        "role": "teacher",
+        "total_groups": len(group_ids),
+        "total_students": total_students,
+        "today_lessons": today_lessons,
+        "weekly_lessons": weekly_lessons,
+        "today_attendance_rate": today_attendance_rate,
+        "unread_notifications": unread,
+        "today_present": 0,
+        "today_absent": 0,
+        "today_late": 0,
+        "today_excused": 0,
+        "today_attendance_rate": today_attendance_rate,
+        "week_attendance_rate": 0.0,
+        "month_attendance_rate": 0.0,
+        "pending_reports": 0,
+        "active_students": total_students,
+        "active_groups": len(group_ids),
+    }
+
+
+# ============================================
+# DEAN DASHBOARD
+# ============================================
+
+async def _dean_dashboard(db: AsyncSession, user: User):
+    """Dean dashboard stats for mobile."""
+    today = today_tashkent()
+
+    total_students = (await db.execute(
+        select(func.count(Student.id)).where(Student.is_active == True)
+    )).scalar() or 0
+    total_groups = (await db.execute(
+        select(func.count(Group.id)).where(Group.is_active == True)
+    )).scalar() or 0
+
+    att_stats = await db.execute(
+        select(
+            func.count(Attendance.id).label("total"),
+            func.sum(case((Attendance.status.in_([AttendanceStatus.PRESENT, AttendanceStatus.LATE]), 1), else_=0)).label("present"),
+            func.sum(case((Attendance.status == AttendanceStatus.ABSENT, 1), else_=0)).label("absent"),
+        ).where(Attendance.date == today)
+    )
+    row = att_stats.first()
+    total_today = row.total or 0
+    present = row.present or 0
+    absent = row.absent or 0
+    rate = round(present / total_today * 100, 1) if total_today > 0 else 0
+
+    unread = (await db.execute(
+        select(func.count(Notification.id)).where(
+            Notification.user_id == user.id, Notification.is_read == False
+        )
+    )).scalar() or 0
+
+    return {
+        "role": "dean",
+        "total_students": total_students,
+        "total_groups": total_groups,
+        "active_students": total_students,
+        "active_groups": total_groups,
+        "today_present": present,
+        "today_absent": absent,
+        "today_late": 0,
+        "today_excused": 0,
+        "today_attendance_rate": rate,
+        "week_attendance_rate": 0.0,
+        "month_attendance_rate": 0.0,
+        "unread_notifications": unread,
+        "today_lessons": 0,
+        "pending_reports": 0,
+    }
+
+
+# ============================================
+# REGISTRAR DASHBOARD
+# ============================================
+
+async def _registrar_dashboard(db: AsyncSession, user: User):
+    """Registrar dashboard stats for mobile."""
+    from app.models.nb_permit import NBPermit, PermitStatus
+
+    today = today_tashkent()
+
+    total_students = (await db.execute(
+        select(func.count(Student.id)).where(Student.is_active == True)
+    )).scalar() or 0
+    total_groups = (await db.execute(
+        select(func.count(Group.id)).where(Group.is_active == True)
+    )).scalar() or 0
+
+    today_present = (await db.execute(
+        select(func.count(Attendance.id)).where(
+            Attendance.date == today, Attendance.status == AttendanceStatus.PRESENT
+        )
+    )).scalar() or 0
+    today_absent = (await db.execute(
+        select(func.count(Attendance.id)).where(
+            Attendance.date == today, Attendance.status == AttendanceStatus.ABSENT
+        )
+    )).scalar() or 0
+
+    active_permits = 0
+    try:
+        active_permits = (await db.execute(
+            select(func.count(NBPermit.id)).where(
+                NBPermit.status.in_([PermitStatus.ISSUED, PermitStatus.PENDING, PermitStatus.IN_PROGRESS])
+            )
+        )).scalar() or 0
+    except Exception:
+        pass
+
+    unread = (await db.execute(
+        select(func.count(Notification.id)).where(
+            Notification.user_id == user.id, Notification.is_read == False
+        )
+    )).scalar() or 0
+
+    return {
+        "role": "registrar",
+        "total_students": total_students,
+        "total_groups": total_groups,
+        "active_students": total_students,
+        "active_groups": total_groups,
+        "today_present": today_present,
+        "today_absent": today_absent,
+        "today_late": 0,
+        "today_excused": 0,
+        "today_attendance_rate": round(today_present / (today_present + today_absent) * 100, 1) if (today_present + today_absent) > 0 else 0,
+        "week_attendance_rate": 0.0,
+        "month_attendance_rate": 0.0,
+        "unread_notifications": unread,
+        "today_lessons": 0,
+        "pending_reports": active_permits,
+    }
+
+
+# ============================================
+# ACADEMIC AFFAIRS DASHBOARD
+# ============================================
+
+async def _academic_dashboard(db: AsyncSession, user: User):
+    """Academic affairs dashboard stats for mobile."""
+    from app.models.schedule import Schedule
+    from sqlalchemy import distinct
+
+    total_groups = (await db.execute(
+        select(func.count(Group.id)).where(Group.is_active == True)
+    )).scalar() or 0
+    total_schedules = (await db.execute(
+        select(func.count(Schedule.id)).where(Schedule.is_active == True)
+    )).scalar() or 0
+    total_subjects = (await db.execute(
+        select(func.count(distinct(Schedule.subject))).where(Schedule.is_active == True)
+    )).scalar() or 0
+    total_teachers = (await db.execute(
+        select(func.count(User.id)).where(User.role == UserRole.TEACHER, User.is_active == True)
+    )).scalar() or 0
+    total_students = (await db.execute(
+        select(func.count(Student.id)).where(Student.is_active == True)
+    )).scalar() or 0
+
+    unread = (await db.execute(
+        select(func.count(Notification.id)).where(
+            Notification.user_id == user.id, Notification.is_read == False
+        )
+    )).scalar() or 0
+
+    return {
+        "role": "academic_affairs",
+        "total_students": total_students,
+        "total_groups": total_groups,
+        "active_students": total_students,
+        "active_groups": total_groups,
+        "today_present": 0,
+        "today_absent": 0,
+        "today_late": 0,
+        "today_excused": 0,
+        "today_attendance_rate": 0.0,
+        "week_attendance_rate": 0.0,
+        "month_attendance_rate": 0.0,
+        "unread_notifications": unread,
+        "today_lessons": total_schedules,
+        "pending_reports": 0,
+        "total_schedules": total_schedules,
+        "total_subjects": total_subjects,
+        "total_teachers": total_teachers,
     }

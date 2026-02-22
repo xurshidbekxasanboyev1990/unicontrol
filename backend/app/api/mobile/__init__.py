@@ -13,6 +13,10 @@ from app.api.mobile import (
     auth,
     student,
     leader,
+    teacher,
+    dean,
+    registrar,
+    academic,
     push,
     general,
     dashboard,
@@ -46,6 +50,34 @@ mobile_router.include_router(
     leader.router,
     prefix="/leader",
     tags=["Mobile Leader"]
+)
+
+# Teacher Mobile
+mobile_router.include_router(
+    teacher.router,
+    prefix="/teacher",
+    tags=["Mobile Teacher"]
+)
+
+# Dean Mobile
+mobile_router.include_router(
+    dean.router,
+    prefix="/dean",
+    tags=["Mobile Dean"]
+)
+
+# Registrar Mobile
+mobile_router.include_router(
+    registrar.router,
+    prefix="/registrar",
+    tags=["Mobile Registrar"]
+)
+
+# Academic Affairs Mobile
+mobile_router.include_router(
+    academic.router,
+    prefix="/academic",
+    tags=["Mobile Academic"]
 )
 
 # Dashboard (unified)
