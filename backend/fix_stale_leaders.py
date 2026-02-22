@@ -11,7 +11,7 @@ import os
 sys.path.insert(0, os.path.dirname(__file__))
 
 from sqlalchemy import select, text
-from app.database import async_engine, AsyncSessionLocal
+from app.database import engine, async_session_maker
 from app.models.user import User, UserRole
 from app.models.student import Student
 from app.models.group import Group
@@ -19,7 +19,7 @@ from app.models.group import Group
 
 async def fix_stale_leaders():
     """Find users with role=leader who are NOT actually leading any group, reset to student."""
-    async with AsyncSessionLocal() as db:
+    async with async_session_maker() as db:
         # Get all users with role=leader
         result = await db.execute(
             select(User).where(User.role == UserRole.LEADER)
