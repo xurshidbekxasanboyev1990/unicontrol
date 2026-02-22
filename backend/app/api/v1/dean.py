@@ -184,7 +184,6 @@ async def dean_students(
                 Student.name.ilike(f"%{search}%"),
                 Student.student_id.ilike(f"%{search}%"),
                 Student.phone.ilike(f"%{search}%"),
-                Student.hemis_id.ilike(f"%{search}%")
             )
         )
 
@@ -588,10 +587,7 @@ async def dean_attendance_import(
             student = None
             s_result = await db.execute(
                 select(Student).where(
-                    or_(
-                        Student.student_id == student_id_val,
-                        Student.hemis_id == student_id_val,
-                    )
+                    Student.student_id == student_id_val
                 )
             )
             student = s_result.scalar_one_or_none()
@@ -674,7 +670,6 @@ async def dean_attendance_import(
                     subject=subject,
                     lesson_number=lesson_number,
                     recorded_by=current_user.id,
-                    student_name=student.name,
                 )
                 db.add(new_att)
                 created += 1
@@ -1094,14 +1089,14 @@ async def dean_nb_permits(
     try:
         from app.models.nb_permit import NBPermit
 
-        query = select(NBPermit)
+        query = select(NBPermit).options(joinedload(NBPermit.student))
 
         if search:
-            query = query.where(
+            query = query.join(Student, Student.id == NBPermit.student_id, isouter=True).where(
                 or_(
                     NBPermit.permit_code.ilike(f"%{search}%"),
                     NBPermit.subject_name.ilike(f"%{search}%"),
-                    NBPermit.student_name.ilike(f"%{search}%"),
+                    Student.name.ilike(f"%{search}%"),
                 )
             )
 
@@ -1110,20 +1105,20 @@ async def dean_nb_permits(
 
         query = query.order_by(NBPermit.created_at.desc())
         result = await db.execute(query)
-        permits = result.scalars().all()
+        permits = result.unique().scalars().all()
 
         items = []
         for p in permits:
             items.append({
                 "id": p.id,
                 "permit_code": p.permit_code,
-                "student_name": getattr(p, 'student_name', ''),
+                "student_name": p.student.name if p.student else '',
                 "subject_name": p.subject_name,
                 "teacher_name": getattr(p, 'teacher_name', ''),
-                "permit_type": getattr(p, 'permit_type', ''),
+                "permit_type": getattr(p, 'nb_type', ''),
                 "status": p.status,
                 "created_at": str(p.created_at) if p.created_at else None,
-                "deadline": str(p.deadline) if getattr(p, 'deadline', None) else None,
+                "deadline": str(p.expiry_date) if getattr(p, 'expiry_date', None) else None,
             })
 
         return {"items": items, "total": len(items)}
