@@ -288,7 +288,7 @@ const loadAttendance = async () => {
     if (filterStatus.value) params.append('status_filter', filterStatus.value)
     const resp = await api.get(`/dean/attendance?${params}`)
     attendance.value = resp.records || resp.items || []
-    totalItems.value = resp.total || 0
+    totalItems.value = resp.total || attendance.value.length
   } catch (err) {
     console.error('Dean attendance error:', err)
   } finally {
