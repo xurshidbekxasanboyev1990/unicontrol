@@ -19,7 +19,7 @@ from app.database import get_db
 from app.services.auth_service import AuthService
 from app.core.dependencies import get_current_active_user
 from app.core.security import create_access_token, create_refresh_token
-from app.models.user import User
+from app.models.user import User, UserRole
 from app.models.student import Student
 from app.models.group import Group
 
@@ -71,18 +71,10 @@ async def mobile_login(
         password=request.password
     )
     
-    # Create tokens
-    access_token = create_access_token(user.id, user.role.value)
-    refresh_token = create_refresh_token(user.id)
-    
-    # Save refresh token to DB
-    user.refresh_token = refresh_token
-    db.add(user)
-    await db.commit()
-    
-    # Find group_id
+    # Find group_id and verify role is still correct
     group_id = None
     group_name = None
+    
     student_res = await db.execute(select(Student).where(Student.user_id == user.id))
     student = student_res.scalar_one_or_none()
     if student:
@@ -92,12 +84,31 @@ async def mobile_login(
             g = grp.scalar_one_or_none()
             if g:
                 group_name = g.name
+                # Verify leader role: user has role=leader but is NOT the actual leader of their group
+                if user.role == UserRole.LEADER and g.leader_id != student.id:
+                    # Check if they're leader of any other group
+                    other_grp = await db.execute(
+                        select(Group).where(Group.leader_id == student.id)
+                    )
+                    if not other_grp.scalar_one_or_none():
+                        user.role = UserRole.STUDENT
+                        student.is_leader = False
+                        db.add(user)
     else:
         grp = await db.execute(select(Group).where(Group.leader_id == user.id))
         g = grp.scalar_one_or_none()
         if g:
             group_id = g.id
             group_name = g.name
+    
+    # Create tokens (after role fix so token has correct role)
+    access_token = create_access_token(user.id, user.role.value)
+    refresh_token = create_refresh_token(user.id)
+    
+    # Save refresh token to DB
+    user.refresh_token = refresh_token
+    db.add(user)
+    await db.commit()
     
     return {
         "access_token": access_token,

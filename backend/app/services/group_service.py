@@ -175,6 +175,34 @@ class GroupService:
         if not group:
             raise NotFoundException("Group not found")
         
+        # === Reset old leader's role back to student ===
+        old_leader_id = group.leader_id
+        if old_leader_id and old_leader_id != leader_id:
+            # Find the old leader student
+            old_result = await self.db.execute(
+                select(Student).where(Student.id == old_leader_id)
+            )
+            old_student = old_result.scalar_one_or_none()
+            if old_student:
+                old_student.is_leader = False
+                # Reset user role back to student
+                if old_student.user_id:
+                    old_user_result = await self.db.execute(
+                        select(User).where(User.id == old_student.user_id)
+                    )
+                    old_user = old_user_result.scalar_one_or_none()
+                    if old_user and old_user.role == UserRole.LEADER:
+                        # Check if this user is leader in any OTHER group
+                        other_group_result = await self.db.execute(
+                            select(Group)
+                            .where(Group.leader_id == old_leader_id)
+                            .where(Group.id != group_id)
+                        )
+                        other_group = other_group_result.scalar_one_or_none()
+                        if not other_group:
+                            old_user.role = UserRole.STUDENT
+                            logger.debug(f"[GROUP SERVICE] Eski sardor student ga qaytarildi: user_id={old_user.id}, name={old_user.name}")
+        
         if leader_id:
             # Verify leader exists and is from this group (if student)
             result = await self.db.execute(

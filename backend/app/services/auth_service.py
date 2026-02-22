@@ -96,6 +96,32 @@ class AuthService:
         """
         user = await self.authenticate(credentials.login, credentials.password)
         
+        # Verify leader role is still valid
+        if user.role == UserRole.LEADER:
+            from app.models.student import Student
+            from app.models.group import Group
+            student_res = await self.db.execute(
+                select(Student).where(Student.user_id == user.id)
+            )
+            student = student_res.scalar_one_or_none()
+            if student and student.group_id:
+                grp_res = await self.db.execute(
+                    select(Group).where(
+                        Group.id == student.group_id,
+                        Group.leader_id == student.id
+                    )
+                )
+                if not grp_res.scalar_one_or_none():
+                    # Not a leader of their group — check other groups
+                    other_res = await self.db.execute(
+                        select(Group).where(Group.leader_id == student.id)
+                    )
+                    if not other_res.scalar_one_or_none():
+                        user.role = UserRole.STUDENT
+                        student.is_leader = False
+                        self.db.add(user)
+                        await self.db.flush()
+        
         # Create tokens
         access_token = create_access_token(user.id, user.role.value)
         refresh_token = create_refresh_token(user.id)
