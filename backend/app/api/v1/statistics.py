@@ -19,6 +19,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import get_db
 from app.models import User, Student, Group, Attendance
+from app.models.attendance import AttendanceStatus
 from app.models.user import UserRole
 from app.core.dependencies import get_current_active_user, require_admin
 from app.config import today_tashkent
@@ -100,48 +101,65 @@ async def get_attendance_stats(
     if not date_to:
         date_to = today_tashkent()
     
-    # Total records
-    query = select(func.count(Attendance.id)).where(
+    # Base date filter conditions
+    base_conditions = [
         Attendance.date >= date_from,
         Attendance.date <= date_to
-    )
+    ]
     
+    # If group_id specified, get student IDs in that group
+    student_ids = None
     if group_id:
-        # Get students in group first
         students_query = select(Student.id).where(Student.group_id == group_id)
         students_result = await db.execute(students_query)
         student_ids = [s for s in students_result.scalars()]
-        
-        if student_ids:
-            query = query.where(Attendance.student_id.in_(student_ids))
+        if not student_ids:
+            return {
+                "total_records": 0,
+                "present_count": 0,
+                "absent_count": 0,
+                "late_count": 0,
+                "attendance_rate": 0.0,
+                "date_from": str(date_from),
+                "date_to": str(date_to)
+            }
     
+    def _add_group_filter(q):
+        """Apply group filter if student_ids are set."""
+        if student_ids is not None:
+            return q.where(Attendance.student_id.in_(student_ids))
+        return q
+    
+    # Total records
+    query = select(func.count(Attendance.id)).where(*base_conditions)
+    query = _add_group_filter(query)
     total_result = await db.execute(query)
     total_records = total_result.scalar() or 0
     
     # Present count
     present_query = select(func.count(Attendance.id)).where(
-        Attendance.date >= date_from,
-        Attendance.date <= date_to,
-        Attendance.status == 'present'
+        *base_conditions,
+        Attendance.status == AttendanceStatus.PRESENT
     )
+    present_query = _add_group_filter(present_query)
     present_result = await db.execute(present_query)
     present_count = present_result.scalar() or 0
     
     # Absent count
     absent_query = select(func.count(Attendance.id)).where(
-        Attendance.date >= date_from,
-        Attendance.date <= date_to,
-        Attendance.status == 'absent'
+        *base_conditions,
+        Attendance.status == AttendanceStatus.ABSENT
     )
+    absent_query = _add_group_filter(absent_query)
     absent_result = await db.execute(absent_query)
     absent_count = absent_result.scalar() or 0
     
     # Late count
     late_query = select(func.count(Attendance.id)).where(
-        Attendance.date >= date_from,
-        Attendance.date <= date_to,
-        Attendance.status == 'late'
+        *base_conditions,
+        Attendance.status == AttendanceStatus.LATE
     )
+    late_query = _add_group_filter(late_query)
     late_result = await db.execute(late_query)
     late_count = late_result.scalar() or 0
     

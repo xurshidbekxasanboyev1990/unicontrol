@@ -113,15 +113,15 @@ async def dean_dashboard(
     # NB permits stats (combined single query)
     nb_stats = {"total": 0, "active": 0, "approved": 0}
     try:
-        from app.models.nb_permit import NBPermit
+        from app.models.nb_permit import NBPermit, PermitStatus
         nb_result = await db.execute(
             select(
                 func.count(NBPermit.id).label("total"),
                 func.count(NBPermit.id).filter(
-                    NBPermit.status.in_(["issued", "pending", "in_progress"])
+                    NBPermit.status.in_([PermitStatus.ISSUED, PermitStatus.PENDING, PermitStatus.IN_PROGRESS])
                 ).label("active"),
                 func.count(NBPermit.id).filter(
-                    NBPermit.status == "approved"
+                    NBPermit.status == PermitStatus.APPROVED
                 ).label("approved"),
             )
         )
@@ -503,7 +503,9 @@ async def dean_attendance_export(
     )
 
     # Build filename
-    fname_parts = ["davomat", target_date.strftime("%d_%m_%Y")]
+    fname_parts = ["davomat", d_from.strftime("%d_%m_%Y")]
+    if d_from != d_to:
+        fname_parts.append(d_to.strftime("%d_%m_%Y"))
     if group_id:
         fname_parts.insert(1, f"guruh_{group_id}")
     filename = "_".join(fname_parts) + ".xlsx"

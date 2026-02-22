@@ -203,7 +203,7 @@ async def get_leader_dashboard(
     reports_result = await db.execute(
         select(func.count(Report.id)).where(
             Report.created_by == current_user.id,
-            Report.status == 'pending'
+            Report.status == ReportStatus.PENDING
         )
     )
     pending_reports = reports_result.scalar() or 0
@@ -266,7 +266,7 @@ async def get_admin_dashboard(
     
     # Pending reports
     pending_reports = await db.execute(
-        select(func.count(Report.id)).where(Report.status == 'pending')
+        select(func.count(Report.id)).where(Report.status == ReportStatus.PENDING)
     )
     
     # Low attendance groups (below 80%) — use unique students per group
