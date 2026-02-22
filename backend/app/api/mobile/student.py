@@ -154,21 +154,56 @@ async def get_attendance_history(
     
     records = attendance.scalars().all()
     
+    # Build subject stats
+    subject_map = {}
+    for a in records:
+        subj = getattr(a, 'subject', None) or 'Nomalum'
+        if subj not in subject_map:
+            subject_map[subj] = {'total': 0, 'present': 0, 'late': 0, 'absent': 0}
+        subject_map[subj]['total'] += 1
+        if a.status == AttendanceStatus.PRESENT:
+            subject_map[subj]['present'] += 1
+        elif a.status == AttendanceStatus.LATE:
+            subject_map[subj]['late'] += 1
+        elif a.status == AttendanceStatus.ABSENT:
+            subject_map[subj]['absent'] += 1
+
+    total = len(records)
+    present = sum(1 for a in records if a.status == AttendanceStatus.PRESENT)
+    absent_count = sum(1 for a in records if a.status == AttendanceStatus.ABSENT)
+    late_count = sum(1 for a in records if a.status == AttendanceStatus.LATE)
+    rate = round(((present + late_count) / (total or 1)) * 100, 1)
+
     return {
         "records": [
             {
+                "id": a.id,
                 "date": str(a.date),
                 "status": a.status.value,
+                "subject": getattr(a, 'subject', None) or '',
+                "lesson_number": getattr(a, 'lesson_number', None),
+                "check_in_time": a.check_in_time.strftime("%H:%M") if getattr(a, 'check_in_time', None) else None,
+                "late_minutes": getattr(a, 'late_minutes', 0) or 0,
                 "notes": getattr(a, 'note', '') or ''
             }
             for a in records
         ],
         "stats": {
-            "total": len(records),
-            "present": sum(1 for a in records if a.status == AttendanceStatus.PRESENT),
-            "absent": sum(1 for a in records if a.status == AttendanceStatus.ABSENT),
-            "late": sum(1 for a in records if a.status == AttendanceStatus.LATE)
-        }
+            "total": total,
+            "present": present,
+            "absent": absent_count,
+            "late": late_count,
+            "rate": rate
+        },
+        "by_subject": [
+            {
+                "name": subj,
+                "total": data['total'],
+                "attended": data['present'] + data['late'],
+                "rate": round(((data['present'] + data['late']) / (data['total'] or 1)) * 100)
+            }
+            for subj, data in sorted(subject_map.items(), key=lambda x: -round(((x[1]['present'] + x[1]['late']) / (x[1]['total'] or 1)) * 100))
+        ]
     }
 
 
