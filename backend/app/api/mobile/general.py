@@ -294,9 +294,9 @@ async def mobile_attendance(
             "group_id": None,
             "date": str(a.date),
             "status": a.status.value,
-            "reason": a.reason if hasattr(a, "reason") else None,
-            "notes": a.notes,
-            "marked_by": a.marked_by,
+            "reason": a.excuse_reason if hasattr(a, "excuse_reason") else None,
+            "notes": a.note,
+            "marked_by": a.recorded_by,
             "created_at": a.created_at.isoformat() if a.created_at else None,
         })
 
@@ -332,13 +332,13 @@ async def mobile_attendance_batch(
 
             if att:
                 att.status = status
-                att.marked_by = current_user.id
+                att.recorded_by = current_user.id
             else:
                 att = Attendance(
                     student_id=sid,
                     date=att_date,
                     status=status,
-                    marked_by=current_user.id,
+                    recorded_by=current_user.id,
                 )
                 db.add(att)
 

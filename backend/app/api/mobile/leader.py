@@ -188,7 +188,7 @@ async def get_today_attendance(
                 "id": s.id,
                 "full_name": s.full_name,
                 "status": attendance_map[s.id].status.value if s.id in attendance_map else None,
-                "notes": attendance_map[s.id].notes if s.id in attendance_map else None
+                "notes": attendance_map[s.id].note if s.id in attendance_map else None
             }
             for s in students_list
         ]
@@ -238,13 +238,13 @@ async def mark_quick_attendance(
     
     if attendance:
         attendance.status = status
-        attendance.marked_by = current_user.id
+        attendance.recorded_by = current_user.id
     else:
         attendance = Attendance(
             student_id=request.student_id,
             date=today,
             status=status,
-            marked_by=current_user.id
+            recorded_by=current_user.id
         )
         db.add(attendance)
     
@@ -290,13 +290,13 @@ async def mark_bulk_attendance(
             
             if attendance:
                 attendance.status = status
-                attendance.marked_by = current_user.id
+                attendance.recorded_by = current_user.id
             else:
                 attendance = Attendance(
                     student_id=student_id,
                     date=request.attendance_date,
                     status=status,
-                    marked_by=current_user.id
+                    recorded_by=current_user.id
                 )
                 db.add(attendance)
             
