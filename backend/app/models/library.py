@@ -229,7 +229,7 @@ class BookBorrow(Base):
     )
     
     # Dates
-    borrow_date = Column(Date, nullable=False, default=date.today, comment="Borrow date")
+    borrow_date = Column(Date, nullable=False, default=today_tashkent, comment="Borrow date")
     due_date = Column(Date, nullable=False, comment="Return due date")
     return_date = Column(Date, nullable=True, comment="Actual return date")
     

@@ -14,6 +14,7 @@ from app.database import get_db
 from app.models.user import User
 from app.models.library import Book, BookCategory, BookBorrow, BorrowStatus, BookStatus
 from app.core.dependencies import get_current_active_user
+from app.config import today_tashkent
 
 router = APIRouter()
 
@@ -258,8 +259,8 @@ async def borrow_book(
     borrow = BookBorrow(
         user_id=current_user.id,
         book_id=book_id,
-        borrow_date=date.today(),
-        due_date=date.today() + timedelta(days=14),
+        borrow_date=today_tashkent(),
+        due_date=today_tashkent() + timedelta(days=14),
         status=BorrowStatus.ACTIVE,
     )
     db.add(borrow)

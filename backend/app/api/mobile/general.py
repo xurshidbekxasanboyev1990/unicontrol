@@ -20,7 +20,7 @@ from app.models.attendance import Attendance, AttendanceStatus
 from app.models.schedule import Schedule, WeekDay
 from app.models.notification import Notification
 from app.core.dependencies import get_current_active_user, require_leader
-from app.config import today_tashkent
+from app.config import today_tashkent, now_tashkent
 
 router = APIRouter()
 
@@ -706,8 +706,7 @@ async def mobile_mark_notification_read(
 
     notification.is_read = True
     if hasattr(notification, "read_at"):
-        from datetime import datetime
-        notification.read_at = datetime.utcnow()
+        notification.read_at = now_tashkent()
     await db.commit()
 
     return {"message": "O'qildi deb belgilandi"}

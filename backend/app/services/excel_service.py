@@ -34,7 +34,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func, text
 from sqlalchemy.orm import joinedload
 
-from app.config import now_tashkent
+from app.config import now_tashkent, today_tashkent
 from app.models.student import Student
 from app.models.group import Group
 from app.models.attendance import Attendance, AttendanceStatus
@@ -313,7 +313,7 @@ class ExcelService:
         
         # Sheet 2: Attendance (last 90 days)
         from datetime import timedelta
-        date_from = date.today() - timedelta(days=90)
+        date_from = today_tashkent() - timedelta(days=90)
         
         att_query = select(Attendance).where(
             Attendance.student_id == student.id,

@@ -13,6 +13,7 @@ from typing import Optional
 from sqlalchemy import String, Integer, DateTime, Boolean, Text
 from sqlalchemy.orm import Mapped, mapped_column
 
+from app.config import now_tashkent
 from app.database import Base
 
 
@@ -45,7 +46,7 @@ class TeacherWorkload(Base):
     
     # Metadata
     source_file: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
-    imported_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    imported_at: Mapped[datetime] = mapped_column(DateTime, default=now_tashkent)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
     
     def __repr__(self):

@@ -20,7 +20,7 @@ from sqlalchemy import select, func, and_, or_, distinct
 from pydantic import BaseModel
 
 from app.database import get_db
-from app.config import TASHKENT_TZ
+from app.config import TASHKENT_TZ, today_tashkent
 from app.models.user import User, UserRole
 from app.models.student import Student
 from app.models.group import Group
@@ -99,7 +99,7 @@ async def get_registrar_dashboard(
     current_user: User = Depends(require_registrar)
 ):
     """Registrar office dashboard stats."""
-    today = date.today()
+    today = today_tashkent()
     
     # Total students
     total_students = await db.scalar(
@@ -348,11 +348,11 @@ async def get_attendance(
 ):
     """Get attendance records (read-only view for registrar)."""
     if date_from or date_to:
-        d_from = date_from or date.today()
+        d_from = date_from or today_tashkent()
         d_to = date_to or d_from
         query = select(Attendance).where(Attendance.date >= d_from).where(Attendance.date <= d_to)
     else:
-        target_date = date_val or date.today()
+        target_date = date_val or today_tashkent()
         query = select(Attendance).where(Attendance.date == target_date)
     
     if group_id:
@@ -397,7 +397,7 @@ async def get_attendance(
         "excused": sum(1 for i in items if i["status"] == "excused"),
     }
     
-    return {"items": items, "total": total, "stats": day_stats, "date": str(date_from or date_val or date.today())}
+    return {"items": items, "total": total, "stats": day_stats, "date": str(date_from or date_val or today_tashkent())}
 
 
 # ============================================
@@ -484,7 +484,7 @@ async def create_permit(
     
     # Generate permit code and verification hash
     permit_code = NBPermit.generate_permit_code()
-    today = date.today()
+    today = today_tashkent()
     verification_hash = NBPermit.generate_verification_hash(
         permit_code, data.student_id, data.subject_name, str(today)
     )
@@ -536,7 +536,7 @@ async def update_permit(
     if data.status:
         permit.status = data.status
         if data.status in [PermitStatus.APPROVED]:
-            permit.completed_date = date.today()
+            permit.completed_date = today_tashkent()
     if data.result_grade is not None:
         permit.result_grade = data.result_grade
     if data.teacher_notes is not None:
@@ -720,7 +720,7 @@ async def teacher_update_permit(
     
     if data.status in ["approved", PermitStatus.APPROVED]:
         permit.status = PermitStatus.APPROVED
-        permit.completed_date = date.today()
+        permit.completed_date = today_tashkent()
     elif data.status in ["rejected", PermitStatus.REJECTED]:
         permit.status = PermitStatus.REJECTED
     else:

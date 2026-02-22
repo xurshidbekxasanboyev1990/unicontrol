@@ -13,6 +13,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import get_db
 from app.core.dependencies import get_current_active_user, require_admin
+from app.config import now_tashkent
 from app.models.user import User
 
 
@@ -245,7 +246,7 @@ async def create_support_message(
         "category": data.category,
         "status": "open",
         "reply": None,
-        "created_at": datetime.datetime.utcnow().isoformat(),
+        "created_at": now_tashkent().isoformat(),
     }
     _next_msg_id += 1
     _support_messages.append(msg)
